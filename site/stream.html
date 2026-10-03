@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" data-veil-build="2026-10-03T19:18:16Z">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stream — Veil (mirror)</title>
+<meta name="description" content="Veil Stream — a real FreeTube program running as a service. Static mirror showcase.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f59e0b' stroke-width='2'%3E%3Crect x='2' y='4' width='20' height='16' rx='2'/%3E%3Cpath d='M10 9l5 3-5 3z'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/veil.css">
+</head>
+<body>
+<div class="shell">
+<nav class="topnav" aria-label="Main">
+  <div class="topnav-inner">
+    <a class="brand" href="index.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/></svg>
+      Veil <span class="beta">MIRROR</span>
+    </a>
+    <div class="navlinks">
+      <a href="index.html">Home</a>
+      <a href="chat.html">Chat</a>
+      <a href="arcade.html">Arcade</a>
+      <a href="ai.html">AI</a>
+      <a href="stream.html" class="active">Stream</a>
+      <a href="wallpapers.html">Wallpapers</a>
+      <a href="status.html">Status</a>
+    </div>
+    <span class="nav-clock" data-veil-clock data-seconds aria-label="current time"></span>
+  </div>
+</nav>
+
+<main>
+  <section class="hero" style="padding-top:38px">
+    <span class="kicker">Veil Stream</span>
+    <h1 style="margin-top:8px">The tube, without the tube.</h1>
+    <p class="tagline">A real FreeTube program runs as a service on the box — subscriptions, playlists, Popular and Shorts — <em>proxied through Veil</em>.</p>
+    <div class="hero-badges">
+      <span class="pill ok">service live</span>
+      <span class="pill">subscriptions</span>
+      <span class="pill">playlists</span>
+      <span class="pill">watch parties</span>
+    </div>
+  </section>
+
+  <section class="panel" style="max-width:860px;margin:0 auto;overflow:hidden" aria-label="Stream preview">
+    <div style="aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg,#052e2f,#0a1f1f);border-bottom:1px solid var(--line);position:relative">
+      <div style="font-size:64px" aria-hidden="true">📺</div>
+      <div style="position:absolute;bottom:14px;left:16px;font-size:12px;color:var(--text-1)" class="mono">For You · Shorts · Popular · Subscriptions · Playlists</div>
+      <span class="pill ok" style="position:absolute;top:14px;right:14px">● service healthy</span>
+    </div>
+    <div style="padding:18px 22px">
+      <h3>Your feeds, your rules</h3>
+      <p class="sub" style="margin-top:6px">The Stream section drives a genuine FreeTube instance with per-viewer profiles — your subscriptions and watch history are yours, stored locally on the box, never on someone else's ad platform.</p>
+    </div>
+  </section>
+
+  <section class="grid grid-3" style="margin-top:22px">
+    <div class="card"><div class="sec-ico">🎯</div><h3>For You</h3><p class="sub">A feed built from what you actually watch — no engagement-maximizing dark patterns.</p></div>
+    <div class="card"><div class="sec-ico">📌</div><h3>Subscriptions</h3><p class="sub">Follow channels across frontends; new videos surface in order, newest first.</p></div>
+    <div class="card"><div class="sec-ico">🍿</div><h3>Watch parties</h3><p class="sub">Paste a Stream link into #general and the room watches together through the proxy lane.</p></div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <span>Veil Stream mirror · <a href="https://github.com/ok5678765s/veil-os" target="_blank" rel="noopener noreferrer">ok5678765s/veil-os</a></span>
+    <span>the real program runs on the live site</span>
+  </div>
+</footer>
+</div>
+<button id="refresh-pill" onclick="location.reload()" title="A newer version was pushed to GitHub">✨ Veil updated — tap to refresh</button>
+<script src="assets/veil.js"></script>
+</body>
+</html>

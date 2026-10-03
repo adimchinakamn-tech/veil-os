@@ -1,0 +1,13 @@
+{
+  "built": "2026-10-03T19:18:16Z",
+  "commit": "a685835",
+  "pages": [
+    "site/index.html",
+    "site/chat.html",
+    "site/arcade.html",
+    "site/ai.html",
+    "site/stream.html",
+    "site/wallpapers.html",
+    "site/status.html"
+  ]
+}
