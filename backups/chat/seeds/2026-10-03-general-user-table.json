@@ -1,0 +1,192 @@
+{
+  "veil": "chat-backup",
+  "version": 1,
+  "exportedAt": "2026-10-03T16:45:00.000Z",
+  "note": "Recovered #general history (Sep 15-17, 2026) from the owner's message table after the 2026-10-03 data wipe. Veil's messages map onto the live operator account; the other three authors are recreated as legacy placeholders that keep the name free to re-register (registering the username claims the account and all its restored messages).",
+  "counts": { "accounts": 4, "messages": 11, "dms": 0 },
+  "accounts": [
+    {
+      "id": "seed-veil",
+      "username": "Veil",
+      "displayName": "Veil",
+      "avatarColor": "#f97316",
+      "avatarImage": null,
+      "bio": "",
+      "role": "admin",
+      "muted": false,
+      "banned": false,
+      "coins": 100,
+      "tag": null,
+      "tagColor": null,
+      "pfpAccessory": null,
+      "legacy": false,
+      "createdAt": "2026-09-10T00:00:00.000Z"
+    },
+    {
+      "id": "seed-canadian-spy",
+      "username": "Canadian Spy",
+      "displayName": "Canadian Spy",
+      "avatarColor": "#16a085",
+      "avatarImage": null,
+      "bio": "",
+      "role": "member",
+      "muted": false,
+      "banned": false,
+      "coins": 100,
+      "tag": null,
+      "tagColor": null,
+      "pfpAccessory": null,
+      "legacy": true,
+      "createdAt": "2026-09-14T00:00:00.000Z"
+    },
+    {
+      "id": "seed-spiffyboss5111",
+      "username": "SpiffyBoss5111",
+      "displayName": "SpiffyBoss5111",
+      "avatarColor": "#8e44ad",
+      "avatarImage": null,
+      "bio": "",
+      "role": "member",
+      "muted": false,
+      "banned": false,
+      "coins": 100,
+      "tag": null,
+      "tagColor": null,
+      "pfpAccessory": null,
+      "legacy": true,
+      "createdAt": "2026-09-14T00:00:00.000Z"
+    },
+    {
+      "id": "seed-ppja",
+      "username": "ppJA",
+      "displayName": "ppJA",
+      "avatarColor": "#c0392b",
+      "avatarImage": null,
+      "bio": "",
+      "role": "member",
+      "muted": false,
+      "banned": false,
+      "coins": 100,
+      "tag": null,
+      "tagColor": null,
+      "pfpAccessory": null,
+      "legacy": true,
+      "createdAt": "2026-09-14T00:00:00.000Z"
+    }
+  ],
+  "messages": [
+    {
+      "id": "gen-restore-001",
+      "channelId": "main",
+      "accountId": "seed-veil",
+      "content": "yo",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-09-15T12:22:00-04:00"
+    },
+    {
+      "id": "gen-restore-002",
+      "channelId": "main",
+      "accountId": "seed-veil",
+      "content": "https://media2.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3bTJpODZoenUxb2o2YWJob3Bya2F1NzJ3cmZiYmNkajE4cGpybXpkNCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/ASd0Ukj0y3qMM/giphy.gif",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-09-16T18:13:00-04:00"
+    },
+    {
+      "id": "gen-restore-003",
+      "channelId": "main",
+      "accountId": "seed-canadian-spy",
+      "content": "ollo",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-09-17T14:45:00-04:00"
+    },
+    {
+      "id": "gen-restore-004",
+      "channelId": "main",
+      "accountId": "seed-canadian-spy",
+      "content": "dis me seb",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-09-17T14:45:20-04:00"
+    },
+    {
+      "id": "gen-restore-005",
+      "channelId": "main",
+      "accountId": "seed-veil",
+      "content": "holy grammar",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-09-17T18:24:00-04:00"
+    },
+    {
+      "id": "gen-restore-006",
+      "channelId": "main",
+      "accountId": "seed-canadian-spy",
+      "content": "gobler of glizzys",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-09-17T18:29:00-04:00"
+    },
+    {
+      "id": "gen-restore-007",
+      "channelId": "main",
+      "accountId": "seed-veil",
+      "content": "yo wtf",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-09-17T18:56:00-04:00"
+    },
+    {
+      "id": "gen-restore-008",
+      "channelId": "main",
+      "accountId": "seed-spiffyboss5111",
+      "content": "bet u can smell me now",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-09-17T18:57:00-04:00"
+    },
+    {
+      "id": "gen-restore-009",
+      "channelId": "main",
+      "accountId": "seed-ppja",
+      "content": "I can smell him from here",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-09-17T19:09:00-04:00"
+    },
+    {
+      "id": "gen-restore-010",
+      "channelId": "main",
+      "accountId": "seed-spiffyboss5111",
+      "content": "yo spiffy boss smell rn",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-09-17T19:09:20-04:00"
+    },
+    {
+      "id": "gen-restore-011",
+      "channelId": "main",
+      "accountId": "seed-veil",
+      "content": "lol",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-09-17T20:34:00-04:00"
+    }
+  ],
+  "dms": [],
+  "dmMembers": [],
+  "friends": []
+}
