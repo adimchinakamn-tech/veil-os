@@ -1180,3 +1180,22 @@ Stage Summary:
 - CHAT IS BACKED UP FROM NOW ON: 30s auto-snapshot daemon → JSON snapshots in backups/chat/ → auto git commits → auto push (queued until the GitHub PAT gets Contents:write — same single toggle the watcher needs; after that every backup lands on GitHub and is purged into the jsDelivr CDN immediately). Permanent link once live: https://cdn.jsdelivr.net/gh/adimchinakamn-tech/veil-os@main/backups/chat/latest.json — restore path is one click in the chat header Backup panel (or `bun scripts/chat-restore.ts --jsdelivr`); restores are idempotent and wipe-proof.
 - jsDelivr note: @main branch links cache up to ~12h on the CDN; the loop purges on every successful push, so the link stays fresh. Nothing sensitive is exported (no password hashes by design — reclaim flow replaces them).
 - Unresolved/next: 1) user flips token Contents:write → watcher pushes the repo (chat backups ride along + keep flowing); 2) freetube infinite-loading bug; 3) YouTube-spec recommendation system; 4) history cap raise; 5) yt/now route rewrite; 6) PAT rotation after deploy; 7) optionally surface "claim your restored account" hint on the login screen for legacy names.
+
+---
+Task ID: github-help-1
+Agent: main (Z.ai Code)
+Task: Answer "how to remove the adimchinakamn-tech part" + give the user detailed instructions for unblocking the GitHub push.
+
+Work Log:
+- Verified git remote: origin = https://github.com/adimchinakamn-tech/veil-os.git
+- Verified the stored PAT belongs to account `adimchinakamn-tech` (display name "Aquid Rizzler") — i.e. the user's own GitHub username, confirmed via GET /user
+- Verified repo adimchinakamn-tech/veil-os EXISTS on GitHub and is PUBLIC (API: full_name ok, permissions admin:true)
+- Dry-run push test: still 403 "Permission to adimchinakamn-tech/veil-os.git denied" — the PAT still lacks Contents:write
+- Killed the old push watcher (pid 13653, started 15:09 UTC, ~2h49m of its 6h window left) and relaunched fresh (pid 5480, 18:21 UTC, full new 6h window) so it survives while the user flips the token permission
+- Confirmed the 15-min webDevReview cron job already exists (no duplicate created; currently exec-limited/disabled by the platform, not by us)
+- Wrote the user-facing instructions: (a) what the adimchinakamn-tech part is (repo owner in the URL — GitHub cannot have an owner-less repo; options: rename account / different owner or org / make repo private), (b) the one-toggle fix for pushing (PAT → Contents → Read and write), after which the watcher auto-pushes within 60s
+
+Stage Summary:
+- Blocker unchanged and precisely characterized: repo exists, token valid, Contents permission read-only → 403 on push. ONLY the user can flip this toggle (PATs cannot self-modify).
+- Watcher healthy (pid 5480); chat-backup loop healthy (pid 23632). When the user flips Contents→Read-and-write, the watcher pushes main (10ec29a) and logs VERIFIED; the chat-backup loop then keeps new backup commits pushed.
+- jsDelivr caveat documented for the user: the chat-restore CDN link (cdn.jsdelivr.net/gh/adimchinakamn-tech/veil-os@main/...) ONLY works while the repo stays PUBLIC. Making it private breaks the CDN restore path (local backups/chat/ + git remain).
