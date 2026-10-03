@@ -60,7 +60,15 @@ server.log
 # ---------------------------------------------------------------------------
 /db/
 /upload/
-/backups/
+# Whole-box tar snapshots stay local-only (big, box-specific)…
+/backups/*
+# …but the CHAT backup snapshots are the point of the jsDelivr idea: they
+# are committed to the public repo so they live at
+# cdn.jsdelivr.net/gh/adimchinakamn-tech/veil-os@main/backups/chat/latest.json
+!/backups/chat/
+# local-only loop state (change fingerprint / last push result)
+/backups/chat/.state.json
+/backups/chat/loop.log
 /tmp/
 /tool-results/
 /tests/
