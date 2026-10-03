@@ -2,7 +2,7 @@
 # ============================================================================
 # github-push-watch.sh — background one-shot watcher (v2).
 #
-# STATE (2026-10-03 15:15): repo https://github.com/adimchinakamn-tech/veil-os
+# STATE (2026-10-03 15:15): repo https://github.com/ok5678765s/veil-os
 # EXISTS and is PUBLIC, and it IS in the token's Repository access list
 # (authenticated reads work). BUT the token's Contents permission is
 # READ-ONLY — git push answers 403 (needs contents=write).
@@ -18,7 +18,7 @@
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
-OWNER="adimchinakamn-tech"
+OWNER="ok5678765s"
 REPO="veil-os"
 LOG="tmp/github-push-watch.log"
 mkdir -p tmp

@@ -2,7 +2,7 @@
 # ============================================================================
 # push-to-github.sh — publish the Veil OS repo to GitHub (idempotent).
 #
-# Target: https://github.com/adimchinakamn-tech/veil-os (private)
+# Target: https://github.com/ok5678765s/veil-os (private)
 #
 # The fine-grained PAT used on this box has Contents:write (can push) but
 # NOT Administration:write (cannot create repos). So:
@@ -17,7 +17,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-OWNER="adimchinakamn-tech"
+OWNER="ok5678765s"
 REPO="veil-os"
 
 TOKEN="$(sed -n 's#https://[^:]*:\([^@]*\)@github\.com#\1#p' ~/.git-credentials 2>/dev/null | head -1)"

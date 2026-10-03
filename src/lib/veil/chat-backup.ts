@@ -8,10 +8,10 @@ import { db } from "../db"
  * WHY: the sandbox rolled back and every chat account + message was lost
  * twice. Chat data now gets continuously exported to JSON snapshots under
  * backups/chat/ which are committed to the public GitHub repo
- * (adimchinakamn-tech/veil-os) — and therefore permanently reachable
+ * (ok5678765s/veil-os) — and therefore permanently reachable
  * through the jsDelivr CDN:
  *
- *   https://cdn.jsdelivr.net/gh/adimchinakamn-tech/veil-os@main/backups/chat/latest.json
+ *   https://cdn.jsdelivr.net/gh/ok5678765s/veil-os@main/backups/chat/latest.json
  *
  * If the box is wiped again, the owner restores from that link (chat header
  * → Backup panel, or POST /api/chat-backup {action:"restore"}) and the whole
@@ -21,7 +21,7 @@ import { db } from "../db"
  * account is upgraded in place, claiming every restored message.
  */
 
-export const BACKUP_REPO = "adimchinakamn-tech/veil-os"
+export const BACKUP_REPO = "ok5678765s/veil-os"
 export const BACKUP_DIR = "/home/z/my-project/backups/chat"
 export const BACKUP_HISTORY_DIR = BACKUP_DIR + "/history"
 export const BACKUP_STATE_FILE = BACKUP_DIR + "/.state.json"

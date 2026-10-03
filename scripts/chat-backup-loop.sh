@@ -2,9 +2,9 @@
 # Veil Chat — jsDelivr backup daemon loop (2026-10-03 wipe-recovery).
 #
 # Every 30 seconds: snapshot the chat DB to backups/chat/*.json when anything
-# changed, git-commit it, and try to publish to github.com/adimchinakamn-tech/veil-os
+# changed, git-commit it, and try to publish to github.com/ok5678765s/veil-os
 # so the backup is permanently reachable at
-#   https://cdn.jsdelivr.net/gh/adimchinakamn-tech/veil-os@main/backups/chat/latest.json
+#   https://cdn.jsdelivr.net/gh/ok5678765s/veil-os@main/backups/chat/latest.json
 # (the push fails quietly until the fine-grained token gets Contents:write —
 # the standing github-push watcher will land the backlog the moment it does,
 # and this loop keeps the repo current from then on).

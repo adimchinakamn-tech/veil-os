@@ -19,7 +19,7 @@ import {
  * → git add+commit → git push (fails quietly until the GitHub token gets
  * Contents:write — the standing watcher will land the backlog) → on a
  * successful push, purge the jsDelivr CDN cache so the public link
- * (cdn.jsdelivr.net/gh/adimchinakamn-tech/veil-os@main/backups/chat/latest.json)
+ * (cdn.jsdelivr.net/gh/ok5678765s/veil-os@main/backups/chat/latest.json)
  * serves the fresh snapshot immediately.
  */
 
