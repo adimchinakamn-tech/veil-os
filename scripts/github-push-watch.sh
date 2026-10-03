@@ -66,14 +66,16 @@ for i in $(seq 1 720); do
         exit 1
       fi
     fi
-    # verify the remote actually holds our commit
+    # verify the remote actually holds our commit — re-read main HERE:
+    # new commits may have landed locally while the watcher was waiting
     sleep 5
     REMOTE_SHA="$(git ls-remote origin refs/heads/main 2>/dev/null | cut -f1)"
-    if [ "$REMOTE_SHA" = "$LOCAL_SHA" ]; then
-      log "VERIFIED $LOCAL_SHA → https://github.com/$OWNER/$REPO"
+    HEAD_SHA="$(git rev-parse main)"
+    if [ "$REMOTE_SHA" = "$HEAD_SHA" ]; then
+      log "VERIFIED $HEAD_SHA → https://github.com/$OWNER/$REPO"
       exit 0
     else
-      log "MISMATCH remote='$REMOTE_SHA' local='$LOCAL_SHA' — exiting"
+      log "MISMATCH remote='$REMOTE_SHA' local-main='$HEAD_SHA' — exiting"
       exit 1
     fi
   fi

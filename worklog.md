@@ -1119,3 +1119,7 @@ Stage Summary:
 - Repository content: 5 commits, zero secrets, full deployment kit (Dockerfile, deploy/start.sh, deploy/Caddyfile, docker-compose.yml, render.yaml, railway.toml, DEPLOY.md, README.md, .env.example) — push-ready as-is.
 - After push lands: deploy per DEPLOY.md — Railway (recommended: Dockerfile auto-detected, add volume /home/z/my-project/db, public URL in ~5min) or Render (blueprint) or docker compose on a VPS.
 - Unresolved/next: 1) token scope fix by user → watcher pushes (verify + report link); 2) first real Docker build on Railway/Render (untestable in sandbox — no docker binary); 3) freetube infinite-loading bug; 4) YouTube-spec recommendation system; 5) history cap raise; 6) yt/now route rewrite; 7) advise user to rotate the PAT after deployment.
+
+### Daemonization addendum
+- Plain `nohup … &` and bare `setsid … &` BOTH died at tool-session end (platform kills the session process tree). The surviving daemons on this box (veil-keeper/backup-loop/dev-watchdog) all use the double-fork subshell pattern from veil-start.sh. Watcher relaunched with the same `( setsid bash … & )` pattern → PPID=1, own session, SURVIVED session boundaries (verified 51s+ across tool calls).
+- Verify step now re-reads `git rev-parse main` at verification time (a stale startup SHA would false-MISMATCH when new commits land while waiting). Idempotency still keyed on the startup SHA; a relaunched watcher pushes any newer main incrementally.
