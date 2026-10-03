@@ -1,9 +1,9 @@
 {
-  "latestWrittenAt": "2026-10-03T16:47:40.238Z",
-  "sha256": "bbc292769f5098d3bb850377ab22f7695cc5b87cc50fb6fceb6b82ddda237169",
+  "latestWrittenAt": "2026-10-03T16:48:10.977Z",
+  "sha256": "d2a89335b0f0d447552df9c5a13620077d348abee05c589f4ecb778d8db3d99c",
   "counts": {
-    "accounts": 5,
-    "messages": 12,
+    "accounts": 4,
+    "messages": 11,
     "dms": 0
   },
   "jsdelivr": "https://cdn.jsdelivr.net/gh/adimchinakamn-tech/veil-os@main/backups/chat/latest.json"
