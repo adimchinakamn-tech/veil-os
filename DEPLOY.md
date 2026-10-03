@@ -67,11 +67,26 @@ All state lives in **one volume** at `/home/z/my-project/db`:
 
 **Backups:** `docker cp veil-os:/home/z/my-project/db ./veil-backup` (or stop the container and copy the volume). The database is a single SQLite file — copy it and you've backed everything up.
 
+## Enabling Veil AI (optional)
+
+The AI sections (Veil AI assistant, the ai-operator) call the model gateway through `z-ai-web-dev-sdk`, which reads credentials from a `.z-ai-config` file:
+
+```json
+{"baseUrl": "https://your-endpoint/v1", "apiKey": "your-key"}
+```
+
+Deployments don't have one by default. Set it through a single env var and the boot script materializes it into the volume + project root:
+
+- Service → **Variables** → add `ZAI_CONFIG` = the JSON above (one line).
+
+Without it everything else works; the AI routes answer with an error.
+
 ## First boot checklist
 
 - [ ] Health check green (Railway/Render show this)
 - [ ] `https://<your-url>/` shows the Veil desktop
-- [ ] Register a chat account → it becomes a normal member (the owner account is `Veil` — see `scripts/seed-veil-operator.ts` if you want to pre-seed it with a known password)
+- [ ] Find the owner password in the deploy logs (`generated owner password: …`, first boot only — it also lives in the volume at `db/owner-password.txt`)
+- [ ] Log into chat as **`Veil`** (the OWNER account, auto-seeded on first boot — same password as owner mode) for mod/owner powers everywhere
 - [ ] Open a site through the browser (type a URL on the start page) — the Quasar proxy loads it
 
 ## Troubleshooting
@@ -81,5 +96,7 @@ All state lives in **one volume** at `/home/z/my-project/db`:
 **Container restarts with `prisma` errors** — make sure the volume is mounted at exactly `/home/z/my-project/db` (read-write).
 
 **Chat connects but no messages save** — same cause: the SQLite file must be on the volume, not in the ephemeral layer.
+
+**Veil AI / assistant returns errors** — the `ZAI_CONFIG` variable is missing or invalid (see “Enabling Veil AI” above).
 
 **Service logs** — each service writes to `/tmp/veil-<name>.log` inside the container: `docker logs veil-os` for the boot script, `docker exec veil-os tail -50 /tmp/veil-chat.log` for the chat service.

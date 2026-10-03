@@ -20,6 +20,12 @@
 FROM oven/bun:1 AS build
 WORKDIR /home/z/my-project
 
+# Node for the Next.js / Prisma CLIs — the bun image ships no node binary,
+# and the dev sandbox this image mirrors runs both CLIs under node (v24).
+# Copying the binary from the official slim image keeps `next build`
+# deterministic (the standalone server itself still runs under bun).
+COPY --from=node:22-slim /usr/local/bin/node /usr/local/bin/node
+
 # deps first (layer cache)
 COPY package.json bun.lock ./
 RUN bun install --frozen-lockfile
@@ -50,6 +56,9 @@ ENV NODE_ENV=production \
 # the gateway
 COPY --from=caddy:2 /usr/bin/caddy /usr/bin/caddy
 
+# node for the boot-time prisma schema push (deterministic CLI run)
+COPY --from=node:22-slim /usr/local/bin/node /usr/local/bin/node
+
 # Next standalone server — self-contained (traced node_modules + static +
 # public are inside; the build script copies static/public into it)
 COPY --from=build /home/z/my-project/.next/standalone ./.next/standalone
@@ -62,6 +71,9 @@ COPY package.json bun.lock ./
 # mini-services (quasar-bridge imports ../../src/lib/veil/quasar/*)
 COPY --from=build /home/z/my-project/mini-services ./mini-services
 COPY src/lib/veil/quasar ./src/lib/veil/quasar
+
+# chat operator seed — run by deploy/start.sh on every boot (idempotent)
+COPY scripts/seed-veil-operator.ts ./scripts/seed-veil-operator.ts
 
 # boot script + gateway config
 COPY deploy ./deploy

@@ -38,6 +38,21 @@ chmod 600 db/chat-secret.key 2>/dev/null || true
 # quasar AES key: QUASAR_KEY_FILE points at db/.quasar-key (volume) and the
 # codec auto-creates it when missing — nothing to do here.
 
+# Optional AI credentials (Veil AI / ai-operator): set the ZAI_CONFIG env to
+# the JSON a .z-ai-config file would contain — {"baseUrl":"…/v1","apiKey":"…"}
+# — and it is materialized into the volume and the project root where the
+# z-ai SDK looks for it. Without it the AI sections error out; everything
+# else works fine.
+if [ -n "${ZAI_CONFIG:-}" ]; then
+  printf '%s' "$ZAI_CONFIG" > db/.z-ai-config
+  chmod 600 db/.z-ai-config 2>/dev/null || true
+  echo "[veil] ZAI_CONFIG provided — AI credentials installed"
+fi
+if [ -s db/.z-ai-config ] && [ ! -f .z-ai-config ]; then
+  cp -f db/.z-ai-config .z-ai-config
+  chmod 600 .z-ai-config 2>/dev/null || true
+fi
+
 # owner password (used until the owner sets their own in-app): generated on
 # first boot, persisted in the volume, echoed here once. The repo carries NO
 # default password — a public repo must never ship working owner credentials.
@@ -45,7 +60,8 @@ if [ -z "${OWNER_DEFAULT_PASSWORD:-}" ]; then
   if [ ! -s db/owner-password.txt ]; then
     head -c 18 /dev/urandom | base64 | tr -d '\n' > db/owner-password.txt
     chmod 600 db/owner-password.txt
-    echo "[veil] generated owner password → db/owner-password.txt (set your own in-app: Updates → Owner Mode → Password)"
+    echo "[veil] generated owner password: $(cat db/owner-password.txt)"
+    echo "[veil] (also stored in the volume at db/owner-password.txt — set your own in-app: Updates → Owner Mode → Password)"
   fi
   OWNER_DEFAULT_PASSWORD=$(cat db/owner-password.txt)
   export OWNER_DEFAULT_PASSWORD
@@ -53,7 +69,15 @@ fi
 
 # ---- 2) database schema (idempotent) ----------------------------------------
 echo "[veil] pushing prisma schema…"
-bunx prisma db push --accept-data-loss --skip-generate 2>&1 | tail -2
+node node_modules/prisma/build/index.js db push --accept-data-loss --skip-generate 2>&1 | tail -2
+
+# Seed the chat operator account ("Veil" — the owner, powers granted by
+# username match). Idempotent: upserts, never clobbers an existing account.
+# Uses the owner password (env-provided or first-boot generated) so the
+# deployment is usable immediately; override with VEIL_OPERATOR_PW.
+VEIL_OPERATOR_PW="${VEIL_OPERATOR_PW:-${OWNER_DEFAULT_PASSWORD}}" \
+  bun scripts/seed-veil-operator.ts >> /tmp/veil-seed.log 2>&1 \
+  && echo "[veil] chat operator ready (username: Veil — same password as owner mode)"
 
 # ---- 3) services, each under a revival loop ---------------------------------
 # Plain `command &` dies silently; each service runs inside a while-loop in
