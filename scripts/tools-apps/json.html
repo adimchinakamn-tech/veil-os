@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Veil Toolkit — JSON Formatter</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:#09090b;color:#f4f4f5;font:14px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column;gap:12px;padding:14px 16px;overflow:hidden;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:2px solid rgba(52,211,153,.6);outline-offset:2px}
+.tag{font-size:10.5px;font-weight:700;letter-spacing:.18em;color:#34d399}
+h1{font-size:17px;font-weight:700}
+header{display:flex;align-items:baseline;gap:10px;flex:none}
+main{flex:1;min-height:0;display:flex;flex-direction:column;gap:12px}
+.panel{background:#131316;border:1px solid rgba(255,255,255,.08);border-radius:14px;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.pin{flex:1 1 38%;min-height:150px}
+.pout{flex:1 1 62%;min-height:120px}
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.07);flex:none}
+.plabel{font-size:10.5px;font-weight:700;letter-spacing:.14em;color:#71717a;text-transform:uppercase;margin-right:auto}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+#in{flex:1;min-height:60px;width:100%;resize:none;border:0;border-radius:0;background:transparent;font:13px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#f4f4f5;padding:13px 16px;overflow:auto;white-space:pre-wrap;overflow-wrap:break-word}
+#in::placeholder{color:#71717a}
+#out{flex:1;min-height:0;overflow:auto;margin:0;padding:13px 16px;font:13px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#f4f4f5}
+.badge{font-size:11px;font-weight:700;color:#34d399;background:rgba(16,185,129,.12);border:1px solid rgba(52,211,153,.35);padding:2px 9px;border-radius:999px}
+.err{flex:none;margin:10px 12px 0;padding:10px 12px;background:rgba(239,68,68,.09);border:1px solid rgba(248,113,113,.35);border-radius:10px;color:#fca5a5;display:flex;flex-direction:column;gap:6px}
+.err b{font-size:12px;letter-spacing:.04em}
+.err .msg{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11.5px;color:#fecaca}
+.err .pos{font-size:11.5px;color:#f87171}
+.err pre{margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11.5px;color:#d4d4d8;white-space:pre-wrap;overflow-wrap:break-word;background:#0c0c0e;border-radius:8px;padding:8px 10px}
+.j-key{color:#7dd3fc}
+.j-str{color:#6ee7b7}
+.j-num{color:#fbbf24}
+.j-bool{color:#a78bfa}
+.j-null{color:#fb7185}
+.j-p{color:#71717a}
+.stats{flex:none;display:flex;flex-wrap:wrap;gap:4px 16px;padding:9px 16px;border-top:1px solid rgba(255,255,255,.07);font-size:12px;color:#a1a1aa}
+.stats b{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums;color:#f4f4f5;font-weight:600}
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,10px);background:#131316;border:1px solid rgba(52,211,153,.35);color:#6ee7b7;padding:9px 18px;border-radius:999px;font-size:12.5px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .22s,transform .22s;z-index:99;box-shadow:0 10px 30px rgba(0,0,0,.45);white-space:nowrap;max-width:calc(100vw - 32px);overflow:hidden;text-overflow:ellipsis}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.btn{border:1px solid rgba(52,211,153,.35);background:rgba(16,185,129,.12);color:#6ee7b7;padding:7px 13px;border-radius:10px;font-size:12.5px;font-weight:600;cursor:pointer;transition:background .12s,color .12s,transform .1s;font-family:inherit}
+.btn:hover{background:rgba(16,185,129,.22)}
+.btn:active{transform:scale(.96)}
+.btn.solid{background:#10b981;border-color:transparent;color:#032015}
+.btn.solid:hover{background:#34d399}
+.btn.ghost{border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:#d4d4d8}
+.btn.ghost:hover{background:rgba(255,255,255,.09);color:#fafafa}
+.btn.danger{border-color:rgba(248,113,113,.35);background:rgba(239,68,68,.12);color:#fca5a5}
+.btn.on{background:#10b981;border-color:transparent;color:#032015}
+input,select,textarea{background:#18181b;border:1px solid rgba(255,255,255,.1);border-radius:10px;color:#f4f4f5;padding:7px 10px;font-size:13.5px;outline:none;font-family:inherit}
+input:focus,select:focus,textarea:focus{border-color:rgba(52,211,153,.55)}
+/* additive sizing on top of the shared button/input base */
+.btn{min-height:36px}
+.btn.ghost.danger{border-color:rgba(248,113,113,.35);color:#fca5a5}
+.btn.ghost.danger:hover{background:rgba(239,68,68,.15);color:#fecaca}
+</style>
+</head>
+<body>
+<header><span class="tag">VEIL TOOLKIT</span><h1>JSON Formatter</h1></header>
+
+<main>
+  <section class="panel pin">
+    <div class="bar">
+      <button class="btn solid" id="fmt">format</button>
+      <button class="btn" id="min">minify</button>
+      <button class="btn" id="val">validate</button>
+      <button class="btn" id="sample">sample</button>
+      <button class="btn" id="sort">sort keys</button>
+      <button class="btn ghost" id="copy">copy result</button>
+      <button class="btn ghost danger" id="clear">clear</button>
+    </div>
+    <textarea id="in" spellcheck="false" placeholder="paste JSON…"></textarea>
+  </section>
+
+  <section class="panel pout">
+    <div class="bar">
+      <span class="plabel">output</span>
+      <span class="badge" id="badge" hidden>valid ✓</span>
+    </div>
+    <div class="err" id="err" hidden></div>
+    <pre id="out"></pre>
+    <div class="stats" id="stats"></div>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+var store=(function(){try{var k="__v";localStorage.setItem(k,"1");localStorage.removeItem(k);return localStorage}catch(e){var m={};return{getItem:function(k){return k in m?m[k]:null},setItem:function(k,v){m[k]=String(v)},removeItem:function(k){delete m[k]}}}})();
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+
+var toastEl=document.getElementById("toast"),toastT=null;
+function toast(msg){toastEl.textContent=msg;toastEl.classList.add("show");clearTimeout(toastT);toastT=setTimeout(function(){toastEl.classList.remove("show")},1600)}
+
+var KEY="veil.tk.json";
+var inEl=document.getElementById("in"),outEl=document.getElementById("out");
+var errEl=document.getElementById("err"),badge=document.getElementById("badge"),statsEl=document.getElementById("stats");
+var sortBtn=document.getElementById("sort");
+var sortOn=false,lastOut="";
+var saveT=null;
+
+var SAMPLE=[
+"{",
+'  "name": "Veil Toolkit",',
+'  "version": 3,',
+'  "offline": true,',
+'  "author": null,',
+'  "packs": ["stash", "gn-math", "tools"],',
+'  "meta": {',
+'    "apps": 52,',
+'    "rating": 4.8,',
+'    "tags": ["games", "tools", "ai"],',
+'    "limits": { "max_apps": 1024, "headroom": 0.42 }',
+"  }",
+"}"].join("\n");
+
+/* ---- syntax highlight: escape first, then one alternation pass ----
+   After esc() a JSON string is &quot;…&quot; — units inside:
+   \\&quot; (escaped quote) | \\x (other escape) | & not opening a quote | plain char */
+var HL=/(&quot;(?:\\&quot;|\\[\s\S]|&(?!quot;)|[^&\\])*&quot;)(\s*:)|(&quot;(?:\\&quot;|\\[\s\S]|&(?!quot;)|[^&\\])*&quot;)|(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)|\b(true|false)\b|\b(null)\b|([{}\[\],:])/g;
+
+function highlight(json){
+  return esc(json).replace(HL,function(m,key,colon,str,num,bool,nul,punc){
+    if(key!==undefined)return '<span class="j-key">'+key+"</span>"+(colon?'<span class="j-p">'+colon+"</span>":"");
+    if(str!==undefined)return '<span class="j-str">'+str+"</span>";
+    if(num!==undefined)return '<span class="j-num">'+num+"</span>";
+    if(bool!==undefined)return '<span class="j-bool">'+bool+"</span>";
+    if(nul!==undefined)return '<span class="j-null">'+nul+"</span>";
+    return '<span class="j-p">'+punc+"</span>";
+  });
+}
+
+/* ---- recursive key-sorting replacer ---- */
+function sortReplacer(key,val){
+  if(val&&typeof val==="object"&&!Array.isArray(val)){
+    var o={},ks=Object.keys(val).sort();
+    for(var i=0;i<ks.length;i++)o[ks[i]]=val[ks[i]];
+    return o;
+  }
+  return val;
+}
+
+function parseInput(){
+  try{return{ok:true,v:JSON.parse(inEl.value)}}
+  catch(e){return{ok:false,e:e}}
+}
+
+function showErr(ex){
+  var msg=String(ex&&ex.message?ex.message:ex);
+  var html="<b>invalid JSON</b><span class=\"msg\">"+esc(msg)+"</span>";
+  var pm=/position (\d+)/.exec(msg);
+  var lm=/line (\d+) column (\d+)/.exec(msg);
+  var line=0,col=0;
+  if(pm){
+    var pos=+pm[1],upto=inEl.value.slice(0,pos);
+    line=upto.split("\n").length;
+    col=pos-(upto.lastIndexOf("\n")+1)+1;
+  }else if(lm){
+    line=+lm[1];col=+lm[2];
+  }
+  if(line>0){
+    var lines=inEl.value.split("\n");
+    var txt=(line<=lines.length)?lines[line-1]:"";
+    var pad=Math.max(0,Math.min(col-1,60));
+    html+="<span class=\"pos\">line "+line+", column "+col+"</span>";
+    html+="<pre>"+esc(txt)+"\n"+new Array(pad+1).join(" ")+"^</pre>";
+  }
+  errEl.innerHTML=html;
+  errEl.hidden=false;
+}
+function hideErr(){errEl.hidden=true;errEl.innerHTML=""}
+
+/* ---- stats ---- */
+function bytes(s){
+  try{if(window.TextEncoder)return new TextEncoder().encode(s).length}catch(e){}
+  var n=0;
+  for(var i=0;i<s.length;i++){var c=s.charCodeAt(i);n+=c<0x80?1:c<0x800?2:3}
+  return n;
+}
+function renderStats(v){
+  var keys=0,depth=0;
+  (function walk(x,d){
+    if(x&&typeof x==="object"){
+      if(d+1>depth)depth=d+1;
+      if(Array.isArray(x)){for(var i=0;i<x.length;i++)walk(x[i],d+1)}
+      else{var ks=Object.keys(x);keys+=ks.length;for(var j=0;j<ks.length;j++)walk(x[ks[j]],d+1)}
+    }
+  })(v,0);
+  var type;
+  if(v===null)type="null";
+  else if(Array.isArray(v))type="array";
+  else if(typeof v==="object")type="object";
+  else type=typeof v;
+  statsEl.innerHTML=
+    "<span>type <b>"+esc(type)+"</b></span>"+
+    "<span>keys <b>"+keys+"</b></span>"+
+    "<span>depth <b>"+depth+"</b></span>"+
+    "<span>size <b>"+bytes(inEl.value)+" B</b></span>";
+}
+
+/* ---- actions ---- */
+function run(indent){
+  hideErr();
+  var r=parseInput();
+  if(!r.ok){
+    showErr(r.e);
+    badge.hidden=true;
+    outEl.textContent="";
+    statsEl.textContent="";
+    lastOut="";
+    return;
+  }
+  var s=JSON.stringify(r.v,sortOn?sortReplacer:null,indent);
+  lastOut=s;
+  outEl.innerHTML=highlight(s);
+  badge.hidden=false;
+  renderStats(r.v);
+  saveDraft();
+}
+document.getElementById("fmt").addEventListener("click",function(){run(2)});
+document.getElementById("min").addEventListener("click",function(){run(null)});
+document.getElementById("val").addEventListener("click",function(){
+  var r=parseInput();
+  if(r.ok){
+    hideErr();
+    badge.hidden=false;
+    renderStats(r.v);
+    toast("valid JSON");
+  }else{
+    showErr(r.e);
+    badge.hidden=true;
+    toast("invalid JSON");
+  }
+});
+document.getElementById("sample").addEventListener("click",function(){
+  inEl.value=SAMPLE;
+  run(2);
+});
+sortBtn.addEventListener("click",function(){
+  sortOn=!sortOn;
+  sortBtn.classList.toggle("on",sortOn);
+  if(inEl.value.trim())run(2);
+});
+document.getElementById("copy").addEventListener("click",function(){
+  if(!lastOut&&inEl.value.trim())run(2);
+  if(lastOut)copyText(lastOut);
+  else toast("nothing to copy");
+});
+var clearBtn=document.getElementById("clear");
+var armed=false,armT=null;
+clearBtn.addEventListener("click",function(){
+  if(!armed){armed=true;clearBtn.textContent="click again to clear";
+    armT=setTimeout(function(){armed=false;clearBtn.textContent="clear"},2200);return}
+  clearTimeout(armT);armed=false;clearBtn.textContent="clear";
+  inEl.value="";
+  outEl.textContent="";
+  hideErr();
+  badge.hidden=true;
+  statsEl.textContent="";
+  lastOut="";
+  try{store.removeItem(KEY)}catch(e){}
+  toast("cleared");
+  inEl.focus();
+});
+
+/* ---- clipboard with fallback ---- */
+function copyText(t){
+  function fb(){
+    var ok=false;
+    try{
+      var ta=document.createElement("textarea");
+      ta.value=t;
+      ta.style.position="fixed";ta.style.opacity="0";
+      document.body.appendChild(ta);
+      ta.select();
+      ok=document.execCommand("copy");
+      ta.remove();
+    }catch(e){}
+    toast(ok?"copied":"copy failed");
+  }
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(function(){toast("copied")},fb);
+  }else fb();
+}
+
+/* ---- persistence + boot ---- */
+function saveDraft(){clearTimeout(saveT);saveT=setTimeout(function(){try{store.setItem(KEY,inEl.value)}catch(e){}},400)}
+inEl.addEventListener("input",saveDraft);
+
+var saved=store.getItem(KEY);
+if(saved!==null&&saved!==undefined&&saved!==""){
+  inEl.value=saved;
+  run(2);
+}
+</script>
+</body>
+</html>

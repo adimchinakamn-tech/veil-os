@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Veil Lab — Neon Piano</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:radial-gradient(1200px 600px at 50% -10%,#12061f 0%,#09090b 55%);color:#f4f4f5;
+  font:14px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column;
+  gap:10px;padding:12px 14px;overflow:hidden;-webkit-font-smoothing:antialiased;user-select:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:2px solid rgba(217,70,239,.6);outline-offset:2px}
+.tag{font-size:10.5px;font-weight:700;letter-spacing:.18em;color:#e879f9}
+h1{font-size:17px;font-weight:700}
+header{display:flex;align-items:baseline;gap:10px;flex:none}
+header .sub{color:#71717a;font-size:12px}
+.panel{background:rgba(19,19,22,.85);border:1px solid rgba(217,70,239,.14);border-radius:14px}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.ctl{flex:none;padding:9px 12px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+.lab{font-size:10px;font-weight:700;letter-spacing:.12em;color:#71717a;text-transform:uppercase}
+.seg{display:flex;gap:3px;background:#0c0c0e;border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:3px}
+.seg button{padding:4px 10px;border-radius:8px;font-size:12px;color:#a1a1aa;transition:.15s}
+.seg button.on{background:rgba(217,70,239,.18);color:#f0abfc;box-shadow:0 0 12px rgba(217,70,239,.25)}
+.seg button:hover:not(.on){color:#e4e4e7}
+#octVal,.val{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px;color:#f0abfc;min-width:24px;text-align:center}
+button.icon{padding:6px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.09);background:#131316;
+  font-size:12px;color:#d4d4d8;display:inline-flex;align-items:center;gap:6px;transition:.15s}
+button.icon:hover:not(:disabled){border-color:rgba(217,70,239,.45);color:#f0abfc}
+button.icon:disabled{opacity:.4;cursor:default}
+button.icon.rec-on{border-color:#fb7185;color:#fb7185;animation:pulse 1s infinite}
+@keyframes pulse{50%{box-shadow:0 0 14px rgba(251,113,133,.5)}}
+#viz{display:block;width:100%;height:96px;border-radius:12px;background:rgba(12,12,14,.8);flex:none}
+.stage{flex:1;min-height:0;display:flex;flex-direction:column;gap:8px}
+.keys{position:relative;flex:1;min-height:170px;display:flex;padding:0 4px 12px;touch-action:none}
+.key{position:relative;flex:1;border-radius:0 0 9px 9px;background:linear-gradient(#27272a,#18181b);
+  border:1px solid #09090b;border-top:0;cursor:pointer}
+.key.w span{position:absolute;left:0;right:0;bottom:7px;text-align:center;font-size:10px;color:#71717a;pointer-events:none}
+.key.down{background:linear-gradient(#6b21a8,#4c1d95);box-shadow:0 0 22px rgba(217,70,239,.55),inset 0 -14px 18px rgba(0,0,0,.35)}
+.key.w{background:linear-gradient(#efefef,#c8c8cd)}
+.key.w.down{background:linear-gradient(#f0abfc,#c026d3);box-shadow:0 0 26px rgba(240,171,252,.7)}
+#noteOut{color:#f0abfc;font-size:12.5px;min-height:18px}
+input[type=range]{-webkit-appearance:none;appearance:none;height:4px;border-radius:4px;background:#27272a;flex:1;min-width:90px;max-width:180px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:14px;height:14px;border-radius:50%;
+  background:#e879f9;box-shadow:0 0 10px rgba(217,70,239,.6);cursor:pointer}
+@media (max-width:640px){#viz{height:64px}}
+</style>
+</head>
+<body>
+<header><span class="tag">VEIL LAB · 01</span><h1>Neon Piano</h1><span class="sub">synth · visualizer · recorder</span></header>
+
+<div class="panel ctl">
+  <span class="lab">Wave</span>
+  <div class="seg" id="waves">
+    <button data-w="sine" class="on">Sine</button><button data-w="triangle">Tri</button>
+    <button data-w="sawtooth">Saw</button><button data-w="square">Sqr</button>
+  </div>
+  <span class="lab">Octave</span>
+  <button class="icon" id="octDn" aria-label="Octave down">−</button>
+  <span class="val" id="octVal">4</span>
+  <button class="icon" id="octUp" aria-label="Octave up">+</button>
+  <span class="lab">Release</span><input id="glide" type="range" min="0" max="400" value="80" aria-label="Release length milliseconds">
+  <span class="lab">Volume</span><input id="vol" type="range" min="0" max="100" value="70" aria-label="Volume">
+  <button class="icon" id="rec" title="Record what you play, then replay it">● Record</button>
+  <button class="icon" id="play" title="Replay the recording" disabled>▶ Play</button>
+  <button class="icon" id="clear" title="Clear the recording">Clear</button>
+</div>
+
+<div class="stage">
+  <canvas id="viz" height="96" aria-label="Live spectrum visualizer"></canvas>
+  <div class="keys" id="keys" role="application" aria-label="Piano keyboard — play with the mouse, touch, or the labeled keys"></div>
+  <p class="mono" id="noteOut">ready — click keys or press the labeled letters · Z/X shifts octave · S sustain</p>
+</div>
+
+<script>
+"use strict";
+/* ── audio engine ─────────────────────────────────────────────── */
+var AC = null, MASTER = null, ANALYZER = null, DATA = null;
+var wave = "sine", octave = 4, releaseMs = 80, volume = 0.7, sustain = false;
+var active = {};        /* noteId → { osc, gain, midi } */
+var sustainTail = {};   /* notes ringing under sustain */
+function audio() {
+  if (AC) return AC;
+  AC = new (window.AudioContext || window.webkitAudioContext)();
+  MASTER = AC.createGain(); MASTER.gain.value = volume;
+  ANALYZER = AC.createAnalyser(); ANALYZER.fftSize = 256; ANALYZER.smoothingTimeConstant = 0.82;
+  DATA = new Uint8Array(ANALYZER.frequencyBinCount);
+  MASTER.connect(ANALYZER); ANALYZER.connect(AC.destination);
+  return AC;
+}
+function hzOf(n) { return 440 * Math.pow(2, (n - 69) / 12); }
+function start(n) {
+  audio(); if (AC.state === "suspended") AC.resume();
+  var id = "n" + n; if (active[id]) return;
+  var osc = AC.createOscillator(), g = AC.createGain();
+  osc.type = wave; osc.frequency.value = hzOf(n);
+  g.gain.setValueAtTime(0, AC.currentTime);
+  g.gain.linearRampToValueAtTime(0.30, AC.currentTime + 0.012);
+  osc.connect(g); g.connect(MASTER); osc.start();
+  active[id] = { osc: osc, gain: g, midi: n };
+  delete sustainTail[id];
+  mark(n, true); log(n);
+  if (recording) rec.push({ t: performance.now() - recStart, n: n, on: true });
+}
+function stop(n) {
+  var id = "n" + n, v = active[id]; if (!v) return;
+  if (recording) rec.push({ t: performance.now() - recStart, n: n, on: false });
+  if (sustain) { sustainTail[id] = v; delete active[id]; mark(n, false); return; }
+  release(v);
+}
+function release(v) {
+  var t = AC.currentTime, r = Math.max(0.09, releaseMs / 1000 + 0.04);
+  v.gain.gain.cancelScheduledValues(t);
+  v.gain.gain.setValueAtTime(Math.max(v.gain.gain.value, 0.0008), t);
+  v.gain.gain.exponentialRampToValueAtTime(0.0008, t + r);
+  v.osc.stop(t + r + 0.05);
+  mark(v.midi, false);
+}
+function log(n) {
+  var names = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+  out.textContent = names[n % 12] + (Math.floor(n / 12) - 1) + " · " + Math.round(hzOf(n)) + " Hz";
+}
+/* ── keyboard build ───────────────────────────────────────────── */
+/* 10 white keys from C(octave); black keys placed between the pairs
+   that actually have a semitone (C-D, D-E, F-G, G-A, A-B). */
+var WHITE = [0, 2, 4, 5, 7, 9, 11, 12, 14, 16];
+var BLACKS = [ /* semitone offset, left position in white-key widths */
+  { s: 1, x: 1 }, { s: 3, x: 2 }, { s: 6, x: 4 }, { s: 8, x: 5 }, { s: 10, x: 6 },
+  { s: 13, x: 8 }, { s: 15, x: 9 }
+];
+var KEYMAP = "ZSXDCVGBHNJ";  /* 10 white keys + spare letters for black keys: the black row below */
+var KEYMAP_BLACK = { 1: "S", 3: "D", 6: "G", 8: "H", 10: "J", 13: "S2", 15: "D2" };
+var keysEl = document.getElementById("keys"), out = document.getElementById("noteOut");
+var keyEls = {};
+function baseNote() { return (octave + 1) * 12; }
+function build() {
+  keysEl.innerHTML = ""; keyEls = {};
+  var bw = 100 / WHITE.length;
+  WHITE.forEach(function (s, i) {
+    var n = baseNote() + s;
+    var k = document.createElement("div");
+    k.className = "key w"; k.dataset.n = n;
+    k.innerHTML = "<span>" + (KEYMAP[i] || "") + "</span>";
+    k.style.flex = "1";
+    keysEl.appendChild(k); keyEls[n] = k;
+  });
+  BLACKS.forEach(function (b) {
+    var n = baseNote() + b.s;
+    var k = document.createElement("div");
+    k.className = "key"; k.dataset.n = n;
+    k.style.cssText = "position:absolute;top:0;height:58%;width:" + (bw * 0.62).toFixed(2) +
+      "%;left:" + (bw * b.x - bw * 0.31).toFixed(2) + "%;border:1px solid #09090b;border-radius:0 0 7px 7px;z-index:2";
+    keysEl.appendChild(k); keyEls[n] = k;
+  });
+}
+function mark(n, on) { var k = keyEls[n]; if (k) k.classList.toggle("down", !!on); }
+/* pointer — press + glide across keys */
+var ptr = null, ptrNote = -1;
+function keyFromPoint(x, y) {
+  var el = document.elementFromPoint(x, y);
+  return el && el.closest ? el.closest(".key") : null;
+}
+keysEl.addEventListener("pointerdown", function (e) {
+  var k = e.target.closest(".key"); if (!k) return;
+  ptr = e.pointerId; keysEl.setPointerCapture(ptr);
+  ptrNote = +k.dataset.n; start(ptrNote);
+});
+keysEl.addEventListener("pointermove", function (e) {
+  if (ptr !== e.pointerId) return;
+  var k = keyFromPoint(e.clientX, e.clientY);
+  var now = k ? +k.dataset.n : -1;
+  if (now !== ptrNote) {
+    if (ptrNote >= 0) stop(ptrNote);
+    ptrNote = now;
+    if (now >= 0) start(now);
+  }
+});
+["pointerup", "pointercancel"].forEach(function (ev) {
+  keysEl.addEventListener(ev, function (e) {
+    if (ptr === e.pointerId) {
+      if (ptrNote >= 0) stop(ptrNote);
+      ptr = null; ptrNote = -1;
+    }
+  });
+});
+/* computer keyboard: bottom row = white keys, home row = black keys */
+var LOWER = "zx cvbnm,.";             /* white C..E of next octave (10) */
+var UPPER = { a: 1, w: 3, e: 6, r: 8, t: 10, y: 13, u: 15 };  /* black */
+addEventListener("keydown", function (e) {
+  if (e.repeat || e.metaKey || e.ctrlKey || e.altKey) return;
+  var c = e.key.toLowerCase();
+  if (c === "z" && false) return;
+  if (c === "s") { toggleSustain(); return; }
+  var wi = LOWER.indexOf(c);
+  if (wi >= 0) { start(baseNote() + WHITE[wi]); return; }
+  if (UPPER[c] !== undefined) start(baseNote() + UPPER[c]);
+});
+addEventListener("keyup", function (e) {
+  var c = e.key.toLowerCase();
+  var wi = LOWER.indexOf(c);
+  if (wi >= 0) { stop(baseNote() + WHITE[wi]); return; }
+  if (UPPER[c] !== undefined) stop(baseNote() + UPPER[c]);
+});
+function toggleSustain() {
+  sustain = !sustain;
+  if (!sustain) { for (var id in sustainTail) release(sustainTail[id]); sustainTail = {}; }
+  out.textContent = sustain ? "sustain ON — released keys keep ringing until S again" : "sustain off";
+}
+function shift(d) {
+  octave = Math.min(6, Math.max(1, octave + d));
+  document.getElementById("octVal").textContent = octave;
+  allOff(); build();
+}
+function allOff() {
+  for (var id in active) release(active[id]); active = {};
+  for (var s in sustainTail) release(sustainTail[s]); sustainTail = {};
+}
+/* ── controls ─────────────────────────────────────────────────── */
+document.getElementById("waves").addEventListener("click", function (e) {
+  var b = e.target.closest("button"); if (!b) return;
+  wave = b.dataset.w;
+  this.querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x === b); });
+  for (var id in active) active[id].osc.type = wave;
+});
+document.getElementById("octDn").onclick = function () { shift(-1); };
+document.getElementById("octUp").onclick = function () { shift(1); };
+document.getElementById("glide").oninput = function () { releaseMs = +this.value; };
+document.getElementById("vol").oninput = function () {
+  volume = this.value / 100; if (MASTER) MASTER.gain.value = volume;
+};
+/* ── recorder ─────────────────────────────────────────────────── */
+var rec = [], recording = false, recStart = 0, playTimer = null;
+var recBtn = document.getElementById("rec"), playBtn = document.getElementById("play");
+recBtn.onclick = function () {
+  recording = !recording;
+  recBtn.classList.toggle("rec-on", recording);
+  if (recording) { rec = []; recStart = performance.now(); out.textContent = "recording…"; }
+  else { playBtn.disabled = rec.length === 0; out.textContent = rec.length + " events captured"; }
+};
+playBtn.onclick = function () {
+  if (playTimer) { clearTimeout(playTimer); playTimer = null; }
+  var i = 0;
+  out.textContent = "replaying " + rec.length + " events…";
+  (function step() {
+    if (i >= rec.length) { playTimer = null; out.textContent = "replay done"; return; }
+    var ev = rec[i++], d = i < rec.length ? Math.max(30, rec[i].t - ev.t) : 240;
+    if (ev.on) { audio(); if (AC.state === "suspended") AC.resume(); start(ev.n); } else stop(ev.n);
+    playTimer = setTimeout(step, d);
+  })();
+};
+document.getElementById("clear").onclick = function () {
+  rec = []; playBtn.disabled = true; out.textContent = "recording cleared";
+};
+/* ── visualizer — neon spectrum ───────────────────────────────── */
+var viz = document.getElementById("viz"), vx = viz.getContext("2d"), PH = 0;
+function fit() {
+  var dpr = window.devicePixelRatio || 1;
+  viz.width = viz.clientWidth * dpr; viz.height = viz.clientHeight * dpr;
+}
+addEventListener("resize", fit); fit();
+(function draw() {
+  requestAnimationFrame(draw);
+  var W = viz.width, H = viz.height;
+  vx.clearRect(0, 0, W, H);
+  if (!ANALYZER) {
+    vx.fillStyle = "rgba(217,70,239,.12)";
+    vx.fillRect(0, H - 2, W * ((Math.sin(PH) + 1) / 2), 2); PH += 0.02; return;
+  }
+  ANALYZER.getByteFrequencyData(DATA);
+  var bars = 56, bw = W / bars;
+  for (var i = 0; i < bars; i++) {
+    var v = DATA[Math.floor(i * DATA.length / bars)] / 255, h = Math.pow(v, 1.4) * (H - 8) + 2;
+    var hue = 285 - v * 65;
+    vx.fillStyle = "hsla(" + hue + ",90%," + (52 + v * 22) + "%," + (0.35 + v * 0.6) + ")";
+    vx.shadowColor = "hsla(" + hue + ",95%,65%,.9)"; vx.shadowBlur = 16 * v;
+    vx.fillRect(i * bw + 1, H - h, bw - 2, h);
+  }
+  vx.shadowBlur = 0;
+})();
+build();
+</script>
+</body>
+</html>

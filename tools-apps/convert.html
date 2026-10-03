@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Veil Toolkit — Unit Converter</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{color-scheme:dark;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+html,body{height:100%}
+body{background:#09090b;color:#f4f4f5;font:14px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column;padding:14px 16px;gap:12px;overflow:hidden;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:2px solid #34d399;outline-offset:2px}
+
+.btn{border:1px solid rgba(52,211,153,.35);background:rgba(16,185,129,.12);color:#6ee7b7;padding:7px 13px;border-radius:10px;font-size:12.5px;font-weight:600;cursor:pointer;transition:background .12s,color .12s,transform .1s;font-family:inherit}
+.btn:hover{background:rgba(16,185,129,.22)}
+.btn:active{transform:scale(.96)}
+.btn.solid{background:#10b981;border-color:transparent;color:#032015}
+.btn.solid:hover{background:#34d399}
+.btn.ghost{border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:#d4d4d8}
+.btn.ghost:hover{background:rgba(255,255,255,.09);color:#fafafa}
+.btn.danger{border-color:rgba(248,113,113,.35);background:rgba(239,68,68,.12);color:#fca5a5}
+.btn.on{background:#10b981;border-color:transparent;color:#032015}
+input,select,textarea{background:#18181b;border:1px solid rgba(255,255,255,.1);border-radius:10px;color:#f4f4f5;padding:7px 10px;font-size:13.5px;outline:none;font-family:inherit}
+input:focus,select:focus,textarea:focus{border-color:rgba(52,211,153,.55)}
+
+/* ── unit converter app ───────────────────────────────────── */
+.btn{min-height:36px}
+.pill{border-radius:999px}
+.tag{font-size:10.5px;font-weight:700;letter-spacing:.18em;color:#34d399}
+header{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;flex:none}
+.hgroup{display:flex;flex-direction:column;gap:1px}
+h1{font-size:17px;font-weight:700;letter-spacing:-.01em}
+.chips{display:flex;flex-wrap:wrap;gap:8px;flex:none}
+main{flex:1;min-height:0;overflow:auto;background:#131316;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.lbl{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#71717a}
+.row{display:flex;gap:8px}
+#in{flex:1;min-width:0;font-family:var(--mono);font-size:16px}
+select{flex:none;max-width:44%}
+.swaprow{display:flex;justify-content:center}
+.torow{display:flex;gap:8px;align-items:center}
+.out{flex:1;min-width:0;font-family:var(--mono);font-size:26px;font-weight:600;text-align:right;color:#f4f4f5;white-space:nowrap;overflow:hidden;cursor:pointer;-webkit-user-select:all;user-select:all}
+.hint{font-size:11.5px;color:#71717a;text-align:center}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%) translateY(10px);background:#1b1b20;border:1px solid rgba(52,211,153,.4);color:#a7f3d0;font-size:12.5px;font-weight:600;padding:8px 15px;border-radius:999px;opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;z-index:9;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<header>
+  <div class="hgroup">
+    <span class="tag">VEIL TOOLKIT</span>
+    <h1>Unit Converter</h1>
+  </div>
+</header>
+<div class="chips" id="cats">
+  <button class="btn ghost pill" data-cat="Length">Length</button>
+  <button class="btn ghost pill" data-cat="Mass">Mass</button>
+  <button class="btn ghost pill" data-cat="Temperature">Temperature</button>
+  <button class="btn ghost pill" data-cat="Speed">Speed</button>
+  <button class="btn ghost pill" data-cat="Data">Data</button>
+  <button class="btn ghost pill" data-cat="Area">Area</button>
+  <button class="btn ghost pill" data-cat="Time">Time</button>
+</div>
+<main>
+  <div class="lbl">from</div>
+  <div class="row">
+    <input id="in" type="number" step="any" inputmode="decimal" placeholder="value" autocomplete="off">
+    <select id="uFrom" aria-label="from unit"></select>
+  </div>
+  <div class="swaprow"><button id="swap" class="btn ghost" title="swap units">⇅ swap</button></div>
+  <div class="lbl">to</div>
+  <div class="torow">
+    <select id="uTo" aria-label="to unit"></select>
+    <div id="out" class="out" title="click to select">—</div>
+    <button id="copy" class="btn" title="copy result">copy</button>
+  </div>
+  <div class="hint">live conversion · Enter re-converts · click the value to select it</div>
+</main>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<script>
+"use strict";
+var store=(function(){try{var k="__v";localStorage.setItem(k,"1");localStorage.removeItem(k);return localStorage}catch(e){var m={};return{getItem:function(k){return k in m?m[k]:null},setItem:function(k,v){m[k]=String(v)},removeItem:function(k){delete m[k]}}}})();
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+
+/* unit sets: value = factor to base unit (temperature special-cased) */
+var UNITS={
+  Length:{d:["m","ft"],u:{mm:.001,cm:.01,m:1,km:1000,in:.0254,ft:.3048,yd:.9144,mi:1609.344}},
+  Mass:{d:["kg","lb"],u:{mg:1e-6,g:.001,kg:1,t:1000,oz:.0283495,lb:.453592,st:6.35029}},
+  Temperature:{d:["°C","°F"],u:{"°C":1,"°F":1,K:1}},
+  Speed:{d:["km/h","mph"],u:{"m/s":1,"km/h":.277778,mph:.44704,kn:.514444}},
+  Data:{d:["MB","GB"],u:{B:1,KB:1024,MB:1048576,GB:1073741824,TB:1099511627776}},
+  Area:{d:["m²","ft²"],u:{"m²":1,"km²":1e6,"ft²":.092903,"yd²":.836127,acre:4046.86,ha:10000}},
+  Time:{d:["h","min"],u:{ms:.001,s:1,min:60,h:3600,day:86400,wk:604800}}
+};
+
+var catsEl=document.getElementById("cats"),inEl=document.getElementById("in");
+var uFrom=document.getElementById("uFrom"),uTo=document.getElementById("uTo");
+var outEl=document.getElementById("out"),swapBtn=document.getElementById("swap"),copyBtn=document.getElementById("copy");
+var toastEl=document.getElementById("toast"),toastT=null,rawOut=null;
+
+function toast(msg){toastEl.textContent=msg;toastEl.classList.add("show");clearTimeout(toastT);toastT=setTimeout(function(){toastEl.classList.remove("show")},1700)}
+
+function copyText(txt,okMsg){
+  var done=function(){toast(okMsg||"copied")};
+  var fail=function(){toast("couldn't copy — select the value")};
+  try{
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done,fail);return}
+  }catch(e){}
+  try{
+    var ta=document.createElement("textarea");
+    ta.value=txt;ta.style.position="fixed";ta.style.opacity="0";
+    document.body.appendChild(ta);ta.focus();ta.select();
+    var ok=document.execCommand("copy");
+    document.body.removeChild(ta);
+    if(ok)done();else fail();
+  }catch(e){fail()}
+}
+
+/* ── formatting: up to 6 significant digits, trailing zeros stripped,
+      thousands separators for big numbers, exponential for extremes ── */
+function expFmt(n){
+  var s=n.toExponential(5);
+  s=s.replace(/(\.\d*?)0+e/,"$1e").replace(/\.e/,"e");
+  return s;
+}
+function fmt(n,sep){
+  if(n===null||n===undefined||typeof n!=="number"||!isFinite(n))return"—";
+  if(n===0)return"0";
+  var a=Math.abs(n);
+  if(a>=1e15||a<1e-9)return expFmt(n);
+  var mag=Math.floor(Math.log10(a));
+  var p=5-mag; /* decimals for 6 significant digits */
+  var s;
+  if(p<=0){
+    var f=Math.pow(10,-p);
+    s=String(Math.round(n/f)*f);
+  }else{
+    s=n.toFixed(p);
+    if(s.indexOf(".")>-1)s=s.replace(/(\.\d*?)0+$/,"$1").replace(/\.$/,"");
+  }
+  if(sep===false)return s;
+  var neg=s.charAt(0)==="-";
+  if(neg)s=s.slice(1);
+  var parts=s.split(".");
+  parts[0]=parts[0].replace(/\B(?=(\d{3})+(?!\d))/g,",");
+  return (neg?"-":"")+parts.join(".");
+}
+
+/* ── state ── */
+var state={cat:"Length",from:"m",to:"ft"};
+try{
+  var raw=store.getItem("veil.tk.convert");
+  if(raw){
+    var o=JSON.parse(raw);
+    if(o&&UNITS[o.cat]&&UNITS[o.cat].u[o.from]!=null&&UNITS[o.cat].u[o.to]!=null){
+      state={cat:o.cat,from:o.from,to:o.to};
+    }
+  }
+}catch(e){}
+function saveState(){try{store.setItem("veil.tk.convert",JSON.stringify({cat:state.cat,from:state.from,to:state.to}))}catch(e){}}
+
+function unitList(cat){
+  var u=UNITS[cat].u,out=[];
+  for(var k in u){if(Object.prototype.hasOwnProperty.call(u,k))out.push(k)}
+  return out;
+}
+function fillSelect(sel,list,val){
+  var h="";
+  for(var i=0;i<list.length;i++)h+='<option value="'+esc(list[i])+'">'+esc(list[i])+"</option>";
+  sel.innerHTML=h;
+  sel.value=val;
+}
+function syncCatChips(){
+  var chips=catsEl.querySelectorAll("button");
+  for(var i=0;i<chips.length;i++){
+    var on=chips[i].getAttribute("data-cat")===state.cat;
+    chips[i].classList.toggle("on",on);chips[i].classList.toggle("ghost",!on);
+  }
+}
+function setCat(cat,keep){
+  state.cat=cat;
+  var ul=unitList(cat);
+  if(!(keep&&ul.indexOf(state.from)>=0&&ul.indexOf(state.to)>=0)){
+    state.from=UNITS[cat].d[0];state.to=UNITS[cat].d[1];
+  }
+  fillSelect(uFrom,ul,state.from);
+  fillSelect(uTo,ul,state.to);
+  syncCatChips();
+  recalc();saveState();
+}
+
+/* ── conversion ── */
+function toBase(cat,u,v){
+  if(cat==="Temperature"){
+    if(u==="°F")return (v-32)*5/9;
+    if(u==="K")return v-273.15;
+    return v;
+  }
+  return v*UNITS[cat].u[u];
+}
+function fromBase(cat,u,v){
+  if(cat==="Temperature"){
+    if(u==="°F")return v*9/5+32;
+    if(u==="K")return v+273.15;
+    return v;
+  }
+  return v/UNITS[cat].u[u];
+}
+function recalc(){
+  var v=parseFloat(inEl.value);
+  if(inEl.value.trim()===""||isNaN(v)||!isFinite(v)){outEl.textContent="—";rawOut=null;return}
+  var r=fromBase(state.cat,state.to,toBase(state.cat,state.from,v));
+  outEl.textContent=fmt(r,true);
+  rawOut=fmt(r,false);
+}
+
+catsEl.addEventListener("click",function(e){
+  var b=e.target.closest?e.target.closest("button"):null;
+  if(!b)return;
+  var cat=b.getAttribute("data-cat");
+  if(cat&&cat!==state.cat)setCat(cat,false);
+});
+uFrom.addEventListener("change",function(){state.from=uFrom.value;recalc();saveState()});
+uTo.addEventListener("change",function(){state.to=uTo.value;recalc();saveState()});
+inEl.addEventListener("input",recalc);
+inEl.addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();recalc()}});
+
+swapBtn.addEventListener("click",function(){
+  var tmp=state.from;state.from=state.to;state.to=tmp;
+  uFrom.value=state.from;uTo.value=state.to;
+  recalc();saveState();
+});
+
+copyBtn.addEventListener("click",function(){
+  if(rawOut===null){toast("nothing to copy yet");return}
+  copyText(rawOut,"copied");
+});
+outEl.addEventListener("click",function(){
+  try{
+    var r=document.createRange();
+    r.selectNodeContents(outEl);
+    var sel=window.getSelection();
+    sel.removeAllRanges();sel.addRange(r);
+  }catch(e){}
+});
+
+setCat(state.cat,true);
+recalc();
+</script>
+</body>
+</html>

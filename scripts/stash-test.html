@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>stash offline verification</title>
+<style>
+  body { background: #09090b; color: #e4e4e7; font: 13px/1.5 ui-monospace, monospace; margin: 20px; }
+  #log { white-space: pre; }
+  .pass { color: #34d399; } .fail { color: #f87171; } .wait { color: #fbbf24; }
+  iframe { width: 900px; height: 600px; border: 1px solid #333; position: fixed; right: 20px; top: 20px; z-index: -1; }
+</style>
+</head>
+<body>
+<div id="status">booting…</div>
+<div id="log"></div>
+<iframe id="stage" sandbox="allow-scripts allow-same-origin allow-pointer-lock allow-forms"></iframe>
+<script>
+/* Stash offline-verification harness.
+   Each inlined game is loaded into the iframe with a NETCUT script
+   injected FIRST (before the veil-res shim): every non-data:/blob:
+   network path (fetch, XHR, script/img/media src, setAttribute,
+   CSS-injecting link) FAILS exactly like a real offline browser.
+   A game PASSES when it still boots: either its rAF loop ticks
+   (active render loop) or it lays out a real interactive DOM. */
+const NETCUT = `<script>
+(function () {
+  function blocked(u) {
+    try { u = String(u); } catch (e) { return false; }
+    if (/^(data:|blob:|about:|javascript:)/i.test(u)) return false;
+    if (u.indexOf(location.origin) === 0) return true;
+    return /^https?:/i.test(u) || /^\\/\\//.test(u);
+  }
+  window.__tick = 0;
+  (function count() { window.__tick++; requestAnimationFrame(count); })();
+  var F = window.fetch;
+  window.fetch = function (input, init) {
+    try {
+      var u = input && input.url != null ? input.url : input;
+      if (blocked(u)) return Promise.reject(new TypeError("netcut: offline"));
+    } catch (e) {}
+    return F.apply(window, arguments);
+  };
+  var O = XMLHttpRequest.prototype.open;
+  XMLHttpRequest.prototype.open = function () {
+    try { if (blocked(arguments[1])) { arguments[1] = "data:text/plain,netcut"; } } catch (e) {}
+    return O.apply(this, arguments);
+  };
+  ["HTMLImageElement", "HTMLScriptElement", "HTMLMediaElement", "HTMLSourceElement", "HTMLLinkElement"].forEach(function (n) {
+    try {
+      var proto = window[n] && window[n].prototype;
+      if (!proto) return;
+      var prop = n === "HTMLLinkElement" ? "href" : "src";
+      var d = Object.getOwnPropertyDescriptor(proto, prop);
+      if (!d || !d.set) return;
+      Object.defineProperty(proto, prop, {
+        get: function () { return d.get.call(this); },
+        set: function (v) { if (blocked(v)) { v = "about:blank"; } return d.set.call(this, v); },
+        configurable: true, enumerable: d.enumerable
+      });
+    } catch (e) {}
+  });
+  window.alert = function () {}; window.confirm = function () { return true; }; window.prompt = function () { return ""; };
+})();
+<\/script>`;
+
+const stage = document.getElementById("stage");
+const log = document.getElementById("log");
+const status = document.getElementById("status");
+function line(cls, txt) { const d = document.createElement("div"); d.className = cls; d.textContent = txt; log.appendChild(d); }
+
+async function testGame(g) {
+  const t0 = performance.now();
+  let html;
+  try {
+    const r = await fetch("/stash/" + encodeURIComponent(g.id) + ".html", { cache: "no-store" });
+    html = await r.text();
+  } catch (e) { return { id: g.id, verdict: "fail", why: "fetch " + e.message }; }
+  /* inject NETCUT as the very first head element (before the veil shim) */
+  html = html.replace(/<head([^>]*)>/i, (m) => m + NETCUT);
+
+  return new Promise((resolve) => {
+    let settled = false;
+    const readFrame = () => {
+      let ticks = 0, dom = 0, text = 0, canvases = 0;
+      try {
+        const w = stage.contentWindow;
+        ticks = w && typeof w.__tick === "number" ? w.__tick : 0;
+        const doc = w && w.document;
+        if (doc) { dom = doc.querySelectorAll("*").length; text = (doc.body ? doc.body.innerText : "").trim().length; canvases = doc.querySelectorAll("canvas").length; }
+      } catch (e) {}
+      return { ticks, dom, text, canvases };
+    };
+    const finish = (verdict, why) => {
+      if (settled) return; settled = true;
+      clearTimeout(killT);
+      const s = readFrame();
+      resolve({ id: g.id, verdict, why, ...s, ms: Math.round(performance.now() - t0) });
+      stage.removeAttribute("srcdoc");
+    };
+    const killT = setTimeout(() => {
+      /* evaluate after the settle window + an 800ms rAF re-sample */
+      const s1 = readFrame();
+      setTimeout(() => {
+        const s2 = readFrame();
+        const looped = s2.ticks - s1.ticks > 12;
+        const laidOut = s2.dom > 40 && s2.text > 60;
+        const painted = s2.canvases > 0 && (looped || s2.dom > 25);
+        finish(looped || laidOut || painted ? "pass" : "fail",
+          looped ? "rAF loop active" : laidOut ? "DOM laid out" : painted ? "canvas present" : "no boot signal");
+      }, 800);
+    }, 5000);
+    stage.srcdoc = html;
+  });
+}
+
+(async () => {
+  status.textContent = "loading manifest…";
+  const manifest = await (await fetch("/manifest.json")).json();
+  status.textContent = manifest.length + " games to verify";
+  const results = [];
+  for (const g of manifest) {
+    status.textContent = "testing " + g.id + " (" + (results.length + 1) + "/" + manifest.length + ")";
+    const r = await testGame(g);
+    results.push(r);
+    line(r.verdict === "pass" ? "pass" : "fail",
+      (r.verdict === "pass" ? "PASS " : "FAIL ") + r.id.padEnd(44) +
+      " " + String(r.why) + " · ticks " + r.ticks + " · dom " + r.dom + " · text " + r.text + " · canvas " + r.canvases);
+  }
+  const pass = results.filter((r) => r.verdict === "pass").length;
+  status.textContent = "DONE — " + pass + "/" + results.length + " pass";
+  window.__VEIL_RESULTS__ = results;
+  document.title = "DONE " + pass + "/" + results.length;
+})();
+</script>
+</body>
+</html>

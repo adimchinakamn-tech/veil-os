@@ -1,0 +1,47 @@
+# Veil OS — Docker build context hygiene
+# Everything that must not enter the image (state, secrets, caches, dev junk).
+
+# deps & build state (rebuilt inside the image)
+node_modules
+**/node_modules
+.next
+out
+build
+
+# git & CI
+.git
+.gitignore
+
+# STATE — lives in volumes, never in images
+db
+upload
+backups
+*.db
+*.db-journal
+*.key
+.quasar-key
+
+# secrets
+.env
+.env.*
+*.pem
+
+# sandbox/dev machinery & logs
+tmp
+tool-results
+tests
+.mbgs-cache
+.zscripts
+.claude
+.z-ai-config
+skills
+qa-shots
+*.log
+dev.log
+dev.out.log
+server.log
+dev-watchdog.log
+
+# OS misc
+.DS_Store
+Thumbs.db

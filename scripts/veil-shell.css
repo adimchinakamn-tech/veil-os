@@ -1,0 +1,2538 @@
+html.veil-shell-on .titlebar, html.veil-shell-on .navbar, html.veil-shell-on .bookmarks-bar-wrap, html.veil-shell-on #newtab, html.veil-shell-on #tutorialOverlay, html.veil-shell-on #findBar, html.veil-shell-on #metricsBtn, html.veil-shell-on #aiSidebar, html.veil-shell-on #logs, html.veil-shell-on #elements, html.veil-shell-on #zenBar, html.veil-shell-on #historyPopup, html.veil-shell-on #settingsPage, html.veil-shell-on #adblockModal, html.veil-shell-on #wallpaperModal, html.veil-shell-on #bookmarkModal, html.veil-shell-on #addFavoriteModal, html.veil-shell-on #shortcutsList, html.veil-shell-on #shortcutEditModal, html.veil-shell-on #customSearchCard, html.veil-shell-on #contextMenu, html.veil-shell-on #elemCtxMenu {
+    display: none !important;
+}html.veil-shell-on main { padding: 0 !important; gap: 0 !important; }html.veil-shell-on .view { border: 0 !important; box-shadow: none !important; }html.veil-shell-on body { background: #09090b; }html.veil-shell-on #overlay {
+    background: rgba(9, 9, 11, .92) !important;
+    backdrop-filter: blur(12px);
+}html.veil-shell-on #overlay .overlay-err-btns button, html.veil-shell-on #overlay button {
+    background: rgba(16, 185, 129, .18) !important;
+    color: #6ee7b7 !important;
+    border: 1px solid rgba(16, 185, 129, .35) !important;
+    border-radius: 12px !important;
+}
+/* THE hidden GUARD - the shell toggles panels with the hidden attribute, but
+   author display rules (.veil-chat-auth { display:flex } etc.) outrank the
+   UA's attribute default, so gate/auth/room cards painted at once. This one
+   rule makes the hidden attribute win, always. */
+#veilShell [hidden] { display: none !important; }
+#veilShell {
+    position: fixed;
+    inset: 0;
+    z-index: 9000;
+    pointer-events: none;
+    font-family: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: #f4f4f5;
+    font-size: 14px;
+    line-height: 1.5;
+}#veilShell * { box-sizing: border-box; margin: 0; padding: 0; }#veilShell button, #veilShell input, #veilShell textarea {
+    font: inherit;
+    color: inherit;
+    background: none;
+    border: 0;
+    outline: none;
+}#veilShell ::selection { background: rgba(52, 211, 153, .3); }#veilShell svg.luc { display: block; }#veilShell .veil-ep { pointer-events: auto; }#veilShell .luc { width: 16px; height: 16px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }#veilShell .luc-14 { width: 14px; height: 14px; }#veilShell .luc-18 { width: 18px; height: 18px; }#veilShell .luc-28 { width: 28px; height: 28px; }#veilShell .veil-slim { scrollbar-width: thin; scrollbar-color: rgba(63,63,70,.6) transparent; }#veilShell .veil-slim::-webkit-scrollbar { width: 6px; height: 6px; }#veilShell .veil-slim::-webkit-scrollbar-thumb { background: rgba(82,82,91,.6); border-radius: 999px; }#veilShell .veil-slim::-webkit-scrollbar-thumb:hover { background: rgba(113,113,122,.8); }#veilShell 
+@keyframes veil-float { 0%,100% { transform: translate3d(0,0,0) scale(1); } 50% { transform: translate3d(2%,-3%,0) scale(1.06); } }
+@keyframes veil-float-slow { 0%,100% { transform: translate3d(0,0,0) scale(1); } 50% { transform: translate3d(-3%,2%,0) scale(1.1); } }
+@keyframes veil-pulse-ring { 0% { box-shadow: 0 0 0 0 rgba(16,185,129,.45); } 70% { box-shadow: 0 0 0 14px rgba(16,185,129,0); } 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); } }
+@keyframes veil-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes veil-bar-sweep { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
+@keyframes veil-spin { to { transform: rotate(360deg); } }#veilShell .veil-orb-a { animation: veil-float 14s ease-in-out infinite; }#veilShell .veil-orb-b { animation: veil-float-slow 18s ease-in-out infinite; }#veilShell .veil-rise { animation: veil-rise .45s cubic-bezier(.22,1,.36,1) both; }#veilShell .veil-rise-d1 { animation-delay: .06s; }#veilShell .veil-rise-d2 { animation-delay: .12s; }
+@media (prefers-reduced-motion: reduce) {#veilShell .veil-orb-a, #veilShell .veil-orb-b, #veilShell .veil-rise { animation: none !important; }
+}#veilShell .veil-shield { flex-shrink: 0; }#veilShell .veil-tile {
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 12px;
+    background: rgba(16, 185, 129, .15);
+    box-shadow: inset 0 0 0 1px rgba(16, 185, 129, .3);
+    color: #34d399;
+}#veilShell .veil-chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, .1);
+    background: rgba(0, 0, 0, .35);
+    backdrop-filter: blur(12px);
+    padding: 6px 14px;
+    font-size: 12px;
+    color: rgba(212, 212, 216, .9);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .2);
+}#veilShell .veil-kbd {
+    border-radius: 6px; border: 1px solid rgba(255,255,255,.15);
+    background: rgba(0,0,0,.4); padding: 2px 6px;
+    font-family: "Geist Mono", ui-monospace, monospace;
+    font-size: 10.5px; color: #e4e4e7;
+}#veilNt {
+    position: absolute; inset: 0;
+    display: none;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: #09090b;
+    pointer-events: auto;
+    overscroll-behavior: contain;
+}html.veil-ntp #veilNt { display: block; }#veilShell .veil-nt-bg { position: fixed; inset: 0; overflow: hidden; pointer-events: none; }#veilShell .veil-nt-bg .bgimg, #veilShell .veil-nt-bg .bgvid {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; display: block;
+}
+/* Ambient fill — squarish/portrait sources show whole (contain) over a
+   blurred, zoomed copy of themselves, instead of cover-cropping ("zoomed
+   in"). The fill layer uses the poster/thumb frame (cheap) and sits under
+   the contained media. */
+#veilShell .veil-nt-fill {
+    position: absolute; inset: -8%; display: none;
+    background-size: cover; background-position: center;
+    filter: blur(64px) saturate(1.15) brightness(.82);
+    transform: scale(1.12);
+}
+#veilShell .veil-nt-fill.on { display: block; }
+#veilShell .bgvid.ambient { object-fit: contain; }
+#veilShell .bgimg.ambient { object-fit: contain; }#veilShell .veil-vignette {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 256px;
+    background: linear-gradient(to top, rgba(0,0,0,.45), transparent);
+}#veilShell .veil-nt-theme { position: absolute; inset: 0; }#veilShell .veil-nt-theme .orbA {
+    position: absolute; top: -160px; left: 25%;
+    width: 640px; height: 420px; border-radius: 999px;
+    filter: blur(130px);
+}#veilShell .veil-nt-theme .orbB {
+    position: absolute; bottom: -128px; right: 8%;
+    width: 320px; height: 320px; border-radius: 999px;
+    filter: blur(110px);
+}#veilShell .veil-nt-theme .grid {
+    position: absolute; inset: 0; opacity: .10;
+    background-image:
+        linear-gradient(to right, #52525b 1px, transparent 1px),
+        linear-gradient(to bottom, #52525b 1px, transparent 1px);
+    background-size: 56px 56px;
+    -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black 20%, transparent 100%);
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black 20%, transparent 100%);
+}#veilShell .veil-nt-content {
+    position: relative;
+    max-width: 768px; margin: 0 auto;
+    min-height: 100%;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 64px 16px 96px;
+    transition: opacity .22s ease;
+}
+/* A full-screen layer owns the viewport (translucent app section, lightbox,
+   running game, or the browsing app): the start-page CONTENT fades out so
+   open apps read as "over the wallpaper" — the backdrop itself stays. */
+#veilNt.covered .veil-nt-content { opacity: 0; pointer-events: none; }
+@media (min-width: 640px) {#veilShell .veil-nt-content { padding: 64px 24px 96px; } }#veilShell .veil-clock { text-align: center; user-select: none; }#veilShell .veil-clock .t {
+    font-size: 48px; font-weight: 300; letter-spacing: -.025em;
+    color: #fafafa;
+    text-shadow: 0 2px 18px rgba(0,0,0,.55);
+    font-variant-numeric: tabular-nums;
+}
+@media (min-width: 640px) {#veilShell .veil-clock .t { font-size: 60px; } }#veilShell .veil-clock .d {
+    margin-top: 6px; font-size: 11px; font-weight: 600;
+    letter-spacing: .3em; text-transform: uppercase;
+    color: rgba(212,212,216,.9);
+    text-shadow: 0 1px 12px rgba(0,0,0,.6);
+}#veilShell .veil-wx { margin-top: 14px; display: flex; justify-content: center; }#veilShell .veil-wx .veil-chip { max-width: 100%; overflow: hidden; padding: 6px 14px; }#veilShell .veil-wx i { width: 14px; height: 14px; flex-shrink: 0; display: flex; }#veilShell .veil-wx .dot { width: 2px; height: 2px; border-radius: 99px; background: #71717a; flex-shrink: 0; }#veilShell .veil-wx .wx-t {
+    border-radius: 999px; padding: 2px 6px;
+    font-variant-numeric: tabular-nums; font-weight: 500; color: #f4f4f5;
+    cursor: pointer; transition: background .15s, color .15s;
+}#veilShell .veil-wx .wx-t:hover { background: rgba(255,255,255,.15); color: #a7f3d0; }#veilShell .veil-wx .wx-t:active { transform: scale(.96); }#veilShell .veil-wx .wx-desc { min-width: 0; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }#veilShell .veil-brand { margin: 40px 0 28px; display: flex; align-items: center; gap: 10px; justify-content: center; }#veilShell .veil-brand .veil-tile { width: 40px; height: 40px; }#veilShell .veil-brand .wm { font-size: 18px; font-weight: 600; letter-spacing: -.025em; text-shadow: 0 1px 12px rgba(0,0,0,.4); }#veilShell .veil-brand .wm b { color: #34d399; font-weight: 600; }#veilShell .veil-nt-h2 {
+    text-align: center; font-size: 24px; font-weight: 700; letter-spacing: -.03em;
+    text-shadow: 0 2px 16px rgba(0,0,0,.6);
+    max-width: 672px; margin-left: auto; margin-right: auto; /* long splash lines wrap inside the form column */
+}
+/* splash-text variant — inline-gradient glyphs (a text-shadow on
+   transparent bg-clip text paints a solid smudge: the "square" bug).
+   drop-shadow respects the clipped glyph alpha instead. */
+#veilShell .veil-nt-h2.splash {
+    background-image: linear-gradient(180deg,#f4f4f5 55%,#6ee7b7);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    text-shadow: none; filter: drop-shadow(0 2px 16px rgba(52,211,153,.35));
+}
+/* the 1% "passwords" drop — gold */
+#veilShell .veil-nt-h2.splash.gold {
+    background-image: linear-gradient(180deg,#fde68a 45%,#f59e0b);
+    filter: drop-shadow(0 2px 16px rgba(245,158,11,.45));
+}
+@media (min-width: 640px) {#veilShell .veil-nt-h2 { font-size: 30px; } }#veilShell .veil-nt-form { margin-top: 28px; width: 100%; max-width: 672px; display: flex; gap: 8px; }#veilShell .veil-cb-wrap { position: relative; flex: 1; min-width: 0; }#veilShell .veil-cb {
+    width: 100%; height: 52px;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,.1);
+    background: rgba(0,0,0,.45);
+    backdrop-filter: blur(12px);
+    padding: 0 16px 0 44px;
+    font-size: 15px; color: #f4f4f5;
+    box-shadow: 0 24px 48px rgba(0,0,0,.5);
+    transition: border-color .2s, box-shadow .2s;
+}#veilShell .veil-cb::placeholder { color: #71717a; }#veilShell .veil-cb:focus {
+    border-color: rgba(16,185,129,.6);
+    box-shadow: 0 0 0 3px rgba(16,185,129,.18), 0 24px 48px rgba(0,0,0,.5);
+}#veilShell .veil-cb-wrap > .luc.mag {
+    position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+    color: #71717a; pointer-events: none; transition: color .2s;
+    width: 18px; height: 18px;
+}#veilShell .veil-cb-wrap:focus-within > .luc.mag { color: #34d399; }#veilShell .veil-nt-form .go {
+    height: 52px; border-radius: 16px;
+    display: flex; align-items: center; gap: 6px;
+    padding: 0 20px;
+    background: #10b981; color: #022c22;
+    font-size: 15px; font-weight: 600;
+    box-shadow: 0 12px 24px rgba(16,185,129,.25);
+    transition: background .15s, transform .15s;
+    cursor: pointer; flex-shrink: 0;
+}#veilShell .veil-nt-form .go:hover { background: #34d399; }#veilShell .veil-nt-form .go:active { transform: scale(.98); }#veilShell .veil-nt-form .go span { display: none; }
+@media (min-width: 640px) {#veilShell .veil-nt-form .go span { display: inline; } }#veilShell .veil-sug {
+    position: absolute; left: 0; right: 0; top: calc(100% + 8px);
+    z-index: 40; overflow-y: auto;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,.1);
+    background: rgba(9,9,11,.92);
+    backdrop-filter: blur(16px);
+    padding: 6px;
+    box-shadow: 0 32px 64px rgba(0,0,0,.6);
+    max-height: min(60vh, 420px);
+    display: none;
+}#veilShell .veil-sug.open { display: block; }#veilShell .veil-sug .row {
+    display: flex; width: 100%; align-items: center; gap: 12px;
+    border-radius: 12px; padding: 8px 10px; text-align: left;
+    transition: background .12s;
+}#veilShell .veil-sug .row:hover { background: rgba(255,255,255,.05); }#veilShell .veil-sug .row.sel { background: rgba(16,185,129,.15); box-shadow: inset 0 0 0 1px rgba(16,185,129,.3); }#veilShell .veil-sug .ic {
+    width: 36px; height: 36px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 10px;
+}#veilShell .veil-sug .ic.img { overflow: hidden; background: #18181b; }#veilShell .veil-sug .ic.img img { width: 100%; height: 100%; object-fit: cover; }#veilShell .veil-sug .ic.act { background: rgba(16,185,129,.15); box-shadow: inset 0 0 0 1px rgba(16,185,129,.25); color: #6ee7b7; }#veilShell .veil-sug .ic.gm { background: rgba(16,185,129,.15); box-shadow: inset 0 0 0 1px rgba(16,185,129,.25); color: #fbbf24; }#veilShell .veil-sug .ic .ltr { font-size: 13px; font-weight: 600; color: #6ee7b7; }#veilShell .veil-sug .tx { min-width: 0; flex: 1; }#veilShell .veil-sug .tx .tt { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13.5px; font-weight: 500; color: #f4f4f5; }#veilShell .veil-sug .tx .ss { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11.5px; color: #71717a; }#veilShell .veil-sug .row.sel .ent { display: block; }#veilShell .veil-sug .ent { display: none; margin-right: 4px; flex-shrink: 0; }#veilShell .veil-hints { margin-top: 14px; }#veilShell .veil-dock { margin: 32px auto 0; max-width: 576px; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; }#veilShell .veil-dock .dk {
+    display: flex; align-items: center; gap: 8px; height: 36px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,.1);
+    background: rgba(0,0,0,.4);
+    backdrop-filter: blur(12px);
+    padding: 0 14px;
+    font-size: 12.5px; font-weight: 500; color: #e4e4e7;
+    box-shadow: 0 8px 20px rgba(0,0,0,.25);
+    cursor: pointer;
+    transition: transform .18s, border-color .18s, background .18s;
+}#veilShell .veil-dock .dk:hover { transform: translateY(-2px); border-color: rgba(255,255,255,.25); background: rgba(0,0,0,.55); }#veilShell .veil-dock .dk span { display: none; }
+@media (min-width: 640px) {#veilShell .veil-dock .dk span { display: inline; } }#veilShell .veil-dock .dk.a-ai  .luc { color: #c4b5fd; }#veilShell .veil-dock .dk.a-ai:hover .luc { color: #ddd6fe; }#veilShell .veil-dock .dk.a-arcade .luc { color: #fbbf24; }#veilShell .veil-dock .dk.a-arcade:hover .luc { color: #fcd34d; }#veilShell .veil-dock .dk.a-wp .luc { color: #5eead4; }#veilShell .veil-dock .dk.a-wp:hover .luc { color: #99f6e4; }#veilShell .veil-dock .dk.a-links .luc { color: #6ee7b7; }#veilShell .veil-dock .dk.a-links:hover .luc { color: #a7f3d0; }#veilShell .veil-dock .dk.a-hist .luc { color: #7dd3fc; }#veilShell .veil-dock .dk.a-hist:hover .luc { color: #bae6fd; }#veilShell .veil-recent { margin-top: 40px; width: 100%; }#veilShell .veil-recent .hd { margin-bottom: 10px; display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: #71717a; }#veilShell .veil-recent .grid { display: grid; grid-template-columns: 1fr; gap: 8px; }
+@media (min-width: 640px) {#veilShell .veil-recent .grid { grid-template-columns: 1fr 1fr; } }#veilShell .veil-recent .card {
+    display: flex; width: 100%; align-items: center; gap: 12px;
+    border-radius: 12px; border: 1px solid rgba(255,255,255,.1);
+    background: rgba(0,0,0,.35); backdrop-filter: blur(12px);
+    padding: 10px; text-align: left; cursor: pointer;
+    transition: border-color .15s, background .15s;
+}#veilShell .veil-recent .card:hover { border-color: rgba(16,185,129,.4); background: rgba(0,0,0,.55); }#veilShell .veil-recent .fv { width: 32px; height: 32px; flex-shrink: 0; border-radius: 8px; background: rgba(16,185,129,.15); color: #6ee7b7; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; }#veilShell .veil-recent .card .tx { min-width: 0; flex: 1; }#veilShell .veil-recent .card .tt { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 500; }#veilShell .veil-recent .card .ss { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; color: #71717a; }#veilShell .veil-closeall { margin-top: 24px; text-align: center; }#veilShell .veil-closeall button { font-size: 12.5px; color: #71717a; text-underline-offset: 4px; cursor: pointer; transition: color .15s; }#veilShell .veil-closeall button:hover { color: #d4d4d8; text-decoration: underline; }#veilBar {
+    position: absolute; left: 0; right: 0; top: 0;
+    z-index: 25; /* above the program frame (#veilApp z5) — the bar stays usable while a program is open */
+    transform: translateY(-105%);
+    transition: transform .34s cubic-bezier(.22,1,.36,1);
+    background: rgba(9,9,11,.92);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 24px 48px rgba(0,0,0,.3);
+    pointer-events: auto;
+}html.veil-bar-open #veilBar { transform: translateY(0); }#veilBar.inert { visibility: hidden; }#veilTabs {
+    display: none;
+    margin: 0 auto; max-width: 1600px;
+    display: flex; align-items: center; gap: 4px;
+    overflow-x: auto; padding: 6px 8px 0;
+}#veilTabs.solo { display: none; }#veilTabs.multi { display: flex; }#veilShell .veil-tab {
+    position: relative; display: flex; align-items: center; gap: 8px;
+    height: 36px; min-width: 140px; max-width: 220px;
+    border-top: 2px solid transparent;
+    border-radius: 8px 8px 0 0;
+    background: rgba(24,24,27,.4); color: #71717a;
+    padding: 0 12px; cursor: pointer; flex-shrink: 0;
+    transition: background .15s, color .15s, border-color .15s;
+}#veilShell .veil-tab:hover { background: rgba(24,24,27,.7); color: #d4d4d8; }#veilShell .veil-tab.on { border-top-color: #34d399; background: #18181b; color: #f4f4f5; }#veilShell .veil-tab .fi { width: 16px; height: 16px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #71717a; }#veilShell .veil-tab .fi img { width: 16px; height: 16px; border-radius: 4px; object-fit: contain; background: #27272a; }#veilShell .veil-tab .fi .ltr { font-size: 9px; font-weight: 600; color: #6ee7b7; background: rgba(16,185,129,.2); width: 16px; height: 16px; border-radius: 4px; display: flex; align-items: center; justify-content: center; }#veilShell .veil-tab .tt { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12.5px; }#veilShell .veil-tab .x {
+    width: 20px; height: 20px; flex-shrink: 0; border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    color: #71717a; opacity: 0; transition: opacity .12s, background .12s, color .12s;
+    cursor: pointer;
+}#veilShell .veil-tab:hover .x, #veilShell .veil-tab.on .x { opacity: 1; }#veilShell .veil-tab .x:hover { background: #3f3f46; color: #f4f4f5; }#veilShell .veil-bar-row { display: flex; align-items: center; height: 56px; gap: 6px; margin: 0 auto; max-width: 1600px; padding: 0 10px; }
+@media (min-width: 640px) {#veilShell .veil-bar-row { gap: 8px; padding: 0 16px; } }#veilShell .veil-ib {
+    width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: #71717a; cursor: pointer;
+    transition: background .12s, color .12s;
+}#veilShell .veil-ib:hover { background: #27272a; color: #f4f4f5; }#veilShell .veil-ib:disabled { pointer-events: none; opacity: .3; }#veilShell .veil-ib.hide-bar { color: #6ee7b7; }#veilShell .veil-ib.hide-bar:hover { background: rgba(16,185,129,.15); }#veilShell .veil-ib .spin { animation: veil-spin 1s linear infinite; }#veilShell .veil-urlform { flex: 1; min-width: 0; margin: 0 4px; }
+@media (min-width: 640px) {#veilShell .veil-urlform { margin: 0 8px; } }#veilShell .veil-url {
+    display: flex; align-items: center; gap: 10px; height: 40px;
+    border-radius: 12px;
+    border: 1px solid rgba(63,63,70,.8);
+    background: rgba(39,39,42,.6);
+    padding: 0 12px;
+    transition: border-color .15s, background .15s, box-shadow .2s;
+}#veilShell .veil-url:focus-within {
+    border-color: rgba(16,185,129,.6); background: #27272a;
+    box-shadow: 0 0 0 3px rgba(16,185,129,.18);
+}#veilShell .veil-url .sh { color: #34d399; flex-shrink: 0; }#veilShell .veil-url .veiled {
+    display: none; align-items: center; gap: 4px; flex-shrink: 0;
+    border-radius: 6px; background: rgba(16,185,129,.1);
+    padding: 2px 6px;
+    font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em;
+    color: #34d399;
+}
+@media (min-width: 640px) {#veilShell .veil-url .veiled { display: inline-flex; } }#veilShell .veil-url input { flex: 1; min-width: 0; height: 100%; font-size: 13.5px; color: #f4f4f5; }#veilShell .veil-url input::placeholder { color: #71717a; }#veilShell .veil-url .host { display: none; max-width: 180px; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; color: #71717a; }
+@media (min-width: 1024px) {#veilShell .veil-url .host { display: block; } }#veilShell .veil-bar-right { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }#veilShell .veil-bar-sep { margin: 0 4px; width: 1px; height: 24px; background: #3f3f46; display: none; }
+@media (min-width: 640px) {#veilShell .veil-bar-sep { display: block; } }#veilShell .veil-exit {
+    height: 36px; border-radius: 10px;
+    display: flex; align-items: center; gap: 6px;
+    padding: 0 12px;
+    background: rgba(16,185,129,.15); color: #6ee7b7;
+    box-shadow: inset 0 0 0 1px rgba(16,185,129,.3);
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    transition: background .15s;
+}#veilShell .veil-exit:hover { background: rgba(16,185,129,.25); }#veilShell .veil-exit span { display: none; }
+@media (min-width: 640px) {#veilShell .veil-exit span { display: inline; } }#veilShell .veil-kbd-btn { font-weight: 700; }#veilLoad {
+    position: absolute; left: 0; right: 0; top: 0; bottom: 0;
+    pointer-events: none; display: none;
+    background: #09090b;
+    opacity: 0; transition: opacity .25s ease;
+}#veilLoad.on { display: block; }
+#veilLoad.vis { opacity: 1; }
+#veilLoad .cover {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
+}#veilLoad .wheel {
+    position: relative; width: 40px; height: 40px;
+}#veilLoad .wheel i {
+    position: absolute; inset: 0; border-radius: 999px;
+    border: 3px solid #27272a;
+}#veilLoad .wheel::after {
+    content: ""; position: absolute; inset: -3px; border-radius: 999px;
+    border: 3px solid transparent; border-top-color: #34d399;
+    animation: veil-spin .9s linear infinite;
+}#veilLoad .mark {
+    display: flex; align-items: center; gap: 8px; opacity: .8;
+}#veilLoad .mark span {
+    font-size: 12px; font-weight: 500; letter-spacing: .2em; color: #71717a;
+}#veilLoad .bar {
+    position: absolute; left: 0; right: 0; top: 0; height: 3px;
+    overflow: hidden; background: rgba(16,185,129,.1);
+}#veilLoad .bar::after {
+    content: ""; position: absolute; inset: 0; width: 50%;
+    background: linear-gradient(to right, transparent, #34d399, transparent);
+    animation: veil-bar-sweep 1.1s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+    #veilLoad .wheel::after { animation-duration: 2s; }
+}#veilCorner {
+    position: absolute; left: 10px; top: 10px;
+    z-index: 26; /* above the bar + the program frame */
+    pointer-events: auto; /* veilShell root is none — re-enable or clicks fall through to the page iframe */
+    width: 36px; height: 36px; border-radius: 999px;
+    border: 1px solid rgba(63,63,70,.7);
+    background: rgba(9,9,11,.8);
+    color: #d4d4d8;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 12px 28px rgba(0,0,0,.4);
+    display: none; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: border-color .15s, background .15s, color .15s, opacity .22s, transform .22s;
+}#veilCorner.show { display: flex; }#veilCorner:hover { border-color: rgba(16,185,129,.6); background: #18181b; color: #6ee7b7; }html.veil-ntp #veilCorner { display: none !important; }#veilFsNudge {
+    position: absolute; right: 20px; bottom: 20px;
+    pointer-events: auto; /* same veilShell-root none hatch as the corner */
+    display: none; align-items: center; gap: 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(63,63,70,.7);
+    background: rgba(9,9,11,.85);
+    color: #d4d4d8;
+    padding: 10px 16px;
+    font-size: 12.5px; font-weight: 500;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 12px 28px rgba(0,0,0,.3);
+    cursor: pointer;
+    transition: border-color .15s, color .15s;
+}#veilFsNudge:hover { border-color: rgba(16,185,129,.5); color: #6ee7b7; }#veilFsNudge .k { font-family: "Geist Mono", ui-monospace, monospace; font-size: 10.5px; color: #71717a; }#veilFsNudge.show { display: flex; }html.veil-ntp #veilFsNudge { display: none !important; }#veilShell .veil-sec {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    /* Translucent on purpose: the applied wallpaper (or default theme)
+       keeps showing behind every app — History, Music, Settings… — through
+       a dark scrim + blur instead of a flat #09090b wall. */
+    background: rgba(9,9,11,.74); color: #f4f4f5;
+    -webkit-backdrop-filter: blur(24px) saturate(1.08);
+    backdrop-filter: blur(24px) saturate(1.08);
+    pointer-events: auto;
+    overflow: hidden;
+}#veilShell .veil-sec.open { display: flex; }#veilShell .veil-sec .orbs { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }#veilShell .veil-sec .orbs .o1 { position: absolute; top: -160px; left: 50%; transform: translateX(-50%); width: 576px; height: 288px; border-radius: 999px; background: rgba(16,185,129,.10); filter: blur(48px); }#veilShell .veil-sec .orbs .o2 { position: absolute; bottom: -128px; right: -96px; width: 320px; height: 320px; border-radius: 999px; background: rgba(20,184,166,.10); filter: blur(48px); }#veilShell .veil-sec-hd {
+    position: relative; z-index: 10; flex-shrink: 0;
+    border-bottom: 1px solid rgba(39,39,42,.7);
+    background: rgba(9,9,11,.7);
+    backdrop-filter: blur(16px);
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 12px;
+}
+@media (min-width: 640px) {#veilShell .veil-sec-hd { padding: 10px 16px; gap: 10px; } }#veilShell .veil-sec-hd .back {
+    width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: #71717a; cursor: pointer;
+    transition: background .12s, color .12s;
+}#veilShell .veil-sec-hd .back:hover { background: rgba(39,39,42,.7); color: #f4f4f5; }#veilShell .veil-sec-hd .tt-wrap { display: flex; min-width: 0; flex: 1; align-items: center; gap: 10px; }#veilShell .veil-sec-hd .tile {
+    width: 36px; height: 36px; flex-shrink: 0; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    color: #09090b;
+    background: linear-gradient(135deg, #34d399, #0d9488);
+    box-shadow: 0 8px 20px rgba(16,185,129,.2), inset 0 0 0 1px rgba(110,231,183,.3);
+}#veilShell .veil-sec-hd .tile.amber { background: linear-gradient(135deg, #fbbf24, #d97706); box-shadow: 0 8px 20px rgba(245,158,11,.2), inset 0 0 0 1px rgba(252,211,77,.3); }#veilShell .veil-sec-hd .tile.violet { background: linear-gradient(135deg, #a78bfa, #7c3aed); box-shadow: 0 8px 20px rgba(139,92,246,.2), inset 0 0 0 1px rgba(196,181,253,.3); }#veilShell .veil-sec-hd h1 { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 16px; font-weight: 600; letter-spacing: -.02em; color: #fafafa; }
+@media (min-width: 640px) {#veilShell .veil-sec-hd h1 { font-size: 18px; } }#veilShell .veil-sec-hd .sub { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; color: #71717a; }#veilShell .veil-sec-hd .count {
+    margin-left: auto; flex-shrink: 0;
+    display: inline-flex; align-items: center; gap: 6px;
+    border-radius: 999px;
+    border: 1px solid rgba(16,185,129,.25); background: rgba(16,185,129,.1);
+    padding: 4px 10px;
+    font-size: 11px; font-weight: 500; color: #6ee7b7;
+}#veilShell .veil-sec-body { position: relative; z-index: 10; min-height: 0; flex: 1; overflow-y: auto; }#veilShell .veil-sec-inner { margin: 0 auto; width: 100%; max-width: 896px; padding: 24px 16px 48px; }
+@media (min-width: 640px) {#veilShell .veil-sec-inner { padding: 24px 24px 48px; } }#veilShell .veil-sec-inner.wide { max-width: 1152px; }#veilShell .veil-sec-search { position: relative; margin-bottom: 20px; }#veilShell .veil-sec-search input {
+    width: 100%; height: 40px; border-radius: 12px;
+    border: 1px solid #27272a; background: #18181b;
+    padding: 0 12px 0 38px; font-size: 13.5px; color: #f4f4f5;
+    transition: border-color .15s, box-shadow .15s;
+}#veilShell .veil-sec-search input:focus { border-color: rgba(16,185,129,.5); box-shadow: 0 0 0 3px rgba(16,185,129,.15); }#veilShell .veil-sec-search .luc { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #71717a; }#veilShell .veil-links-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+@media (min-width: 640px) {#veilShell .veil-links-grid { grid-template-columns: repeat(2, 1fr); } }#veilShell .veil-link-card {
+    display: flex; align-items: center; gap: 12px;
+    border-radius: 16px;
+    border: 1px solid rgba(39,39,42,.8);
+    background: rgba(24,24,27,.4);
+    padding: 12px; text-align: left; cursor: pointer;
+    transition: transform .18s, border-color .18s, background .18s;
+}#veilShell .veil-link-card:hover { transform: translateY(-2px); border-color: rgba(16,185,129,.4); background: #18181b; }#veilShell .veil-link-card .fv { width: 40px; height: 40px; flex-shrink: 0; border-radius: 12px; background: rgba(16,185,129,.15); box-shadow: inset 0 0 0 1px rgba(16,185,129,.25); color: #6ee7b7; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 600; }#veilShell .veil-link-card .tx { min-width: 0; flex: 1; }#veilShell .veil-link-card .tt { display: block; font-size: 14px; font-weight: 600; color: #f4f4f5; }#veilShell .veil-link-card .ss { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; color: #71717a; margin-top: 1px; }#veilShell .veil-link-card .tag { flex-shrink: 0; border-radius: 999px; border: 1px solid rgba(16,185,129,.3); background: rgba(16,185,129,.1); padding: 3px 9px; font-size: 10.5px; font-weight: 600; color: #6ee7b7; }#veilShell .veil-hist-row {
+    display: flex; align-items: center; gap: 12px;
+    border-radius: 12px; border: 1px solid rgba(255,255,255,.06);
+    background: rgba(24,24,27,.5);
+    padding: 10px 12px; width: 100%; text-align: left; cursor: pointer;
+    transition: border-color .15s, background .15s;
+}#veilShell .veil-hist-row:hover { border-color: rgba(16,185,129,.4); background: #18181b; }#veilShell .veil-hist-row .fv { width: 32px; height: 32px; flex-shrink: 0; border-radius: 8px; background: rgba(16,185,129,.15); color: #6ee7b7; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 13px; }#veilShell .veil-hist-row .tx { min-width: 0; flex: 1; }#veilShell .veil-hist-row .tt { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 500; }#veilShell .veil-hist-row .ss { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; color: #71717a; }#veilShell .veil-hist-row .del { width: 28px; height: 28px; flex-shrink: 0; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #71717a; cursor: pointer; transition: background .12s, color .12s; }#veilShell .veil-hist-row .del:hover { background: rgba(239,68,68,.15); color: #f87171; }#veilShell .veil-wp-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+@media (min-width: 640px) {#veilShell .veil-wp-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 1024px) {#veilShell .veil-wp-grid { grid-template-columns: repeat(4, 1fr); } }#veilShell .veil-wp-tabs { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }#veilShell .veil-wp-tabs .tb {
+    height: 32px; border-radius: 10px;
+    border: 1px solid #27272a; background: #18181b;
+    padding: 0 14px; font-size: 12.5px; font-weight: 500; color: #a1a1aa;
+    cursor: pointer; transition: border-color .15s, color .15s, background .15s;
+}#veilShell .veil-wp-tabs .tb:hover { color: #f4f4f5; border-color: #3f3f46; }#veilShell .veil-wp-tabs .tb.on { border-color: rgba(16,185,129,.5); background: rgba(16,185,129,.15); color: #6ee7b7; }#veilShell .veil-wp-sub { font-size: 12px; color: #71717a; margin-bottom: 14px; }#veilShell .veil-wp-card {
+    position: relative; display: block; width: 100%; overflow: hidden;
+    border-radius: 16px;
+    border: 1px solid rgba(39,39,42,.8);
+    background: #18181b;
+    cursor: pointer;
+    transition: transform .2s, border-color .2s, box-shadow .2s;
+    aspect-ratio: 16 / 9;
+}#veilShell .veil-wp-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(16,185,129,.6);
+    box-shadow: 0 18px 42px -14px rgba(16,185,129,.45);
+}#veilShell .veil-wp-card .media { position: absolute; inset: 0; }#veilShell .veil-wp-card .media img, #veilShell .veil-wp-card .media video { width: 100%; height: 100%; object-fit: cover; display: block; }#veilShell .veil-wp-card .media.thm { position: absolute; inset: 0; border-radius: 6px; }#veilShell .veil-wp-card .kind {
+    position: absolute; left: 10px; top: 10px;
+    display: inline-flex; align-items: center; gap: 5px;
+    border-radius: 999px; padding: 3px 8px;
+    font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em;
+    background: rgba(9,9,11,.75); backdrop-filter: blur(8px);
+}#veilShell .veil-wp-card .kind.live { border: 1px solid rgba(52,211,153,.3); color: #6ee7b7; }#veilShell .veil-wp-card .kind.static { border: 1px solid rgba(45,212,191,.4); background: rgba(20,184,166,.25); color: #99f6e4; }#veilShell .veil-wp-card .kind.theme { border: 1px solid rgba(129,140,248,.4); background: rgba(99,102,241,.25); color: #c7d2fe; }#veilShell .veil-wp-card .fav {
+    position: absolute; right: 10px; top: 10px;
+    width: 28px; height: 28px; border-radius: 999px;
+    background: rgba(9,9,11,.6); backdrop-filter: blur(8px);
+    color: #a1a1aa; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; opacity: 0; transition: opacity .15s, color .15s, transform .15s;
+}#veilShell .veil-wp-card:hover .fav { opacity: 1; }#veilShell .veil-wp-card .fav.on { opacity: 1; color: #f472b6; }#veilShell .veil-wp-card .fav:hover { transform: scale(1.1); }#veilShell .veil-wp-card .active {
+    position: absolute; right: 44px; top: 10px;
+    display: inline-flex; align-items: center; gap: 4px;
+    border-radius: 999px; border: 1px solid rgba(16,185,129,.4); background: rgba(16,185,129,.2);
+    padding: 3px 8px; font-size: 10px; font-weight: 600; color: #6ee7b7;
+    backdrop-filter: blur(8px);
+}#veilShell .veil-wp-card .shade {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 66%;
+    background: linear-gradient(to top, rgba(9,9,11,.9), rgba(9,9,11,.3) 60%, transparent);
+    pointer-events: none;
+}#veilShell .veil-wp-card .meta { position: absolute; left: 0; right: 0; bottom: 0; padding: 12px; }#veilShell .veil-wp-card .nm { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; font-weight: 600; color: #fafafa; text-shadow: 0 1px 4px rgba(0,0,0,.4); }#veilShell .veil-wp-card .ds { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; color: #a1a1aa; margin-top: 2px; }#veilLb {
+    position: absolute; inset: 0;
+    display: none; align-items: center; justify-content: center;
+    background: rgba(0,0,0,.8); backdrop-filter: blur(8px);
+    pointer-events: auto;
+    padding: 16px;
+    z-index: 20;
+}#veilLb.open { display: flex; }#veilShell .veil-lb-card {
+    width: min(94vw, 760px);
+    max-height: 92vh;
+    display: flex; flex-direction: column;
+    border-radius: 16px; overflow: hidden;
+    border: 1px solid #27272a; background: #09090b;
+    box-shadow: 0 40px 90px rgba(0,0,0,.6);
+}#veilShell .veil-lb-hd { display: flex; align-items: center; gap: 10px; padding: 14px 20px 10px; padding-right: 44px; }#veilShell .veil-lb-hd .luc { color: #34d399; flex-shrink: 0; }#veilShell .veil-lb-hd .tt { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 15px; font-weight: 600; }#veilShell .veil-lb-hd .kind { flex-shrink: 0; }#veilShell .veil-lb-x { position: absolute; right: 12px; top: 12px; width: 32px; height: 32px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #71717a; cursor: pointer; }#veilShell .veil-lb-x:hover { background: #27272a; color: #f4f4f5; }#veilShell .veil-lb-media {
+    margin: 0 20px; aspect-ratio: 16/9; max-height: 54vh;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 12px; border: 1px solid #27272a; background: #18181b;
+    overflow: hidden; position: relative;
+}#veilShell .veil-lb-media video, #veilShell .veil-lb-media img { max-width: 100%; max-height: 100%; width: 100%; height: 100%; object-fit: contain; }#veilShell .veil-lb-media .thm { position: absolute; inset: 0; }#veilShell .veil-lb-tags { display: flex; gap: 6px; flex-wrap: wrap; padding: 12px 20px 0; }#veilShell .veil-lb-tags .tg { border-radius: 999px; border: 1px solid #27272a; background: #18181b; padding: 3px 10px; font-size: 11px; color: #a1a1aa; }#veilShell .veil-lb-act { display: flex; gap: 10px; padding: 16px 20px 20px; flex-wrap: wrap; }#veilShell .veil-lb-act button {
+    height: 36px; border-radius: 10px;
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 0 16px; font-size: 13px; font-weight: 500; cursor: pointer;
+    transition: background .15s, border-color .15s, color .15s;
+}#veilShell .veil-lb-act .primary { background: #10b981; color: #022c22; font-weight: 600; }#veilShell .veil-lb-act .primary:hover { background: #34d399; }#veilShell .veil-lb-act .ghost { border: 1px solid #3f3f46; background: #18181b; color: #d4d4d8; }#veilShell .veil-lb-act .ghost:hover { border-color: rgba(16,185,129,.5); background: #27272a; color: #6ee7b7; }#veilShell .veil-lb-act .ok { background: rgba(16,185,129,.2); color: #6ee7b7; border: 1px solid rgba(16,185,129,.4); }#veilShell .veil-g-letter { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: #71717a; margin: 22px 0 10px; }#veilShell .veil-g-letter:first-child { margin-top: 0; }#veilShell .veil-g-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }#veilShell .veil-g-btn {
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,.06);
+    background: rgba(24,24,27,.5);
+    padding: 9px 12px;
+    font-size: 12.5px; font-weight: 500; color: #e4e4e7;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    cursor: pointer; text-align: left;
+    transition: border-color .15s, background .15s, color .15s, transform .15s;
+}#veilShell .veil-g-btn:hover { border-color: rgba(245,158,11,.5); background: #18181b; color: #fcd34d; transform: translateY(-1px); }#veilShell .veil-g-btn.emb { border-color: rgba(16,185,129,.28); padding-right: 26px; position: relative; }#veilShell .veil-g-btn.emb::after { content: ""; position: absolute; right: 10px; top: 50%; margin-top: -3px; width: 6px; height: 6px; border-radius: 999px; background: #34d399; box-shadow: 0 0 6px rgba(52,211,153,.8); }#veilShell .veil-g-btn.emb:hover { border-color: rgba(16,185,129,.55); color: #6ee7b7; }#veilShell .veil-sec .loadbox { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 48px 16px; color: #71717a; text-align: center; }#veilShell .veil-sec .loadbox .luc { width: 24px; height: 24px; color: #34d399; }#veilShell .veil-sec .loadbox .spin { animation: veil-spin 1.2s linear infinite; }#veilShell .veil-sec .loadbox.warn .luc { color: #fbbf24; }#veilShell .veil-sec .loadbox button { margin-top: 4px; height: 34px; border-radius: 10px; border: 1px solid rgba(16,185,129,.4); background: rgba(16,185,129,.15); padding: 0 16px; font-size: 12.5px; font-weight: 600; color: #6ee7b7; cursor: pointer; }#veilShell .veil-sec .loadbox button:hover { background: rgba(16,185,129,.25); }#veilTitle {
+    position: absolute; inset: 0;
+    display: none; flex-direction: column;
+    background: #09090b; pointer-events: auto; z-index: 12;
+}#veilTitle.open { display: flex; }#veilShell .veil-title-hd { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid rgba(39,39,42,.7); background: rgba(9,9,11,.85); backdrop-filter: blur(16px); }#veilShell .veil-title-hd .tile { width: 32px; height: 32px; border-radius: 10px; background: linear-gradient(135deg, #fbbf24, #d97706); color: #09090b; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }#veilShell .veil-title-hd .tt { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; font-weight: 600; }#veilShell .veil-title-hd .ib { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #71717a; cursor: pointer; transition: background .12s, color .12s; }#veilShell .veil-title-hd .ib:hover { background: #27272a; color: #f4f4f5; }#veilShell .veil-title-body { flex: 1; min-height: 0; position: relative; background: #09090b; }#veilShell .veil-title-body iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: #09090b; }#veilShell .veil-title-body .loadbox { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: #71717a; }#veilShell .veil-ai-body { position: relative; z-index: 10; flex: 1; min-height: 0; display: flex; flex-direction: column; }#veilShell .veil-ai-scroll { flex: 1; min-height: 0; overflow-y: auto; }#veilShell .veil-ai-col { margin: 0 auto; width: 100%; max-width: 672px; padding: 24px 16px 32px; display: flex; flex-direction: column; gap: 16px; }
+@media (min-width: 640px) {#veilShell .veil-ai-col { padding: 24px 24px 32px; } }#veilShell .veil-ai-empty { margin: auto; max-width: 672px; padding: 32px 16px; display: flex; flex-direction: column; align-items: center; text-align: center; }#veilShell .veil-ai-empty .pulse {
+    position: relative;
+    width: 80px; height: 80px; border-radius: 999px;
+    background: rgba(16,185,129,.15); box-shadow: inset 0 0 0 1px rgba(16,185,129,.3);
+    display: flex; align-items: center; justify-content: center; color: #34d399;
+    animation: veil-pulse-ring 2.4s ease-out infinite;
+}#veilShell .veil-ai-empty .pulse .spark { position: absolute; right: -4px; top: -4px; width: 28px; height: 28px; border-radius: 999px; border: 1px solid #3f3f46; background: #18181b; display: flex; align-items: center; justify-content: center; color: #a78bfa; }#veilShell .veil-ai-empty h2 { margin-top: 16px; font-size: 22px; font-weight: 700; letter-spacing: -.03em; }#veilShell .veil-ai-empty p { margin-top: 10px; max-width: 448px; font-size: 13.5px; line-height: 1.6; color: #71717a; }#veilShell .veil-ai-sugs { margin-top: 24px; display: grid; gap: 10px; width: 100%; max-width: 560px; grid-template-columns: 1fr; }
+@media (min-width: 640px) {#veilShell .veil-ai-sugs { grid-template-columns: 1fr 1fr; } }#veilShell .veil-ai-sug {
+    display: flex; align-items: center; gap: 10px; text-align: left;
+    border-radius: 16px; border: 1px solid rgba(39,39,42,.8); background: rgba(24,24,27,.4);
+    padding: 12px; cursor: pointer;
+    transition: transform .18s, border-color .18s, background .18s;
+}#veilShell .veil-ai-sug:hover { transform: translateY(-2px); border-color: rgba(16,185,129,.4); background: #18181b; }#veilShell .veil-ai-sug .tile { width: 32px; height: 32px; border-radius: 10px; background: rgba(16,185,129,.15); box-shadow: inset 0 0 0 1px rgba(16,185,129,.25); color: #6ee7b7; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }#veilShell .veil-ai-sug .tx { min-width: 0; }#veilShell .veil-ai-sug .tt { display: block; font-size: 13.5px; font-weight: 500; }#veilShell .veil-ai-sug .ss { display: block; font-size: 11.5px; color: #71717a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }#veilShell .veil-msg { max-width: 85%; border-radius: 16px; padding: 10px 16px; font-size: 13.5px; line-height: 1.65; }#veilShell .veil-msg.user {
+    align-self: flex-end; border-radius: 16px 16px 4px 16px;
+    background: rgba(16,185,129,.15); color: #ecfdf5;
+    box-shadow: inset 0 0 0 1px rgba(16,185,129,.25);
+}#veilShell .veil-msg.bot { align-self: flex-start; border-radius: 16px 16px 16px 4px; border: 1px solid #27272a; background: #18181b; }#veilShell .veil-msg.bot.think { color: #71717a; font-style: italic; }#veilShell .veil-msg pre { margin: 8px 0 0; border-radius: 10px; border: 1px solid #27272a; background: #09090b; padding: 10px 12px; overflow-x: auto; font-family: "Geist Mono", ui-monospace, monospace; font-size: 12px; color: #a1a1aa; }#veilShell .veil-msg code { border-radius: 6px; background: #27272a; padding: 2px 6px; font-family: "Geist Mono", ui-monospace, monospace; font-size: 12px; color: #6ee7b7; }#veilShell .veil-msg pre code { background: none; padding: 0; }#veilShell .veil-msg p { margin: 0 0 8px; }#veilShell .veil-msg p:last-child { margin: 0; }#veilShell .veil-msg ul, #veilShell .veil-msg ol { margin: 4px 0 8px; padding-left: 20px; }#veilShell .veil-msg li { margin: 2px 0; position: relative; }#veilShell .veil-msg .dots { display: inline-flex; gap: 4px; align-items: center; }#veilShell .veil-msg .dots i { width: 6px; height: 6px; border-radius: 99px; background: rgba(52,211,153,.8); animation: veil-bounce 1.2s infinite; }#veilShell .veil-msg .dots i:nth-child(2) { animation-delay: .15s; }#veilShell .veil-msg .dots i:nth-child(3) { animation-delay: .3s; }#veilShell .veil-msg.bot.stream { color: #d4d4d8; font-style: normal; }#veilShell .veil-msg .ai-caret { display: inline-block; width: 7px; height: 15px; margin-left: 3px; vertical-align: -2px; border-radius: 2px; background: rgba(52,211,153,.9); animation: veil-caret 1.05s steps(1) infinite; }@keyframes veil-caret { 0%, 55% { opacity: 1; } 56%, 100% { opacity: .12; } }#veilShell .veil-msg .ai-lite-tag { display: inline-flex; align-items: center; gap: 5px; margin: 0 0 8px; padding: 3px 10px; border-radius: 99px; border: 1px solid rgba(45,212,191,.35); background: rgba(45,212,191,.08); color: #5eead4; font-size: 10.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; font-style: normal; font-family: inherit; }#veilShell .veil-msg .ai-lite-tag .luc-14 { width: 12px; height: 12px; }
+/* live building panel — maker code never shows while it streams */
+#veilShell .veil-msg .ai-build { display: flex; align-items: center; gap: 11px; margin-top: 8px; padding: 11px 13px; border: 1px solid rgba(139,92,246,.3); border-radius: 12px; background: rgba(139,92,246,.07); }
+#veilShell .veil-msg .ai-build .pkg { color: #a78bfa; display: flex; flex-shrink: 0; }
+#veilShell .veil-msg .ai-build .tx { min-width: 0; }
+#veilShell .veil-msg .ai-build .tx b { display: block; font-size: 12.5px; font-weight: 600; color: #f4f4f5; font-style: normal; }
+#veilShell .veil-msg .ai-build .tx i { display: block; font-style: normal; font-size: 11px; color: #a1a1aa; margin-top: 2px; }
+#veilShell .veil-msg .ai-build .luc-14 { width: 15px; height: 15px; }
+#veilShell .veil-msg .ai-build .luc-14.spin { animation: veil-spin 1s linear infinite; }
+@keyframes veil-bounce { 0%,60%,100% { transform: translateY(0); opacity: .5; } 30% { transform: translateY(-4px); opacity: 1; } }#veilShell .veil-ai-input { flex-shrink: 0; border-top: 1px solid rgba(39,39,42,.7); background: rgba(9,9,11,.85); backdrop-filter: blur(16px); padding: 12px 16px; }#veilShell .veil-ai-input .row { margin: 0 auto; max-width: 672px; display: flex; gap: 8px; align-items: flex-end; }#veilShell .veil-ai-input textarea {
+    flex: 1; min-width: 0; resize: none;
+    border-radius: 12px; border: 1px solid #27272a; background: #18181b;
+    padding: 9px 12px; font-size: 13.5px; line-height: 1.5; color: #f4f4f5;
+    max-height: 132px;
+    transition: border-color .15s, box-shadow .15s;
+}#veilShell .veil-ai-input textarea:focus { border-color: rgba(16,185,129,.5); box-shadow: 0 0 0 3px rgba(16,185,129,.15); }#veilShell .veil-ai-input textarea::placeholder { color: #71717a; }#veilShell .veil-ai-input .send {
+    width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
+    background: #10b981; color: #022c22;
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+    transition: background .15s, transform .15s;
+}#veilShell .veil-ai-input .send:hover { background: #34d399; }#veilShell .veil-ai-input .send:disabled { background: #27272a; color: #71717a; cursor: default; }#veilShell .veil-keys-grid { display: grid; gap: 8px; }#veilShell .veil-keys-row { display: flex; align-items: center; gap: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,.06); background: rgba(24,24,27,.5); padding: 10px 14px; }#veilShell .veil-keys-row .act { flex: 1; font-size: 13px; }#veilShell .veil-keys-row .ks { display: flex; gap: 4px; flex-shrink: 0; }#veilToast {
+    position: absolute; left: 50%; bottom: 24px; transform: translate(-50%, 16px);
+    display: flex; align-items: center; gap: 10px;
+    border-radius: 12px; border: 1px solid rgba(16,185,129,.35);
+    background: rgba(9,9,11,.92); backdrop-filter: blur(12px);
+    padding: 10px 16px; font-size: 13px; color: #d4d4d8;
+    box-shadow: 0 16px 40px rgba(0,0,0,.4);
+    opacity: 0; pointer-events: none;
+    transition: opacity .25s, transform .25s;
+    z-index: 30;
+}#veilToast.show { opacity: 1; transform: translate(-50%, 0); }#veilToast .luc { color: #34d399; }#veilToast.err { border-color: rgba(239,68,68,.4); }#veilToast.err .luc { color: #f87171; }
+
+/* ═══ online wallpaper catalogs (Live + 4K) ═══ */
+#veilShell .veil-wp-online { margin-bottom: 4px; }
+#veilShell .veil-wp-online .veil-wp-search { margin-bottom: 12px; }
+#veilShell .veil-wp-cats { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: thin; scrollbar-color: #3f3f46 transparent; }
+#veilShell .veil-wp-cats::-webkit-scrollbar { height: 6px; }
+#veilShell .veil-wp-cats::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 999px; }
+#veilShell .veil-wp-cats .chip {
+    flex-shrink: 0; height: 30px; border-radius: 999px;
+    border: 1px solid #27272a; background: #18181b;
+    padding: 0 14px; font-size: 12px; font-weight: 500; color: #a1a1aa;
+    cursor: pointer; transition: border-color .15s, color .15s, background .15s;
+    white-space: nowrap;
+}#veilShell .veil-wp-cats .chip:hover { color: #f4f4f5; border-color: #3f3f46; }
+#veilShell .veil-wp-cats .chip.on { border-color: rgba(16,185,129,.5); background: rgba(16,185,129,.15); color: #6ee7b7; }
+#veilShell .veil-wp-onlinebar { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+#veilShell .veil-wp-onlinebar .shuff {
+    display: inline-flex; align-items: center; gap: 7px; height: 32px;
+    border-radius: 10px; border: 1px solid rgba(245,158,11,.35);
+    background: rgba(245,158,11,.12); color: #fcd34d;
+    padding: 0 14px; font-size: 12.5px; font-weight: 600; cursor: pointer;
+    transition: background .15s, transform .15s, border-color .15s;
+}#veilShell .veil-wp-onlinebar .shuff:hover { background: rgba(245,158,11,.2); border-color: rgba(245,158,11,.55); }
+#veilShell .veil-wp-onlinebar .shuff:active { transform: scale(.97); }
+#veilShell .veil-wp-onlinebar .shuff[hidden] { display: none; }
+#veilShell .veil-wp-onlinebar .stat { font-size: 12px; color: #71717a; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#veilShell .veil-wp-onlinebar .stat.err { color: #fbbf24; }
+#veilShell .veil-wp-card .kind.k4 { border: 1px solid rgba(129,140,248,.4); background: rgba(99,102,241,.25); color: #c7d2fe; }
+#veilShell .veil-wp-card .meta .src { display: block; font-size: 10px; color: #71717a; margin-top: 2px; }
+#veilShell .veil-wp-more { display: flex; justify-content: center; padding: 18px 0 6px; }
+#veilShell .veil-wp-more[hidden] { display: none; }
+#veilShell .veil-wp-more button {
+    height: 38px; border-radius: 12px; border: 1px solid rgba(16,185,129,.4);
+    background: rgba(16,185,129,.12); color: #6ee7b7;
+    padding: 0 22px; font-size: 13px; font-weight: 600; cursor: pointer;
+    transition: background .15s, transform .15s;
+}#veilShell .veil-wp-more button:hover { background: rgba(16,185,129,.22); }
+#veilShell .veil-wp-more button:active { transform: scale(.98); }
+#veilShell .veil-lb-res { padding: 10px 20px 0; font-size: 12px; color: #a1a1aa; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+#veilShell .veil-lb-res .res-pill { border-radius: 999px; border: 1px solid #27272a; background: #18181b; padding: 3px 10px; font-size: 11px; color: #a1a1aa; }
+#veilShell .veil-lb-res .res-pill.best { border-color: rgba(16,185,129,.5); background: rgba(16,185,129,.12); color: #6ee7b7; }
+#veilShell .veil-lb-res .wait { color: #71717a; display: inline-flex; align-items: center; gap: 8px; }
+#veilShell .veil-lb-res .wait .luc { animation: veil-spin 1.2s linear infinite; }
+#veilShell .luc.spin { animation: veil-spin 1.2s linear infinite; }
+#veilShell .veil-wp-card .media video.hovervid { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+
+/* ═══ Veil programs (FreeTube / GrayJay) — direct birth-origin frame ═══ */
+#veilApp {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    background: #09090b; color: #f4f4f5;
+    pointer-events: auto;
+    z-index: 5;
+    overflow: hidden;
+}#veilApp.open { display: flex; }
+#veilApp #veilAppBar {
+    position: relative; z-index: 6;
+    display: flex; align-items: center; gap: 12px;
+    height: 52px; padding: 0 10px 0 14px;
+    background: rgba(9,9,11,.92);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(39,39,42,.7);
+    box-shadow: 0 18px 40px rgba(0,0,0,.32);
+    flex-shrink: 0;
+}
+#veilApp .va-ic {
+    width: 34px; height: 34px; border-radius: 10px;
+    background: linear-gradient(135deg, rgba(16,185,129,.18), rgba(20,184,166,.12));
+    border: 1px solid rgba(16,185,129,.35);
+    color: #34d399;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}#veilApp .va-ic .luc { width: 17px; height: 17px; }
+#veilApp .va-tt {
+    min-width: 0; flex: 1;
+    display: flex; flex-direction: column; gap: 1px;
+    overflow: hidden;
+}#veilApp .va-tt strong {
+    font-size: 13.5px; font-weight: 600; letter-spacing: .01em;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}#veilApp .va-tt span {
+    font-size: 11px; color: #71717a;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+#veilApp .va-badge {
+    display: none;
+    flex-shrink: 0;
+    font-size: 10px; font-weight: 600; letter-spacing: .14em;
+    color: #6ee7b7;
+    padding: 4px 9px; border-radius: 999px;
+    background: rgba(16,185,129,.1);
+    border: 1px solid rgba(16,185,129,.3);
+}
+@media (min-width: 640px) { #veilApp .va-badge { display: inline-block; } }
+#veilApp .va-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+#veilApp .va-btn, #veilApp .va-close {
+    width: 34px; height: 34px; border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    color: #a1a1aa; cursor: pointer;
+    background: transparent; border: 1px solid transparent;
+    transition: background .13s, color .13s, border-color .13s, transform .13s;
+}#veilApp .va-btn:hover, #veilApp .va-close:hover {
+    background: #18181b; color: #f4f4f5; border-color: rgba(63,63,70,.7);
+}#veilApp .va-btn:active { transform: scale(.94); }
+#veilApp .va-close { color: #fca5a5; }
+#veilApp .va-close:hover { background: rgba(239,68,68,.12); border-color: rgba(239,68,68,.4); color: #fecaca; }
+#veilApp .va-btn .luc, #veilApp .va-close .luc { width: 16px; height: 16px; }
+#veilApp #veilAppFrame {
+    flex: 1; min-height: 0;
+    width: 100%;
+    border: 0;
+    background: #09090b;
+}
+#veilApp #veilAppLoad {
+    position: absolute; inset: 52px 0 0 0;
+    z-index: 7;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+    background: #09090b;
+    opacity: 1; transition: opacity .3s ease;
+    pointer-events: none;
+}#veilApp #veilAppLoad:not(.on) { opacity: 0; }
+#veilApp .va-spin {
+    position: relative; width: 38px; height: 38px;
+}#veilApp .va-spin::before {
+    content: ""; position: absolute; inset: 0; border-radius: 999px;
+    border: 3px solid #27272a;
+}#veilApp .va-spin::after {
+    content: ""; position: absolute; inset: -3px; border-radius: 999px;
+    border: 3px solid transparent; border-top-color: #34d399;
+    animation: veil-spin .9s linear infinite;
+}
+#veilApp .va-mark {
+    display: flex; align-items: center; gap: 8px; opacity: .8;
+}#veilApp .va-mark span {
+    font-size: 12px; font-weight: 500; letter-spacing: .2em; color: #71717a;
+}
+@media (prefers-reduced-motion: reduce) { #veilApp .va-spin::after { animation-duration: 2s; } }
+#veilApp #veilAppFail {
+    position: absolute; inset: 52px 0 0 0;
+    z-index: 8;
+    display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(1200px 500px at 50% 30%, rgba(16,185,129,.06), transparent 60%), #09090b;
+}#veilApp #veilAppFail[hidden] { display: none; }
+#veilApp .vaf-box {
+    max-width: 420px; margin: 0 20px;
+    display: flex; flex-direction: column; align-items: center; gap: 14px;
+    padding: 30px 26px;
+    border-radius: 18px;
+    border: 1px solid rgba(63,63,70,.7);
+    background: rgba(24,24,27,.6);
+    text-align: center;
+}
+#veilApp .vaf-box .luc { width: 26px; height: 26px; color: #fbbf24; }
+#veilApp .vaf-box p { font-size: 13px; line-height: 1.55; color: #a1a1aa; }
+#veilApp .vaf-row { display: flex; gap: 10px; }
+#veilApp .vaf-btn {
+    padding: 9px 18px; border-radius: 10px;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    background: linear-gradient(135deg, #10b981, #0d9488);
+    color: #052e22; border: 0;
+    transition: transform .13s, box-shadow .13s;
+}#veilApp .vaf-btn:hover { box-shadow: 0 8px 24px rgba(16,185,129,.35); }
+#veilApp .vaf-btn:active { transform: scale(.96); }
+#veilApp .vaf-btn.ghost {
+    background: transparent; color: #a1a1aa;
+    border: 1px solid rgba(63,63,70,.7);
+}#veilApp .vaf-btn.ghost:hover { color: #f4f4f5; border-color: #52525b; box-shadow: none; }
+
+/* ── GUST 4.0 credit — small bottom-right corner mark ────────── */
+#veilShell #veilCredit {
+    position: fixed;
+    right: 14px;
+    bottom: 9px;
+    z-index: 70; /* above sections + bar, below the boot cover */
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: .14em;
+    color: rgba(113, 113, 122, .8);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, .65);
+    user-select: none;
+}
+#veilShell #veilCredit .dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 999px;
+    background: rgba(52, 211, 153, .7);
+    box-shadow: 0 0 6px rgba(52, 211, 153, .55);
+}
+/* OS-fullscreen hides browser chrome but the credit stays — subtle */
+:fullscreen #veilCredit { opacity: .7; }
+
+/* ═══ Music section + persistent player + Settings rows ═════════ */
+/* Dock accents (fuchsia Music, zinc Settings — the website's colors) */
+#veilShell .veil-dock .dk.a-music i svg { color: #e879f9; }
+#veilShell .veil-dock .dk.a-music:hover { border-color: rgba(217,70,239,.35); color: #fce7f3; }
+#veilShell .veil-dock .dk.a-set i svg { color: #d4d4d8; }
+
+/* Section header tile — fuchsia variant (Music) */
+#veilShell .veil-sec-hd .tile.fuchsia {
+    background: linear-gradient(135deg, #e879f9, #a21caf);
+    box-shadow: 0 8px 20px rgba(217,70,239,.22), inset 0 0 0 1px rgba(240,171,252,.3);
+}
+#veilShell .veil-sec .orbs.music .o1 { background: rgba(217,70,239,.10); }
+#veilShell .veil-sec .orbs.music .o2 { background: rgba(168,85,247,.10); }
+
+/* Backdrop dim scrim (Settings › Appearance) — sits over the wallpaper,
+   under the vignette; opacity is set from JS. */
+#veilShell .veil-nt-dim {
+    position: absolute; inset: 0;
+    background: #000;
+    opacity: 0;
+    transition: opacity .5s ease;
+    pointer-events: none;
+}
+
+/* ── Music: search form ─────────────────────────────────────── */
+#veilShell .veil-mu-search { display: flex; gap: 8px; margin: 0 0 14px; }
+#veilShell .veil-mu-inputwrap {
+    position: relative; flex: 1; min-width: 0;
+    display: flex; align-items: center;
+}
+#veilShell .veil-mu-inputwrap i svg {
+    position: absolute; left: 14px; width: 15px; height: 15px;
+    color: #71717a; pointer-events: none;
+}
+#veilShell .veil-mu-inputwrap:focus-within i svg { color: #e879f9; }
+#veilShell .veil-mu-input {
+    width: 100%; height: 44px;
+    padding: 0 16px 0 40px;
+    border-radius: 16px;
+    border: 1px solid rgba(39,39,42,.9);
+    background: rgba(24,24,27,.7);
+    color: #f4f4f5; font-size: 14px; font-family: inherit;
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+}
+#veilShell .veil-mu-input::placeholder { color: #71717a; }
+#veilShell .veil-mu-input:focus {
+    border-color: rgba(217,70,239,.6);
+    box-shadow: 0 0 0 3px rgba(217,70,239,.22);
+}
+#veilShell .veil-mu-go {
+    display: flex; align-items: center; gap: 7px;
+    height: 44px; padding: 0 18px;
+    border: 0; border-radius: 16px;
+    background: #d946ef; color: #3b0764;
+    font-size: 13.5px; font-weight: 650; font-family: inherit;
+    cursor: pointer;
+    box-shadow: 0 10px 24px rgba(217,70,239,.28);
+    transition: background .15s, transform .15s;
+}
+#veilShell .veil-mu-go:hover { background: #e879f9; transform: translateY(-1px); }
+#veilShell .veil-mu-go svg { width: 15px; height: 15px; }
+#veilShell .veil-mu-go.busy svg { animation: veil-spin 1s linear infinite; }
+#veilShell .veil-mu-note {
+    margin: -4px 0 12px; font-size: 12px; color: #fda4af;
+}
+#veilShell .veil-mu-fine {
+    margin: 18px 0 0; padding: 14px 16px;
+    display: flex; gap: 9px; align-items: flex-start;
+    border: 1px solid rgba(39,39,42,.8);
+    border-radius: 16px;
+    background: rgba(24,24,27,.4);
+    color: #a1a1aa; font-size: 12px; line-height: 1.55;
+}
+#veilShell .veil-mu-fine b { color: #6ee7b7; font-weight: 600; }
+
+/* ── Music: rows / shelves / cards ───────────────────────────── */
+#veilShell .veil-mu-row { margin: 0 0 22px; }
+#veilShell .veil-mu-row-hd { display: flex; align-items: center; gap: 10px; margin: 0 0 10px; }
+#veilShell .veil-mu-row-hd h3 {
+    margin: 0; font-size: 11px; font-weight: 650;
+    text-transform: uppercase; letter-spacing: .08em;
+    color: #a1a1aa;
+}
+#veilShell .veil-mu-row-hd .ln { flex: 1; height: 1px; background: linear-gradient(to right, rgba(39,39,42,.9), transparent); }
+#veilShell .veil-mu-row-hd .veil-mu-clear {
+    border: 1px solid rgba(39,39,42,.9);
+    background: rgba(24,24,27,.7);
+    color: #a1a1aa; font-size: 10.5px; font-weight: 550; font-family: inherit;
+    border-radius: 999px; padding: 3px 11px; cursor: pointer;
+    transition: color .15s, border-color .15s;
+}
+#veilShell .veil-mu-row-hd .veil-mu-clear:hover { color: #e4e4e7; border-color: #52525b; }
+#veilShell .veil-mu-shelf {
+    display: flex; gap: 10px; overflow-x: auto;
+    padding-bottom: 4px;
+    scroll-snap-type: x proximity;
+}
+#veilShell .veil-mu-card {
+    position: relative; flex: 0 0 auto;
+    display: flex; flex-direction: column; gap: 0;
+    width: 136px; padding: 10px;
+    border: 1px solid rgba(39,39,42,.9);
+    border-radius: 16px;
+    background: rgba(24,24,27,.6);
+    cursor: pointer; text-align: left; font-family: inherit;
+    scroll-snap-align: start;
+    transition: transform .18s, border-color .18s, background .18s, box-shadow .18s;
+}
+#veilShell .veil-mu-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(217,70,239,.5);
+    background: #18181b;
+    box-shadow: 0 14px 30px rgba(217,70,239,.18);
+}
+#veilShell .veil-mu-card .art {
+    position: relative; display: block;
+    width: 100%; aspect-ratio: 1 / 1;
+    border-radius: 12px; overflow: hidden;
+    background: linear-gradient(135deg, rgba(217,70,239,.18), #18181b 60%, #09090b);
+    display: flex; align-items: center; justify-content: center;
+    color: #71717a;
+}
+#veilShell .veil-mu-card .art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+#veilShell .veil-mu-card .pl {
+    position: absolute; inset: 0; margin: 10px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(9,9,11,0);
+    opacity: 0; transition: opacity .18s, background .18s;
+}
+#veilShell .veil-mu-card:hover .pl { opacity: 1; background: rgba(9,9,11,.42); }
+#veilShell .veil-mu-card .pl svg { width: 34px; height: 34px; color: #d946ef; filter: drop-shadow(0 6px 14px rgba(217,70,239,.5)); }
+#veilShell .veil-mu-card .tx { display: flex; flex-direction: column; gap: 2px; margin-top: 8px; min-width: 0; }
+#veilShell .veil-mu-card .tt {
+    font-size: 12.5px; font-weight: 550; color: #f4f4f5; line-height: 1.25;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+#veilShell .veil-mu-card .ss { font-size: 10.5px; color: #71717a; text-transform: capitalize; }
+
+/* search-result song cards (landscape) */
+#veilShell .veil-mu-song {
+    position: relative; flex: 0 0 auto;
+    display: flex; gap: 11px; align-items: center;
+    width: 208px; min-height: 76px; padding: 10px;
+    border: 1px solid rgba(39,39,42,.9);
+    border-radius: 16px;
+    background: rgba(24,24,27,.6);
+    cursor: pointer; text-align: left; font-family: inherit;
+    scroll-snap-align: start;
+    transition: transform .18s, border-color .18s, background .18s, box-shadow .18s;
+}
+#veilShell .veil-mu-song:hover {
+    transform: translateY(-2px);
+    border-color: rgba(217,70,239,.5);
+    background: #18181b;
+}
+#veilShell .veil-mu-song.on {
+    border-color: rgba(217,70,239,.65);
+    background: rgba(217,70,239,.10);
+    box-shadow: 0 14px 30px rgba(217,70,239,.22);
+}
+#veilShell .veil-mu-song.ghost { pointer-events: none; animation: veil-shimmer 1.4s linear infinite; background: rgba(24,24,27,.5); }
+#veilShell .veil-mu-song .art {
+    flex: 0 0 auto;
+    width: 54px; height: 54px;
+    border-radius: 12px; overflow: hidden;
+    background: linear-gradient(135deg, rgba(217,70,239,.18), #18181b 60%, #09090b);
+    display: flex; align-items: center; justify-content: center;
+    color: #71717a;
+}
+#veilShell .veil-mu-song .art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+#veilShell .veil-mu-song .tx { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+#veilShell .veil-mu-song .tt {
+    font-size: 12.5px; font-weight: 550; color: #f4f4f5; line-height: 1.25;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+#veilShell .veil-mu-song .ss { font-size: 10.5px; color: #71717a; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+#veilShell .veil-mu-song .pv {
+    display: inline-flex; align-items: center; gap: 4px; align-self: flex-start;
+    margin-top: 3px; padding: 2px 8px;
+    border: 1px solid rgba(63,63,70,.7); border-radius: 999px;
+    background: rgba(9,9,11,.6);
+    font-size: 9.5px; font-weight: 650; letter-spacing: .07em; text-transform: uppercase;
+    color: #a1a1aa;
+}
+#veilShell .veil-mu-song .pv svg { width: 9px; height: 9px; }
+/* full-song badge — the emerald "this is the WHOLE track" signal */
+#veilShell .veil-mu-song .pv.full {
+    border-color: rgba(16,185,129,.5);
+    background: rgba(16,185,129,.1);
+    color: #6ee7b7;
+}
+#veilShell .veil-mu-song .meta { display: inline-flex; align-items: center; gap: 6px; margin-top: 3px; }
+#veilShell .veil-mu-song .meta .pv { margin-top: 0; }
+#veilShell .veil-mu-song .dur {
+    font-size: 10px; font-variant-numeric: tabular-nums; color: #71717a;
+}
+@keyframes vm-eq-bounce { 0%,100% { transform: scaleY(.35); } 50% { transform: scaleY(1); } }
+
+/* ── persistent music player (pill / panel) ──────────────────── */
+#veilShell #veilMusic {
+    position: fixed;
+    right: 14px; bottom: 30px;   /* above the credit line */
+    z-index: 130;                /* above sections (120), below lightbox/toasts */
+    width: auto; max-width: min(94vw, 400px);
+}
+#veilShell #veilMusic .vm-card {
+    border-radius: 18px;
+    border: 1px solid rgba(39,39,42,.9);
+    background: rgba(9,9,11,.95);
+    box-shadow: 0 24px 60px rgba(0,0,0,.6);
+    backdrop-filter: blur(14px);
+    overflow: hidden;
+    transition: border-radius .2s;
+}
+#veilShell #veilMusic .vm-hd { display: flex; align-items: center; gap: 10px; padding: 8px 10px; }
+#veilShell #veilMusic.attached { width: min(94vw, 400px); }
+#veilShell #veilMusic.attached .vm-card { border-radius: 18px; }
+#veilShell #veilMusic:not(.attached) .vm-card { border-radius: 999px; }
+#veilShell #veilMusic .vm-art {
+    position: relative; flex: 0 0 auto;
+    width: 38px; height: 38px;
+    border-radius: 12px; overflow: hidden; border: 0; padding: 0;
+    background: linear-gradient(135deg, rgba(217,70,239,.18), #18181b 60%, #09090b);
+    display: flex; align-items: center; justify-content: center;
+    color: #a1a1aa; cursor: pointer;
+}
+#veilShell #veilMusic.attached .vm-art { width: 44px; height: 44px; }
+#veilShell #veilMusic .vm-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+#veilShell #veilMusic .vm-art-ic { display: flex; }
+#veilShell #veilMusic .vm-art-ic svg { width: 17px; height: 17px; color: #e879f9; }
+#veilShell #veilMusic .vm-eq {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center; gap: 2.5px;
+    background: rgba(9,9,11,.4);
+}
+#veilShell #veilMusic .vm-eq i {
+    width: 2.5px; height: 12px; border-radius: 999px;
+    background: #f0abfc;
+    transform-origin: bottom;
+    animation: vm-eq-bounce .9s ease-in-out infinite;
+}
+#veilShell #veilMusic .vm-eq i:nth-child(2) { animation-delay: .15s; }
+#veilShell #veilMusic .vm-eq i:nth-child(3) { animation-delay: .3s; }
+#veilShell #veilMusic .vm-tt { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 1px; }
+#veilShell #veilMusic .vm-kicker {
+    margin: 0; display: none;
+    font-size: 9.5px; font-weight: 650; letter-spacing: .09em; text-transform: uppercase;
+    color: rgba(232,121,249,.85);
+}
+#veilShell #veilMusic.attached .vm-kicker { display: block; }
+#veilShell #veilMusic .vm-title {
+    margin: 0; font-size: 12.5px; font-weight: 550; color: #f4f4f5;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+#veilShell #veilMusic.attached .vm-title { font-size: 13px; }
+#veilShell #veilMusic .vm-sub {
+    margin: 0; display: none;
+    font-size: 11px; color: #71717a;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+#veilShell #veilMusic.attached .vm-sub { display: block; }
+#veilShell #veilMusic .vm-actions { display: flex; align-items: center; gap: 2px; flex: 0 0 auto; }
+#veilShell #veilMusic .vm-btn {
+    display: flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px;
+    border: 0; border-radius: 999px;
+    background: transparent; color: #a1a1aa; cursor: pointer;
+    text-decoration: none;
+    transition: background .15s, color .15s;
+}
+#veilShell #veilMusic .vm-btn:hover { background: rgba(39,39,42,.7); color: #e879f9; }
+#veilShell #veilMusic .vm-btn svg { width: 15px; height: 15px; }
+#veilShell #veilMusic .vm-btn.stop:hover { color: #fb7185; }
+#veilShell #veilMusic .vm-body { border-top: 1px solid rgba(39,39,42,.8); padding: 12px 16px 14px; }
+#veilShell #veilMusic .vm-scrub { display: flex; align-items: center; gap: 10px; }
+#veilShell #veilMusic .vm-play-big {
+    flex: 0 0 auto;
+    width: 40px; height: 40px;
+    border: 0; border-radius: 999px;
+    background: #d946ef; color: #3b0764; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 10px 22px rgba(217,70,239,.3);
+    transition: background .15s;
+}
+#veilShell #veilMusic .vm-play-big:hover { background: #e879f9; }
+#veilShell #veilMusic .vm-play-big svg { width: 17px; height: 17px; }
+#veilShell #veilMusic .vm-time { flex: 0 0 auto; font-size: 11px; color: #71717a; font-variant-numeric: tabular-nums; }
+#veilShell #veilMusic .vm-bar {
+    position: relative; flex: 1; height: 16px; cursor: pointer;
+    outline: none;
+}
+#veilShell #veilMusic .vm-bar:focus-visible .knob { box-shadow: 0 0 0 3px rgba(217,70,239,.35); }
+#veilShell #veilMusic .vm-bar .track {
+    position: absolute; inset: 0; top: 50%; height: 6px; margin-top: -3px;
+    border-radius: 999px; background: rgba(39,39,42,.9); overflow: hidden;
+}
+#veilShell #veilMusic .vm-bar .fill {
+    position: absolute; left: 0; top: 0; height: 6px; width: 0%;
+    border-radius: 999px;
+    background: linear-gradient(to right, #d946ef, #f0abfc);
+}
+#veilShell #veilMusic .vm-bar .knob {
+    position: absolute; top: 50%; left: 0%;
+    width: 12px; height: 12px; margin: -6px 0 0 -6px;
+    border-radius: 999px; background: #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,.5), 0 0 0 2px rgba(217,70,239,.6);
+    opacity: 0; transition: opacity .15s;
+}
+#veilShell #veilMusic .vm-bar:hover .knob { opacity: 1; }
+#veilShell #veilMusic .vm-hand { margin: 10px 0 0; font-size: 11px; color: #71717a; }
+#veilShell #veilMusic .vm-hand a { color: #6ee7b7; text-decoration: none; }
+#veilShell #veilMusic .vm-hand a:hover { text-decoration: underline; }
+#veilShell #veilMusic .vm-embed iframe { display: block; }
+/* the vm-bar needs a visible track — injected .fill sits inside it */
+#veilShell #veilMusic .vm-bar { position: relative; }
+#veilShell #veilMusic .vm-bar::before {
+    content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 6px; margin-top: -3px;
+    border-radius: 999px; background: rgba(39,39,42,.9);
+}
+#veilShell #veilMusic .vm-bar .fill { position: absolute; left: 0; top: 50%; height: 6px; margin-top: -3px; }
+
+/* ── Settings rows ───────────────────────────────────────────── */
+#veilShell .veil-set-row {
+    display: flex; flex-direction: column; gap: 12px;
+    padding: 15px 16px; margin-bottom: 10px;
+    border: 1px solid rgba(39,39,42,.8);
+    border-radius: 16px;
+    background: rgba(24,24,27,.5);
+}
+@media (min-width: 640px) {
+    #veilShell .veil-set-row { flex-direction: row; align-items: center; }
+}
+#veilShell .veil-set-row .left { display: flex; min-width: 0; flex: 1; gap: 11px; align-items: flex-start; }
+#veilShell .veil-set-row .ic {
+    flex: 0 0 auto;
+    width: 36px; height: 36px;
+    border-radius: 12px;
+    background: rgba(39,39,42,.8);
+    display: flex; align-items: center; justify-content: center;
+    color: #d4d4d8;
+}
+#veilShell .veil-set-row .ic svg { width: 15px; height: 15px; }
+#veilShell .veil-set-row .tx { min-width: 0; }
+#veilShell .veil-set-row .lb { margin: 0; font-size: 14px; font-weight: 550; color: #f4f4f5; }
+#veilShell .veil-set-row .ss { margin: 2px 0 0; font-size: 12px; line-height: 1.4; color: #71717a; }
+#veilShell .veil-set-row .grp {
+    display: flex; flex-wrap: wrap; gap: 4px; flex: 0 0 auto;
+    padding: 4px;
+    border: 1px solid rgba(39,39,42,.9); border-radius: 12px;
+    background: rgba(9,9,11,.7);
+}
+#veilShell .veil-set-row .opt {
+    display: flex; align-items: center; gap: 4px;
+    height: 30px; padding: 0 12px;
+    border: 0; border-radius: 9px;
+    background: transparent; color: #a1a1aa;
+    font-size: 12.5px; font-weight: 550; font-family: inherit;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+}
+#veilShell .veil-set-row .opt:hover { background: rgba(39,39,42,.7); color: #e4e4e7; }
+#veilShell .veil-set-row .opt.on {
+    background: rgba(16,185,129,.15);
+    color: #6ee7b7;
+    box-shadow: inset 0 0 0 1px rgba(16,185,129,.4);
+}
+#veilShell .veil-set-input {
+    flex: 0 0 auto;
+    width: 100%; height: 36px;
+    margin: 0; padding: 0 14px;
+    border: 1px solid rgba(39,39,42,.9); border-radius: 12px;
+    background: rgba(9,9,11,.7);
+    color: #f4f4f5; font-size: 13px; font-family: inherit;
+    outline: none;
+}
+@media (min-width: 640px) { #veilShell .veil-set-input { width: 224px; } }
+#veilShell .veil-set-input:focus { border-color: rgba(16,185,129,.5); box-shadow: 0 0 0 3px rgba(16,185,129,.18); }
+#veilShell .veil-set-input::placeholder { color: #52525b; }
+#veilShell .veil-set-row.danger .ic {
+    background: rgba(244,63,94,.1);
+    box-shadow: inset 0 0 0 1px rgba(244,63,94,.2);
+    color: #fda4af;
+}
+#veilShell .veil-set-wipe {
+    flex: 0 0 auto;
+    height: 36px; padding: 0 16px;
+    border: 1px solid #52525b; border-radius: 12px;
+    background: rgba(24,24,27,.9); color: #d4d4d8;
+    font-size: 13px; font-weight: 550; font-family: inherit;
+    cursor: pointer;
+    transition: all .15s;
+}
+#veilShell .veil-set-wipe:hover {
+    border-color: rgba(244,63,94,.5);
+    color: #fda4af;
+}
+#veilShell .veil-set-wipe.armed {
+    background: #f43f5e; border-color: #f43f5e; color: #4c0519;
+}
+
+/* Static "Fixed" badge on non-interactive settings rows (behavior facts) */
+#veilShell .veil-set-fixed {
+    flex: 0 0 auto;
+    height: 26px; padding: 0 11px;
+    display: inline-flex; align-items: center;
+    border: 1px solid rgba(16,185,129,.25); border-radius: 9px;
+    background: rgba(16,185,129,.1); color: #6ee7b7;
+    font-size: 11px; font-weight: 600; letter-spacing: .02em;
+}
+
+@keyframes veil-mu-pulse { 0%,100% { opacity: .45; } 50% { opacity: 1; } }
+#veilShell .veil-mu-song.ghost { animation: veil-mu-pulse 1.4s ease-in-out infinite; }
+
+/* ═══ Arcade tabs — the stash / bloxd (mirrors the site) ═══ */
+#veilShell .veil-arc-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+#veilShell .arc-tab {
+    display: inline-flex; align-items: center; gap: 6px;
+    height: 32px; padding: 0 14px;
+    border-radius: 999px; border: 1px solid rgba(39,39,42,.9);
+    background: rgba(24,24,27,.55); color: #a1a1aa;
+    font-size: 12.5px; font-weight: 600; letter-spacing: .01em;
+    cursor: pointer; transition: all .15s ease;
+}
+#veilShell .arc-tab .luc { width: 14px; height: 14px; }
+#veilShell .arc-tab:hover { border-color: rgba(16,185,129,.45); background: rgba(16,185,129,.08); color: #d4d4d8; }
+#veilShell .arc-tab[aria-selected="true"] {
+    border-color: rgba(16,185,129,.65); background: rgba(16,185,129,.16); color: #6ee7b7;
+    box-shadow: 0 0 18px -8px rgba(16,185,129,.9);
+}
+#veilShell .arc-tab[data-arc-tab="stash"] .luc { color: #5fae87; }
+#veilShell .arc-tab[data-arc-tab="bloxd"] .luc { color: #6ee7b7; }
+#veilShell .veil-arc-meta { font-size: 11.5px; color: #71717a; margin: 0 0 14px; min-height: 15px; }
+#veilShell .veil-arc-view { animation: veil-rise .3s ease both; }
+
+/* ═══ Veil Math — the number rush (native, replaced the bloxd embed) ═══ */
+#veilShell .arc-math { max-width: 620px; margin: 0 auto; }
+#veilShell .mm-home { display: grid; grid-template-columns: 1fr; gap: 10px; }
+@media (min-width: 560px) { #veilShell .mm-home { grid-template-columns: repeat(3, 1fr); } }
+#veilShell .mm-mode {
+    display: flex; flex-direction: column; gap: 5px; text-align: left; cursor: pointer;
+    border: 1px solid #27272a; border-radius: 16px; background: rgba(24,24,27,.6);
+    padding: 16px 14px; color: #f4f4f5; transition: border-color .15s, background .15s, transform .15s;
+}
+#veilShell .mm-mode:hover { border-color: rgba(52,211,153,.5); background: rgba(22,40,33,.7); transform: translateY(-2px); }
+#veilShell .mm-mode .mm-t { font-size: 15px; font-weight: 650; }
+#veilShell .mm-mode .mm-best {
+    font-style: normal; font-size: 10.5px; font-weight: 700; color: #fcd34d;
+    border: 1px solid rgba(245,158,11,.3); background: rgba(245,158,11,.08);
+    border-radius: 999px; padding: 1px 8px; margin-left: 6px; font-variant-numeric: tabular-nums;
+}
+#veilShell .mm-mode .mm-d { font-size: 11.5px; color: #a1a1aa; line-height: 1.5; }
+#veilShell .mm-over {
+    border: 1px solid rgba(52,211,153,.3); background: rgba(16,185,129,.08);
+    border-radius: 16px; padding: 18px; margin-bottom: 12px;
+}
+#veilShell .mm-k { font-size: 10.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #6ee7b7; margin: 0; }
+#veilShell .mm-big { font-size: 30px; font-weight: 750; margin: 4px 0 0; color: #fafafa; font-variant-numeric: tabular-nums; }
+#veilShell .mm-big small { font-size: 14px; color: #a1a1aa; margin-left: 4px; }
+#veilShell .mm-nb { display: flex; align-items: center; gap: 6px; margin: 6px 0 0; font-size: 12px; font-weight: 700; color: #fcd34d; }
+#veilShell .mm-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 14px; }
+#veilShell .mm-stats div { border: 1px solid #27272a; background: rgba(9,9,11,.6); border-radius: 10px; padding: 8px 4px; text-align: center; }
+#veilShell .mm-stats b { display: block; font-size: 16px; font-variant-numeric: tabular-nums; }
+#veilShell .mm-stats span { font-size: 9.5px; text-transform: uppercase; letter-spacing: .07em; color: #71717a; }
+#veilShell .mm-acts { display: flex; gap: 8px; margin-top: 14px; }
+#veilShell .mm-acts button { height: 38px; border-radius: 11px; display: inline-flex; align-items: center; gap: 7px; padding: 0 16px; font-size: 13px; font-weight: 650; cursor: pointer; }
+#veilShell .mm-acts .mm-go { border: 0; background: #34d399; color: #052e16; }
+#veilShell .mm-acts .mm-go:hover { background: #6ee7b7; }
+#veilShell .mm-acts .mm-plain { border: 1px solid #3f3f46; background: rgba(24,24,27,.8); color: #d4d4d8; }
+#veilShell .mm-acts .mm-plain:hover { border-color: #52525b; color: #fafafa; }
+#veilShell .mm-top { display: flex; align-items: center; gap: 8px; }
+#veilShell .mm-end {
+    display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px;
+    border-radius: 9px; border: 1px solid #27272a; background: rgba(9,9,11,.6);
+    color: #a1a1aa; font-size: 12px; font-weight: 600; cursor: pointer;
+}
+#veilShell .mm-end:hover { color: #f4f4f5; border-color: #52525b; }
+#veilShell .mm-hudrow { display: flex; gap: 6px; margin-left: auto; }
+#veilShell .mm-hud {
+    display: inline-flex; align-items: center; gap: 4px; height: 26px; padding: 0 10px;
+    border-radius: 999px; background: rgba(39,39,42,.7); color: #e4e4e7;
+    font-size: 11.5px; font-weight: 700; font-variant-numeric: tabular-nums;
+}
+#veilShell .mm-hud.mm-streak.fire { background: rgba(245,158,11,.14); color: #fcd34d; border: 1px solid rgba(245,158,11,.4); }
+#veilShell .mm-hud.mm-lvl { background: rgba(16,185,129,.1); color: #6ee7b7; border: 1px solid rgba(16,185,129,.25); }
+#veilShell .mm-lives .mm-heart { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 3px; background: #3f3f46; }
+#veilShell .mm-lives .mm-heart.on { background: #fb7185; box-shadow: 0 0 6px rgba(251,113,133,.6); }
+#veilShell .mm-clock { height: 8px; border-radius: 999px; background: rgba(39,39,42,.9); overflow: hidden; margin-top: 12px; }
+#veilShell .mm-clock-fill { height: 100%; border-radius: 999px; background: #34d399; transition: width .9s linear; }
+#veilShell .mm-clock-fill.warm { background: #fbbf24; }
+#veilShell .mm-clock-fill.hot { background: #fb7185; }
+#veilShell .mm-clock-t { font-size: 11px; color: #71717a; margin: 5px 0 0; font-variant-numeric: tabular-nums; }
+#veilShell .mm-q {
+    border: 1px solid #27272a; background: rgba(24,24,27,.6); border-radius: 22px;
+    padding: 26px 20px; margin-top: 16px; text-align: center; transition: border-color .15s, background .15s;
+}
+#veilShell .mm-q.ok { border-color: rgba(52,211,153,.55); background: rgba(16,185,129,.08); }
+#veilShell .mm-q.no { border-color: rgba(251,113,133,.55); background: rgba(251,113,133,.07); }
+#veilShell .mm-tier { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #71717a; margin: 0; }
+#veilShell .mm-text { font-size: 40px; font-weight: 750; margin: 8px 0 0; color: #fafafa; font-variant-numeric: tabular-nums; }
+#veilShell .mm-qclock { height: 6px; width: 180px; margin: 14px auto 0; border-radius: 999px; background: rgba(39,39,42,.9); overflow: hidden; }
+#veilShell .mm-qfill { height: 100%; background: #34d399; border-radius: 999px; transition: width .1s linear; }
+#veilShell .mm-qfill.hot { background: #fb7185; }
+#veilShell .mm-ans {
+    display: inline-block; min-width: 110px; margin-top: 16px; padding: 8px 20px;
+    border: 1px solid #3f3f46; background: rgba(9,9,11,.7); border-radius: 15px;
+    font-family: "Geist Mono", ui-monospace, monospace; font-size: 27px; font-weight: 700;
+    color: #fafafa; font-variant-numeric: tabular-nums;
+}
+#veilShell .mm-ans.ok { border-color: rgba(52,211,153,.6); background: rgba(16,185,129,.12); color: #a7f3d0; }
+#veilShell .mm-ans.no { border-color: rgba(251,113,133,.6); background: rgba(251,113,133,.1); color: #fda4af; }
+#veilShell .mm-verdict { margin: 14px 0 0; font-size: 13px; font-weight: 600; }
+#veilShell .mm-verdict.ok { color: #6ee7b7; }
+#veilShell .mm-verdict.no { color: #fda4af; }
+#veilShell .mm-pad { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 18px; }
+#veilShell .mm-key {
+    height: 52px; border-radius: 15px; border: 1px solid #27272a; background: rgba(24,24,27,.6);
+    color: #f4f4f5; font-size: 19px; font-weight: 650; cursor: pointer;
+    font-variant-numeric: tabular-nums; transition: background .12s, transform .06s;
+}
+#veilShell .mm-key:hover { background: rgba(39,39,42,.9); }
+#veilShell .mm-key:active { transform: scale(.94); }
+#veilShell .mm-key.mm-soft { font-size: 15px; color: #a1a1aa; }
+#veilShell .mm-key.mm-zero { grid-column: span 2; }
+#veilShell .mm-key.mm-go { background: #34d399; color: #052e16; font-size: 22px; }
+#veilShell .mm-key.mm-go:hover { background: #6ee7b7; }
+#veilShell .mm-hint { text-align: center; font-size: 11px; color: #52525b; margin: 10px 0 0; }
+
+/* ═══ extension packs — the stash's drop-in system ═══ */
+#veilShell .veil-ext-bar {
+    display: flex; align-items: center; gap: 12px;
+    margin: 10px 0 14px; padding: 10px 14px;
+    border: 1px solid #27272a; border-radius: 12px;
+    background: rgba(24,24,27,.72);
+}
+#veilShell .veil-ext-bar[hidden] { display: none; }
+#veilShell .vx-ic {
+    display: flex; align-items: center; justify-content: center;
+    width: 30px; height: 30px; border-radius: 9px; flex: none;
+    background: rgba(52,211,153,.12); color: #34d399;
+}
+#veilShell .vx-body { flex: 1; min-width: 0; }
+#veilShell .vx-line {
+    margin: 0; font-size: 12.5px; color: #a1a1aa;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+#veilShell .vx-prog {
+    height: 3px; border-radius: 999px; background: #27272a;
+    margin-top: 7px; overflow: hidden;
+}
+#veilShell .vx-prog span {
+    display: block; height: 100%; width: 0;
+    background: linear-gradient(90deg,#10b981,#34d399);
+    transition: width .18s ease;
+}
+#veilShell .vx-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+#veilShell .vx-chip {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-size: 11px; font-weight: 600; color: #a1a1aa;
+    padding: 4px 10px; border: 1px solid #27272a; border-radius: 999px;
+    background: rgba(39,39,42,.5);
+    transition: border-color .15s, background .15s, color .15s;
+}
+#veilShell .vx-chip .vx-n { font-weight: 500; color: #71717a; }
+#veilShell .vx-chip.on {
+    color: #6ee7b7; border-color: rgba(52,211,153,.35);
+    background: rgba(16,185,129,.12);
+}
+#veilShell .vx-chip.on .vx-n { color: #34d399; }
+#veilShell .vx-chip .vx-x {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 15px; height: 15px; border-radius: 5px; cursor: pointer;
+    color: #71717a; margin-left: 1px;
+    transition: color .15s, background .15s;
+}
+#veilShell .vx-chip .vx-x:hover { color: #f87171; background: rgba(248,113,113,.14); }
+#veilShell .vx-dl {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 24px; height: 24px; border-radius: 999px;
+    border: 1px solid rgba(52,211,153,.3); color: #34d399;
+    background: rgba(16,185,129,.08);
+    transition: background .15s, border-color .15s, transform .15s;
+}
+#veilShell .vx-dl:hover {
+    background: rgba(16,185,129,.2); border-color: rgba(52,211,153,.6);
+    transform: translateY(-1px);
+}
+#veilShell .vx-add {
+    flex: none; display: inline-flex; align-items: center; gap: 7px;
+    height: 32px; padding: 0 13px; border-radius: 999px;
+    border: 1px solid #3f3f46; background: #18181b; color: #d4d4d8;
+    font-size: 12px; font-weight: 500; cursor: pointer;
+    transition: border-color .15s, background .15s, color .15s;
+}
+#veilShell .vx-add:hover {
+    border-color: rgba(16,185,129,.5); background: #27272a; color: #6ee7b7;
+}
+#veilShell .vx-add:active { transform: scale(.97); }
+
+/* the global drop overlay (fixed, above everything) */
+#veilShell #veilExtDrop {
+    position: fixed; inset: 0; z-index: 2147483000;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(9,9,11,.84); backdrop-filter: blur(6px);
+}
+#veilShell #veilExtDrop[hidden] { display: none; }
+#veilShell .ved-card {
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    padding: 38px 48px; border-radius: 18px;
+    border: 1px dashed rgba(52,211,153,.45);
+    background: rgba(24,24,27,.85);
+    box-shadow: 0 24px 60px rgba(0,0,0,.5), 0 0 0 1px rgba(52,211,153,.12);
+    color: #34d399;
+}
+#veilShell .ved-t { margin: 0; font-size: 15px; font-weight: 600; color: #fafafa; }
+#veilShell .ved-s { margin: 0; font-size: 12px; color: #71717a; }
+
+/* ═══ toolkit tab — apps from the Veil Toolkit pack ═══ */
+#veilShell .luc-20 { width: 20px; height: 20px; }
+#veilShell .veil-dock .dk.a-up i svg { color: #fbbf24; }
+#veilShell .veil-dock .dk.a-up:hover { border-color: rgba(245,158,11,.4); color: #fde68a; }
+#veilShell .veil-dock .dk.a-up:hover i svg { color: #fcd34d; }
+#veilShell .veil-dock .dk.a-up:active { transform: translateY(0) scale(.97); }
+
+/* the toolkit pack bar — mirrors the stash extension bar, emerald-coded */
+#veilShell .veil-ext-bar.su {
+    border-color: rgba(52,211,153,.25);
+    background: linear-gradient(180deg, rgba(52,211,153,.06), rgba(24,24,27,.6));
+}
+#veilShell .veil-ext-bar.su .vx-ic { color: #6ee7b7; background: rgba(16,185,129,.12); }
+#veilShell .veil-ext-bar.su .vx-chip.on { border-color: rgba(52,211,153,.35); background: rgba(16,185,129,.08); color: #a7f3d0; }
+#veilShell .veil-ext-bar.su .vx-chip.on .vx-n { color: #6ee7b7; }
+#veilShell .veil-ext-bar.su .vx-prog span { background: linear-gradient(90deg, #10b981, #6ee7b7); }
+#veilShell .veil-ext-bar.su .vx-add:hover { border-color: rgba(52,211,153,.5); color: #a7f3d0; }
+
+/* the app grid — one card per packed app */
+#veilShell .veil-su-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 10px; margin-top: 12px;
+}
+#veilShell .veil-su-card {
+    display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
+    padding: 14px; border-radius: 14px; text-align: left; cursor: pointer;
+    background: rgba(24,24,27,.72); border: 1px solid #27272a; color: #e4e4e7;
+    transition: transform .16s ease, border-color .16s ease, background .16s ease, box-shadow .16s ease;
+    min-height: 118px;
+}
+#veilShell .veil-su-card:hover {
+    transform: translateY(-2px); border-color: rgba(52,211,153,.5);
+    background: rgba(18,26,23,.9);
+    box-shadow: 0 10px 28px rgba(0,0,0,.45), 0 0 0 1px rgba(52,211,153,.15);
+}
+#veilShell .veil-su-card:active { transform: translateY(0) scale(.985); }
+#veilShell .veil-su-card:focus-visible { outline: 2px solid #34d399; outline-offset: 2px; }
+#veilShell .veil-su-card .su-ic {
+    display: flex; align-items: center; justify-content: center;
+    width: 38px; height: 38px; border-radius: 11px; color: #6ee7b7;
+    background: rgba(16,185,129,.12); border: 1px solid rgba(52,211,153,.25);
+}
+#veilShell .veil-su-card .su-nm { font-size: 14px; font-weight: 600; color: #fafafa; line-height: 1.25; }
+#veilShell .veil-su-card .su-ds {
+    font-size: 11.5px; line-height: 1.45; color: #a1a1aa;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+#veilShell .veil-su-card .su-pk {
+    margin-top: auto; padding-top: 4px;
+    font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .1em;
+    color: #34d399;
+}
+#veilShell .su-empty { align-items: flex-start; }
+#veilShell .su-hint { margin: 8px 0 0; font-size: 12px; line-height: 1.6; color: #a1a1aa; }
+#veilShell .su-hint b { color: #6ee7b7; font-weight: 600; }
+@media (max-width: 520px) {
+    #veilShell .veil-su-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+    #veilShell .veil-su-card { min-height: 96px; padding: 12px; }
+    #veilShell .veil-su-card .su-ic { width: 32px; height: 32px; }
+}
+
+/* ══ the Extensions section — the panel behind the dock's package icon ══ */
+#veilShell .veil-dock .dk.a-ext i svg { color: #fb923c; }
+#veilShell .veil-dock .dk.a-ext:hover { border-color: rgba(251,146,60,.35); color: #ffedd5; }
+#veilShell .veil-dock .dk.a-ext:hover i svg { color: #fdba74; }
+#veilShell .veil-sec-hd .tile.orange {
+    background: linear-gradient(135deg, #fb923c, #ea580c);
+    box-shadow: 0 8px 20px rgba(249,115,22,.2), inset 0 0 0 1px rgba(253,186,116,.3);
+}
+#veilShell .veil-sec .orbs.ext .o1 { background: rgba(251,146,60,.10); }
+#veilShell .veil-sec .orbs.ext .o2 { background: rgba(234,88,12,.10); }
+
+/* the upload zone — click-to-pick, drop-on, magnet for pack files */
+#veilShell .veil-ex-up {
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    padding: 30px 20px 22px; text-align: center; cursor: pointer;
+    border: 1.5px dashed rgba(251,146,60,.35); border-radius: 18px;
+    background:
+        radial-gradient(120% 120% at 50% 0%, rgba(251,146,60,.07), transparent 60%),
+        rgba(9,9,11,.6);
+    transition: border-color .18s ease, background-color .18s ease, transform .18s ease;
+    -webkit-user-select: none; user-select: none; touch-action: manipulation;
+}
+#veilShell .veil-ex-up:hover, #veilShell .veil-ex-up:focus-visible {
+    border-color: rgba(251,146,60,.6); outline: none;
+    background-color: rgba(24,17,10,.75);
+}
+#veilShell .veil-ex-up.over {
+    border-color: #fb923c; border-style: solid; transform: scale(1.012);
+    box-shadow: 0 0 0 4px rgba(251,146,60,.15), 0 18px 40px rgba(0,0,0,.5);
+    background-color: rgba(45,26,12,.85);
+}
+#veilShell .veil-ex-up .ex-up-ring {
+    display: flex; align-items: center; justify-content: center;
+    width: 54px; height: 54px; border-radius: 16px;
+    background: linear-gradient(135deg, rgba(251,146,60,.22), rgba(234,88,12,.16));
+    box-shadow: inset 0 0 0 1px rgba(253,186,116,.35), 0 10px 26px rgba(249,115,22,.15);
+    color: #fdba74;
+    transition: transform .18s ease, color .18s ease;
+}
+#veilShell .veil-ex-up:hover .ex-up-ring, #veilShell .veil-ex-up.over .ex-up-ring { transform: translateY(-3px) scale(1.06); color: #fed7aa; }
+#veilShell .veil-ex-up .ex-up-tx { display: flex; flex-direction: column; gap: 3px; }
+#veilShell .veil-ex-up .ex-up-tx strong { font-size: 14.5px; font-weight: 600; letter-spacing: -.01em; color: #fed7aa; }
+#veilShell .veil-ex-up .ex-up-tx span { font-size: 12px; line-height: 1.45; color: #a1a1aa; }
+#veilShell .veil-ex-up .ex-up-btn {
+    display: inline-flex; align-items: center; gap: 7px; margin-top: 4px;
+    height: 36px; padding: 0 18px; border-radius: 12px; cursor: pointer;
+    border: 1px solid rgba(251,146,60,.45); background: rgba(251,146,60,.14);
+    font-size: 12.5px; font-weight: 600; color: #fdba74;
+    transition: background-color .15s ease, border-color .15s ease, transform .12s ease;
+}
+#veilShell .veil-ex-up .ex-up-btn:hover { background: rgba(251,146,60,.24); border-color: rgba(251,146,60,.65); }
+#veilShell .veil-ex-up .ex-up-btn:active { transform: scale(.97); }
+#veilShell .veil-ex-up .ex-up-fine { margin: 2px 0 0; font-size: 10.5px; letter-spacing: .02em; color: #52525b; }
+
+/* live progress inside the section */
+#veilShell .veil-ex-prog { margin-top: 16px; }
+#veilShell .veil-ex-prog p { margin: 0 0 7px; font-size: 12px; color: #fdba74; }
+#veilShell .veil-ex-prog .vx-prog { height: 5px; }
+
+/* group headers */
+#veilShell .veil-ex-hd { display: flex; align-items: center; gap: 12px; margin: 26px 0 10px; }
+#veilShell .veil-ex-hd h3 { margin: 0; font-size: 11px; font-weight: 650; text-transform: uppercase; letter-spacing: .12em; color: #a1a1aa; }
+#veilShell .veil-ex-hd .ln { flex: 1; height: 1px; background: linear-gradient(to right, rgba(63,63,70,.7), transparent); }
+
+/* pack rows — installed (.on) and available
+   each list lives in .veil-ex-scroll: its own frame, its own scrollbar, its own
+   fade hints — every pack stays reachable on the shortest screens */
+#veilShell .veil-ex-scroll { position: relative; }
+#veilShell .veil-ex-list {
+    display: flex; flex-direction: column; gap: 8px;
+    max-height: min(46vh, 384px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    scrollbar-width: thin; scrollbar-color: rgba(63,63,70,.6) transparent;
+    padding: 2px 10px 2px 2px; margin: 0 -10px 0 -2px; /* gutter for the thumb, visual edges unchanged */
+}
+#veilShell .veil-ex-list::-webkit-scrollbar { width: 6px; }
+#veilShell .veil-ex-list::-webkit-scrollbar-thumb { background: rgba(82,82,91,.55); border-radius: 999px; }
+#veilShell .veil-ex-list::-webkit-scrollbar-thumb:hover { background: rgba(113,113,122,.85); }
+#veilShell .veil-ex-scroll .sc-fade {
+    position: absolute; left: -2px; right: -10px; height: 42px;
+    pointer-events: none; opacity: 0; z-index: 2;
+    transition: opacity .22s ease;
+}
+#veilShell .veil-ex-scroll .sc-fade.top { top: 0; background: linear-gradient(to bottom, rgba(9,9,11,.96), rgba(9,9,11,0)); }
+#veilShell .veil-ex-scroll .sc-fade.bot { bottom: 0; background: linear-gradient(to top, rgba(9,9,11,.96), rgba(9,9,11,0)); }
+#veilShell .veil-ex-scroll.can-scroll:not(.at-top) .sc-fade.top { opacity: 1; }
+#veilShell .veil-ex-scroll.can-scroll:not(.at-bot) .sc-fade.bot { opacity: 1; }
+#veilShell .veil-ex-scroll .sc-more {
+    position: absolute; right: 14px; bottom: 12px; z-index: 3; pointer-events: none;
+    display: flex; align-items: center; gap: 6px;
+    padding: 4px 11px; border-radius: 999px;
+    border: 1px solid rgba(63,63,70,.6); background: rgba(9,9,11,.82);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    font-size: 10.5px; font-weight: 600; letter-spacing: .05em; color: #a1a1aa;
+    opacity: 0; transform: translateY(5px);
+    transition: opacity .22s ease, transform .22s ease;
+}
+#veilShell .veil-ex-scroll .sc-more .luc { width: 13px; height: 13px; color: #fdba74; animation: ext-more-bob 1.6s ease-in-out infinite; }
+#veilShell .veil-ex-scroll .sc-more b { font-weight: 600; }
+#veilShell .veil-ex-scroll.can-scroll:not(.at-bot) .sc-more { opacity: 1; transform: none; }
+@keyframes ext-more-bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(2.5px); } }
+@media (prefers-reduced-motion: reduce) {
+    #veilShell .veil-ex-scroll .sc-more .luc { animation: none; }
+    #veilShell .veil-ex-scroll .sc-fade, #veilShell .veil-ex-scroll .sc-more { transition: none; }
+}
+
+/* viewport-level “the panel continues below” affordance (outer scroll):
+   a fade + centered chip pinned to the bottom of the section — visible
+   whenever the panel body itself still has content below the fold */
+#veilShell #veilSecExt .veil-sec-fade {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 84px; z-index: 12;
+    pointer-events: none; opacity: 0; transition: opacity .22s ease;
+    background: linear-gradient(to top, rgba(9,9,11,.97), rgba(9,9,11,0));
+}
+#veilShell #veilSecExt.sec-more .veil-sec-fade { opacity: 1; }
+#veilShell #veilSecExt .veil-sec-fade .sf-chip {
+    position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%) translateY(6px);
+    display: flex; align-items: center; gap: 7px; white-space: nowrap;
+    padding: 5px 13px; border-radius: 999px;
+    border: 1px solid rgba(63,63,70,.6); background: rgba(9,9,11,.86);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    font-size: 11px; font-weight: 600; letter-spacing: .05em; color: #d4d4d8;
+}
+#veilShell #veilSecExt.sec-more .veil-sec-fade .sf-chip { transform: translateX(-50%) translateY(0); }
+#veilShell #veilSecExt .veil-sec-fade .sf-chip .luc { width: 14px; height: 14px; color: #fdba74; animation: ext-more-bob 1.6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+    #veilShell #veilSecExt .veil-sec-fade .sf-chip .luc { animation: none; }
+    #veilShell #veilSecExt .veil-sec-fade { transition: none; }
+}
+#veilShell .veil-ex-row {
+    display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+    border-radius: 14px; border: 1px solid rgba(39,39,42,.9); background: rgba(24,24,27,.55);
+    transition: border-color .15s ease, background-color .15s ease, transform .15s ease;
+}
+#veilShell .veil-ex-row:hover { border-color: rgba(251,146,60,.3); background: rgba(24,24,27,.85); transform: translateY(-1px); }
+#veilShell .veil-ex-row.on { border-color: rgba(16,185,129,.25); background: rgba(16,24,20,.55); }
+#veilShell .veil-ex-row.on:hover { border-color: rgba(16,185,129,.5); }
+#veilShell .veil-ex-row .ex-ic {
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    width: 38px; height: 38px; border-radius: 12px; color: #fdba74;
+    background: linear-gradient(135deg, rgba(251,146,60,.18), rgba(234,88,12,.12));
+    box-shadow: inset 0 0 0 1px rgba(253,186,116,.28);
+}
+#veilShell .veil-ex-row.on .ex-ic { color: #6ee7b7; background: linear-gradient(135deg, rgba(16,185,129,.18), rgba(5,150,105,.12)); box-shadow: inset 0 0 0 1px rgba(110,231,183,.28); }
+#veilShell .veil-ex-row .ex-tx { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 2px; }
+#veilShell .veil-ex-row .ex-nm { font-size: 13.5px; font-weight: 600; color: #f4f4f5; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#veilShell .veil-ex-row .ex-ds { font-size: 11.5px; color: #71717a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#veilShell .veil-ex-row .ex-sub { font-size: 11px; color: #52525b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#veilShell .veil-ex-row.on .ex-ds { color: #34d399; }
+#veilShell .veil-ex-row .ex-go, #veilShell .veil-ex-row .ex-x {
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    width: 32px; height: 32px; border-radius: 10px; cursor: pointer;
+    border: 1px solid rgba(39,39,42,1); background: rgba(24,24,27,.9); color: #a1a1aa;
+    transition: color .15s ease, border-color .15s ease, background-color .15s ease, transform .12s ease;
+}
+#veilShell .veil-ex-row .ex-go:hover { color: #6ee7b7; border-color: rgba(16,185,129,.4); background: rgba(16,185,129,.12); transform: scale(1.06); }
+#veilShell .veil-ex-row .ex-x:hover { color: #fca5a5; border-color: rgba(248,113,113,.4); background: rgba(248,113,113,.12); transform: scale(1.06); }
+#veilShell .veil-ex-row .ex-dl, #veilShell .veil-ex-row .ex-off {
+    display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0;
+    height: 32px; padding: 0 13px; border-radius: 10px; font-size: 12px; font-weight: 600;
+}
+#veilShell .veil-ex-row .ex-dl {
+    cursor: pointer; text-decoration: none;
+    border: 1px solid rgba(251,146,60,.45); background: rgba(251,146,60,.14); color: #fdba74;
+    transition: background-color .15s ease, border-color .15s ease, transform .12s ease;
+}
+#veilShell .veil-ex-row .ex-dl:hover { background: rgba(251,146,60,.24); border-color: rgba(251,146,60,.7); color: #fed7aa; }
+#veilShell .veil-ex-row .ex-dl:active { transform: scale(.97); }
+#veilShell .veil-ex-row .ex-off { border: 1px dashed rgba(63,63,70,1); color: #71717a; }
+
+#veilShell .veil-ex-note { margin: 22px 0 0; font-size: 11px; line-height: 1.6; color: #52525b; }
+#veilShell .veil-ex-note b { color: #71717a; font-weight: 600; }
+
+@media (max-width: 640px) {
+    #veilShell .veil-ex-up { padding: 24px 14px 18px; }
+    #veilShell .veil-ex-row { padding: 10px 12px; gap: 10px; }
+    #veilShell .veil-ex-row .ex-ic { width: 34px; height: 34px; }
+    #veilShell .veil-ex-row .ex-sub { display: none; }
+    #veilShell .veil-ex-list { max-height: min(42vh, 336px); }
+    #veilShell .veil-ex-scroll .sc-more { right: 10px; bottom: 10px; }
+}
+/* short viewports — compact the upload zone a touch so the lists lead */
+@media (max-height: 760px) {
+    #veilShell .veil-ex-up { padding: 18px 16px 14px; }
+    #veilShell .veil-ex-hd { margin: 18px 0 8px; }
+    #veilShell .veil-ex-list { max-height: min(48vh, 340px); }
+}
+/* very short viewports (split-screen / small windows) — the zone folds down
+   to a slim strip so the pack lists own the screen */
+@media (max-height: 560px) {
+    #veilShell .veil-ex-up { padding: 12px 14px 10px; gap: 14px; }
+    #veilShell .veil-ex-up .ex-up-ring { width: 40px; height: 40px; }
+    #veilShell .veil-ex-up .ex-up-ring .luc { width: 20px; height: 20px; }
+    #veilShell .veil-ex-up .ex-up-tx strong { font-size: 13px; }
+    #veilShell .veil-ex-up .ex-up-tx span { font-size: 11px; }
+    #veilShell .veil-ex-up .ex-up-fine { display: none; }
+    #veilShell .veil-ex-hd { margin: 14px 0 7px; }
+    #veilShell .veil-ex-list { max-height: min(52vh, 260px); }
+    #veilShell .veil-ex-note { margin: 16px 0 0; }
+    #veilShell .veil-sec-inner { padding: 16px 16px 40px; }
+}
+
+/* ── gn-math tab — the math arcade packet (graph-paper identity) ── */
+#veilShell .arc-tab.gnm { letter-spacing: .02em; }
+#veilShell .arc-tab.gnm .luc { color: #f59e0b; }
+#veilShell .arc-tab.gnm:hover { border-color: rgba(245,158,11,.45); background: rgba(245,158,11,.08); }
+#veilShell .arc-tab.gnm[aria-selected="true"] {
+    border-color: rgba(245,158,11,.65); background: rgba(245,158,11,.14); color: #fcd34d;
+    box-shadow: 0 0 18px -8px rgba(245,158,11,.9);
+}
+#veilShell .veil-ext-bar.gnm {
+    border-color: rgba(245,158,11,.22);
+    background:
+        linear-gradient(rgba(245,158,11,.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(245,158,11,.04) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(245,158,11,.05), rgba(24,24,27,.6));
+    background-size: 26px 26px, 26px 26px, 100% 100%;
+}
+#veilShell .veil-ext-bar.gnm .vx-ic { color: #fbbf24; background: rgba(245,158,11,.1); }
+#veilShell .veil-ext-bar.gnm .vx-chip.on { border-color: rgba(245,158,11,.3); background: rgba(245,158,11,.07); color: #fcd34d; }
+#veilShell .veil-ext-bar.gnm .vx-chip.on .vx-n { color: #fbbf24; }
+#veilShell .veil-ext-bar.gnm .vx-prog span { background: linear-gradient(90deg, #f59e0b, #34d399); }
+#veilShell .veil-ext-bar.gnm .vx-add:hover { border-color: rgba(245,158,11,.45); color: #fde68a; }
+/* the game grid — graph-paper cards, amber icon chips, emerald hover edge */
+#veilShell .veil-su-grid.gnm-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+}
+#veilShell .veil-su-card.gnm-card {
+    background:
+        linear-gradient(rgba(245,158,11,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(245,158,11,.035) 1px, transparent 1px),
+        rgba(16,15,12,.78);
+    background-size: 22px 22px, 22px 22px, 100% 100%;
+    border-color: rgba(63,56,44,.9);
+}
+#veilShell .veil-su-card.gnm-card:hover {
+    border-color: rgba(52,211,153,.5);
+    background:
+        linear-gradient(rgba(245,158,11,.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(245,158,11,.05) 1px, transparent 1px),
+        rgba(22,20,16,.94);
+    background-size: 22px 22px, 22px 22px, 100% 100%;
+    box-shadow: 0 10px 28px rgba(0,0,0,.45), 0 0 0 1px rgba(52,211,153,.18);
+}
+#veilShell .veil-su-card.gnm-card .su-ic {
+    color: #34d399;
+    background: rgba(52,211,153,.1); border: 1px solid rgba(52,211,153,.25);
+}
+#veilShell .veil-su-card.gnm-card .su-pk { color: #f59e0b; }
+#veilShell .gnm-empty .luc { color: #f59e0b; }
+#veilShell .gnm-empty { border-color: rgba(245,158,11,.25); }
+
+/* ═══ HIDE UI (zen) — just the wallpaper ═══════════════════════ */
+#veilShell .veil-zen-btn {
+    position: fixed; top: 14px; left: 16px; z-index: 60;
+    display: flex; align-items: center; gap: 6px;
+    height: 26px; padding: 0 10px;
+    border-radius: 999px; border: 1px solid rgba(255,255,255,.09);
+    background: rgba(9,9,11,.38); backdrop-filter: blur(10px);
+    color: rgba(228,228,231,.62); font-size: 11px; font-weight: 500;
+    letter-spacing: .04em; cursor: pointer; user-select: none;
+    transition: color .15s, border-color .15s, background .15s;
+    -webkit-backdrop-filter: blur(10px);
+}
+#veilShell .veil-zen-btn .luc { width: 12px; height: 12px; flex-shrink: 0; }
+#veilShell .veil-zen-btn:hover {
+    color: #f4f4f5; border-color: rgba(255,255,255,.25); background: rgba(9,9,11,.6);
+}
+#veilShell .veil-zen-btn:focus-visible { outline: 2px solid rgba(52,211,153,.6); outline-offset: 2px; }
+html.veil-zen #veilNt .veil-nt-content { opacity: 0 !important; pointer-events: none !important; }
+html.veil-zen #veilBar, html.veil-zen #veilCorner, html.veil-zen #veilFsNudge { display: none !important; }
+html.veil-zen #veilShell { cursor: default; }
+#veilShell .veil-nt-content { transition: opacity .45s ease; }
+#veilNt.covered .veil-nt-content { transition: opacity .3s ease; }
+
+/* ═══ WEATHER PIN — set the city by hand ═══════════════════════ */
+#veilShell .veil-wx { position: relative; }
+#veilShell .veil-wx .wx-pin {
+    width: 22px; height: 22px; margin-left: 2px; margin-right: -6px;
+    border-radius: 999px; border: 0; background: transparent;
+    display: flex; align-items: center; justify-content: center;
+    color: #71717a; cursor: pointer; flex-shrink: 0;
+    transition: color .15s, background .15s;
+}
+#veilShell .veil-wx .wx-pin .luc { width: 13px; height: 13px; }
+#veilShell .veil-wx .wx-pin:hover { color: #d4d4d8; background: rgba(255,255,255,.1); }
+#veilShell .veil-wx .wx-pin.on { color: #34d399; }
+#veilShell .veil-wx .wx-pin:focus-visible { outline: 2px solid rgba(52,211,153,.6); outline-offset: 1px; }
+#veilShell .veil-wx-pop {
+    position: absolute; top: calc(100% + 12px); left: 50%; transform: translateX(-50%);
+    width: 300px; max-width: calc(100vw - 32px);
+    border-radius: 16px; border: 1px solid rgba(39,39,42,.9);
+    background: rgba(9,9,11,.96); backdrop-filter: blur(20px);
+    box-shadow: 0 24px 64px rgba(0,0,0,.6);
+    padding: 14px; z-index: 40;
+    display: flex; flex-direction: column; gap: 8px;
+}
+#veilShell .veil-wx-pop .hd { font-size: 12.5px; font-weight: 600; color: #f4f4f5; }
+#veilShell .veil-wx-pop .sub { font-size: 11.5px; line-height: 1.45; color: #71717a; }
+#veilShell .veil-wx-pop .row { display: flex; gap: 6px; }
+#veilShell .veil-wx-pop input {
+    flex: 1; min-width: 0; height: 32px; border-radius: 10px;
+    border: 1px solid rgba(63,63,70,.9); background: #131316;
+    padding: 0 10px; font-size: 12.5px; color: #f4f4f5; outline: none;
+    transition: border-color .15s;
+}
+#veilShell .veil-wx-pop input:focus { border-color: rgba(52,211,153,.55); }
+#veilShell .veil-wx-pop input::placeholder { color: #52525b; }
+#veilShell .veil-wx-pop #veilWxPopSet {
+    width: 32px; height: 32px; border-radius: 10px; flex-shrink: 0;
+    border: 0; background: #10b981; color: #052e22; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .15s;
+}
+#veilShell .veil-wx-pop #veilWxPopSet:hover { background: #34d399; }
+#veilShell .veil-wx-pop #veilWxPopSet .luc { width: 14px; height: 14px; }
+#veilShell .veil-wx-pop .msg { font-size: 11.5px; line-height: 1.45; color: #fbbf24; }
+#veilShell .veil-wx-pop .auto {
+    align-self: stretch; height: 30px; border-radius: 10px;
+    border: 1px solid rgba(63,63,70,.8); background: rgba(24,24,27,.6);
+    color: #a1a1aa; font-size: 11.5px; cursor: pointer;
+    transition: border-color .15s, color .15s;
+}
+#veilShell .veil-wx-pop .auto:hover { border-color: #52525b; color: #e4e4e7; }
+
+/* ═══ VEIL AI — EXTENSION MAKER ════════════════════════════════ */
+#veilShell .veil-ai-maker {
+    margin: 0 auto 8px; max-width: 672px; width: 100%;
+    display: flex; align-items: center; gap: 7px;
+    height: 30px; padding: 0 12px;
+    align-self: flex-start;
+    border-radius: 999px; border: 1px solid rgba(63,63,70,.8);
+    background: rgba(24,24,27,.55); color: #a1a1aa;
+    font-size: 12px; font-weight: 600; letter-spacing: .01em;
+    cursor: pointer; position: relative;
+    transition: border-color .15s, background .15s, color .15s, box-shadow .2s;
+}
+#veilShell .veil-ai-maker .luc { width: 13px; height: 13px; flex-shrink: 0; }
+#veilShell .veil-ai-maker:hover { border-color: rgba(139,92,246,.5); color: #c4b5fd; }
+#veilShell .veil-ai-maker.on {
+    border-color: rgba(139,92,246,.65); background: rgba(139,92,246,.16); color: #ddd6fe;
+    box-shadow: 0 0 22px -10px rgba(139,92,246,.8);
+}
+#veilShell .veil-ai-maker em {
+    position: absolute; right: 9px; top: 50%; transform: translateY(-50%);
+    width: 6px; height: 6px; border-radius: 99px; background: #c4b5fd;
+    animation: veil-pulse-dot 1.6s ease-in-out infinite;
+}
+@keyframes veil-pulse-dot {
+    0%,100% { opacity: .35; transform: translateY(-50%) scale(.85); }
+    50% { opacity: 1; transform: translateY(-50%) scale(1.12); }
+}
+#veilShell .veil-ai-input textarea.maker { border-color: rgba(139,92,246,.4); }
+#veilShell .veil-ai-input textarea.maker:focus {
+    border-color: rgba(139,92,246,.6);
+    box-shadow: 0 0 0 3px rgba(139,92,246,.16);
+}
+#veilShell .veil-ai-mkcard {
+    margin-top: 10px; width: 100%; max-width: 560px;
+    display: flex; align-items: center; gap: 12px; text-align: left;
+    border-radius: 16px; border: 1px solid rgba(139,92,246,.3);
+    background: rgba(139,92,246,.06); padding: 13px 14px; cursor: pointer;
+    transition: border-color .15s, background .15s, transform .15s;
+}
+#veilShell .veil-ai-mkcard:hover {
+    border-color: rgba(139,92,246,.55); background: rgba(139,92,246,.1);
+    transform: translateY(-2px);
+}
+#veilShell .veil-ai-mkcard .mk-ic {
+    width: 36px; height: 36px; border-radius: 11px; flex-shrink: 0;
+    background: rgba(139,92,246,.14); box-shadow: inset 0 0 0 1px rgba(139,92,246,.3);
+    color: #c4b5fd; display: flex; align-items: center; justify-content: center;
+}
+#veilShell .veil-ai-mkcard .mk-ic .luc { width: 16px; height: 16px; }
+#veilShell .veil-ai-mkcard .mk-tx { min-width: 0; flex: 1; }
+#veilShell .veil-ai-mkcard .mk-tx b { display: block; font-size: 13.5px; font-weight: 600; color: #e4e4e7; }
+#veilShell .veil-ai-mkcard .mk-tx i {
+    display: block; font-style: normal; font-size: 11.5px; color: #71717a;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+#veilShell .veil-ai-mkcard .mk-sp { color: rgba(196,181,253,.6); flex-shrink: 0; }
+#veilShell .veil-ai-mkcard .mk-sp .luc { width: 15px; height: 15px; }
+#veilShell .veil-ai-mkcard:hover .mk-sp { color: #c4b5fd; }
+
+/* the built-extension card inside a bot message */
+#veilShell .veil-ai-ext {
+    margin-top: 10px; border-radius: 16px; overflow: hidden;
+    border: 1px solid rgba(139,92,246,.35); background: rgba(9,9,11,.7);
+}
+#veilShell .veil-ai-ext .ax-hd {
+    display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+    border-bottom: 1px solid rgba(139,92,246,.22);
+    background: rgba(139,92,246,.07);
+}
+#veilShell .veil-ai-ext .ax-ic {
+    width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
+    background: rgba(139,92,246,.14); box-shadow: inset 0 0 0 1px rgba(139,92,246,.3);
+    color: #c4b5fd; display: flex; align-items: center; justify-content: center;
+}
+#veilShell .veil-ai-ext .ax-ic .luc { width: 16px; height: 16px; }
+#veilShell .veil-ai-ext .ax-tx { min-width: 0; flex: 1; }
+#veilShell .veil-ai-ext .ax-tx b { display: block; font-size: 13px; font-weight: 600; color: #f4f4f5; }
+#veilShell .veil-ai-ext .ax-tx i {
+    display: block; font-style: normal; font-size: 11.5px; color: #71717a;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+#veilShell .veil-ai-ext .ax-kb {
+    flex-shrink: 0; font-size: 10.5px; font-family: "Geist Mono", ui-monospace, monospace;
+    color: #a78bfa; padding: 2px 8px; border-radius: 99px;
+    border: 1px solid rgba(139,92,246,.3); background: rgba(139,92,246,.1);
+}
+#veilShell .veil-ai-ext .ax-row { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 12px; }
+#veilShell .veil-ai-ext .ax-btn {
+    display: flex; align-items: center; gap: 6px;
+    height: 30px; padding: 0 12px; border-radius: 10px;
+    border: 1px solid rgba(63,63,70,.9); background: rgba(24,24,27,.6);
+    color: #d4d4d8; font-size: 12px; font-weight: 500; cursor: pointer;
+    transition: border-color .15s, color .15s, background .15s;
+}
+#veilShell .veil-ai-ext .ax-btn .luc { width: 13px; height: 13px; }
+#veilShell .veil-ai-ext .ax-btn:hover { border-color: #52525b; color: #f4f4f5; }
+#veilShell .veil-ai-ext .ax-btn:disabled { cursor: default; opacity: .7; }
+#veilShell .veil-ai-ext .ax-btn.go {
+    background: #7c3aed; border-color: #7c3aed; color: #fff;
+}
+#veilShell .veil-ai-ext .ax-btn.go:hover { background: #8b5cf6; border-color: #8b5cf6; }
+#veilShell .veil-ai-ext .ax-btn.go.done {
+    background: rgba(16,185,129,.16); border-color: rgba(16,185,129,.5); color: #6ee7b7;
+}
+#veilShell .veil-ai-ext .ax-btn .luc.spin { animation: veil-spin 1s linear infinite; }
+/* ── View HTML — full-screen source viewer (violet AI identity) ──
+   Opened from the ExtCard's "view HTML" button: the actual code with
+   line numbers, copy / preview / raw save. Backdrop + Esc close it. */
+#veilShell .cv-back {
+    position: absolute; inset: 0; z-index: 80;
+    background: rgba(0, 0, 0, .74); backdrop-filter: blur(9px);
+}
+#veilShell .veil-codeview {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    z-index: 81; width: min(94vw, 920px); max-height: 92vh;
+    display: flex; flex-direction: column; overflow: hidden;
+    border-radius: 18px; border: 1px solid rgba(139, 92, 246, .35);
+    background: #0c0c0f; box-shadow: 0 40px 90px rgba(0, 0, 0, .65);
+}
+#veilShell .veil-codeview .cv-hd {
+    display: flex; align-items: center; gap: 12px; padding: 13px 14px;
+    border-bottom: 1px solid rgba(139, 92, 246, .25);
+    background: linear-gradient(180deg, rgba(139, 92, 246, .10), rgba(139, 92, 246, .03));
+}
+#veilShell .veil-codeview .cv-ic {
+    width: 36px; height: 36px; border-radius: 11px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: #a78bfa; background: rgba(139, 92, 246, .14);
+    border: 1px solid rgba(139, 92, 246, .3);
+}
+#veilShell .veil-codeview .cv-tx { min-width: 0; flex: 1; }
+#veilShell .veil-codeview .cv-tx b {
+    display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    font-size: 14px; font-weight: 600; color: #f4f4f5;
+}
+#veilShell .veil-codeview .cv-tx i {
+    display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    font-style: normal; font-size: 11.5px; color: #a1a1aa; margin-top: 1px;
+}
+#veilShell .veil-codeview .cv-x {
+    width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid #27272a; background: #18181b; color: #a1a1aa;
+    transition: border-color .12s, color .12s, background .12s;
+}
+#veilShell .veil-codeview .cv-x:hover { background: #27272a; color: #f4f4f5; border-color: #3f3f46; }
+#veilShell .veil-codeview .cv-bar {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+    padding: 10px 14px; border-bottom: 1px solid rgba(39, 39, 42, .8); background: #0f0f12;
+}
+#veilShell .veil-codeview .cv-btn {
+    display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
+    border-radius: 10px; border: 1px solid #27272a; background: #18181b;
+    color: #d4d4d8; padding: 7px 12px; font-size: 12.5px;
+    font-family: inherit; transition: border-color .12s, color .12s, background .12s;
+}
+#veilShell .veil-codeview .cv-btn:hover { border-color: #3f3f46; background: #27272a; color: #f4f4f5; }
+#veilShell .veil-codeview .cv-btn:active { transform: scale(.97); }
+#veilShell .veil-codeview .cv-btn.ok {
+    border-color: rgba(16, 185, 129, .45); background: rgba(16, 185, 129, .12); color: #6ee7b7;
+}
+#veilShell .veil-codeview .cv-note { flex: 1; min-width: 100%; text-align: right; font-size: 11px; color: #52525b; }
+@media (min-width: 560px) { #veilShell .veil-codeview .cv-note { min-width: 0; } }
+#veilShell .veil-codeview .cv-body { flex: 1; min-height: 0; overflow: auto; background: #09090b; }
+#veilShell .veil-codeview .cv-pre {
+    margin: 0; padding: 14px 16px; display: block;
+    font-family: "Geist Mono", ui-monospace, monospace; font-size: 11.5px;
+    line-height: 1.6; color: #c8c8cf; white-space: pre; tab-size: 2;
+}
+#veilShell .veil-codeview .cv-more {
+    margin: 0; padding: 10px 16px 14px; font-size: 11.5px; color: #71717a;
+    border-top: 1px solid rgba(39, 39, 42, .8);
+}
+/* toasts must clear the viewer (80/81) so copy errors stay visible */
+#veilShell.cv-open #veilToast { z-index: 90; }
+@keyframes veil-spin { to { transform: rotate(360deg); } }
+
+/* ═══ AI LAB — the arcade tab for AI-made apps (violet identity) ═ */
+#veilShell .arc-tab.ailab { letter-spacing: .02em; }
+#veilShell .arc-tab.ailab .luc { color: #a78bfa; }
+#veilShell .arc-tab.ailab:hover { border-color: rgba(139,92,246,.45); background: rgba(139,92,246,.08); }
+#veilShell .arc-tab.ailab[aria-selected="true"] {
+    border-color: rgba(139,92,246,.65); background: rgba(139,92,246,.14); color: #ddd6fe;
+    box-shadow: 0 0 18px -8px rgba(139,92,246,.9);
+}
+#veilShell .veil-ext-bar.ai {
+    border-color: rgba(139,92,246,.22);
+    background:
+        linear-gradient(rgba(139,92,246,.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(139,92,246,.04) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(139,92,246,.05), rgba(24,24,27,.6));
+    background-size: 26px 26px, 26px 26px, 100% 100%;
+}
+#veilShell .veil-ext-bar.ai .vx-ic { color: #c4b5fd; background: rgba(139,92,246,.1); }
+#veilShell .veil-ext-bar.ai .vx-chip.on { border-color: rgba(139,92,246,.3); background: rgba(139,92,246,.07); color: #ddd6fe; }
+#veilShell .veil-ext-bar.ai .vx-chip.on .vx-n { color: #c4b5fd; }
+#veilShell .veil-ext-bar.ai .vx-prog span { background: linear-gradient(90deg, #8b5cf6, #34d399); }
+#veilShell .veil-ext-bar.ai .vx-add:hover { border-color: rgba(139,92,246,.45); color: #ddd6fe; }
+#veilShell .veil-su-card.ai {
+    background:
+        linear-gradient(rgba(139,92,246,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(139,92,246,.035) 1px, transparent 1px),
+        rgba(14,13,18,.78);
+    background-size: 22px 22px, 22px 22px, 100% 100%;
+    border-color: rgba(46,42,62,.9);
+}
+#veilShell .veil-su-card.ai:hover {
+    border-color: rgba(52,211,153,.5);
+    background:
+        linear-gradient(rgba(139,92,246,.055) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(139,92,246,.055) 1px, transparent 1px),
+        rgba(18,16,26,.9);
+    background-size: 22px 22px, 22px 22px, 100% 100%;
+}
+#veilShell .veil-su-card.ai .su-ic {
+    background: rgba(139,92,246,.13); box-shadow: inset 0 0 0 1px rgba(139,92,246,.3); color: #c4b5fd;
+}
+#veilShell .veil-su-card.ai .su-pk { color: #a78bfa; }
+#veilShell .ai-empty { border-color: rgba(139,92,246,.25); }
+#veilShell .ai-empty .luc { color: #a78bfa; }
+#veilShell .ai-hint {
+    margin-top: 8px; font-size: 12px; line-height: 1.6; color: #71717a;
+}
+#veilShell .ai-hint b { color: #c4b5fd; }
+@media (max-width: 640px) {
+    #veilShell .veil-zen-btn { top: 10px; left: 10px; }
+}
+
+/* ═══ 16. VEIL STREAM — YouTube through the veil (rose identity,
+       mirrors the site's Stream section) ═══════════════════════ */
+#veilShell .veil-dock .dk.a-stream i svg { color: #fb7185; }
+#veilShell .veil-dock .dk.a-stream:hover { border-color: rgba(244,63,94,.35); color: #ffe4e6; }
+#veilShell .veil-sec-hd .tile.rose {
+    background: linear-gradient(135deg, #fb7185, #e11d48);
+    box-shadow: 0 8px 20px rgba(244,63,94,.22), inset 0 0 0 1px rgba(253,164,175,.3);
+}
+#veilShell .veil-sec .orbs.stream .o1 { background: rgba(244,63,94,.10); }
+#veilShell .veil-sec .orbs.stream .o2 { background: rgba(225,29,72,.10); }
+#veilShell .veil-sec-hd h1 .veil-st-dot { color: #fb7185; }
+#veilShell .veil-st-search { margin-bottom: 14px; }
+#veilShell .veil-st-rowhd {
+    display: flex; align-items: center; gap: 10px; margin: 4px 0 14px;
+}
+#veilShell .veil-st-rowhd .rh-ic {
+    display: flex; align-items: center; justify-content: center; width: 34px; height: 34px;
+    border-radius: 11px; flex-shrink: 0;
+}
+#veilShell .veil-st-rowhd .rh-ic.rose { background: rgba(244,63,94,.2); color: #fb7185; box-shadow: inset 0 0 0 1px rgba(244,63,94,.32); }
+#veilShell .veil-st-rowhd .rh-ic.fuchsia { background: rgba(217,70,239,.2); color: #e879f9; box-shadow: inset 0 0 0 1px rgba(217,70,239,.32); }
+#veilShell .veil-st-rowhd .rh-ic.amber { background: rgba(245,158,11,.2); color: #fbbf24; box-shadow: inset 0 0 0 1px rgba(245,158,11,.32); }
+#veilShell .veil-st-rowhd .rh-ic.zinc { background: rgba(161,161,170,.15); color: #a1a1aa; box-shadow: inset 0 0 0 1px rgba(161,161,170,.3); }
+#veilShell .veil-st-rowhd .rh-ic.cyan { background: rgba(34,211,238,.18); color: #67e8f9; box-shadow: inset 0 0 0 1px rgba(34,211,238,.32); }
+#veilShell .veil-st-rowhd .rh-ic.violet { background: rgba(139,92,246,.2); color: #a78bfa; box-shadow: inset 0 0 0 1px rgba(139,92,246,.32); }
+#veilShell .veil-st-rowhd .rh-ic svg { width: 16px; height: 16px; }
+#veilShell .veil-st-rowhd h3 {
+    font-size: 16px; font-weight: 650; letter-spacing: -0.01em;
+    color: #f4f4f5; white-space: nowrap;
+}
+#veilShell .veil-st-rowhd .rh-n {
+    font-size: 11px; font-weight: 500; font-variant-numeric: tabular-nums; color: #52525b; white-space: nowrap;
+}
+#veilShell .veil-st-rowhd .rh-re {
+    display: flex; align-items: center; justify-content: center; width: 30px; height: 30px;
+    border-radius: 9px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.03);
+    color: #a1a1aa; cursor: pointer; transition: color .15s, border-color .15s;
+}
+#veilShell .veil-st-rowhd .rh-re:hover { color: #f4f4f5; border-color: rgba(255,255,255,.22); }
+#veilShell .veil-st-rowhd .rh-re svg { width: 13px; height: 13px; }
+#veilShell .veil-st-rowhd .ln { flex: 1; height: 1px; background: linear-gradient(to right, #27272a, transparent); }
+#veilShell .veil-st-layout { display: flex; gap: 18px; align-items: flex-start; }
+#veilShell .veil-st-main { flex: 1; min-width: 0; }
+#veilShell .veil-st-rail { width: 152px; flex-shrink: 0; display: flex; flex-direction: column; gap: 4px; position: sticky; top: 0; }
+#veilShell .veil-st-rail .rail-t { font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: #71717a; margin: 0 0 6px 6px; }
+#veilShell .veil-st-rail button {
+    display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 12px;
+    border-radius: 11px; border: 1px solid rgba(39,39,42,.9); background: rgba(9,9,11,.5);
+    color: #a1a1aa; font-size: 12.5px; font-weight: 600; cursor: pointer; text-align: left;
+    transition: color .15s, border-color .15s, background .15s;
+}
+#veilShell .veil-st-rail button .luc { width: 14px; height: 14px; flex-shrink: 0; }
+#veilShell .veil-st-rail button:hover { color: #f4f4f5; border-color: rgba(255,255,255,.18); }
+#veilShell .veil-st-rail button[aria-pressed="true"] {
+    color: #fda4af; border-color: rgba(244,63,94,.4); background: rgba(244,63,94,.08);
+}
+/* per-page tones — the site's exact accents (fuchsia shorts, amber popular, zinc history) */
+#veilShell .veil-st-rail button[data-stpage="shorts"][aria-pressed="true"] {
+    color: #f0abfc; border-color: rgba(217,70,239,.42); background: rgba(217,70,239,.09);
+}
+#veilShell .veil-st-rail button[data-stpage="popular"][aria-pressed="true"] {
+    color: #fcd34d; border-color: rgba(245,158,11,.42); background: rgba(245,158,11,.09);
+}
+#veilShell .veil-st-rail button[data-stpage="history"][aria-pressed="true"] {
+    color: #d4d4d8; border-color: rgba(161,161,170,.35); background: rgba(161,161,170,.1);
+}
+@media (max-width: 900px) {
+    #veilShell .veil-st-layout { flex-direction: column; }
+    #veilShell .veil-st-rail { flex-direction: row; flex-wrap: wrap; width: auto; position: static; }
+    #veilShell .veil-st-rail .rail-t { display: none; }
+    #veilShell .veil-st-rail button { height: 34px; }
+}
+#veilShell .veil-st-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px;
+}
+@media (min-width: 1500px) {
+    #veilShell .veil-st-grid { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); }
+}
+/* the shorts page — vertical cards in a tighter grid (site rhythm) */
+#veilShell .veil-st-grid.shorts {
+    grid-template-columns: repeat(auto-fill, minmax(152px, 1fr)); gap: 12px;
+}
+#veilShell .veil-st-card {
+    display: flex; flex-direction: column; gap: 8px; text-align: left; cursor: pointer;
+    background: rgba(24,24,27,.72); border: 1px solid #27272a; border-radius: 14px; padding: 8px;
+    color: #e4e4e7; transition: transform .16s ease, border-color .16s ease, background .16s ease, box-shadow .16s ease;
+}
+#veilShell .veil-st-card:hover {
+    transform: translateY(-2px); border-color: rgba(244,63,94,.5);
+    background: rgba(26,18,21,.9);
+    box-shadow: 0 10px 28px rgba(0,0,0,.45), 0 0 0 1px rgba(244,63,94,.15);
+}
+#veilShell .veil-st-card:active { transform: translateY(0) scale(.985); }
+#veilShell .veil-st-card:focus-visible { outline: 2px solid #fb7185; outline-offset: 2px; }
+#veilShell .veil-st-card .th {
+    position: relative; display: block; aspect-ratio: 16 / 9; border-radius: 9px; overflow: hidden; background: #18181b;
+}
+#veilShell .veil-st-card .th img { width: 100%; height: 100%; object-fit: cover; display: block; }
+#veilShell .veil-st-card .th .dur {
+    position: absolute; right: 6px; bottom: 6px; padding: 2px 6px; border-radius: 6px;
+    background: rgba(9,9,11,.85); color: #f4f4f5; font-size: 10.5px; font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+#veilShell .veil-st-card .th .live {
+    position: absolute; left: 6px; top: 6px; padding: 2px 7px; border-radius: 6px;
+    background: rgba(244,63,94,.92); color: #fff; font-size: 10px; font-weight: 700; letter-spacing: .06em;
+}
+#veilShell .veil-st-card .tt { font-size: 13px; font-weight: 600; line-height: 1.3; color: #fafafa;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+#veilShell .veil-st-card .by { font-size: 11.5px; color: #a1a1aa; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#veilShell .veil-st-card .by .v { color: #52525b; }
+#veilShell .veil-st-load {
+    aspect-ratio: 16 / 9; border-radius: 9px; background: rgba(24,24,27,.6);
+    animation: veilPulse 1.6s ease-in-out infinite;
+}
+@keyframes veilPulse { 50% { opacity: .55; } }
+#veilShell .veil-st-empty {
+    grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; gap: 8px;
+    padding: 44px 20px; text-align: center; color: #71717a; font-size: 13px;
+    border: 1px dashed #27272a; border-radius: 14px; background: rgba(24,24,27,.4);
+}
+/* ── the shorts shelf (For you page) + the shorts page cards ── */
+#veilShell .veil-st-shelf { grid-column: 1 / -1; margin: 4px 0 2px; }
+#veilShell .veil-st-shelf .hd { display: flex; align-items: center; gap: 9px; margin-bottom: 10px; }
+#veilShell .veil-st-shelf .hd .ic {
+    display: flex; align-items: center; justify-content: center; width: 28px; height: 28px;
+    border-radius: 9px; background: rgba(217,70,239,.15); border: 1px solid rgba(217,70,239,.3); color: #e879f9;
+}
+#veilShell .veil-st-shelf .hd .t {
+    font-size: 12.5px; font-weight: 650; letter-spacing: .1em; text-transform: uppercase; color: #a1a1aa;
+}
+#veilShell .veil-st-shelf .hd .ln { flex: 1; height: 1px; background: rgba(39,39,42,.8); }
+#veilShell .veil-st-shelf .hd .n { font-size: 10.5px; font-variant-numeric: tabular-nums; color: #52525b; }
+#veilShell .veil-st-shelf .rail {
+    display: flex; gap: 12px; overflow-x: auto; padding-bottom: 6px;
+    scrollbar-width: thin; scrollbar-color: rgba(63,63,70,.6) transparent;
+}
+#veilShell .veil-st-shelf .rail::-webkit-scrollbar { height: 6px; }
+#veilShell .veil-st-shelf .rail::-webkit-scrollbar-thumb { background: rgba(82,82,91,.6); border-radius: 999px; }
+#veilShell .veil-st-shcard {
+    display: flex; flex-direction: column; gap: 6px; text-align: left; cursor: pointer; flex-shrink: 0;
+    background: none; border: 0; padding: 0; width: 132px; color: #e4e4e7; font-family: inherit;
+    transition: transform .16s ease;
+}
+#veilShell .veil-st-shcard:hover { transform: translateY(-2px); }
+#veilShell .veil-st-shcard .th {
+    position: relative; display: block; aspect-ratio: 9 / 16; border-radius: 10px; overflow: hidden; background: #18181b;
+}
+#veilShell .veil-st-shcard .th img { width: 100%; height: 100%; object-fit: cover; display: block; }
+#veilShell .veil-st-shcard .th .dur {
+    position: absolute; right: 5px; bottom: 5px; padding: 1.5px 5px; border-radius: 5px;
+    background: rgba(9,9,11,.85); color: #f4f4f5; font-size: 10px; font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+#veilShell .veil-st-shcard .tx { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+#veilShell .veil-st-shcard .tt { font-size: 11.5px; font-weight: 600; line-height: 1.3; color: #fafafa;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+#veilShell .veil-st-shcard .by { font-size: 10.5px; color: #a1a1aa; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* the shorts PAGE variant — same card, sized for the wrapped grid */
+#veilShell .veil-st-shcard.big { width: auto; gap: 8px; }
+#veilShell .veil-st-shcard.big .th { border: 1px solid #27272a; }
+#veilShell .veil-st-shcard.big .tt { font-size: 12.5px; }
+#veilShell .veil-st-shcard.big .by { font-size: 11px; }
+#veilShell .veil-st-shcard.big:hover .th { border-color: rgba(217,70,239,.4); }
+/* ── stream search — the site's rose action, not the music purple ── */
+#veilShell .veil-st-search .veil-mu-go {
+    background: #f43f5e; color: #4c0519; box-shadow: 0 10px 24px rgba(244,63,94,.28);
+}
+#veilShell .veil-st-search .veil-mu-go:hover { background: #fb7185; }
+#veilShell .veil-st-search .veil-mu-inputwrap:focus-within { border-color: rgba(244,63,94,.45); }
+#veilShell .veil-st-search .veil-mu-inputwrap:focus-within svg { color: #fb7185; }
+#veilShell .veil-st-empty b { color: #a1a1aa; font-size: 14px; }
+#veilShell .veil-st-watch { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+@media (min-width: 900px) {
+    #veilShell .veil-st-watch { grid-template-columns: minmax(0, 2.2fr) minmax(260px, 1fr); align-items: start; }
+}
+#veilShell .veil-st-player {
+    position: relative; aspect-ratio: 16 / 9; border-radius: 14px; overflow: hidden;
+    background: #000; border: 1px solid #27272a; box-shadow: 0 18px 50px rgba(0,0,0,.5);
+}
+#veilShell .veil-st-player video { width: 100%; height: 100%; display: block; background: #000; }
+#veilShell .veil-st-gate, #veilShell .veil-st-novideo {
+    position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 8px; padding: 24px; text-align: center; background: rgba(24,20,22,.92); backdrop-filter: blur(4px);
+}
+#veilShell .veil-st-gate .luc, #veilShell .veil-st-novideo .luc { color: #fbbf24; }
+#veilShell .veil-st-gate .g-t, #veilShell .veil-st-novideo .g-t { font-size: 14.5px; font-weight: 700; color: #f4f4f5; }
+#veilShell .veil-st-gate .g-s, #veilShell .veil-st-novideo .g-s { font-size: 12.5px; line-height: 1.55; color: #a1a1aa; max-width: 420px; }
+#veilShell .veil-st-gate .g-n { font-size: 11px; color: #71717a; max-width: 420px; }
+#veilShell .veil-st-gate .g-n span { color: #fbbf24; font-variant-numeric: tabular-nums; }
+#veilShell .veil-st-meta h2 { font-size: 16.5px; font-weight: 650; letter-spacing: -.01em; color: #fafafa; line-height: 1.3; }
+#veilShell .veil-st-meta .m-line { margin-top: 6px; font-size: 12px; color: #a1a1aa; }
+#veilShell .veil-st-meta .m-line .v { color: #52525b; }
+#veilShell .veil-st-acts { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+#veilShell .st-btn {
+    display: inline-flex; align-items: center; gap: 6px; padding: 7px 13px; border-radius: 10px;
+    border: 1px solid #27272a; background: rgba(24,24,27,.72); color: #d4d4d8; font-size: 12px;
+    cursor: pointer; transition: border-color .16s ease, color .16s ease, background .16s ease;
+}
+#veilShell .st-btn:hover { border-color: rgba(244,63,94,.45); color: #ffe4e6; background: rgba(26,18,21,.9); }
+/* followed / saved states — emerald, like the site's Subscribe pill */
+#veilShell .st-btn.on { border-color: rgba(16,185,129,.5); background: rgba(16,185,129,.14); color: #6ee7b7; }
+#veilShell .st-btn.on:hover { border-color: rgba(16,185,129,.7); color: #a7f3d0; background: rgba(16,185,129,.2); }
+#veilShell .st-btn.on svg { color: #34d399; }
+#veilShell .veil-st-chhd .st-sub { margin-left: auto; }
+#veilShell .veil-st-meta .veil-st-acts { flex-wrap: wrap; }
+/* new-upload dot (subscriptions + for-you cards, unwatched) */
+#veilShell .veil-st-card .veil-st-newdot {
+    position: absolute; top: 10px; left: 10px; width: 10px; height: 10px; border-radius: 50%;
+    background: #22d3ee; box-shadow: 0 0 8px rgba(34,211,238,.85); z-index: 3;
+}
+#veilShell .veil-st-card { position: relative; }
+/* playlist cover cards (the Playlists page) */
+#veilShell .veil-st-pl {
+    display: flex; flex-direction: column; gap: 8px; text-align: left; cursor: pointer;
+    border: 1px solid rgba(139,92,246,.28); border-radius: 14px; background: rgba(24,24,27,.55);
+    padding: 10px; transition: border-color .16s ease, background .16s ease, transform .16s ease;
+}
+#veilShell .veil-st-pl:hover { border-color: rgba(139,92,246,.6); background: rgba(30,24,38,.75); transform: translateY(-2px); }
+#veilShell .veil-st-pl .th {
+    position: relative; display: block; aspect-ratio: 16/9; border-radius: 10px; overflow: hidden;
+    background: linear-gradient(135deg, #1c1917, #18181b);
+}
+#veilShell .veil-st-pl .th img { width: 100%; height: 100%; object-fit: cover; display: block; }
+#veilShell .veil-st-pl .th .ph { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; color: #8b5cf6; }
+#veilShell .veil-st-pl .th .ph svg { width: 34px; height: 34px; opacity: .6; }
+#veilShell .veil-st-pl .th .n {
+    position: absolute; right: 7px; bottom: 7px; padding: 2px 7px; border-radius: 7px;
+    background: rgba(9,9,11,.85); color: #ddd6fe; font-size: 10.5px; font-weight: 600;
+    border: 1px solid rgba(139,92,246,.35);
+}
+#veilShell .veil-st-pl .nm { font-size: 12.5px; font-weight: 600; color: #e4e4e7; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#veilShell .veil-st-meta .m-desc {
+    font-size: 12.5px; line-height: 1.6; color: #a1a1aa; white-space: pre-wrap; overflow-wrap: anywhere;
+    max-height: 168px; overflow-y: auto;
+    border-top: 1px solid #1f1f23; padding-top: 10px;
+}
+#veilShell .veil-st-related-hd { display: flex; align-items: center; gap: 10px; margin: 16px 0 10px; }
+#veilShell .veil-st-related-hd h3 {
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: #a1a1aa;
+}
+#veilShell .veil-st-related-hd .ln { flex: 1; height: 1px; background: linear-gradient(to right, #27272a, transparent); }
+#veilShell .veil-st-related { display: flex; flex-direction: column; gap: 8px; max-height: 480px; overflow-y: auto; }
+#veilShell .veil-st-rel {
+    display: flex; gap: 10px; align-items: flex-start; padding: 7px; border-radius: 11px; cursor: pointer;
+    background: rgba(24,24,27,.5); border: 1px solid transparent; color: #e4e4e7; text-align: left;
+    transition: background .16s ease, border-color .16s ease;
+}
+#veilShell .veil-st-rel:hover { background: rgba(26,18,21,.85); border-color: rgba(244,63,94,.3); }
+#veilShell .veil-st-rel .th { position: relative; flex: none; width: 118px; aspect-ratio: 16 / 9; border-radius: 7px; overflow: hidden; background: #18181b; }
+#veilShell .veil-st-rel .th img { width: 100%; height: 100%; object-fit: cover; display: block; }
+#veilShell .veil-st-rel .th .dur {
+    position: absolute; right: 4px; bottom: 4px; padding: 1px 5px; border-radius: 5px;
+    background: rgba(9,9,11,.85); color: #f4f4f5; font-size: 10px; font-weight: 600;
+}
+#veilShell .veil-st-rel .tx { min-width: 0; display: flex; flex-direction: column; gap: 3px; padding-top: 1px; }
+#veilShell .veil-st-rel .tt { font-size: 12px; font-weight: 600; line-height: 1.3; color: #f4f4f5;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+#veilShell .veil-st-rel .by { font-size: 11px; color: #71717a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ═══ 17. ARCADE — the lab tab (fuchsia-experiment identity, Veil Lab packet) ═══ */
+#veilShell .arc-tab.lab { letter-spacing: .02em; }
+#veilShell .arc-tab.lab .luc { color: #e879f9; }
+#veilShell .arc-tab.lab:hover { border-color: rgba(217,70,239,.45); background: rgba(217,70,239,.08); }
+#veilShell .arc-tab.lab[aria-selected="true"] {
+    border-color: rgba(217,70,239,.65); background: rgba(217,70,239,.14); color: #f5d0fe;
+    box-shadow: 0 0 18px -8px rgba(217,70,239,.9);
+}
+#veilShell .veil-ext-bar.lab .vx-ic .luc { color: #e879f9; }
+#veilShell .veil-ext-bar.lab { border-color: rgba(217,70,239,.28); background: rgba(217,70,239,.05); }
+#veilShell .veil-ext-bar.lab .vx-add:hover { border-color: rgba(217,70,239,.45); color: #f5d0fe; }
+#veilShell .veil-su-card.lab {
+    background:
+        radial-gradient(340px 120px at 20% -10%, rgba(217,70,239,.06), transparent 60%),
+        rgba(24,19,27,.78);
+    border-color: rgba(63,44,70,.9);
+}
+#veilShell .veil-su-card.lab:hover {
+    border-color: rgba(217,70,239,.5);
+    background:
+        radial-gradient(340px 120px at 20% -10%, rgba(217,70,239,.1), transparent 60%),
+        rgba(28,20,32,.9);
+}
+#veilShell .veil-su-card.lab .su-ic {
+    background: rgba(217,70,239,.13); box-shadow: inset 0 0 0 1px rgba(217,70,239,.3); color: #f0abfc;
+}
+#veilShell .veil-st-loading {
+    position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 10px; padding: 24px; text-align: center; background: rgba(9,9,11,.92); backdrop-filter: blur(4px);
+}
+#veilShell .veil-st-loading .luc { color: #fb7185; }
+#veilShell .veil-st-loading .l-t { font-size: 14.5px; font-weight: 700; color: #f4f4f5; }
+#veilShell .veil-st-loading .l-s { font-size: 11.5px; color: #71717a; font-variant-numeric: tabular-nums; }
+#veilShell .veil-st-loading .l-s span { color: #fb7185; }
+
+/* ═══ 17b. STREAM — channel view, posts, comments (offline edition) ═══ */
+#veilShell .veil-st-channel { display: flex; flex-direction: column; gap: 14px; }
+#veilShell .veil-st-ch-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+#veilShell .veil-st-ch-head .st-btn { order: -1; }
+#veilShell .veil-st-ch-av {
+    flex: none; width: 64px; height: 64px; border-radius: 50%; overflow: hidden;
+    background: rgba(244,63,94,.12); box-shadow: inset 0 0 0 1px rgba(244,63,94,.25);
+    display: flex; align-items: center; justify-content: center;
+}
+#veilShell .veil-st-ch-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+#veilShell .veil-st-ch-info { min-width: 0; flex: 1; }
+#veilShell .veil-st-ch-info h2 { font-size: 17px; font-weight: 700; letter-spacing: -.01em; color: #fafafa; line-height: 1.25; }
+#veilShell .veil-st-ch-subs { margin-top: 3px; font-size: 11.5px; color: #a1a1aa; font-variant-numeric: tabular-nums; }
+#veilShell .veil-st-ch-desc {
+    font-size: 12px; line-height: 1.6; color: #71717a; max-height: 120px; overflow-y: auto;
+    border-top: 1px solid #1f1f23; padding-top: 10px; white-space: pre-wrap; overflow-wrap: anywhere;
+}
+#veilShell .veil-st-ch-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+#veilShell .veil-st-ch-tab {
+    padding: 7px 14px; border-radius: 11px; border: 1px solid #27272a; background: rgba(24,24,27,.72);
+    color: #a1a1aa; font-size: 12px; font-weight: 650; cursor: pointer;
+    transition: color .16s ease, border-color .16s ease, background .16s ease;
+}
+#veilShell .veil-st-ch-tab:hover { color: #f4f4f5; border-color: #3f3f46; }
+#veilShell .veil-st-ch-tab.is-on { color: #ffe4e6; border-color: rgba(244,63,94,.55); background: rgba(244,63,94,.13); }
+#veilShell .veil-st-ch-note { font-size: 12px; color: #fbbf24; line-height: 1.5; }
+#veilShell .veil-st-ch-posts {
+    display: flex; flex-direction: column; gap: 12px; max-width: 640px;
+}
+#veilShell .veil-st-post {
+    background: rgba(24,24,27,.72); border: 1px solid #27272a; border-radius: 14px; overflow: hidden;
+}
+#veilShell .veil-st-post .p-hd { display: flex; align-items: center; gap: 10px; padding: 12px 14px 0; }
+#veilShell .veil-st-post .p-av { flex: none; width: 32px; height: 32px; border-radius: 50%; object-fit: cover; display: block; }
+#veilShell .veil-st-post .p-dot {
+    display: flex; align-items: center; justify-content: center; background: rgba(14,165,233,.14);
+    color: #7dd3fc; font-size: 12px; font-weight: 700;
+}
+#veilShell .veil-st-post .p-by { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+#veilShell .veil-st-post .p-by b { font-size: 12.5px; color: #f4f4f5; }
+#veilShell .veil-st-post .p-by span { font-size: 11px; color: #71717a; }
+#veilShell .veil-st-post .p-tx { padding: 10px 14px 0; font-size: 13px; line-height: 1.6; color: #d4d4d8; white-space: pre-wrap; overflow-wrap: anywhere; }
+#veilShell .veil-st-post .p-imgs { display: grid; gap: 2px; margin-top: 12px; }
+#veilShell .veil-st-post .p-imgs.n1 { grid-template-columns: 1fr; }
+#veilShell .veil-st-post .p-imgs.n2, #veilShell .veil-st-post .p-imgs.n4 { grid-template-columns: 1fr 1fr; }
+#veilShell .veil-st-post .p-imgs.n3 { grid-template-columns: 1fr 1fr 1fr; }
+#veilShell .veil-st-post .p-imgs img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; display: block; background: #18181b; }
+#veilShell .veil-st-post .p-imgs.n1 img { max-height: 420px; aspect-ratio: auto; }
+#veilShell .veil-st-post .p-poll { padding: 12px 14px 0; display: flex; flex-direction: column; gap: 6px; }
+#veilShell .veil-st-post .p-poll b { font-size: 12.5px; color: #f4f4f5; }
+#veilShell .veil-st-post .p-opt {
+    position: relative; height: 28px; border-radius: 8px; background: rgba(39,39,42,.6); overflow: hidden;
+    display: flex; align-items: center;
+}
+#veilShell .veil-st-post .p-opt .bar { position: absolute; inset: 0 auto 0 0; background: rgba(14,165,233,.25); }
+#veilShell .veil-st-post .p-opt .tx { position: relative; padding: 0 10px; font-size: 11.5px; color: #e4e4e7; min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#veilShell .veil-st-post .p-opt .pct { position: relative; padding: 0 10px; font-size: 11px; color: #a1a1aa; font-variant-numeric: tabular-nums; }
+#veilShell .veil-st-post .p-ft {
+    display: flex; align-items: center; gap: 18px; margin-top: 12px; padding: 10px 14px;
+    border-top: 1px solid #1f1f23; font-size: 11.5px; color: #71717a; font-variant-numeric: tabular-nums;
+}
+#veilShell .veil-st-post .p-ft span { display: inline-flex; align-items: center; gap: 5px; }
+#veilShell .veil-st-post .p-ft .luc { width: 13px; height: 13px; }
+#veilShell .veil-st-more { display: flex; justify-content: center; padding: 6px 0 2px; }
+#veilShell .veil-st-more .veil-mu-clear { display: inline-flex; align-items: center; gap: 6px; }
+#veilShell .veil-st-cmts-hd { border-top: 1px solid #1f1f23; margin-top: 12px; padding-top: 4px; display: flex; align-items: center; }
+#veilShell .veil-st-cmts-sorts { display: inline-flex; gap: 4px; margin-left: auto; }
+#veilShell .veil-st-cmts-sorts button {
+    height: 26px; padding: 0 10px; border-radius: 8px; cursor: pointer;
+    border: 1px solid rgba(39,39,42,.9); background: rgba(9,9,11,.5); color: #71717a;
+    font-size: 11px; font-weight: 650; text-transform: lowercase; transition: color .15s, border-color .15s;
+}
+#veilShell .veil-st-cmts-sorts button:hover { color: #f4f4f5; }
+#veilShell .veil-st-cmts-sorts button.on { color: #fda4af; border-color: rgba(244,63,94,.4); background: rgba(244,63,94,.08); }
+#veilShell .st-cmt-degraded {
+    margin: 8px 0 4px; padding: 8px 12px; border-radius: 10px;
+    border: 1px solid rgba(245,158,11,.3); background: rgba(245,158,11,.07);
+    color: #fcd34d; font-size: 11.5px; line-height: 1.5;
+}
+#veilShell .veil-st-cmts-toggle {
+    display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 4px; cursor: pointer;
+    background: none; border: none; color: #d4d4d8; font-size: 13px; text-align: left;
+}
+#veilShell .veil-st-cmts-toggle:hover { color: #fafafa; }
+#veilShell .veil-st-cmts-toggle .luc { color: #fb7185; width: 15px; height: 15px; }
+#veilShell .veil-st-cmts-toggle b { font-weight: 650; }
+#veilShell .veil-st-cmts-count { font-size: 11px; color: #71717a; }
+#veilShell .veil-st-cmts-chev { margin-left: auto; color: #52525b; width: 14px; height: 14px; transition: transform .18s ease; }
+#veilShell .veil-st-cmts-chev.is-open { transform: rotate(180deg); }
+#veilShell .veil-st-cmts { display: flex; flex-direction: column; gap: 14px; padding: 4px 2px 10px; }
+#veilShell .veil-st-cmt { display: flex; gap: 10px; }
+#veilShell .veil-st-cmt .c-av { flex: none; width: 30px; height: 30px; border-radius: 50%; object-fit: cover; display: block; }
+#veilShell .veil-st-cmt .c-dot {
+    display: flex; align-items: center; justify-content: center; background: rgba(39,39,42,.9);
+    color: #a1a1aa; font-size: 11px; font-weight: 700;
+}
+#veilShell .veil-st-cmt .c-bd { min-width: 0; flex: 1; }
+#veilShell .veil-st-cmt .c-hd { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; font-size: 11.5px; }
+#veilShell .veil-st-cmt .c-hd b { color: #e4e4e7; font-weight: 650; }
+#veilShell .veil-st-cmt .c-hd .v { color: #52525b; }
+#veilShell .veil-st-cmt .c-hd .pin {
+    padding: 1px 6px; border-radius: 5px; background: rgba(39,39,42,.9); color: #a1a1aa;
+    font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+}
+#veilShell .veil-st-cmt .c-when { color: #71717a; }
+#veilShell .veil-st-cmt .c-tx { margin-top: 3px; font-size: 12.5px; line-height: 1.55; color: #d4d4d8; white-space: pre-wrap; overflow-wrap: anywhere; }
+#veilShell .veil-st-cmt .c-lk { margin-top: 4px; display: flex; align-items: center; gap: 6px; font-size: 11px; color: #71717a; font-variant-numeric: tabular-nums; }
+#veilShell .veil-st-cmt .c-lk .luc { width: 12px; height: 12px; }
+#veilShell .veil-st-cmt .c-rp { color: #fda4af; }
+#veilShell .st-cmt-more { margin: 0 auto; }
+#veilShell .st-cmt-empty { text-align: center; font-size: 12px; color: #71717a; padding: 12px 0; }
+#veilShell .st-by-btn {
+    display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 8px; border-radius: 9px;
+    border: 1px solid #27272a; background: rgba(24,24,27,.72); color: #e4e4e7; font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: border-color .16s ease, color .16s ease, background .16s ease;
+}
+#veilShell .st-by-btn .luc { width: 13px; height: 13px; color: #fb7185; }
+#veilShell .st-by-btn:hover { border-color: rgba(244,63,94,.45); color: #ffe4e6; background: rgba(26,18,21,.9); }
+#veilShell .st-by-x { font-size: 12px; color: #71717a; margin-left: 8px; }
+
+/* ══ Veil Chat — the living room (birth-origin room, live socket,
+      infinite giphy GIFs) ═══════════════════════════════════════ */
+#veilShell .veil-dock .dk.a-chat i svg { color: #fb923c; }
+#veilShell .veil-dock .dk.a-chat:hover { border-color: rgba(251,146,60,.35); color: #ffedd5; }
+#veilShell .veil-dock .dk.a-chat:hover i svg { color: #fdba74; }
+#veilShell .veil-sec .orbs.chat .o1 { background: rgba(249,115,22,.10); }
+#veilShell .veil-sec .orbs.chat .o2 { background: rgba(251,146,60,.10); }
+#veilShell .veil-chat-wrap { display: flex; flex-direction: column; min-height: 0; }
+#veilShell .veil-chat-wrap > * { min-width: 0; }
+
+/* the no-birth-origin gate */
+#veilShell .veil-chat-gate { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 56px 20px; text-align: center; color: #71717a; }
+#veilShell .veil-chat-gate .luc-28 { color: #fb923c; }
+#veilShell .veil-chat-gate .t { font-size: 15px; font-weight: 600; color: #f4f4f5; }
+#veilShell .veil-chat-gate .s { max-width: 420px; font-size: 12.5px; line-height: 1.6; }
+
+/* the auth card */
+#veilShell .veil-chat-auth { display: flex; justify-content: center; padding: 32px 0 8px; }
+#veilShell .veil-chat-auth-card { width: 100%; max-width: 380px; border: 1px solid rgba(255,255,255,.08); border-radius: 18px; background: rgba(10,10,12,.82); backdrop-filter: blur(14px); box-shadow: 0 24px 60px rgba(0,0,0,.5); overflow: hidden; }
+#veilShell .veil-chat-auth-card .tabs { display: flex; border-bottom: 1px solid rgba(255,255,255,.07); }
+#veilShell .veil-chat-auth-card .tab { flex: 1; height: 44px; border: 0; background: none; font-size: 13px; font-weight: 600; color: #71717a; cursor: pointer; transition: color .15s; }
+#veilShell .veil-chat-auth-card .tab:hover { color: #a1a1aa; }
+#veilShell .veil-chat-auth-card .tab.on { color: #fdba74; box-shadow: inset 0 -2px 0 #f97316; }
+#veilShell .veil-chat-auth-card form { padding: 18px 20px 8px; display: flex; flex-direction: column; gap: 14px; }
+#veilShell .veil-chat-auth-card .fld { display: flex; flex-direction: column; gap: 6px; }
+#veilShell .veil-chat-auth-card .fld > span { font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: #71717a; }
+#veilShell .veil-chat-auth-card .fld > span em { font-style: normal; text-transform: none; letter-spacing: 0; color: #52525b; }
+#veilShell .veil-chat-auth-card .fld input { height: 40px; border-radius: 11px; border: 1px solid rgba(255,255,255,.09); background: rgba(0,0,0,.35); padding: 0 13px; font-size: 13.5px; color: #f4f4f5; outline: none; transition: border-color .15s, box-shadow .15s; }
+#veilShell .veil-chat-auth-card .fld input:focus { border-color: rgba(249,115,22,.55); box-shadow: 0 0 0 3px rgba(249,115,22,.14); }
+#veilShell .veil-chat-auth-card .go { height: 42px; margin-bottom: 6px; border: 0; border-radius: 11px; background: linear-gradient(135deg, #f97316, #ea580c); font-size: 13.5px; font-weight: 700; color: #fff; cursor: pointer; transition: filter .15s, transform .1s; }
+#veilShell .veil-chat-auth-card .go:hover { filter: brightness(1.1); }
+#veilShell .veil-chat-auth-card .go:active { transform: scale(.985); }
+#veilShell .veil-chat-auth-card .go[disabled] { opacity: .6; cursor: wait; }
+#veilShell .veil-chat-auth-card .err { margin: 0 0 8px; border: 1px solid rgba(239,68,68,.35); background: rgba(239,68,68,.08); border-radius: 10px; padding: 9px 12px; font-size: 12.5px; line-height: 1.45; color: #fca5a5; }
+#veilShell .veil-chat-auth-card .fine { padding: 12px 20px 16px; font-size: 11px; line-height: 1.55; color: #52525b; border-top: 1px dashed rgba(255,255,255,.06); }
+
+/* header extras: live pill, coins, sign out */
+#veilShell .veil-chat-hd { display: flex; align-items: center; gap: 8px; }
+#veilShell .veil-chat-live { display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border-radius: 999px; border: 1px solid rgba(255,255,255,.1); background: rgba(0,0,0,.35); font-size: 10.5px; font-weight: 600; color: #71717a; }
+#veilShell .veil-chat-live .dot { width: 6px; height: 6px; border-radius: 999px; background: #71717a; }
+#veilShell .veil-chat-live.on { color: #6ee7b7; border-color: rgba(16,185,129,.35); }
+#veilShell .veil-chat-live.on .dot { background: #34d399; box-shadow: 0 0 6px rgba(52,211,153,.9); animation: veil-chat-pulse 2.4s ease-in-out infinite; }
+@keyframes veil-chat-pulse { 0%,100% { opacity: 1; } 50% { opacity: .45; } }
+#veilShell .veil-chat-coins { display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border-radius: 999px; border: 1px solid rgba(245,158,11,.3); background: rgba(245,158,11,.08); font-size: 11px; font-weight: 700; color: #fcd34d; }
+#veilShell .veil-chat-out { display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border-radius: 999px; border: 1px solid rgba(255,255,255,.1); background: rgba(0,0,0,.35); font-size: 11px; font-weight: 600; color: #a1a1aa; cursor: pointer; transition: color .15s, border-color .15s; }
+#veilShell .veil-chat-out:hover { color: #fca5a5; border-color: rgba(239,68,68,.4); }
+#veilShell .veil-chat-out .luc { width: 11px; height: 11px; }
+@media (max-width: 639px) { #veilShell .veil-chat-out span { display: none; } }
+
+/* the room */
+#veilShell .veil-chat-room { display: flex; flex-direction: column; min-height: 0; flex: 1; }
+#veilShell .veil-chat-cols { display: flex; gap: 12px; min-height: 0; flex: 1; align-items: stretch; }
+#veilShell .veil-chat-main { flex: 1; min-width: 0; display: flex; flex-direction: column; min-height: 0; }
+#veilShell .veil-chat-list { position: relative; margin-bottom: 8px; flex: 1; min-height: 300px; max-height: min(58vh, 560px); overflow-y: auto; border: 1px solid rgba(255,255,255,.07); border-radius: 16px; background: rgba(8,8,10,.6); padding: 8px 6px; display: flex; flex-direction: column; gap: 1px; scrollbar-width: thin; }
+#veilShell .veil-chat-list .empty { margin: auto; text-align: center; color: #52525b; font-size: 12.5px; line-height: 1.7; }
+#veilShell .veil-chat-list .empty .luc-22 { color: #fb923c; }
+
+/* one message — the SITE's flat look: no bubbles, hover wash,
+   consecutive messages from the same author group (avatar ghosted) */
+#veilShell .veil-chat-msg { display: flex; gap: 10px; padding: 5px 10px; border-radius: 10px; }
+#veilShell .veil-chat-msg:hover { background: rgba(255,255,255,.035); }
+#veilShell .veil-chat-msg.grouped { padding-top: 1px; padding-bottom: 1px; }
+#veilShell .veil-chat-msg .av { flex-shrink: 0; width: 34px; height: 34px; border-radius: 999px; display: flex; align-items: center; justify-content: center; font-size: 11.5px; font-weight: 700; color: #fff; overflow: hidden; background: #27272a; margin-top: 1px; }
+#veilShell .veil-chat-msg .av img { width: 100%; height: 100%; object-fit: cover; }
+#veilShell .veil-chat-msg .av.ghost { visibility: hidden; }
+#veilShell .veil-chat-msg .bd { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 2px; }
+#veilShell .veil-chat-msg .meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+#veilShell .veil-chat-msg .nm { font-size: 13px; font-weight: 650; color: #e4e4e7; }
+#veilShell .veil-chat-msg .nm.mod { color: #34d399; }
+#veilShell .veil-chat-msg .nm.owner { color: #f59e0b; }
+#veilShell .veil-chat-msg .tagb, #veilShell .veil-chat-members .tagb {
+    font-size: 9.5px; font-weight: 700; letter-spacing: .04em; color: #fdba74;
+    border: 1px solid rgba(253,186,116,.4); border-radius: 4px; padding: 1px 5px; line-height: 1.35;
+}
+#veilShell .veil-chat-msg .modtag, #veilShell .veil-chat-members .modtag { font-size: 8.5px; font-weight: 800; letter-spacing: .06em; color: #fff; background: #10b981; border-radius: 4px; padding: 1.5px 5px; line-height: 1.35; }
+#veilShell .veil-chat-msg .ownertag, #veilShell .veil-chat-members .ownertag { font-size: 8.5px; font-weight: 800; letter-spacing: .06em; color: #fff; background: #f59e0b; border-radius: 4px; padding: 1.5px 5px; line-height: 1.35; }
+#veilShell .veil-chat-msg .tm { font-size: 10px; color: #52525b; }
+#veilShell .veil-chat-msg .bub { font-size: 13.5px; line-height: 1.55; color: #f4f4f5; word-wrap: break-word; overflow-wrap: break-word; white-space: pre-wrap; }
+#veilShell .veil-chat-msg .bub a { color: #fdba74; text-decoration: underline; text-decoration-color: rgba(253,186,116,.4); }
+#veilShell .veil-chat-msg .bub a:hover { text-decoration-color: #fdba74; }
+#veilShell .veil-chat-msg .bub img.gifmsg { display: block; margin-top: 4px; max-width: min(280px, 100%); max-height: 224px; border-radius: 10px; border: 1px solid rgba(255,255,255,.08); }
+#veilShell .veil-chat-msg.sys { justify-content: center; }
+#veilShell .veil-chat-msg.sys .bub { background: none; border: 1px dashed rgba(255,255,255,.1); color: #71717a; font-size: 11.5px; }
+
+/* file attachment bubbles */
+#veilShell .veil-chat-msg .fileimg { display: block; margin-top: 4px; max-width: min(320px, 100%); max-height: 320px; border-radius: 10px; border: 1px solid rgba(255,255,255,.08); object-fit: contain; }
+#veilShell .veil-chat-msg .filevid { display: block; margin-top: 4px; width: 100%; max-width: 440px; max-height: 300px; border-radius: 10px; border: 1px solid rgba(255,255,255,.08); background: #000; }
+#veilShell .veil-chat-msg .fileaud { display: block; margin-top: 4px; width: 100%; max-width: 320px; }
+#veilShell .veil-chat-msg .filecard {
+    display: flex; align-items: center; gap: 12px; margin-top: 4px; max-width: 340px;
+    padding: 11px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,.1);
+    background: rgba(0,0,0,.3); transition: border-color .15s;
+}
+#veilShell .veil-chat-msg .filecard:hover { border-color: rgba(249,115,22,.45); }
+#veilShell .veil-chat-msg .filecard .fc-ic { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 10px; background: rgba(249,115,22,.15); color: #fdba74; flex-shrink: 0; }
+#veilShell .veil-chat-msg .filecard .fc-bd { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 2px; }
+#veilShell .veil-chat-msg .filecard .fc-bd b { font-size: 13px; font-weight: 600; color: #f4f4f5; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#veilShell .veil-chat-msg .filecard .fc-bd small { font-size: 11px; color: #a1a1aa; }
+#veilShell .veil-chat-msg .filecard .fc-dl { color: #fdba74; flex-shrink: 0; }
+
+/* typing line + upload progress */
+#veilShell .veil-chat-typing { min-height: 18px; margin: 0 4px 6px; font-size: 11.5px; color: #a1a1aa; }
+#veilShell .veil-chat-up { border: 1px solid rgba(249,115,22,.3); background: rgba(249,115,22,.06); border-radius: 12px; padding: 9px 12px; margin-bottom: 8px; }
+#veilShell .veil-chat-up .up-hd { display: flex; justify-content: space-between; gap: 8px; font-size: 11.5px; color: #d4d4d8; }
+#veilShell .veil-chat-up .up-hd .up-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#veilShell .veil-chat-up .up-hd .up-pct { font-weight: 700; color: #fdba74; font-variant-numeric: tabular-nums; }
+#veilShell .veil-chat-up .up-bar { height: 6px; margin-top: 7px; border-radius: 999px; background: rgba(255,255,255,.1); overflow: hidden; }
+#veilShell .veil-chat-up .up-fill { height: 100%; width: 0; border-radius: 999px; background: #fb923c; transition: width .15s; }
+
+/* the players panel (right) */
+#veilShell .veil-chat-members {
+    width: 172px; flex-shrink: 0; display: flex; flex-direction: column; gap: 8px;
+    border: 1px solid rgba(255,255,255,.07); border-radius: 16px; background: rgba(8,8,10,.6);
+    padding: 12px 10px; max-height: min(58vh, 560px);
+}
+#veilShell .veil-chat-members .t { display: flex; align-items: center; gap: 6px; margin: 0; font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #71717a; }
+#veilShell .veil-chat-members .t .luc { width: 13px; height: 13px; color: #fb923c; }
+#veilShell .veil-chat-members .list { overflow-y: auto; display: flex; flex-direction: column; gap: 2px; scrollbar-width: thin; }
+#veilShell .veil-chat-members .mb { display: flex; align-items: center; gap: 8px; padding: 4px 6px; border-radius: 9px; font-size: 12px; color: #d4d4d8; }
+#veilShell .veil-chat-members .mb:hover { background: rgba(255,255,255,.04); }
+#veilShell .veil-chat-members .mb.me { background: rgba(251,146,60,.1); }
+#veilShell .veil-chat-members .mb .av { position: relative; width: 28px; height: 28px; border-radius: 999px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #fff; overflow: visible; background: #27272a; flex-shrink: 0; }
+#veilShell .veil-chat-members .mb .av img { width: 100%; height: 100%; object-fit: cover; border-radius: 999px; }
+#veilShell .veil-chat-members .mb .av .dot { position: absolute; right: -2px; bottom: -2px; width: 9px; height: 9px; border-radius: 999px; background: rgba(255,255,255,.3); border: 2px solid rgba(9,9,11,.75); }
+#veilShell .veil-chat-members .mb.on .av .dot { background: #34d399; box-shadow: 0 0 5px rgba(52,211,153,.7); }
+#veilShell .veil-chat-members .mb .mtx { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 0; }
+#veilShell .veil-chat-members .mb .mtx > span:first-child { display: flex; align-items: center; gap: 5px; min-width: 0; }
+#veilShell .veil-chat-members .mb .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; font-size: 12.5px; }
+#veilShell .veil-chat-members .mb .tagb { flex-shrink: 0; }
+#veilShell .veil-chat-members .mb .un { font-size: 10px; color: rgba(255,255,255,.4); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#veilShell .veil-chat-members .mb .ownertag, #veilShell .veil-chat-members .mb .modtag { flex-shrink: 0; }
+#veilShell .veil-chat-members .mb-hd { margin: 8px 4px 3px; font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #52525b; }
+#veilShell .veil-chat-members .mb-hd.on { color: #34d399; }
+#veilShell .veil-chat-members .mb-empty { font-size: 11.5px; color: #52525b; padding: 8px 6px; }
+@media (max-width: 860px) { #veilShell .veil-chat-members { display: none; } }
+
+/* composer */
+#veilShell .veil-chat-composer { position: relative; display: flex; gap: 8px; align-items: center; }
+#veilShell .veil-chat-composer .clipbtn { height: 38px; width: 40px; flex-shrink: 0; border-radius: 11px; border: 1px solid rgba(255,255,255,.1); background: rgba(0,0,0,.35); display: flex; align-items: center; justify-content: center; color: #a1a1aa; cursor: pointer; transition: color .15s, border-color .15s; }
+#veilShell .veil-chat-composer .clipbtn .luc { width: 15px; height: 15px; }
+#veilShell .veil-chat-composer .clipbtn:hover { color: #fdba74; border-color: rgba(249,115,22,.4); }
+#veilShell .veil-chat-composer .gifbtn { height: 38px; flex-shrink: 0; border-radius: 11px; border: 1px solid rgba(255,255,255,.1); background: rgba(0,0,0,.35); padding: 0 11px; font-size: 10.5px; font-weight: 800; letter-spacing: .04em; color: #a1a1aa; cursor: pointer; transition: color .15s, border-color .15s; }
+#veilShell .veil-chat-composer .gifbtn:hover { color: #fdba74; border-color: rgba(249,115,22,.4); }
+#veilShell .veil-chat-composer .gifbtn.on { color: #fb923c; border-color: rgba(249,115,22,.55); background: rgba(249,115,22,.1); }
+#veilShell .veil-chat-composer input { flex: 1; min-width: 0; height: 38px; border-radius: 11px; border: 1px solid rgba(255,255,255,.09); background: rgba(0,0,0,.35); padding: 0 14px; font-size: 13px; color: #f4f4f5; outline: none; transition: border-color .15s, box-shadow .15s; }
+#veilShell .veil-chat-composer input:focus { border-color: rgba(249,115,22,.55); box-shadow: 0 0 0 3px rgba(249,115,22,.14); }
+#veilShell .veil-chat-composer .sendbtn { height: 38px; width: 42px; flex-shrink: 0; border: 0; border-radius: 11px; background: linear-gradient(135deg, #f97316, #ea580c); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: filter .15s, transform .1s; }
+#veilShell .veil-chat-composer .sendbtn:hover { filter: brightness(1.1); }
+#veilShell .veil-chat-composer .sendbtn:active { transform: scale(.96); }
+#veilShell .veil-chat-composer .sendbtn[disabled] { opacity: .55; cursor: wait; }
+#veilShell .veil-chat-composer .sendbtn .luc { width: 15px; height: 15px; color: #fff; }
+
+/* the GIF drawer */
+#veilShell .veil-chat-gifs { margin-top: 10px; border: 1px solid rgba(255,255,255,.08); border-radius: 14px; background: rgba(10,10,12,.85); overflow: hidden; }
+#veilShell .veil-chat-gifs .bar { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border-bottom: 1px solid rgba(255,255,255,.06); }
+#veilShell .veil-chat-gifs .bar .luc { width: 14px; height: 14px; color: #71717a; flex-shrink: 0; }
+#veilShell .veil-chat-gifs .bar input { flex: 1; min-width: 0; background: none; border: 0; outline: none; font-size: 12.5px; color: #f4f4f5; }
+#veilShell .veil-chat-gifs .bar input::placeholder { color: #52525b; }
+#veilShell .veil-chat-gifs .bar .cl { background: none; border: 0; padding: 2px; cursor: pointer; color: #71717a; display: flex; }
+#veilShell .veil-chat-gifs .bar .cl:hover { color: #f4f4f5; }
+#veilShell .veil-chat-gifs .bar .cl .luc { width: 13px; height: 13px; }
+#veilShell .veil-chat-gifs .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 8px; max-height: 216px; overflow-y: auto; scrollbar-width: thin; }
+@media (min-width: 640px) { #veilShell .veil-chat-gifs .grid { grid-template-columns: repeat(4, 1fr); } }
+#veilShell .veil-chat-gifs .grid .cell { position: relative; aspect-ratio: 1; border: 0; border-radius: 9px; overflow: hidden; background: #18181b; cursor: pointer; padding: 0; transition: transform .12s; }
+#veilShell .veil-chat-gifs .grid .cell:hover { transform: scale(1.05); }
+#veilShell .veil-chat-gifs .grid .cell img { width: 100%; height: 100%; object-fit: cover; display: block; }
+#veilShell .veil-chat-gifs .grid .ldg { grid-column: 1 / -1; text-align: center; color: #71717a; font-size: 11.5px; padding: 10px 0; }
+#veilShell .veil-chat-gifs .more { display: block; width: calc(100% - 16px); margin: 0 8px 8px; height: 30px; border-radius: 9px; border: 1px solid rgba(255,255,255,.09); background: rgba(255,255,255,.04); font-size: 11.5px; font-weight: 600; color: #a1a1aa; cursor: pointer; }
+#veilShell .veil-chat-gifs .more:hover { color: #f4f4f5; background: rgba(255,255,255,.08); }
+#veilShell .veil-chat-gifs .src { padding: 6px 12px 9px; font-size: 10px; color: #52525b; }
+
+#veilShell .arc-math:focus { outline: none; }

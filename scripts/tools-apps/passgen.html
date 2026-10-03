@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Veil Toolkit — Password Gen</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:#09090b;color:#f4f4f5;font:14px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column;gap:12px;padding:14px 16px;overflow:hidden;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:2px solid rgba(52,211,153,.6);outline-offset:2px}
+.tag{font-size:10.5px;font-weight:700;letter-spacing:.18em;color:#34d399}
+h1{font-size:17px;font-weight:700}
+header{display:flex;align-items:baseline;gap:10px;flex:none}
+.panel{background:#131316;border:1px solid rgba(255,255,255,.08);border-radius:14px}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.ctl{flex:none;padding:11px 12px;display:flex;flex-direction:column;gap:10px}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:7px 10px}
+.lab{font-size:10.5px;font-weight:700;letter-spacing:.12em;color:#71717a;text-transform:uppercase}
+.row label{display:inline-flex;align-items:center;gap:7px;min-height:36px;padding:0 4px;font-size:13px;color:#d4d4d8;cursor:pointer}
+#len{flex:1;min-width:110px;max-width:230px}
+#lenVal{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;color:#f4f4f5;min-width:24px;text-align:right}
+#wcVal{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:14px;min-width:22px;text-align:center;color:#f4f4f5}
+.res{flex:none;padding:14px 16px;display:flex;flex-direction:column;gap:12px}
+#out{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:17px;line-height:1.5;color:#f4f4f5;word-break:break-all;user-select:all;min-height:52px;display:flex;align-items:center}
+.bar{height:8px;background:#18181b;border-radius:99px;overflow:hidden}
+#entFill{display:block;height:100%;width:0;background:#fbbf24;border-radius:99px;transition:width .25s,background .25s}
+.entrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+#entBits{font-size:12.5px;color:#a1a1aa}
+#entLab{font-size:12.5px;font-weight:700}
+#crack{font-size:12px;color:#71717a;margin-left:auto}
+.hist{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.hhead{flex:none;padding:10px 14px 8px;font-size:10.5px;font-weight:700;letter-spacing:.14em;color:#71717a;text-transform:uppercase}
+#hist{flex:1;min-height:0;overflow:auto;padding:0 8px 8px}
+.hrow{width:100%;display:flex;align-items:center;gap:10px;min-height:40px;padding:4px 8px;border:0;background:none;border-radius:9px;cursor:pointer;text-align:left}
+.hrow:hover{background:rgba(255,255,255,.05)}
+.hm{font-size:10px;font-weight:700;letter-spacing:.08em;color:#71717a;border:1px solid rgba(255,255,255,.12);padding:2px 7px;border-radius:6px;flex:none;text-transform:uppercase}
+.hv{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px;color:#d4d4d8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hempty{padding:8px;font-size:12px;color:#71717a}
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,10px);background:#131316;border:1px solid rgba(52,211,153,.35);color:#6ee7b7;padding:9px 18px;border-radius:999px;font-size:12.5px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .22s,transform .22s;z-index:99;box-shadow:0 10px 30px rgba(0,0,0,.45);white-space:nowrap;max-width:calc(100vw - 32px);overflow:hidden;text-overflow:ellipsis}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.btn{border:1px solid rgba(52,211,153,.35);background:rgba(16,185,129,.12);color:#6ee7b7;padding:7px 13px;border-radius:10px;font-size:12.5px;font-weight:600;cursor:pointer;transition:background .12s,color .12s,transform .1s;font-family:inherit}
+.btn:hover{background:rgba(16,185,129,.22)}
+.btn:active{transform:scale(.96)}
+.btn.solid{background:#10b981;border-color:transparent;color:#032015}
+.btn.solid:hover{background:#34d399}
+.btn.ghost{border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:#d4d4d8}
+.btn.ghost:hover{background:rgba(255,255,255,.09);color:#fafafa}
+.btn.danger{border-color:rgba(248,113,113,.35);background:rgba(239,68,68,.12);color:#fca5a5}
+.btn.on{background:#10b981;border-color:transparent;color:#032015}
+input,select,textarea{background:#18181b;border:1px solid rgba(255,255,255,.1);border-radius:10px;color:#f4f4f5;padding:7px 10px;font-size:13.5px;outline:none;font-family:inherit}
+input:focus,select:focus,textarea:focus{border-color:rgba(52,211,153,.55)}
+/* additive sizing on top of the shared button/input base */
+.btn{min-height:36px}
+input[type=range]{padding:0;accent-color:#10b981;cursor:pointer}
+input[type=checkbox]{width:16px;height:16px;padding:0;accent-color:#10b981;cursor:pointer;flex:none}
+select{min-height:36px}
+</style>
+</head>
+<body>
+<header><span class="tag">VEIL TOOLKIT</span><h1>Password Gen</h1></header>
+
+<section class="panel ctl">
+  <div class="row">
+    <button class="btn on" id="tabPw">password</button>
+    <button class="btn" id="tabPh">passphrase</button>
+  </div>
+  <div class="row" id="pwCtl">
+    <span class="lab">length</span>
+    <input type="range" id="len" min="8" max="64" value="20" aria-label="password length">
+    <b id="lenVal">20</b>
+    <label><input type="checkbox" id="cLow" checked> a-z</label>
+    <label><input type="checkbox" id="cUp" checked> A-Z</label>
+    <label><input type="checkbox" id="cDig" checked> 0-9</label>
+    <label><input type="checkbox" id="cSym" checked> symbols !@#$%^&amp;*-_+=?</label>
+    <label><input type="checkbox" id="cEx"> no look-alikes (il1Lo0O)</label>
+  </div>
+  <div class="row" id="phCtl" hidden>
+    <span class="lab">words</span>
+    <button class="btn ghost" id="wcDn" title="fewer words">−</button>
+    <b id="wcVal">4</b>
+    <button class="btn ghost" id="wcUp" title="more words">+</button>
+    <span class="lab">sep</span>
+    <select id="sep" aria-label="separator">
+      <option value="-" selected>-</option>
+      <option value="_">_</option>
+      <option value=".">.</option>
+      <option value=" ">space</option>
+      <option value="">none</option>
+    </select>
+    <label><input type="checkbox" id="cCap"> capitalize</label>
+  </div>
+</section>
+
+<section class="panel res">
+  <div id="out" class="mono">…</div>
+  <div class="bar"><i id="entFill"></i></div>
+  <div class="entrow">
+    <b id="entBits" class="mono">0 bits</b>
+    <span id="entLab">—</span>
+    <span id="crack">—</span>
+  </div>
+  <div class="row">
+    <button class="btn solid" id="copy">copy</button>
+    <button class="btn ghost" id="regen">regenerate</button>
+  </div>
+</section>
+
+<section class="panel hist">
+  <div class="hhead">history — click to copy</div>
+  <div id="hist"></div>
+</section>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+var store=(function(){try{var k="__v";localStorage.setItem(k,"1");localStorage.removeItem(k);return localStorage}catch(e){var m={};return{getItem:function(k){return k in m?m[k]:null},setItem:function(k,v){m[k]=String(v)},removeItem:function(k){delete m[k]}}}})();
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+
+var toastEl=document.getElementById("toast"),toastT=null;
+function toast(msg){toastEl.textContent=msg;toastEl.classList.add("show");clearTimeout(toastT);toastT=setTimeout(function(){toastEl.classList.remove("show")},1600)}
+
+/* 128 short common words — exactly 2^7, so each word carries 7 bits */
+var WORDS=["amber","anchor","apple","autumn","basil","beacon","birch","bloom",
+"boulder","brush","candle","canyon","cedar","cherry","cinder","cliff",
+"cloud","comet","copper","coral","cosmos","cotton","creek","crystal",
+"dawn","delta","denim","dew","drift","ember","fern","fjord",
+"flint","fossil","frost","galaxy","garnet","ginger","glacier","granite",
+"grove","harbor","hazel","heron","hollow","honey","indigo","iris",
+"ivory","jade","jasper","jetty","kayak","kettle","lagoon","lantern",
+"lava","lemon","lilac","linen","lotus","lunar","maple","marble",
+"meadow","mist","moss","nebula","nectar","nickel","nomad","north",
+"nova","oak","ocean","olive","onyx","opal","orbit","otter",
+"paddle","pebble","pepper","pine","plain","plume","pond","prairie",
+"quartz","quill","radish","raven","reef","ridge","river","robin",
+"rosemary","russet","saffron","sage","sand","seaweed","shadow","silk",
+"silver","slate","snow","solstice","spruce","starling","stone","storm",
+"summer","sunset","tansy","thistle","tide","timber","topaz","tulip",
+"tundra","umber","valley","velvet","verbena","violet","walnut","willow"];
+
+var LOWER="abcdefghijklmnopqrstuvwxyz",UPPER="ABCDEFGHIJKLMNOPQRSTUVWXYZ",DIGITS="0123456789",SYMS="!@#$%^&*-_+=?";
+var LOWER_X="abcdefghjkmnpqrstuvwxyz",UPPER_X="ABCDEFGHJKMNPQRSTUVWXYZ",DIGITS_X="23456789";
+
+var tabPw=document.getElementById("tabPw"),tabPh=document.getElementById("tabPh");
+var pwCtl=document.getElementById("pwCtl"),phCtl=document.getElementById("phCtl");
+var lenEl=document.getElementById("len"),lenVal=document.getElementById("lenVal");
+var cLow=document.getElementById("cLow"),cUp=document.getElementById("cUp"),cDig=document.getElementById("cDig"),cSym=document.getElementById("cSym"),cEx=document.getElementById("cEx");
+var wcVal=document.getElementById("wcVal"),sepEl=document.getElementById("sep"),cCap=document.getElementById("cCap");
+var outEl=document.getElementById("out"),entFill=document.getElementById("entFill");
+var entBits=document.getElementById("entBits"),entLab=document.getElementById("entLab"),crackEl=document.getElementById("crack");
+var histEl=document.getElementById("hist");
+var mode="pw",wc=4;
+
+/* unbiased random integer in [0,n) — rejection sampling kills modulo bias */
+function ri(n){
+  if(n<=0)return 0;
+  if(window.crypto&&crypto.getRandomValues){
+    var lim=256-(256%n),b=new Uint8Array(1);
+    do{crypto.getRandomValues(b)}while(b[0]>=lim);
+    return b[0]%n;
+  }
+  return Math.floor(Math.random()*n);
+}
+
+function genPassword(){
+  var lo=cLow.checked,up=cUp.checked,dg=cDig.checked,sy=cSym.checked;
+  if(!lo&&!up&&!dg&&!sy){
+    cLow.checked=true;lo=true;
+    toast("need at least one set — lowercase re-enabled");
+  }
+  var pool="";
+  if(lo)pool+=cEx.checked?LOWER_X:LOWER;
+  if(up)pool+=cEx.checked?UPPER_X:UPPER;
+  if(dg)pool+=cEx.checked?DIGITS_X:DIGITS;
+  if(sy)pool+=SYMS;
+  var n=+lenEl.value,s="";
+  for(var i=0;i<n;i++)s+=pool.charAt(ri(pool.length));
+  return{v:s,bits:n*Math.log2(pool.length)};
+}
+function genPassphrase(){
+  var n=wc,s="",words=[];
+  for(var i=0;i<n;i++){
+    var w=WORDS[ri(WORDS.length)];
+    if(cCap.checked)w=w.charAt(0).toUpperCase()+w.slice(1);
+    words.push(w);
+  }
+  s=words.join(sepEl.value);
+  return{v:s,bits:n*Math.log2(WORDS.length)};
+}
+
+function grade(b){
+  if(b<28)return["very weak","#f87171"];
+  if(b<60)return["weak","#fb7185"];
+  if(b<80)return["good","#fbbf24"];
+  if(b<100)return["strong","#34d399"];
+  return["very strong","#6ee7b7"];
+}
+function approx(n){
+  var v=n<10?Math.round(n*10)/10:Math.round(n);
+  return"≈ "+v+" ";
+}
+function crack(b){
+  var s=Math.pow(2,b-1)/1e10; /* average guesses / 10 billion per second */
+  if(s<1)return"cracked instantly";
+  if(s<60)return approx(s)+"seconds";
+  if(s<3600)return approx(s/60)+"minutes";
+  if(s<86400)return approx(s/3600)+"hours";
+  if(s<31557600)return approx(s/86400)+"days";
+  var y=s/31557600;
+  if(y<1e3)return approx(y)+"years";
+  if(y<1e6)return approx(y/1e3)+"thousand years";
+  if(y<1e9)return approx(y/1e6)+"million years";
+  if(y<1e12)return approx(y/1e9)+"billion years";
+  if(y<1e15)return approx(y/1e12)+"trillion years";
+  if(y<1e18)return approx(y/1e15)+"quadrillion years";
+  return"≈ "+y.toExponential(1)+" years";
+}
+
+function regen(){
+  var r=(mode==="pw")?genPassword():genPassphrase();
+  outEl.textContent=r.v;
+  var g=grade(r.bits);
+  entFill.style.width=Math.min(r.bits,120)/120*100+"%";
+  entFill.style.background=g[1];
+  entBits.textContent=Math.round(r.bits)+" bits";
+  entLab.textContent=g[0];
+  entLab.style.color=g[1];
+  crackEl.textContent=crack(r.bits)+" @ 10B guesses/s";
+  pushHist(mode,r.v);
+}
+
+/* ---- history: last 5, persisted ---- */
+var hist=[];
+try{var h=JSON.parse(store.getItem("veil.tk.pass")||"[]");if(Array.isArray(h))hist=h}catch(e){}
+function pushHist(m,v){
+  hist.unshift({m:m,v:v});
+  if(hist.length>5)hist.pop();
+  try{store.setItem("veil.tk.pass",JSON.stringify(hist))}catch(e){}
+  renderHist();
+}
+function renderHist(){
+  histEl.innerHTML="";
+  if(!hist.length){
+    var d=document.createElement("div");
+    d.className="hempty";d.textContent="nothing generated yet";
+    histEl.appendChild(d);
+    return;
+  }
+  hist.forEach(function(h){
+    var b=document.createElement("button");
+    b.className="hrow";
+    var tr=h.v.length>24?h.v.slice(0,24)+"…":h.v;
+    b.innerHTML='<span class="hm">'+esc(h.m)+'</span><span class="hv">'+esc(tr)+'</span>';
+    b.title="click to copy";
+    b.addEventListener("click",function(){copyText(h.v)});
+    histEl.appendChild(b);
+  });
+}
+
+/* ---- clipboard with fallback ---- */
+function copyText(t){
+  function fb(){
+    var ok=false;
+    try{
+      var ta=document.createElement("textarea");
+      ta.value=t;
+      ta.style.position="fixed";ta.style.opacity="0";
+      document.body.appendChild(ta);
+      ta.select();
+      ok=document.execCommand("copy");
+      ta.remove();
+    }catch(e){}
+    toast(ok?"copied":"copy failed");
+  }
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(function(){toast("copied")},fb);
+  }else fb();
+}
+
+/* ---- mode tabs + controls ---- */
+function setMode(m){
+  mode=m;
+  tabPw.classList.toggle("on",m==="pw");
+  tabPh.classList.toggle("on",m==="ph");
+  pwCtl.hidden=(m!=="pw");
+  phCtl.hidden=(m!=="ph");
+  regen();
+}
+tabPw.addEventListener("click",function(){setMode("pw")});
+tabPh.addEventListener("click",function(){setMode("ph")});
+
+lenEl.addEventListener("input",function(){lenVal.textContent=lenEl.value;regen()});
+[cLow,cUp,cDig,cSym,cEx].forEach(function(c){c.addEventListener("change",regen)});
+[sepEl,cCap].forEach(function(c){c.addEventListener("change",regen)});
+function setWc(n){wc=Math.max(3,Math.min(8,n));wcVal.textContent=wc;regen()}
+document.getElementById("wcDn").addEventListener("click",function(){setWc(wc-1)});
+document.getElementById("wcUp").addEventListener("click",function(){setWc(wc+1)});
+
+document.getElementById("regen").addEventListener("click",regen);
+document.getElementById("copy").addEventListener("click",function(){copyText(outEl.textContent)});
+
+/* ---- boot ---- */
+renderHist();
+regen();
+</script>
+</body>
+</html>

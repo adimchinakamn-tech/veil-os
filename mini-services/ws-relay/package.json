@@ -1,0 +1,10 @@
+{
+  "name": "veil-ws-relay",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Veil WebSocket relay mini-service — bridges pages inside the Veil app to remote ws(s):// servers through the machine's single exposed port.",
+  "scripts": {
+    "dev": "bun --hot index.ts"
+  }
+}

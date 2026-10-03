@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Pixel Art — Sulfur OS</title>
+<style>
+:root{color-scheme:dark;--bg:#09090b;--card:#18181b;--bd:#27272a;--bd2:#3f3f46;--tx:#e4e4e7;--mut:#a1a1aa;--dim:#71717a;--amber:#f59e0b;--amber-h:#fbbf24;--tint:rgba(245,158,11,.14);--mono:ui-monospace,Menlo,Consolas,monospace;--sh:0 10px 30px rgba(0,0,0,.4)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--tx);font:14px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column;overflow:hidden;-webkit-font-smoothing:antialiased}
+:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+svg{display:block}
+.topbar{display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(24,24,27,.92);border-bottom:1px solid var(--bd);flex:none}
+.tb-icon{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#fbbf24,#d97706);color:#1c1206;display:grid;place-items:center;flex:none}
+.tb-name{font-weight:700;font-size:14.5px;white-space:nowrap}
+.chip{font-size:10px;font-weight:800;letter-spacing:.18em;color:var(--amber);background:var(--tint);border:1px solid rgba(245,158,11,.35);padding:2px 8px;border-radius:999px;flex:none}
+.spacer{flex:1}
+.ibtn{width:40px;height:40px;display:grid;place-items:center;border-radius:8px;background:#202024;border:1px solid var(--bd);transition:background .12s,border-color .12s,transform .06s,opacity .12s;color:var(--mut)}
+.ibtn:hover{background:#26262b;border-color:var(--bd2);color:var(--tx)}
+.ibtn:active{transform:scale(.96)}
+.ibtn:disabled{opacity:.35;cursor:not-allowed}
+.wrap{flex:1;display:flex;min-height:0}
+.side{width:224px;flex:none;overflow-y:auto;border-right:1px solid var(--bd);background:#101012;padding:12px;display:flex;flex-direction:column;gap:14px}
+.lbl{font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-bottom:6px;display:block}
+.seg{display:flex;gap:5px}
+.seg button{flex:1;min-height:40px;border-radius:8px;background:#202024;border:1px solid var(--bd);font-size:12px;font-weight:600;color:var(--mut);transition:background .12s,border-color .12s,color .12s,transform .06s}
+.seg button:hover{background:#26262b;color:var(--tx)}
+.seg button:active{transform:scale(.97)}
+.seg button.on{background:var(--tint);border-color:rgba(245,158,11,.55);color:var(--amber)}
+.tools{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.tool{min-height:52px;border-radius:8px;background:#202024;border:1px solid var(--bd);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:10px;font-weight:600;color:var(--mut);transition:background .12s,border-color .12s,color .12s,transform .06s}
+.tool:hover{background:#26262b;color:var(--tx)}
+.tool:active{transform:scale(.97)}
+.tool.on{background:var(--tint);border-color:rgba(245,158,11,.55);color:var(--amber)}
+.pal{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+.sw{position:relative;height:36px;border-radius:7px;border:1px solid rgba(255,255,255,.16);transition:transform .1s,box-shadow .1s;overflow:hidden}
+.sw:hover{transform:scale(1.09)}
+.sw.on{box-shadow:0 0 0 2px #101012,0 0 0 4px var(--amber)}
+.sw.tr{background:repeating-conic-gradient(#232327 0 25%,#121214 0 50%) 0 0/10px 10px}
+input[type=color]{-webkit-appearance:none;appearance:none;width:100%;height:40px;border:1px solid var(--bd);border-radius:8px;background:#202024;padding:4px;cursor:pointer}
+input[type=color]::-webkit-color-swatch-wrapper{padding:0}
+input[type=color]::-webkit-color-swatch{border:0;border-radius:5px}
+input[type=color]::-moz-color-swatch{border:0;border-radius:5px}
+.stage{flex:1;overflow:auto;display:grid;place-items:center;padding:18px;background:#0b0b0d;min-width:0}
+.board{border:1px solid var(--bd);border-radius:12px;box-shadow:var(--sh);overflow:hidden;line-height:0;background:#101012}
+canvas{touch-action:none;cursor:crosshair;display:block}
+.status{display:flex;align-items:center;gap:14px;padding:7px 14px;border-top:1px solid var(--bd);background:rgba(24,24,27,.92);flex:none;font-size:12px;color:var(--dim)}
+.coords{font-family:var(--mono);min-width:112px;font-variant-numeric:tabular-nums;color:var(--mut)}
+.saved{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--mut);opacity:0;transition:opacity .25s}
+.saved.show{opacity:1}
+.saved i{width:7px;height:7px;border-radius:50%;background:var(--amber);display:inline-block}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(14px);background:#202024;color:var(--tx);border:1px solid rgba(245,158,11,.45);border-left:3px solid var(--amber);padding:9px 16px;border-radius:10px;font-size:13px;box-shadow:var(--sh);opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;z-index:99;max-width:88vw}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#confirm{position:fixed;inset:0;background:rgba(0,0,0,.62);display:none;align-items:center;justify-content:center;z-index:100;padding:16px}
+#confirm.show{display:flex}
+.cf{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:20px;max-width:340px;width:100%;box-shadow:var(--sh)}
+.cf h3{font-size:15px;font-weight:700;margin-bottom:6px}
+.cf p{font-size:13px;color:var(--mut);margin-bottom:18px}
+.cf-a{display:flex;gap:10px;justify-content:flex-end}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:0 16px;border-radius:8px;background:#202024;border:1px solid var(--bd);font-size:13px;font-weight:600;transition:background .12s,border-color .12s,transform .06s}
+.btn:hover{background:#26262b;border-color:var(--bd2)}
+.btn:active{transform:scale(.97)}
+.btn.amber{background:var(--amber);border-color:transparent;color:#1c1206}
+.btn.amber:hover{background:var(--amber-h)}
+kbd{font-family:var(--mono);font-size:10.5px;background:#202024;border:1px solid var(--bd);border-bottom-width:2px;border-radius:5px;padding:1px 5px;color:var(--mut)}
+.hint{font-size:11px;color:var(--dim);line-height:1.6}
+noscript > div{padding:40px;text-align:center;color:var(--mut)}
+@media (max-width:720px){
+.wrap{flex-direction:column}
+.side{width:100%;flex:none;border-right:0;border-bottom:1px solid var(--bd);display:grid;grid-template-columns:1fr 1fr;gap:12px;max-height:none;overflow:visible}
+.side .sec-pal{grid-column:1/-1}
+.seg button{min-height:40px}
+.stage{padding:12px}
+}
+</style>
+</head>
+<body>
+<noscript><div>Pixel Art needs JavaScript to draw. Please enable it and reload.</div></noscript>
+<header class="topbar">
+  <div class="tb-icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2" y="2" width="5" height="5"/><rect x="9" y="2" width="5" height="5"/><rect x="2" y="9" width="5" height="5"/><rect x="9" y="9" width="5" height="5" fill="currentColor" stroke="none"/></svg></div>
+  <span class="tb-name">Pixel Art</span>
+  <span class="chip">Sulfur</span>
+  <span class="spacer"></span>
+  <button class="ibtn" id="undo" aria-label="Undo (Ctrl+Z)" title="Undo (Ctrl+Z)" disabled><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h6.5a3.5 3.5 0 1 1 0 7H7"/><path d="M6 4 3 7l3 3"/></svg></button>
+  <button class="ibtn" id="redo" aria-label="Redo (Ctrl+Y)" title="Redo (Ctrl+Y)" disabled><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 7H6.5a3.5 3.5 0 1 0 0 7H9"/><path d="M10 4l3 3-3 3"/></svg></button>
+  <button class="ibtn" id="png" aria-label="Export PNG" title="Export PNG"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5v7M5 7l3 3 3-3"/><path d="M3 11v1.5A1.5 1.5 0 0 0 4.5 14h7a1.5 1.5 0 0 0 1.5-1.5V11"/></svg></button>
+  <button class="ibtn" id="clear" aria-label="Clear canvas" title="Clear canvas"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 4h11M6 4V2.8c0-.4.4-.8.8-.8h2.4c.4 0 .8.4.8.8V4M4 4l.6 9.2c0 .4.4.8.9.8h5c.5 0 .9-.4.9-.8L12 4"/></svg></button>
+</header>
+<div class="wrap">
+  <aside class="side">
+    <div>
+      <label class="lbl" id="lbl-size">Canvas size</label>
+      <div class="seg" role="group" aria-labelledby="lbl-size">
+        <button data-size="8">8×8</button>
+        <button data-size="16" class="on">16×16</button>
+        <button data-size="32">32×32</button>
+      </div>
+    </div>
+    <div>
+      <label class="lbl" id="lbl-tools">Tools</label>
+      <div class="tools" role="group" aria-labelledby="lbl-tools">
+        <button class="tool on" data-tool="pen" aria-label="Pencil" title="Pencil (B)"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M11.3 2.2l2.5 2.5-8.7 8.7-3.4 1 1-3.4 8.6-8.8z"/></svg>pen</button>
+        <button class="tool" data-tool="eraser" aria-label="Eraser" title="Eraser (E)"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M2.5 11.5l6.3-8.7 4.9 3.6-6.2 8.6H4.7l-2.2-3.5z"/><path d="M6.2 6.4l4.4 3.2"/></svg>erase</button>
+        <button class="tool" data-tool="fill" aria-label="Flood fill" title="Flood fill (F)"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M8.5 1.5 14 7l-5.5 5.5L3 7l5.5-5.5z"/><path d="M12.6 9.3c.8 1.2 2.4 1.8 2.4 3.1a1.6 1.6 0 0 1-3.2 0c0-1.3 1.1-1.9.8-3.1z" fill="currentColor" stroke="none"/></svg>fill</button>
+        <button class="tool" data-tool="pick" aria-label="Eyedropper" title="Eyedropper (I)"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M10.6 2.2l3.2 3.2-1.5 1.5-3.2-3.2 1.5-1.5z"/><path d="M8.1 4.7l3.2 3.2-7 7-2.8.6.6-2.8 6-8z"/></svg>pick</button>
+      </div>
+    </div>
+    <div class="sec-pal">
+      <label class="lbl" id="lbl-pal">Palette</label>
+      <div class="pal" id="pal" role="group" aria-labelledby="lbl-pal"></div>
+    </div>
+    <div>
+      <label class="lbl" for="custom">Custom color</label>
+      <input type="color" id="custom" value="#f59e0b" aria-label="Custom color">
+      <p class="hint" style="margin-top:10px">Right-drag erases · <kbd>Alt</kbd>+click picks a color · <kbd>Ctrl</kbd><kbd>Z</kbd> undo</p>
+    </div>
+  </aside>
+  <main class="stage" id="stage">
+    <div class="board"><canvas id="cv" aria-label="Pixel canvas — draw here" role="img"></canvas></div>
+  </main>
+</div>
+<footer class="status">
+  <span class="coords" id="coords" aria-live="polite">x — · y —</span>
+  <span id="dims">16×16</span>
+  <span class="saved" id="saved" aria-live="polite"><i></i><span id="savedTxt">Saved</span></span>
+</footer>
+<div id="toast" role="status" aria-live="polite"></div>
+<div id="confirm" role="dialog" aria-modal="true" aria-labelledby="cfTitle">
+  <div class="cf">
+    <h3 id="cfTitle">Are you sure?</h3>
+    <p id="cfMsg"></p>
+    <div class="cf-a">
+      <button class="btn" id="cfNo">Cancel</button>
+      <button class="btn amber" id="cfOk">Confirm</button>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+'use strict';
+var $ = function(s){ return document.querySelector(s); };
+var CELL = 28, KEY = 'sulfur.studio.pixelart';
+var dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+
+/* ---- guarded storage (file:// or srcdoc may refuse) ---- */
+var LS = (function(){ var ok = false, mem = {};
+  try { localStorage.setItem('__t','1'); localStorage.removeItem('__t'); ok = true; } catch(e){}
+  return { ok: ok,
+    get: function(k){ if (ok) { try { return localStorage.getItem(k); } catch(e){} }
+      return Object.prototype.hasOwnProperty.call(mem, k) ? mem[k] : null; },
+    set: function(k, v){ if (ok) { try { localStorage.setItem(k, v); return true; } catch(e){} }
+      mem[k] = String(v); return false; } };
+})();
+
+/* ---- toast ---- */
+var toastEl = $('#toast'), toastT = 0;
+function toast(msg, ms){ toastEl.textContent = msg; toastEl.classList.add('show');
+  clearTimeout(toastT); toastT = setTimeout(function(){ toastEl.classList.remove('show'); }, ms || 1900); }
+
+/* ---- confirm dialog ---- */
+var cf = $('#confirm'), cfRes = null;
+function cfEnd(v){ cf.classList.remove('show'); if (cfRes) { var r = cfRes; cfRes = null; r(v); } }
+$('#cfOk').addEventListener('click', function(){ cfEnd(true); });
+$('#cfNo').addEventListener('click', function(){ cfEnd(false); });
+cf.addEventListener('click', function(e){ if (e.target === cf) cfEnd(false); });
+document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && cf.classList.contains('show')) cfEnd(false); });
+function confirmDlg(title, msg, okLabel){
+  $('#cfTitle').textContent = title; $('#cfMsg').textContent = msg;
+  var ok = $('#cfOk'); ok.textContent = okLabel || 'Confirm';
+  cf.classList.add('show'); ok.focus();
+  return new Promise(function(res){ cfRes = res; });
+}
+
+/* ---- state ---- */
+var PALETTE = ['#000000','#ffffff','','#18181b','#52525b','#a1a1aa','#d4d4d8','#f59e0b','#fbbf24','#facc15','#ea580c','#dc2626','#e11d48','#ec4899','#a855f7','#3b82f6','#0ea5e9','#14b8a6','#16a34a','#84cc16'];
+var size = 16, grid = new Array(256).fill('');
+var cur = '#f59e0b', tool = 'pen';
+var history = [], redoS = [];
+var drawing = false, lastC = null, strokeD = false, eraseDrag = false;
+var hover = null;
+
+var cv = $('#cv'), ctx = cv.getContext('2d');
+var coordsEl = $('#coords'), dimsEl = $('#dims'), savedEl = $('#saved'), savedTxt = $('#savedTxt');
+
+/* ---- palette UI ---- */
+var palEl = $('#pal');
+PALETTE.forEach(function(c, i){
+  var b = document.createElement('button');
+  b.className = 'sw' + (c === '' ? ' tr' : '');
+  b.style.background = c === '' ? '' : c;
+  b.setAttribute('aria-label', c === '' ? 'Transparent' : c);
+  b.title = c === '' ? 'Transparent' : c;
+  b.addEventListener('click', function(){ setColor(c); setTool(c === '' ? 'pen' : 'pen'); });
+  palEl.appendChild(b);
+});
+function setColor(c){
+  cur = c;
+  if (tool === 'eraser' || tool === 'pick') setTool('pen');
+  var sws = palEl.children, hit = -1;
+  for (var i = 0; i < sws.length; i++) sws[i].classList.toggle('on', PALETTE[i] === c);
+  if (c) { try { $('#custom').value = c; } catch(e){} }
+}
+
+/* ---- tools ---- */
+function setTool(t){
+  tool = t;
+  var btns = document.querySelectorAll('.tool');
+  for (var i = 0; i < btns.length; i++) btns[i].classList.toggle('on', btns[i].dataset.tool === t);
+  cv.style.cursor = t === 'pick' ? 'copy' : (t === 'fill' ? 'cell' : 'crosshair');
+}
+Array.prototype.forEach.call(document.querySelectorAll('.tool'), function(b){
+  b.addEventListener('click', function(){ setTool(b.dataset.tool); });
+});
+Array.prototype.forEach.call(document.querySelectorAll('.seg [data-size]'), function(b){
+  b.addEventListener('click', function(){ changeSize(parseInt(b.dataset.size, 10)); });
+});
+$('#custom').addEventListener('input', function(e){ setColor(e.target.value); });
+
+/* ---- canvas setup & render ---- */
+function setup(){
+  var px = size * CELL;
+  cv.width = Math.round(px * dpr); cv.height = Math.round(px * dpr);
+  cv.style.width = px + 'px'; cv.style.height = px + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  dimsEl.textContent = size + '×' + size;
+  render();
+}
+function render(){
+  var px = size * CELL, h = CELL / 2, i, x, y;
+  ctx.fillStyle = '#101012'; ctx.fillRect(0, 0, px, px);
+  ctx.fillStyle = '#17171b';
+  for (y = 0; y < size * 2; y++) for (x = 0; x < size * 2; x++)
+    if ((x + y) % 2) ctx.fillRect(x * h, y * h, h, h);
+  ctx.fillStyle = '#000';
+  for (i = 0; i < grid.length; i++) if (grid[i]) {
+    ctx.fillStyle = grid[i];
+    ctx.fillRect((i % size) * CELL, ((i / size) | 0) * CELL, CELL, CELL);
+  }
+  ctx.strokeStyle = 'rgba(255,255,255,.07)'; ctx.lineWidth = 1; ctx.beginPath();
+  for (i = 0; i <= size; i++) {
+    var p = i * CELL + .5;
+    ctx.moveTo(p, 0); ctx.lineTo(p, px); ctx.moveTo(0, p); ctx.lineTo(px, p);
+  }
+  ctx.stroke();
+  if (hover) {
+    ctx.strokeStyle = 'rgba(251,191,36,.9)'; ctx.lineWidth = 2;
+    ctx.strokeRect(hover.x * CELL + 1, hover.y * CELL + 1, CELL - 2, CELL - 2);
+  }
+}
+
+/* ---- pointer handling ---- */
+function cellAt(e, clamp){
+  var r = cv.getBoundingClientRect();
+  var x = (e.clientX - r.left) / r.width * size;
+  var y = (e.clientY - r.top) / r.height * size;
+  var cx = Math.floor(x), cy = Math.floor(y);
+  if (clamp) { cx = Math.max(0, Math.min(size - 1, cx)); cy = Math.max(0, Math.min(size - 1, cy)); return { x: cx, y: cy }; }
+  if (cx < 0 || cy < 0 || cx >= size || cy >= size) return null;
+  return { x: cx, y: cy };
+}
+function applyCell(c, val){
+  var i = c.y * size + c.x;
+  if (grid[i] !== val) { grid[i] = val; strokeD = true; }
+}
+function lineCells(a, b){
+  var pts = [], x0 = a.x, y0 = a.y, x1 = b.x, y1 = b.y;
+  var dx = Math.abs(x1 - x0), dy = Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1, err = dx - dy;
+  for (;;) {
+    pts.push({ x: x0, y: y0 });
+    if (x0 === x1 && y0 === y1) break;
+    var e2 = 2 * err;
+    if (e2 > -dy) { err -= dy; x0 += sx; }
+    if (e2 < dx) { err += dx; y0 += sy; }
+  }
+  return pts;
+}
+function flood(i){
+  var target = grid[i], repl = eraseDrag ? '' : cur;
+  if (target === repl) return;
+  var stack = [i], j, x, y;
+  while (stack.length) {
+    j = stack.pop();
+    if (grid[j] !== target) continue;
+    grid[j] = repl; strokeD = true;
+    x = j % size; y = (j / size) | 0;
+    if (x > 0) stack.push(j - 1);
+    if (x < size - 1) stack.push(j + 1);
+    if (y > 0) stack.push(j - size);
+    if (y < size - 1) stack.push(j + size);
+  }
+}
+function pick(c){
+  var v = grid[c.y * size + c.x];
+  if (v) { setColor(v); toast('Picked ' + v.toUpperCase()); }
+  else toast('Empty cell — nothing to pick');
+}
+cv.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+cv.addEventListener('pointerdown', function(e){
+  e.preventDefault();
+  try { cv.setPointerCapture(e.pointerId); } catch(err){}
+  var c = cellAt(e, true);
+  eraseDrag = (e.button === 2);
+  drawing = true; strokeD = false; lastC = c;
+  if (tool === 'pick' && !eraseDrag) { pick(c); drawing = false; return; }
+  if (tool === 'fill' && !eraseDrag) { flood(c.y * size + c.x); render(); return; }
+  applyCell(c, eraseDrag || tool === 'eraser' ? '' : cur);
+  render();
+});
+cv.addEventListener('pointermove', function(e){
+  hover = cellAt(e, false);
+  coordsEl.textContent = hover ? 'x ' + hover.x + ' · y ' + hover.y : 'x — · y —';
+  if (!drawing || tool === 'pick' || tool === 'fill') return;
+  var c = cellAt(e, true);
+  if (lastC && (lastC.x !== c.x || lastC.y !== c.y)) {
+    var val = eraseDrag || tool === 'eraser' ? '' : cur;
+    lineCells(lastC, c).forEach(function(p){ applyCell(p, val); });
+    render();
+  }
+  lastC = c;
+});
+function endStroke(){
+  if (!drawing) return;
+  drawing = false; lastC = null; eraseDrag = false;
+  if (strokeD) { pushHistory(); scheduleSave(); strokeD = false; }
+}
+cv.addEventListener('pointerup', endStroke);
+cv.addEventListener('pointercancel', endStroke);
+cv.addEventListener('pointerleave', function(){ hover = null; coordsEl.textContent = 'x — · y —'; render(); });
+
+/* ---- history ---- */
+function pushHistory(){
+  history.push(grid.slice());
+  if (history.length > 60) history.shift();
+  redoS.length = 0; syncHistBtns();
+}
+function undo(){
+  if (history.length < 2) return;
+  redoS.push(history.pop());
+  grid = history[history.length - 1];
+  render(); scheduleSave(); syncHistBtns();
+}
+function redo(){
+  if (!redoS.length) return;
+  history.push(redoS.pop());
+  grid = history[history.length - 1];
+  render(); scheduleSave(); syncHistBtns();
+}
+function syncHistBtns(){
+  $('#undo').disabled = history.length < 2;
+  $('#redo').disabled = !redoS.length;
+}
+$('#undo').addEventListener('click', undo);
+$('#redo').addEventListener('click', redo);
+
+/* ---- size / clear / export ---- */
+function hasPixels(){ for (var i = 0; i < grid.length; i++) if (grid[i]) return true; return false; }
+function changeSize(s){
+  if (s === size) return;
+  var go = function(){
+    size = s; grid = new Array(s * s).fill('');
+    history = [grid.slice()]; redoS.length = 0;
+    Array.prototype.forEach.call(document.querySelectorAll('.seg [data-size]'), function(b){
+      b.classList.toggle('on', parseInt(b.dataset.size, 10) === s);
+    });
+    setup(); scheduleSave(); syncHistBtns();
+  };
+  if (hasPixels()) confirmDlg('Change canvas size?', 'Switching to ' + s + '×' + s + ' clears the current drawing. You can undo afterwards.', 'Change').then(function(ok){ if (ok) go(); });
+  else go();
+}
+$('#clear').addEventListener('click', function(){
+  if (!hasPixels()) { toast('Canvas is already empty'); return; }
+  confirmDlg('Clear canvas?', 'This wipes every pixel. Undo (Ctrl+Z) can bring it back.', 'Clear').then(function(ok){
+    if (!ok) return;
+    grid = new Array(size * size).fill('');
+    pushHistory(); render(); scheduleSave();
+    toast('Canvas cleared');
+  });
+});
+$('#png').addEventListener('click', function(){
+  try {
+    var S = 16, c2 = document.createElement('canvas');
+    c2.width = size * S; c2.height = size * S;
+    var x2 = c2.getContext('2d'), i;
+    for (i = 0; i < grid.length; i++) if (grid[i]) {
+      x2.fillStyle = grid[i];
+      x2.fillRect((i % size) * S, ((i / size) | 0) * S, S, S);
+    }
+    var a = document.createElement('a');
+    a.href = c2.toDataURL('image/png');
+    a.download = 'sulfur-pixel-' + size + 'x' + size + '.png';
+    document.body.appendChild(a); a.click(); a.remove();
+    toast('PNG exported');
+  } catch (err) { toast('Export failed'); }
+});
+
+/* ---- autosave ---- */
+var saveT = 0, savedT = 0;
+function scheduleSave(){ clearTimeout(saveT); saveT = setTimeout(saveNow, 350); }
+function saveNow(){
+  var persisted = LS.set(KEY, JSON.stringify({ v: 1, size: size, grid: grid, cur: cur }));
+  savedTxt.textContent = persisted ? 'Saved' : 'Saved in memory';
+  savedEl.classList.add('show');
+  clearTimeout(savedT); savedT = setTimeout(function(){ savedEl.classList.remove('show'); }, 2200);
+}
+
+/* ---- restore ---- */
+(function restore(){
+  var ok = false;
+  try {
+    var raw = LS.get(KEY);
+    if (raw) {
+      var d = JSON.parse(raw);
+      if (d && (d.size === 8 || d.size === 16 || d.size === 32) &&
+          Object.prototype.toString.call(d.grid) === '[object Array]' && d.grid.length === d.size * d.size) {
+        size = d.size;
+        grid = d.grid.map(function(c){ return (typeof c === 'string' && /^#[0-9a-f]{6}$/i.test(c)) ? c : ''; });
+        if (typeof d.cur === 'string' && /^#[0-9a-f]{6}$/i.test(d.cur)) cur = d.cur;
+        Array.prototype.forEach.call(document.querySelectorAll('.seg [data-size]'), function(b){
+          b.classList.toggle('on', parseInt(b.dataset.size, 10) === size);
+        });
+        ok = hasPixels();
+      }
+    }
+  } catch (e) { ok = false; }
+  history = [grid.slice()];
+  setColor(cur); setTool('pen'); setup(); syncHistBtns();
+  if (ok) toast('Canvas restored');
+})();
+
+/* ---- keyboard ---- */
+document.addEventListener('keydown', function(e){
+  var t = e.target;
+  if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT')) return;
+  if (e.ctrlKey || e.metaKey) {
+    var k = e.key.toLowerCase();
+    if (k === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); }
+    else if (k === 'y') { e.preventDefault(); redo(); }
+    return;
+  }
+  var map = { b: 'pen', e: 'eraser', f: 'fill', i: 'pick' };
+  if (map[e.key.toLowerCase()]) setTool(map[e.key.toLowerCase()]);
+});
+})();
+</script>
+</body>
+</html>

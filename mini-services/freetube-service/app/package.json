@@ -1,0 +1,45 @@
+{
+  "name": "freetube",
+  "productName": "FreeTube",
+  "description": "A private YouTube client",
+  "version": "0.25.3",
+  "license": "AGPL-3.0-or-later",
+  "main": "./dist/main.js",
+  "private": true,
+  "author": {
+    "name": "FreeTube Team",
+    "email": "FreeTubeApp@protonmail.com",
+    "url": "https://github.com/FreeTubeApp/FreeTube"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FreeTubeApp/FreeTube.git"
+  },
+  "bugs": {
+    "url": "https://github.com/FreeTubeApp/FreeTube/issues"
+  },
+  "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^7.3.0",
+    "@fortawesome/free-brands-svg-icons": "^7.3.0",
+    "@fortawesome/free-regular-svg-icons": "^7.3.0",
+    "@fortawesome/free-solid-svg-icons": "^7.3.0",
+    "@fortawesome/vue-fontawesome": "^3.3.1",
+    "@seald-io/nedb": "^4.1.2",
+    "autolinker": "^4.1.5",
+    "bgutils-js": "^4.0.3",
+    "dompurify": "^3.4.11",
+    "electron-context-menu": "^4.1.2",
+    "googlevideo": "^4.0.4",
+    "marked": "^18.0.6",
+    "process": "^0.11.10",
+    "shaka-player": "^5.1.12",
+    "swiper": "^14.0.5",
+    "terser": "^5.49.0",
+    "vue": "^3.5.39",
+    "vue-i18n": "^11.4.6",
+    "vue-observe-visibility": "^2.0.0-alpha.1",
+    "vue-router": "^5.1.0",
+    "vuex": "^4.1.0",
+    "youtubei.js": "^18.0.0"
+  }
+}

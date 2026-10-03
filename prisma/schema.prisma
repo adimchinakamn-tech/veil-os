@@ -1,0 +1,261 @@
+// Veil — full-screen web viewer
+// Prisma schema for browsing history
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Every record is scoped to a "viewer" — the pseudonymous per-browser id
+// resolved by src/lib/veil/viewer.ts. History never leaks across viewers.
+model SiteVisit {
+  id         String   @id @default(cuid())
+  viewer     String   @default("default")
+  url        String
+  host       String
+  title      String?
+  visitCount Int      @default(1)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([viewer, url])
+  @@index([viewer, updatedAt])
+  @@index([host])
+}
+
+// Per-site cookie jar, scoped per viewer. Cookies are captured from upstream
+// responses and replayed on subsequent requests so sessions survive across
+// visits. Never shared between viewers.
+model SiteCookie {
+  id        String    @id @default(cuid())
+  viewer    String    @default("default")
+  host      String
+  name      String
+  value     String
+  path      String    @default("/")
+  hostOnly  Boolean   @default(true)
+  httpOnly  Boolean   @default(false)
+  secure    Boolean   @default(false)
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([viewer, host, name, path])
+  @@index([viewer, host])
+}
+
+// FreeTube — search history, scoped per viewer.
+model FtSearch {
+  id        String   @id @default(cuid())
+  viewer    String
+  query     String
+  createdAt DateTime @default(now())
+
+  @@unique([viewer, query])
+  @@index([viewer, createdAt])
+}
+
+// FreeTube — watch history, scoped per viewer.
+model FtWatch {
+  id         String   @id @default(cuid())
+  viewer     String
+  videoId    String
+  title      String
+  channel    String?
+  thumbnail  String?
+  duration   Int?
+  position   Int      @default(0)
+  watchCount Int      @default(1)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([viewer, videoId])
+  @@index([viewer, updatedAt])
+}
+
+// ---- Veil Chat (Discord-style chat, Task 46) ----
+
+model ChatAccount {
+  id           String    @id @default(cuid())
+  username     String    @unique
+  passwordHash String
+  displayName  String    @default("")
+  avatarColor  String    @default("#f97316")
+  avatarImage  String? // base64 data URL for profile picture
+  bio          String    @default("")
+  role         String    @default("member") // "member" | "moderator" | "admin"
+  muted        Boolean   @default(false)
+  banned       Boolean   @default(false)
+  banReason    String?
+  ipBanned     Boolean   @default(false)
+  coins        Int       @default(100) // Veil Coins starting balance
+  tag          String? // purchased name tag text (e.g. "Cool Dude")
+  tagColor     String? // tag badge color
+  pfpAccessory String? // purchased PFP accessory id (e.g. "crown", "halo")
+  dailyRewardStreak Int      @default(0) // current consecutive-day claim streak
+  lastRewardClaim   DateTime? // timestamp of last daily reward claim
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  messages                ChatMessage[]
+  dmMemberships           DMMember[]
+  ownedDMs                ChatDM[]
+  coinTransactionsSent     CoinTransaction[] @relation("CoinFrom")
+  coinTransactionsReceived CoinTransaction[] @relation("CoinTo")
+  blackjackGames          BlackjackGame[]
+  friends                 ChatFriend[] @relation("FriendOwner")
+  friendOf                ChatFriend[] @relation("FriendTarget")
+}
+
+model ChatMessage {
+  id              String   @id @default(cuid())
+  channelId       String // "main" for the main channel, or DM id
+  accountId       String
+  content         String
+  replyTo         String? // ID of the message being replied to
+  replyToContent  String? // Snippet of the original message (denormalized for display)
+  replyToUsername String? // Username of the original sender (denormalized for display)
+  createdAt       DateTime @default(now())
+
+  account ChatAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([channelId])
+  @@index([accountId])
+}
+
+model ChatDM {
+  id        String   @id @default(cuid())
+  name      String? // null for DMs, set for group chats
+  isGroup   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  owner   ChatAccount? @relation(fields: [ownerId], references: [id])
+  ownerId String?
+  members DMMember[]
+}
+
+model DMMember {
+  id        String @id @default(cuid())
+  dmId      String
+  accountId String
+
+  dm      ChatDM     @relation(fields: [dmId], references: [id], onDelete: Cascade)
+  account ChatAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@unique([dmId, accountId])
+  @@index([accountId])
+}
+
+// ---- Veil Coins economy ----
+
+model CoinTransaction {
+  id        String   @id @default(cuid())
+  fromId    String
+  toId      String
+  amount    Int
+  reason    String   @default("gift") // "gift" | "blackjack_win" | "blackjack_loss" | "message_reward" | "proxy_reward" | "daily_reward" | "shop_purchase:<id>"
+  createdAt DateTime @default(now())
+
+  from ChatAccount @relation("CoinFrom", fields: [fromId], references: [id], onDelete: Cascade)
+  to   ChatAccount @relation("CoinTo", fields: [toId], references: [id], onDelete: Cascade)
+
+  @@index([fromId])
+  @@index([toId])
+}
+
+model BlackjackGame {
+  id         String   @id @default(cuid())
+  playerId   String
+  bet        Int
+  playerHand String   @default("[]") // JSON array of cards
+  dealerHand String   @default("[]")
+  deck       String   @default("[]")
+  status     String   @default("playing") // "playing" | "done"
+  result     String? // "win" | "lose" | "push" | "blackjack"
+  payout     Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  player ChatAccount @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([playerId])
+}
+
+model ChatFriend {
+  id        String   @id @default(cuid())
+  accountId String // the one who added the friend
+  friendId  String // the friend's account id
+  createdAt DateTime @default(now())
+
+  account ChatAccount @relation("FriendOwner", fields: [accountId], references: [id], onDelete: Cascade)
+  friend  ChatAccount @relation("FriendTarget", fields: [friendId], references: [id], onDelete: Cascade)
+
+  @@unique([accountId, friendId])
+  @@index([accountId])
+  @@index([friendId])
+}
+
+// ---- Site updates (owner changelog, posted through the website) ----
+
+model SiteUpdate {
+  id        String   @id @default(cuid())
+  title     String
+  body      String
+  kind      String   @default("feature") // "feature" | "fix" | "notice"
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+// ---- Site apps (self-contained HTML apps added by the owner or the
+//      AI operator assistant; served into the Apps section) ----
+
+model SiteApp {
+  id           String    @id @default(cuid())
+  name         String
+  desc         String    @default("")
+  icon         String    @default("spark")
+  html         String
+  createdBy    String    @default("owner") // "owner" | "ai" | "community"
+  active       Boolean   @default(true)
+  plays        Int       @default(0) // launch counter (Arcade › Apps)
+  lastPlayedAt DateTime? // last launch (drives the grid's recently-played sort)
+  createdAt    DateTime  @default(now())
+
+  @@index([createdAt])
+}
+
+// ---- Dev requests (the Veil AI relay: asks the owner types into
+//      Updates → Veil AI that need the real developer — new engines,
+//      core site changes, bug fixes — land here so the recurring dev
+//      agent picks them up, implements them, and ships them) ----
+
+model DevRequest {
+  id        String   @id @default(cuid())
+  title     String
+  body      String
+  // "pending" → waiting for the dev agent; "in_progress" → being built;
+  // "done" → shipped to the live site; "declined" → won't do (with note)
+  status    String   @default("pending")
+  note      String?  // what the dev did with it (shown when done/declined)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ---- Owner secrets (KV) ----
+// key "owner-password" → scrypt hash "salt:hex" of the owner password.
+// Absent row = the built-in password. Changing it through Updates →
+// Owner Mode applies to every password gate instantly (Veil AI, feed
+// posting, app deletes, dev-request ops).
+
+model OwnerSecret {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}

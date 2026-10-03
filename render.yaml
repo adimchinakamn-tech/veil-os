@@ -1,0 +1,21 @@
+# Veil OS — Render Blueprint
+#
+# Deploy: render.com → New → Blueprint → point at this repo → Apply.
+# The plan/size can be changed in the Render dashboard afterwards.
+
+services:
+  - type: web
+    name: veil-os
+    runtime: docker
+    plan: starter
+    healthCheckPath: /
+    autoDeploy: true
+    disk:
+      # ONE disk per service on Render — that's why every piece of state
+      # (db, secrets, uploads) lives under db/ and upload/ symlinks into it.
+      name: veil-data
+      mountPath: /home/z/my-project/db
+      sizeGB: 1
+    envVars:
+      - key: NODE_ENV
+        value: production

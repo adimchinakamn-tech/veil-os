@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Minesweeper — Sulfur OS</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:#09090b;color:#e4e4e7;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;-webkit-font-smoothing:antialiased;padding:0 0 28px}
+.app{width:100%;max-width:440px;padding:14px 14px 0;display:flex;flex-direction:column;gap:12px}
+.topbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.topbar h1{font-size:15px;font-weight:700;margin:0;letter-spacing:.01em}
+.chip{font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#f59e0b;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.35);border-radius:999px;padding:3px 8px;line-height:1}
+.spacer{flex:1}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.btn{min-height:40px;min-width:40px;padding:0 14px;border-radius:8px;border:1px solid #27272a;background:#18181b;color:#e4e4e7;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:7px;transition:background .15s,border-color .15s,transform .06s;box-shadow:0 1px 0 rgba(0,0,0,.35)}
+.btn:hover{background:#202024;border-color:#3f3f46}
+.btn:active{transform:scale(.98)}
+.btn:focus-visible{outline:2px solid #f59e0b;outline-offset:2px}
+.btn.primary{background:#f59e0b;border-color:#f59e0b;color:#1c1917}
+.btn.primary:hover{background:#fbbf24;border-color:#fbbf24}
+.btn.sq{width:40px;padding:0;font-size:15px}
+.btn.toggle[aria-pressed="true"]{background:rgba(245,158,11,.2);border-color:#f59e0b;color:#f59e0b}
+.hud{display:flex;gap:8px;flex-wrap:wrap;align-items:stretch}
+.stat{display:flex;flex-direction:column;align-items:center;justify-content:center;background:#18181b;border:1px solid #27272a;border-radius:12px;padding:5px 12px;min-width:70px;min-height:48px}
+.stat .label{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:#a1a1aa;font-weight:600}
+.stat .value{font-size:16px;font-weight:700;line-height:1.25}
+.c-mine{color:#fb7185}.c-time{color:#e4e4e7}.c-best{color:#f59e0b}
+.statechip{display:flex;align-items:center;justify-content:center;background:#18181b;border:1px solid #27272a;border-radius:12px;padding:5px 14px;min-height:48px;font-size:12px;font-weight:600;color:#a1a1aa;flex:1}
+.statechip.win{color:#f59e0b;border-color:rgba(245,158,11,.4)}
+.statechip.lose{color:#fb7185;border-color:rgba(239,68,68,.4)}
+.panel{position:relative;width:min(92vw,404px);margin:0 auto}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:2px;background:#101013;border:1px solid #27272a;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.4);padding:8px;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
+.cell{aspect-ratio:1;border:0;padding:0;background:#27272a;color:#e4e4e7;border-radius:4px;display:flex;align-items:center;justify-content:center;font-family:inherit;font-weight:700;font-size:clamp(11px,3.1vw,15px);cursor:pointer;transition:background .12s,transform .06s}
+.cell:hover{background:#333338}
+.cell:active{transform:scale(.88)}
+.cell:focus-visible{outline:2px solid #f59e0b;outline-offset:-2px}
+.cell.rev{background:#141417;cursor:default}
+.cell.rev:hover{background:#141417}
+.cell.flag{color:#f59e0b}
+.cell.q{color:#a1a1aa;font-style:italic}
+.cell.mine{background:rgba(239,68,68,.16);color:#fb7185;cursor:default}
+.cell.boom{background:#ef4444;color:#1c1917;cursor:default}
+.cell.wrong{background:rgba(239,68,68,.1);color:#fb7185;text-decoration:line-through;cursor:default}
+.n1{color:#60a5fa}.n2{color:#22d3ee}.n3{color:#fb7185}.n4{color:#a78bfa}
+.n5{color:#f59e0b}.n6{color:#fbbf24}.n7{color:#e4e4e7}.n8{color:#a1a1aa}
+.hint{font-size:12px;color:#a1a1aa;margin:0;text-align:center;line-height:1.5}
+.overlay{position:absolute;inset:0;border-radius:16px;background:rgba(9,9,11,.88);display:flex;align-items:center;justify-content:center;z-index:12;opacity:0;pointer-events:none;transition:opacity .25s}
+.overlay.show{opacity:1;pointer-events:auto}
+.ov-card{text-align:center;padding:18px}
+.ov-title{margin:0;font-size:22px;font-weight:800}
+.ov-title.win{color:#f59e0b}
+.ov-title.lose{color:#fb7185}
+.ov-sub{margin:6px 0 16px;font-size:13px;color:#a1a1aa}
+.ov-sub b{color:#fbbf24}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;z-index:60;padding:16px}
+.modal.open{display:flex}
+.modal .card{background:#18181b;border:1px solid #27272a;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.4);max-width:410px;width:100%;padding:18px}
+.modal-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.modal-head h2{margin:0;font-size:15px;font-weight:700;flex:1}
+.help-list{margin:0;padding-left:18px;font-size:13px;color:#d4d4d8;line-height:1.65}
+.help-list b{color:#f59e0b;font-weight:600}
+.nojs{padding:24px;text-align:center;color:#f59e0b;font-weight:600}
+</style>
+</head>
+<body>
+<noscript><div class="nojs">Sulfur OS · Minesweeper needs JavaScript — please enable it to play.</div></noscript>
+<div class="app">
+  <header class="topbar">
+    <h1>Minesweeper</h1><span class="chip">Sulfur</span>
+    <span class="spacer"></span>
+    <button class="btn sq toggle" id="btnFlagMode" aria-label="Toggle flag mode" aria-pressed="false" title="Flag mode: tap to flag">⚑</button>
+    <button class="btn sq" id="btnHelp" aria-label="How to play">?</button>
+    <button class="btn" id="btnRestart">Restart</button>
+  </header>
+  <div class="hud">
+    <div class="stat"><span class="label">Mines</span><span class="value mono c-mine" id="mines">20</span></div>
+    <div class="statechip" id="stateChip" aria-live="polite">Ready — first click is safe</div>
+    <div class="stat"><span class="label">Time</span><span class="value mono c-time" id="time">0s</span></div>
+    <div class="stat"><span class="label">Best</span><span class="value mono c-best" id="best">—</span></div>
+  </div>
+  <div class="panel">
+    <div class="grid" id="grid" role="grid" aria-label="Minesweeper board, 12 by 12 with 20 mines"></div>
+    <div class="overlay" id="overlay">
+      <div class="ov-card">
+        <p class="ov-title" id="ovTitle">Boom!</p>
+        <p class="ov-sub" id="ovSub"></p>
+        <button class="btn primary" id="btnAgain">Play again</button>
+      </div>
+    </div>
+  </div>
+  <p class="hint">Left-click reveal · right-click / long-press flag (⚑ → ? → none) · tap a number to chord</p>
+</div>
+
+<div class="modal" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+  <div class="card">
+    <div class="modal-head"><h2 id="helpTitle">How to play</h2><button class="btn sq" id="btnClose" aria-label="Close help">✕</button></div>
+    <ul class="help-list">
+      <li><b>Goal</b> — reveal every safe cell on the 12×12 field. 20 mines are hidden.</li>
+      <li><b>Numbers</b> — tell you how many mines touch that cell.</li>
+      <li><b>Safe start</b> — mines are placed after your first click, never on it or its neighbors.</li>
+      <li><b>Flags</b> — right-click (or long-press on touch) cycles flag → ? → none. The counter shows mines minus flags.</li>
+      <li><b>Chording</b> — tap a revealed number whose flags match: it reveals the rest of its neighbors.</li>
+      <li><b>Flag mode</b> — the ⚑ button makes taps place flags (handy on touch). Your best clear time is saved locally.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+"use strict";
+(function () {
+  var ROWS = 12, COLS = 12, MINES = 20, TOTAL = ROWS * COLS;
+  var $ = function (id) { return document.getElementById(id); };
+  var gridEl = $("grid");
+
+  function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+
+  // st: 0 covered, 1 revealed, 2 flag, 3 question
+  var cells, els, state, flags, time, timerInt, revealedCount, flagMode;
+  var bestTime = parseInt(lsGet("sulfur:mines-best") || "", 10) || 0;
+
+  function idx(r, c) { return r * COLS + c; }
+  function neighbors(r, c) {
+    var out = [];
+    for (var dr = -1; dr <= 1; dr++) for (var dc = -1; dc <= 1; dc++) {
+      if (dr === 0 && dc === 0) continue;
+      var nr = r + dr, nc = c + dc;
+      if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) out.push([nr, nc]);
+    }
+    return out;
+  }
+
+  function newGame() {
+    cells = [];
+    for (var i = 0; i < TOTAL; i++) cells.push({ mine: false, adj: 0, st: 0 });
+    state = "ready"; flags = 0; time = 0; revealedCount = 0;
+    if (timerInt) { clearInterval(timerInt); timerInt = null; }
+    $("time").textContent = "0s";
+    $("mines").textContent = MINES;
+    var chip = $("stateChip");
+    chip.textContent = "Ready — first click is safe";
+    chip.className = "statechip";
+    $("overlay").classList.remove("show");
+    renderBest();
+    buildDom();
+  }
+
+  function buildDom() {
+    gridEl.innerHTML = "";
+    els = [];
+    for (var r = 0; r < ROWS; r++) {
+      var row = [];
+      for (var c = 0; c < COLS; c++) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "cell";
+        (function (rr, cc, btn) {
+          bindCell(btn, rr, cc);
+        })(r, c, b);
+        gridEl.appendChild(b);
+        row.push(b);
+      }
+      els.push(row);
+    }
+    renderAll();
+  }
+
+  function placeMines(sr, sc) {
+    var excluded = {};
+    excluded[idx(sr, sc)] = true;
+    var nb = neighbors(sr, sc);
+    for (var i = 0; i < nb.length; i++) excluded[idx(nb[i][0], nb[i][1])] = true;
+    var placed = 0;
+    while (placed < MINES) {
+      var p = Math.floor(Math.random() * TOTAL);
+      if (excluded[p] || cells[p].mine) continue;
+      cells[p].mine = true;
+      placed++;
+    }
+    for (var r = 0; r < ROWS; r++) for (var c = 0; c < COLS; c++) {
+      if (cells[idx(r, c)].mine) continue;
+      var n = neighbors(r, c), count = 0;
+      for (var k = 0; k < n.length; k++) if (cells[idx(n[k][0], n[k][1])].mine) count++;
+      cells[idx(r, c)].adj = count;
+    }
+  }
+
+  function startTimer() {
+    if (timerInt) return;
+    timerInt = setInterval(function () {
+      time++;
+      $("time").textContent = time + "s";
+    }, 1000);
+  }
+  function stopTimer() { if (timerInt) { clearInterval(timerInt); timerInt = null; } }
+
+  // ---- actions ----
+  function reveal(r, c) {
+    if (state === "won" || state === "lost") return;
+    var cell = cells[idx(r, c)];
+    if (cell.st === 2) return;
+    if (cell.st === 1) { chord(r, c); return; }
+    if (state === "ready") {
+      placeMines(r, c);
+      state = "playing";
+      startTimer();
+      var chip = $("stateChip");
+      chip.textContent = "Playing";
+      chip.className = "statechip";
+    }
+    if (cell.mine) { lose(r, c); return; }
+    // flood fill
+    var stack = [[r, c]];
+    while (stack.length) {
+      var pair = stack.pop();
+      var cr = pair[0], cc = pair[1];
+      var cur = cells[idx(cr, cc)];
+      if (cur.st === 1 || cur.st === 2 || cur.mine) continue;
+      cur.st = 1;
+      revealedCount++;
+      if (cur.adj === 0) {
+        var nbs = neighbors(cr, cc);
+        for (var i = 0; i < nbs.length; i++) {
+          var n = cells[idx(nbs[i][0], nbs[i][1])];
+          if (n.st !== 1 && n.st !== 2) stack.push(nbs[i]);
+        }
+      }
+    }
+    renderAll();
+    if (revealedCount === TOTAL - MINES) win();
+  }
+
+  function chord(r, c) {
+    var cell = cells[idx(r, c)];
+    if (cell.st !== 1 || cell.adj === 0) return;
+    var nbs = neighbors(r, c), f = 0;
+    for (var i = 0; i < nbs.length; i++) if (cells[idx(nbs[i][0], nbs[i][1])].st === 2) f++;
+    if (f !== cell.adj) return;
+    for (var j = 0; j < nbs.length; j++) {
+      var nr = nbs[j][0], nc = nbs[j][1];
+      var ncell = cells[idx(nr, nc)];
+      if (ncell.st === 0 || ncell.st === 3) {
+        if (ncell.mine) { lose(nr, nc); return; }
+        reveal(nr, nc);
+        if (state === "lost") return;
+      }
+    }
+  }
+
+  function flagCycle(r, c) {
+    if (state !== "playing" && state !== "ready") return;
+    var cell = cells[idx(r, c)];
+    if (cell.st === 1) return;
+    if (cell.st === 0) cell.st = 2;
+    else if (cell.st === 2) cell.st = 3;
+    else cell.st = 0;
+    flags = 0;
+    for (var i = 0; i < TOTAL; i++) if (cells[i].st === 2) flags++;
+    $("mines").textContent = MINES - flags;
+    renderCell(r, c);
+  }
+
+  function lose(r, c) {
+    state = "lost";
+    stopTimer();
+    for (var i = 0; i < TOTAL; i++) {
+      var cell = cells[i];
+      if (cell.mine && cell.st !== 2) cell.st = 1; // reveal unflagged mines
+    }
+    cells[idx(r, c)].st = 1;
+    renderAll(true, r, c);
+    var chip = $("stateChip");
+    chip.textContent = "Boom — mine hit";
+    chip.className = "statechip lose";
+    $("ovTitle").textContent = "Boom!";
+    $("ovTitle").className = "ov-title lose";
+    $("ovSub").innerHTML = "You hit a mine after <b>" + time + "s</b> · " + revealedCount + " / " + (TOTAL - MINES) + " cleared";
+    $("overlay").classList.add("show");
+  }
+
+  function win() {
+    state = "won";
+    stopTimer();
+    flags = 0;
+    for (var i = 0; i < TOTAL; i++) if (cells[i].mine) { cells[i].st = 2; flags++; }
+    $("mines").textContent = MINES - flags;
+    renderAll();
+    var chip = $("stateChip");
+    chip.textContent = "Cleared in " + time + "s";
+    chip.className = "statechip win";
+    var isBest = !bestTime || time < bestTime;
+    if (isBest) { bestTime = time; lsSet("sulfur:mines-best", String(bestTime)); renderBest(); }
+    $("ovTitle").textContent = "Cleared!";
+    $("ovTitle").className = "ov-title win";
+    $("ovSub").innerHTML = "Field swept in <b>" + time + "s</b>" + (isBest ? " · new best!" : " · best " + bestTime + "s");
+    $("overlay").classList.add("show");
+  }
+
+  function renderBest() {
+    $("best").textContent = bestTime ? bestTime + "s" : "—";
+  }
+
+  // ---- rendering ----
+  function renderAll(loseMode, boomR, boomC) {
+    for (var r = 0; r < ROWS; r++) for (var c = 0; c < COLS; c++) renderCell(r, c, loseMode, boomR, boomC);
+  }
+
+  function renderCell(r, c, loseMode, boomR, boomC) {
+    var cell = cells[idx(r, c)];
+    var el = els[r][c];
+    var cls = "cell";
+    var txt = "";
+    var label = "Row " + (r + 1) + " column " + (c + 1) + ", ";
+    if (cell.st === 1) {
+      if (cell.mine) {
+        cls += loseMode && r === boomR && c === boomC ? " boom" : " mine";
+        txt = "●";
+        label += "mine";
+      } else {
+        cls += " rev";
+        if (cell.adj > 0) { cls += " n" + cell.adj; txt = String(cell.adj); label += cell.adj; }
+        else label += "empty";
+      }
+    } else if (cell.st === 2) {
+      cls += " flag";
+      if (loseMode && !cell.mine) cls += " wrong";
+      txt = "⚑";
+      label += "flagged";
+    } else if (cell.st === 3) {
+      cls += " q";
+      txt = "?";
+      label += "unsure";
+    } else label += "covered";
+    if (el.className !== cls) el.className = cls;
+    if (el.textContent !== txt) el.textContent = txt;
+    el.setAttribute("aria-label", label);
+  }
+
+  // ---- events ----
+  var lpTimer = null, suppressClick = false, lastLP = 0, lpStart = null;
+
+  function bindCell(btn, r, c) {
+    btn.addEventListener("click", function () {
+      if (suppressClick) { suppressClick = false; return; }
+      if (flagMode) flagCycle(r, c);
+      else reveal(r, c);
+    });
+    btn.addEventListener("contextmenu", function (e) {
+      e.preventDefault();
+      if (Date.now() - lastLP < 450) return; // long-press already handled it
+      flagCycle(r, c);
+    });
+    btn.addEventListener("pointerdown", function (e) {
+      if (state === "won" || state === "lost") return;
+      lpStart = { x: e.clientX, y: e.clientY };
+      lpTimer = setTimeout(function () {
+        lastLP = Date.now();
+        suppressClick = true;
+        flagCycle(r, c);
+      }, 380);
+    });
+    btn.addEventListener("pointermove", function (e) {
+      if (!lpStart || !lpTimer) return;
+      if (Math.abs(e.clientX - lpStart.x) > 8 || Math.abs(e.clientY - lpStart.y) > 8) {
+        clearTimeout(lpTimer); lpTimer = null;
+      }
+    });
+    var cancel = function () { if (lpTimer) { clearTimeout(lpTimer); lpTimer = null; } lpStart = null; };
+    btn.addEventListener("pointerup", cancel);
+    btn.addEventListener("pointercancel", cancel);
+    btn.addEventListener("pointerleave", cancel);
+  }
+
+  var flagBtn = $("btnFlagMode");
+  flagBtn.addEventListener("click", function () {
+    flagMode = !flagMode;
+    flagBtn.setAttribute("aria-pressed", String(flagMode));
+  });
+
+  $("btnRestart").addEventListener("click", newGame);
+  $("btnAgain").addEventListener("click", newGame);
+
+  var helpModal = $("helpModal"), btnHelp = $("btnHelp"), btnClose = $("btnClose");
+  var helpOpen = false;
+  function setHelp(open) {
+    helpOpen = open;
+    helpModal.classList.toggle("open", open);
+    if (open) btnClose.focus(); else btnHelp.focus();
+  }
+  btnHelp.addEventListener("click", function () { setHelp(true); });
+  btnClose.addEventListener("click", function () { setHelp(false); });
+  helpModal.addEventListener("click", function (e) { if (e.target === helpModal) setHelp(false); });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && helpOpen) { e.preventDefault(); setHelp(false); }
+  });
+
+  newGame();
+  window.__sulfur = { get cells() { return cells; }, get state() { return state; }, get time() { return time; }, reveal: reveal, flagCycle: flagCycle, newGame: newGame };
+})();
+</script>
+</body>
+</html>

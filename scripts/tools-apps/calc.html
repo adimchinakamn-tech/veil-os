@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Veil Toolkit — Calculator</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{color-scheme:dark;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+html,body{height:100%}
+body{background:#09090b;color:#f4f4f5;font:14px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column;padding:14px 16px;gap:12px;overflow:hidden;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:2px solid #34d399;outline-offset:2px}
+
+.btn{border:1px solid rgba(52,211,153,.35);background:rgba(16,185,129,.12);color:#6ee7b7;padding:7px 13px;border-radius:10px;font-size:12.5px;font-weight:600;cursor:pointer;transition:background .12s,color .12s,transform .1s;font-family:inherit}
+.btn:hover{background:rgba(16,185,129,.22)}
+.btn:active{transform:scale(.96)}
+.btn.solid{background:#10b981;border-color:transparent;color:#032015}
+.btn.solid:hover{background:#34d399}
+.btn.ghost{border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:#d4d4d8}
+.btn.ghost:hover{background:rgba(255,255,255,.09);color:#fafafa}
+.btn.danger{border-color:rgba(248,113,113,.35);background:rgba(239,68,68,.12);color:#fca5a5}
+.btn.on{background:#10b981;border-color:transparent;color:#032015}
+input,select,textarea{background:#18181b;border:1px solid rgba(255,255,255,.1);border-radius:10px;color:#f4f4f5;padding:7px 10px;font-size:13.5px;outline:none;font-family:inherit}
+input:focus,select:focus,textarea:focus{border-color:rgba(52,211,153,.55)}
+
+/* ── calculator app ───────────────────────────────────────── */
+.tag{font-size:10.5px;font-weight:700;letter-spacing:.18em;color:#34d399}
+header{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;flex:none}
+.hgroup{display:flex;flex-direction:column;gap:1px}
+h1{font-size:17px;font-weight:700;letter-spacing:-.01em}
+.spacer{flex:1}
+#mid{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:12px}
+.panel{background:#131316;border:1px solid rgba(255,255,255,.08);border-radius:16px}
+.disp{padding:14px 16px;display:flex;flex-direction:column;gap:6px;flex:none}
+.expr{font-family:var(--mono);font-size:14px;color:#a1a1aa;min-height:21px;max-width:100%;overflow:hidden;white-space:nowrap;text-align:right;align-self:stretch}
+.res{font-family:var(--mono);font-size:34px;font-weight:600;color:#fafafa;letter-spacing:.01em;line-height:1.15;max-width:100%;overflow:hidden;white-space:nowrap;text-align:right;align-self:stretch}
+.disp.shake{animation:shake .35s}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(2px)}}
+.hist{max-height:30vh;overflow:auto;display:flex;flex-direction:column;gap:4px;padding:10px}
+.hist[hidden]{display:none}
+.hrow{display:flex;justify-content:space-between;align-items:center;gap:10px;font-family:var(--mono);font-size:13px;color:#d4d4d8;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:8px 12px;cursor:pointer;min-height:36px}
+.hrow:hover{background:rgba(52,211,153,.08);border-color:rgba(52,211,153,.25)}
+.hrow .he{color:#a1a1aa;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+.hrow .hr{color:#6ee7b7;flex:none}
+.hempty{color:#71717a;font-size:12.5px;text-align:center;padding:10px}
+.pad{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;flex:none}
+.k{min-height:48px;font-size:17px;font-weight:600;border-radius:12px}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%) translateY(10px);background:#1b1b20;border:1px solid rgba(52,211,153,.4);color:#a7f3d0;font-size:12.5px;font-weight:600;padding:8px 15px;border-radius:999px;opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;z-index:9;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<header>
+  <div class="hgroup">
+    <span class="tag">VEIL TOOLKIT</span>
+    <h1>Calculator</h1>
+  </div>
+  <div class="spacer"></div>
+  <button id="histBtn" class="btn ghost">history (0)</button>
+</header>
+<div id="mid">
+  <div class="panel disp" id="disp">
+    <div class="expr" id="expr"></div>
+    <div class="res" id="res">0</div>
+  </div>
+  <div class="panel hist" id="hist" hidden></div>
+</div>
+<div class="pad" id="pad">
+  <button class="k btn danger" data-k="C">C</button>
+  <button class="k btn ghost" data-k="back">⌫</button>
+  <button class="k btn" data-k="%">%</button>
+  <button class="k btn" data-k="÷">÷</button>
+  <button class="k btn ghost" data-k="7">7</button>
+  <button class="k btn ghost" data-k="8">8</button>
+  <button class="k btn ghost" data-k="9">9</button>
+  <button class="k btn" data-k="×">×</button>
+  <button class="k btn ghost" data-k="4">4</button>
+  <button class="k btn ghost" data-k="5">5</button>
+  <button class="k btn ghost" data-k="6">6</button>
+  <button class="k btn" data-k="−">−</button>
+  <button class="k btn ghost" data-k="1">1</button>
+  <button class="k btn ghost" data-k="2">2</button>
+  <button class="k btn ghost" data-k="3">3</button>
+  <button class="k btn" data-k="+">+</button>
+  <button class="k btn ghost" data-k="±">±</button>
+  <button class="k btn ghost" data-k="0">0</button>
+  <button class="k btn ghost" data-k=".">.</button>
+  <button class="k btn solid" data-k="=">=</button>
+</div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<script>
+"use strict";
+var store=(function(){try{var k="__v";localStorage.setItem(k,"1");localStorage.removeItem(k);return localStorage}catch(e){var m={};return{getItem:function(k){return k in m?m[k]:null},setItem:function(k,v){m[k]=String(v)},removeItem:function(k){delete m[k]}}}})();
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+
+var exprEl=document.getElementById("expr"),resEl=document.getElementById("res"),disp=document.getElementById("disp");
+var histBtn=document.getElementById("histBtn"),histEl=document.getElementById("hist"),pad=document.getElementById("pad");
+var toastEl=document.getElementById("toast"),toastT=null;
+
+function toast(msg){toastEl.textContent=msg;toastEl.classList.add("show");clearTimeout(toastT);toastT=setTimeout(function(){toastEl.classList.remove("show")},1700)}
+
+/* ── result formatting: ≤12 significant digits, trailing zeros stripped,
+      exponential for very large/small ── */
+function expFmt(n){
+  var s=n.toExponential(6);
+  s=s.replace(/(\.\d*?)0+e/,"$1e").replace(/\.e/,"e");
+  return s;
+}
+function fmt(n,sep){
+  if(typeof n!=="number"||!isFinite(n))return"—";
+  if(n===0)return"0";
+  var a=Math.abs(n);
+  if(a>=1e12||a<1e-9)return expFmt(n);
+  var mag=Math.floor(Math.log10(a));
+  var p=11-mag; /* decimals for 12 significant digits */
+  var s;
+  if(p<=0){
+    var f=Math.pow(10,-p);
+    s=String(Math.round(n/f)*f);
+  }else{
+    if(p>20)p=20;
+    s=n.toFixed(p);
+    if(s.indexOf(".")>-1)s=s.replace(/(\.\d*?)0+$/,"$1").replace(/\.$/,"");
+  }
+  if(sep===false)return s;
+  var neg=s.charAt(0)==="-";
+  if(neg)s=s.slice(1);
+  var parts=s.split(".");
+  parts[0]=parts[0].replace(/\B(?=(\d{3})+(?!\d))/g,",");
+  return (neg?"-":"")+parts.join(".");
+}
+
+/* ── hand-written tokenizer + two-pass precedence evaluator (no eval) ── */
+function readNum(s,i){ /* returns {v,end} or null; supports e-notation */
+  var j=i;
+  while(j<s.length&&((s.charAt(j)>="0"&&s.charAt(j)<="9")||s.charAt(j)==="."))j++;
+  var num=s.slice(i,j);
+  if(!/^(\d+\.?\d*|\.\d+)$/.test(num))return null;
+  if(s.charAt(j)==="e"||s.charAt(j)==="E"){
+    var k=j+1;
+    if(s.charAt(k)==="+"||s.charAt(k)==="-")k++;
+    var k2=k;
+    while(k2<s.length&&s.charAt(k2)>="0"&&s.charAt(k2)<="9")k2++;
+    if(k2>k){num=s.slice(i,k2);j=k2}
+  }
+  return {v:parseFloat(num),end:j};
+}
+function tokenize(s){
+  var toks=[],i=0;
+  while(i<s.length){
+    var ch=s.charAt(i);
+    if(ch===" "){i++;continue}
+    if((ch>="0"&&ch<="9")||ch==="."){
+      var r=readNum(s,i);
+      if(!r)return null;
+      var v=r.v,end=r.end,k=end;
+      while(k<s.length&&s.charAt(k)===" ")k++;
+      if(s.charAt(k)==="%"){v/=100;end=k+1}
+      toks.push({t:"n",v:v});
+      i=end;
+      continue;
+    }
+    var isOp=(ch==="+"||ch==="−"||ch==="×"||ch==="÷"||ch==="-");
+    if(!isOp)return null;
+    var o=(ch==="-")?"−":ch;
+    var prev=toks.length?toks[toks.length-1]:null;
+    if((o==="+"||o==="−")&&(!prev||prev.t==="o")){
+      /* unary sign: fold into the number that follows */
+      if(o==="+"){i++;continue}
+      var m=i+1;
+      while(m<s.length&&s.charAt(m)===" ")m++;
+      var rr=readNum(s,m);
+      if(!rr)return null;
+      var vv=-rr.v,ee=rr.end,kk=ee;
+      while(kk<s.length&&s.charAt(kk)===" ")kk++;
+      if(s.charAt(kk)==="%"){vv/=100;ee=kk+1}
+      toks.push({t:"n",v:vv});
+      i=ee;
+      continue;
+    }
+    if(!prev||prev.t==="o")return null; /* operator with no left operand */
+    toks.push({t:"o",v:o});
+    i++;
+  }
+  return toks;
+}
+function evaluate(src){ /* returns {v:number}, {div0:true} or null */
+  var toks=tokenize(src);
+  if(!toks)return null;
+  while(toks.length&&toks[toks.length-1].t==="o")toks.pop(); /* ignore trailing operator */
+  if(!toks.length)return null;
+  /* pass 1: × ÷ (bind tighter, left-to-right) */
+  var vals=[],ops=[],i=0;
+  while(i<toks.length){
+    var tk=toks[i];
+    if(tk.t==="n"){vals.push(tk.v);i++;continue}
+    if(tk.v==="×"||tk.v==="÷"){
+      var b=toks[i+1];
+      if(!b||b.t!=="n")return null;
+      var a=vals.pop();
+      if(a===undefined)return null;
+      if(tk.v==="÷"&&b.v===0)return {div0:true};
+      vals.push(tk.v==="÷"?a/b.v:a*b.v);
+      i+=2;
+      continue;
+    }
+    if(!vals.length)return null;
+    ops.push(tk.v);
+    i++;
+  }
+  /* pass 2: + − left-to-right */
+  if(!vals.length)return null;
+  if(ops.length!==vals.length-1)return null; /* adjacent numbers = malformed */
+  var r=vals[0];
+  for(var j=0;j<ops.length;j++){
+    r=(ops[j]==="+")?r+vals[j+1]:r-vals[j+1];
+  }
+  return {v:r};
+}
+
+/* ── expression model: a plain string like "12 + 7 × 3" ── */
+var expr="";
+function upd(){
+  exprEl.textContent=expr;
+  if(!expr){resEl.textContent="0";return}
+  var r=evaluate(expr);
+  if(r&&r.div0){resEl.textContent="—";return}
+  if(r&&typeof r.v==="number"&&isFinite(r.v)){resEl.textContent="= "+fmt(r.v,true);return}
+  resEl.textContent="—";
+}
+function pressDigit(d){expr+=d}
+function pressDot(){
+  var m=expr.match(/(\d+\.?\d*)$/);
+  if(m){if(m[1].indexOf(".")>=0)return;expr+="."}
+  else{if(/%$/.test(expr))return;expr+="0."}
+}
+function pressOp(o){
+  var t=expr.replace(/\s+$/,"");
+  if(!t){if(o==="−")expr="−";return}
+  var last=t.charAt(t.length-1);
+  if((last==="×"||last==="÷")&&o==="−"){expr=t+" −";return} /* unary minus after × ÷ */
+  if("+−×÷".indexOf(last)>=0){expr=t.slice(0,-1).replace(/\s+$/,"")+" "+o+" "}
+  else{expr=t+" "+o+" "}
+}
+function pressPct(){
+  var t=expr.replace(/\s+$/,"");
+  if(/\d$/.test(t)&&!/%$/.test(t))expr=t+"%";
+}
+function pressBack(){
+  expr=expr.replace(/\s+$/,"");
+  if(!expr)return;
+  var last=expr.charAt(expr.length-1);
+  if("+−×÷".indexOf(last)>=0)expr=expr.slice(0,-1).replace(/\s+$/,"");
+  else expr=expr.slice(0,-1);
+}
+function pressC(){expr=""}
+function flipSign(){ /* flips the sign of the trailing number (keeps a %) */
+  var m=expr.match(/(\d+\.?\d*)(%?)$/);
+  if(!m)return;
+  var num=m[1],pct=m[2];
+  var i=expr.length-num.length-pct.length;
+  var tail=num+pct,head=expr.slice(0,i);
+  if(i===0){expr="−"+tail;return}
+  var c1=head.charAt(head.length-1),c2=head.charAt(head.length-2);
+  if(c1==="−"&&(head.length===1||c2===" "||c2==="×"||c2==="÷"||c2==="+"||c2==="−")){
+    expr=head.slice(0,-1)+tail; /* drop an existing unary minus */
+  }else if(c1===" "&&c2==="+"){
+    expr=head.slice(0,-2)+"− "+tail;
+  }else if(c1===" "&&c2==="−"){
+    expr=head.slice(0,-2)+"+ "+tail;
+  }else{
+    expr=head+"−"+tail; /* after × ÷ (or bare number with sign at 0) */
+  }
+}
+
+/* ── history ── */
+var hist=[];
+try{
+  var raw=store.getItem("veil.tk.calc");
+  if(raw){
+    var a=JSON.parse(raw);
+    if(Object.prototype.toString.call(a)==="[object Array]"){
+      for(var hi=0;hi<Math.min(a.length,12);hi++){
+        if(a[hi]&&typeof a[hi].e==="string"&&typeof a[hi].v==="number"&&isFinite(a[hi].v))hist.push({e:a[hi].e,v:a[hi].v});
+      }
+    }
+  }
+}catch(e){}
+function saveHist(){try{store.setItem("veil.tk.calc",JSON.stringify(hist))}catch(e){}}
+function renderHist(){
+  histBtn.textContent="history ("+hist.length+")";
+  if(!hist.length){histEl.innerHTML='<div class="hempty">nothing yet — results land here</div>';return}
+  var h="";
+  for(var i=0;i<hist.length;i++){
+    h+='<div class="hrow" data-i="'+i+'"><span class="he">'+esc(hist[i].e)+'</span><span class="hr">= '+fmt(hist[i].v,true)+"</span></div>";
+  }
+  histEl.innerHTML=h;
+}
+histBtn.addEventListener("click",function(){histEl.hidden=!histEl.hidden});
+histEl.addEventListener("click",function(e){
+  var row=e.target.closest?e.target.closest(".hrow"):null;
+  if(!row)return;
+  var i=+row.getAttribute("data-i");
+  if(hist[i]){expr=fmt(hist[i].v,false);upd()}
+});
+
+function shake(){
+  disp.classList.remove("shake");
+  void disp.offsetWidth;
+  disp.classList.add("shake");
+  setTimeout(function(){disp.classList.remove("shake")},400);
+}
+function pressEq(){
+  var t=expr.replace(/\s+$/,"");
+  if(!t)return;
+  var r=evaluate(t);
+  if(r&&r.div0){toast("can't divide by zero");shake();return}
+  if(!r||typeof r.v!=="number"||!isFinite(r.v))return; /* malformed → quiet — */
+  var v=r.v;
+  if(/[+−×÷]/.test(t)){
+    hist.unshift({e:t,v:v});
+    if(hist.length>12)hist.length=12;
+    saveHist();renderHist();
+  }
+  expr=fmt(v,false);
+}
+
+function press(k){
+  if(k.length===1&&k>="0"&&k<="9")pressDigit(k);
+  else if(k===".")pressDot();
+  else if(k==="C")pressC();
+  else if(k==="back")pressBack();
+  else if(k==="%")pressPct();
+  else if(k==="±")flipSign();
+  else if(k==="=")pressEq();
+  else if(k==="+"||k==="−"||k==="×"||k==="÷")pressOp(k);
+  upd();
+}
+
+pad.addEventListener("click",function(e){
+  var b=e.target.closest?e.target.closest("button"):null;
+  if(!b)return;
+  var k=b.getAttribute("data-k");
+  if(!k)return;
+  if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
+  press(k);
+});
+
+/* keyboard: digits, ., + - * / (mapped to glyphs), Enter/=, Backspace, Escape */
+document.addEventListener("keydown",function(e){
+  if(e.ctrlKey||e.metaKey||e.altKey)return;
+  var t=e.target;
+  if(t&&t.tagName&&/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))return;
+  var k=e.key;
+  if(k.length===1&&k>="0"&&k<="9"){press(k);e.preventDefault()}
+  else if(k==="."){press(".");e.preventDefault()}
+  else if(k==="+"){press("+");e.preventDefault()}
+  else if(k==="-"){press("−");e.preventDefault()}
+  else if(k==="*"){press("×");e.preventDefault()}
+  else if(k==="/"){press("÷");e.preventDefault()}
+  else if(k==="%"){press("%");e.preventDefault()}
+  else if(k==="Enter"||k==="="){press("=");e.preventDefault()}
+  else if(k==="Backspace"){press("back");e.preventDefault()}
+  else if(k==="Escape"){press("C");e.preventDefault()}
+});
+
+renderHist();upd();
+</script>
+</body>
+</html>

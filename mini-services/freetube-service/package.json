@@ -1,0 +1,9 @@
+{
+  "name": "freetube-service",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Runs the real FreeTube program (main process + renderer) as a service for Veil's YouTube",
+  "scripts": {
+    "dev": "bun --hot index.ts"
+  }
+}

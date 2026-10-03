@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sulfur OS</title>
+<meta name="description" content="Sulfur OS — the Chrome-desktop virtual environment as one file: tabs, the app launcher, a coin economy, blackjack, games, tools and a tunnel-powered browser. Sulfur proxy uses Google — may not work.">
+<style>
+/*__KERNEL_CSS__*/
+</style>
+</head>
+<body>
+
+<div id="soBoot" role="dialog" aria-label="Sulfur OS boot">
+  <div class="bl"><span class="mark">Sulfur</span><span class="os">OS</span></div>
+  <div class="bsub">the whole web, through the veil</div>
+  <input id="soBootName" type="text" placeholder="pick a display name" maxlength="24" aria-label="display name">
+  <button id="soBootBtn" type="button">Enter Sulfur OS</button>
+  <div class="bmeta">VANILLA BUILD · ONE FILE · TUNNEL-AWARE</div>
+</div>
+
+<div id="soShell">
+  <div id="soTabbar">
+    <nav id="soTabs" aria-label="Sulfur OS tabs"></nav>
+  </div>
+  <div id="soToolbar" role="toolbar" aria-label="browser toolbar">
+    <button class="nav" id="soBack" type="button" title="Back" aria-label="back">__SVG_BACK__</button>
+    <button class="nav" id="soFwd" type="button" title="Forward" aria-label="forward">__SVG_FWD__</button>
+    <button class="nav" id="soRel" type="button" title="Reload" aria-label="reload">__SVG_RELOAD__</button>
+    <button class="nav" id="soHome" type="button" title="New tab page" aria-label="home">__SVG_HOME__</button>
+    <input id="soAddr" type="text" placeholder="Search the web or type a URL" aria-label="address bar" autocomplete="off" spellcheck="false">
+    <button id="soCoinsPill" type="button" title="Your coins — earn by playing and winning" aria-label="coins">__SVG_COINS__ <span id="soCoins">0</span></button>
+  </div>
+  <main id="soViewport" aria-label="Sulfur OS viewport"></main>
+
+  <div id="soLauncher" role="dialog" aria-label="App launcher">
+    <div id="soLHead">
+      <div class="lg"><span class="a">Sulfur</span><span class="b">OS</span></div>
+      <input id="soLaunchQ" type="text" placeholder="Search the apps…" aria-label="search apps" autocomplete="off">
+      <button id="soLaunchX" type="button" title="Close" aria-label="close launcher">__SVG_X__</button>
+    </div>
+    <div id="soLBody">
+      <nav id="soLRail" aria-label="App categories"></nav>
+      <div id="soLGrid" role="listbox" aria-label="Apps"></div>
+    </div>
+    <p id="soLHint">Ctrl+K opens this launcher · Ctrl+T new tab · Ctrl+W closes · apps keep their data in local storage</p>
+  </div>
+
+  <footer id="soDock">
+    <span class="dstat" id="soDockName">__SVG_USER__ <span>Guest</span></span>
+    <span class="dstat">__SVG_WIFI__</span>
+    <span class="dstat">__SVG_BATTERY__</span>
+    <span class="grow"></span>
+    <button id="soWp" type="button" title="Next wallpaper" aria-label="switch wallpaper">__SVG_PALETTE__</button>
+    <span class="dstat" id="soDockClock">__:__</span>
+    <button id="soDockGrid" type="button" title="All apps (Ctrl+K)" aria-label="open app launcher">__SVG_GRID__</button>
+  </footer>
+
+  <div id="soToast" role="status" aria-live="polite"></div>
+</div>
+
+<script>
+/*__KERNEL_JS__*/
+</script>
+<!--__APP_SCRIPTS__-->
+</body>
+</html>

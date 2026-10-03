@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Veil Toolkit — Sticky Notes</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{color-scheme:dark;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+html,body{height:100%}
+body{background:#09090b;color:#f4f4f5;font:14px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column;padding:14px 16px;gap:12px;overflow:hidden;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:2px solid #34d399;outline-offset:2px}
+
+.btn{border:1px solid rgba(52,211,153,.35);background:rgba(16,185,129,.12);color:#6ee7b7;padding:7px 13px;border-radius:10px;font-size:12.5px;font-weight:600;cursor:pointer;transition:background .12s,color .12s,transform .1s;font-family:inherit}
+.btn:hover{background:rgba(16,185,129,.22)}
+.btn:active{transform:scale(.96)}
+.btn.solid{background:#10b981;border-color:transparent;color:#032015}
+.btn.solid:hover{background:#34d399}
+.btn.ghost{border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:#d4d4d8}
+.btn.ghost:hover{background:rgba(255,255,255,.09);color:#fafafa}
+.btn.danger{border-color:rgba(248,113,113,.35);background:rgba(239,68,68,.12);color:#fca5a5}
+.btn.on{background:#10b981;border-color:transparent;color:#032015}
+input,select,textarea{background:#18181b;border:1px solid rgba(255,255,255,.1);border-radius:10px;color:#f4f4f5;padding:7px 10px;font-size:13.5px;outline:none;font-family:inherit}
+input:focus,select:focus,textarea:focus{border-color:rgba(52,211,153,.55)}
+
+/* ── sticky notes app ─────────────────────────────────────── */
+.btn{min-height:36px}
+.btn.armed{border-color:rgba(248,113,113,.5);background:rgba(239,68,68,.18);color:#fca5a5}
+.tag{font-size:10.5px;font-weight:700;letter-spacing:.18em;color:#34d399}
+header{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;flex:none}
+.hgroup{display:flex;flex-direction:column;gap:1px}
+h1{font-size:17px;font-weight:700;letter-spacing:-.01em}
+.spacer{flex:1}
+#count{font-size:12px;color:#71717a;font-family:var(--mono);align-self:center;white-space:nowrap}
+main{flex:1;min-height:0;overflow:auto;background:#131316;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;align-content:start}
+.note{background:#161619;border:1px solid rgba(255,255,255,.08);border-radius:12px;display:flex;flex-direction:column;min-height:172px;overflow:hidden;transition:border-color .15s}
+.note:focus-within{border-color:rgba(255,255,255,.18)}
+.strip{height:4px;flex:none;cursor:pointer}
+.ntx{flex:1;min-height:0;background:transparent;border:0;resize:none;color:#f4f4f5;font:inherit;font-size:13.5px;line-height:1.55;padding:10px 12px 2px;caret-color:#34d399}
+.ntx::placeholder{color:#71717a}
+.ntx:focus,.ntx:focus-visible{outline:none;border:0}
+.nfoot{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:4px 6px 7px 12px;flex:none}
+.cc{font-size:11px;color:#71717a;font-family:var(--mono)}
+.del{min-width:28px;height:28px;padding:0 7px;display:inline-grid;place-items:center;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:#a1a1aa;font-size:12px;line-height:1;transition:background .12s,border-color .12s,color .12s}
+.del:hover{border-color:rgba(248,113,113,.4);background:rgba(239,68,68,.14);color:#fca5a5}
+.del.armed{border-color:rgba(248,113,113,.55);background:rgba(239,68,68,.22);color:#fca5a5;font-size:10px;font-weight:700}
+.empty{grid-column:1/-1;border:1px dashed rgba(255,255,255,.18);border-radius:14px;min-height:190px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#71717a;font-size:13px}
+.empty b{color:#6ee7b7;font-weight:600}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%) translateY(10px);background:#1b1b20;border:1px solid rgba(52,211,153,.4);color:#a7f3d0;font-size:12.5px;font-weight:600;padding:8px 15px;border-radius:999px;opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;z-index:9;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<header>
+  <div class="hgroup">
+    <span class="tag">VEIL TOOLKIT</span>
+    <h1>Sticky Notes</h1>
+  </div>
+  <div class="spacer"></div>
+  <span id="count">0 notes</span>
+  <button id="clearBtn" class="btn ghost">clear all</button>
+  <button id="addBtn" class="btn solid">+ new note</button>
+</header>
+<main id="main">
+  <div id="grid" class="grid"></div>
+</main>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<script>
+"use strict";
+var store=(function(){try{var k="__v";localStorage.setItem(k,"1");localStorage.removeItem(k);return localStorage}catch(e){var m={};return{getItem:function(k){return k in m?m[k]:null},setItem:function(k,v){m[k]=String(v)},removeItem:function(k){delete m[k]}}}})();
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+
+var KEY="veil.tk.sticky";
+var COLORS=["#f59e0b","#fb7185","#34d399","#38bdf8","#a78bfa","#a3e635"];
+var grid=document.getElementById("grid"),main=document.getElementById("main");
+var countEl=document.getElementById("count"),addBtn=document.getElementById("addBtn"),clearBtn=document.getElementById("clearBtn");
+var toastEl=document.getElementById("toast"),toastT=null;
+var armT={},clearT=null,saveT=null;
+
+function toast(msg){toastEl.textContent=msg;toastEl.classList.add("show");clearTimeout(toastT);toastT=setTimeout(function(){toastEl.classList.remove("show")},1700)}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+
+function load(){
+  var out=[];
+  try{
+    var raw=store.getItem(KEY);
+    if(raw){
+      var a=JSON.parse(raw);
+      if(Object.prototype.toString.call(a)==="[object Array]"){
+        for(var i=0;i<a.length;i++){
+          var n=a[i];
+          if(n&&typeof n==="object"&&n.id!=null){
+            out.push({id:String(n.id),color:COLORS.indexOf(n.color)>=0?n.color:COLORS[0],text:typeof n.text==="string"?n.text:"",ts:+n.ts||0});
+          }
+        }
+      }
+    }
+  }catch(e){}
+  out.sort(function(x,y){return y.ts-x.ts});
+  return out;
+}
+var notes=load();
+function save(){try{store.setItem(KEY,JSON.stringify(notes))}catch(e){}}
+function queueSave(){clearTimeout(saveT);saveT=setTimeout(save,300)}
+function findNote(id){for(var i=0;i<notes.length;i++){if(notes[i].id===id)return notes[i]}return null}
+
+function render(){
+  if(!notes.length){
+    grid.innerHTML='<div class="empty">no notes yet — hit <b>new note</b></div>';
+  }else{
+    var h="";
+    for(var i=0;i<notes.length;i++){
+      var n=notes[i];
+      h+='<div class="note" data-id="'+esc(n.id)+'">'
+        +'<div class="strip" style="background:'+n.color+'" title="click to cycle color"></div>'
+        +'<textarea class="ntx" data-id="'+esc(n.id)+'" placeholder="write something…" spellcheck="false">'+esc(n.text)+'</textarea>'
+        +'<div class="nfoot"><span class="cc">'+n.text.length+'</span>'
+        +'<button class="del" data-id="'+esc(n.id)+'" title="delete (click twice)">✕</button></div>'
+        +'</div>';
+    }
+    grid.innerHTML=h;
+  }
+  countEl.textContent=notes.length+(notes.length===1?" note":" notes");
+}
+
+/* typing → debounce-persist, live char count (no re-render: keeps focus) */
+grid.addEventListener("input",function(e){
+  var ta=e.target;
+  if(!ta.classList||!ta.classList.contains("ntx"))return;
+  var n=findNote(ta.getAttribute("data-id"));
+  if(!n)return;
+  n.text=ta.value;
+  n.ts=Date.now();
+  var cc=ta.parentNode.querySelector(".cc");
+  if(cc)cc.textContent=String(ta.value.length);
+  queueSave();
+});
+
+grid.addEventListener("click",function(e){
+  var t=e.target;
+  if(!t||!t.closest)return;
+  var del=t.closest(".del");
+  if(del){
+    var id=del.getAttribute("data-id");
+    if(del.classList.contains("armed")){
+      if(armT[id]){clearTimeout(armT[id]);delete armT[id]}
+      notes=notes.filter(function(n){return n.id!==id});
+      queueSave();render();toast("note deleted");
+    }else{
+      del.classList.add("armed");del.textContent="sure?";
+      armT[id]=setTimeout(function(){
+        var b=grid.querySelector('.del[data-id="'+id+'"]');
+        if(b){b.classList.remove("armed");b.textContent="✕"}
+        delete armT[id];
+      },2500);
+    }
+    return;
+  }
+  var strip=t.closest(".strip");
+  if(strip){
+    var noteEl=strip.closest(".note");
+    var nid=noteEl?noteEl.getAttribute("data-id"):null;
+    var nn=findNote(nid);
+    if(nn){
+      var idx=COLORS.indexOf(nn.color);
+      nn.color=COLORS[(idx+1)%COLORS.length];
+      strip.style.background=nn.color;
+      queueSave();
+    }
+  }
+});
+
+addBtn.addEventListener("click",function(){
+  var col=notes.length?COLORS[(COLORS.indexOf(notes[0].color)+1)%COLORS.length]:COLORS[0];
+  notes.unshift({id:uid(),color:col,text:"",ts:Date.now()});
+  save();render();
+  var ta=grid.querySelector(".ntx");
+  if(ta)ta.focus();
+  main.scrollTop=0;
+});
+
+clearBtn.addEventListener("click",function(){
+  if(clearBtn.classList.contains("armed")){
+    clearTimeout(clearT);
+    clearBtn.classList.remove("armed");
+    clearBtn.textContent="clear all";
+    notes=[];save();render();toast("all notes cleared");
+  }else if(notes.length){
+    clearBtn.classList.add("armed");
+    clearBtn.textContent="sure? click again";
+    clearT=setTimeout(function(){
+      clearBtn.classList.remove("armed");clearBtn.textContent="clear all";
+    },2500);
+  }
+});
+
+render();
+</script>
+</body>
+</html>

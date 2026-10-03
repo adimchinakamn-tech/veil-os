@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>gn-math — number rush</title>
+<meta name="description" content="GN-Math Number Rush — true or false, fast, 45 seconds.">
+<style>
+:root { color-scheme: dark; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  background-color: #0a0907;
+  background-image:
+    linear-gradient(rgba(245,158,11,.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(245,158,11,.05) 1px, transparent 1px),
+    linear-gradient(rgba(245,158,11,.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(245,158,11,.09) 1px, transparent 1px);
+  background-size: 26px 26px, 26px 26px, 130px 130px, 130px 130px;
+  color: #fafafa; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  padding: 18px; position: relative;
+}
+body::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse at 50% 28%, rgba(255,251,235,.03), transparent 55%),
+    radial-gradient(ellipse at 50% 115%, rgba(0,0,0,.55), transparent 65%);
+}
+button { font: inherit; cursor: pointer; border: 0; background: none; color: inherit; }
+button:focus-visible { outline: 2px solid #f59e0b; outline-offset: 2px; border-radius: 12px; }
+
+.app { width: 100%; max-width: 440px; position: relative; z-index: 1; }
+.brand { display: flex; align-items: baseline; gap: 8px; margin-bottom: 18px; user-select: none; }
+.brand b { font-weight: 700; font-size: 15px; letter-spacing: .04em; }
+.brand b span { color: #f59e0b; }
+.brand em { font-style: normal; font-size: 10.5px; color: #71717a; letter-spacing: .14em; }
+
+.setup h1 { font-size: clamp(22px, 5.4vw, 30px); font-weight: 700; line-height: 1.15; margin-bottom: 6px; }
+.setup .sub { color: #a1a1aa; font-size: 12.5px; margin-bottom: 18px; }
+.setup .rules { background: #18181b; border: 1px solid #27272a; border-radius: 14px; padding: 16px 16px 13px; margin-bottom: 16px; }
+.setup .rules .r { display: flex; gap: 10px; align-items: baseline; font-size: 12.5px; color: #d4d4d8; margin-bottom: 9px; }
+.setup .rules .r:last-child { margin-bottom: 0; }
+.setup .rules .r i { font-style: normal; color: #f59e0b; font-weight: 700; width: 18px; text-align: center; flex: none; }
+.setup .rules .r span b { color: #fbbf24; }
+.go {
+  width: 100%; padding: 15px; border-radius: 14px;
+  background: #f59e0b; color: #1c1207; font-weight: 700; font-size: 15px;
+  box-shadow: 0 8px 24px rgba(245,158,11,.25); display: flex; justify-content: center; gap: 9px; align-items: center;
+  transition: transform .12s, box-shadow .12s;
+}
+.go:hover { transform: translateY(-1px); box-shadow: 0 10px 30px rgba(245,158,11,.35); }
+.go .ent { font-size: 10px; opacity: .65; margin-left: 4px; }
+
+/* ── rush ── */
+.quit { position: absolute; top: 0; right: 0; padding: 7px 10px; border-radius: 9px; color: #71717a; font-size: 11px; }
+.quit:hover { color: #d4d4d8; background: rgba(255,255,255,.05); }
+.hud { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.hud .score { font-size: 13px; color: #d4d4d8; }
+.hud .score b { font-size: 20px; color: #34d399; font-weight: 700; }
+.hud .combo { font-size: 11px; color: #71717a; margin-left: 8px; }
+.hud .combo.on { color: #fbbf24; }
+.timer { position: relative; width: 52px; height: 52px; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .45; } }
+.timer.urgent { animation: pulse 1s ease-in-out infinite; }
+.tbar { height: 3px; background: rgba(255,255,255,.07); border-radius: 2px; overflow: hidden; margin-bottom: 30px; }
+.tbar i { display: block; height: 100%; background: #34d399; width: 100%; transition: width .2s linear, background .3s; }
+.tbar.low i { background: #fbbf24; }
+
+.eq { text-align: center; margin-bottom: 30px; user-select: none; }
+.eq .e { font-size: clamp(34px, 9.5vw, 54px); font-weight: 700; letter-spacing: -.02em; line-height: 1.1; }
+.eq .e .op { color: #f59e0b; padding: 0 .1em; }
+@keyframes zoomin { 0% { transform: scale(.85); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+.eq .e { animation: zoomin .18s ease-out; }
+@keyframes verdict-ok { 0% { box-shadow: inset 0 0 0 0 rgba(52,211,153,0); } 100% { box-shadow: inset 0 0 0 100vmax rgba(52,211,153,.14); } }
+@keyframes verdict-no { 0% { transform: translateX(-4px); } 25% { transform: translateX(4px); } 50% { transform: translateX(-3px); } 75% { transform: translateX(2px); } 100% { transform: translateX(0); } }
+.eq.ok .e { animation: verdict-ok .45s ease-out both; }
+.eq.no .e { animation: verdict-no .4s ease both; color: #ef4444; }
+.eq .truth { margin-top: 10px; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #71717a; min-height: 16px; }
+.eq.ok .truth { color: #34d399; }
+.eq.no .truth { color: #ef4444; }
+
+.judge { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.jbtn {
+  padding: 22px 0 19px; border-radius: 16px; font-weight: 700; font-size: 19px; letter-spacing: .06em;
+  display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 92px; justify-content: center;
+  transition: transform .1s, filter .1s;
+}
+.jbtn small { font-size: 9.5px; font-weight: 400; color: rgba(255,255,255,.4); letter-spacing: .14em; }
+.jbtn.true { background: rgba(52,211,153,.13); border: 1px solid rgba(52,211,153,.45); color: #34d399; }
+.jbtn.false { background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.4); color: #ef4444; }
+.jbtn:hover { filter: brightness(1.25); }
+.jbtn:active { transform: scale(.95); }
+.hint { margin-top: 14px; text-align: center; font-size: 10px; color: #52525b; letter-spacing: .08em; }
+
+/* ── results ── */
+.res { text-align: center; }
+.res .medal { font-size: 12px; letter-spacing: .2em; color: #f59e0b; margin-bottom: 10px; text-transform: uppercase; }
+.res h2 { font-size: clamp(32px, 8.5vw, 46px); font-weight: 700; line-height: 1; color: #34d399; margin-bottom: 4px; }
+.res .rsub { color: #a1a1aa; font-size: 12.5px; margin-bottom: 20px; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 18px; }
+.stat { background: #18181b; border: 1px solid #27272a; border-radius: 12px; padding: 12px 8px; }
+.stat b { display: block; font-size: 18px; font-weight: 700; margin-bottom: 3px; }
+.stat span { font-size: 9.5px; color: #71717a; letter-spacing: .1em; text-transform: uppercase; }
+.stat b.amber { color: #fbbf24; } .stat b.green { color: #34d399; } .stat b.red { color: #ef4444; }
+.again { width: 100%; padding: 14px; border-radius: 13px; background: #f59e0b; color: #1c1207; font-weight: 700; font-size: 14px; display: flex; justify-content: center; gap: 8px; }
+.homebtn { margin-top: 9px; width: 100%; padding: 11px; border-radius: 13px; border: 1px solid #27272a; color: #a1a1aa; font-size: 12.5px; }
+.homebtn:hover { color: #fafafa; border-color: #3f3f46; }
+.newhs { display: flex; align-items: center; justify-content: center; gap: 7px; font-size: 12px; color: #fbbf24; margin: 0 0 16px; }
+.newhs svg { width: 14px; height: 14px; stroke: #fbbf24; }
+
+@media (max-height: 640px) {
+  .eq { margin-bottom: 18px; } .jbtn { min-height: 74px; padding: 16px 0 13px; }
+  .tbar { margin-bottom: 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .timer.urgent, .eq .e, .eq.ok .e, .eq.no .e { animation: none; }
+  .go, .jbtn { transition: none; }
+}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script>
+"use strict";
+/* gn-math number rush — true/false equations, 45 seconds, ramping speed. */
+(function () {
+  var app = document.getElementById("app");
+  var ROUND_MS = 45000;
+  var LS = {
+    get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  };
+  var HS_KEY = "gnm:rush:hs";
+  function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+  function makeEq(n) {
+    /* difficulty ramps with n: bigger operands, sneakier lies */
+    var top = Math.min(10 + Math.floor(n / 3) * 3, 40);
+    var a = rand(2, top), b = rand(2, Math.min(12, top));
+    var op = rand(0, 2);
+    var truth, shown;
+    if (op === 0) {
+      truth = a + b;
+      shown = truth + (rand(0, 2) ? rand(-3, 3) || 2 : 0);
+      return { text: a + "+" + b, truth: truth, shown: shown, ok: shown === truth };
+    }
+    if (op === 1) {
+      if (b > a) { var t = a; a = b; b = t; }
+      truth = a - b;
+      shown = truth + (rand(0, 2) ? rand(-3, 3) || 2 : 0);
+      return { text: a + "−" + b, truth: truth, shown: shown, ok: shown === truth };
+    }
+    truth = a * b;
+    /* near-miss products: (a±1)*b or a*(b±1) */
+    var lie = [a + 1, a - 1, b + 1, b - 1][rand(0, 3)];
+    shown = truth;
+    if (rand(0, 2)) {
+      if (lie === a + 1 || lie === a - 1) shown = lie * b;
+      else shown = a * lie;
+    }
+    return { text: a + "×" + b, truth: truth, shown: shown, ok: shown === truth };
+  }
+
+  function renderSetup() {
+    var hs = Number(LS.get(HS_KEY)) || 0;
+    app.innerHTML =
+      '<div class="brand"><b>gn<span>-</span>math</b><em>NUMBER RUSH</em></div>' +
+      '<div class="setup">' +
+      '<h1>True or false.<br>Faster. Faster.</h1>' +
+      '<p class="sub">Equations fly by — call them true or false before the clock eats you. Streaks stack bonus points.</p>' +
+      '<div class="rules">' +
+      '<div class="r"><i>1</i><span>an equation appears, like <b>6 × 7 = 41</b></span></div>' +
+      '<div class="r"><i>2</i><span>hit <b>TRUE</b> or <b>FALSE</b> (← / → keys work too)</span></div>' +
+      '<div class="r"><i>3</i><span>right = +5, streaks add bonus · wrong = streak gone</span></div>' +
+      '<div class="r"><i>4</i><span><b>45 seconds</b>, equations get meaner as you climb</span></div>' +
+      '</div>' +
+      (hs ? '<div class="newhs" style="margin:0 0 14px"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>best: ' + hs + '</div>' : "") +
+      '<button type="button" class="go" id="go">Start the rush<span class="ent">↵</span></button>' +
+      '</div>';
+    document.getElementById("go").addEventListener("click", startRush);
+  }
+
+  var rush = null;
+  function startRush() {
+    rush = { end: Date.now() + ROUND_MS, n: 0, score: 0, right: 0, wrong: 0, streak: 0, best: 0, eq: null, raf: 0, locked: false };
+    nextEq();
+    rush.raf = requestAnimationFrame(tick);
+  }
+  function tick() {
+    if (!rush) return;
+    var left = Math.max(0, rush.end - Date.now());
+    var pct = left / ROUND_MS;
+    var bar = document.getElementById("bar");
+    if (bar) { bar.style.width = pct * 100 + "%"; bar.parentElement.classList.toggle("low", left < 10000); }
+    var secs = document.getElementById("secs");
+    if (secs) secs.textContent = String(Math.ceil(left / 1000));
+    var tw = document.getElementById("timerWrap");
+    if (tw) tw.classList.toggle("urgent", left < 10000);
+    if (left <= 0) { finish(); return; }
+    rush.raf = requestAnimationFrame(tick);
+  }
+  function nextEq() {
+    rush.eq = makeEq(rush.n);
+    rush.locked = false;
+    renderEq();
+  }
+  function renderEq() {
+    var e = rush.eq;
+    app.innerHTML =
+      '<button type="button" class="quit" id="quit">✕ quit</button>' +
+      '<div class="hud">' +
+      '<div><span class="score"><b id="sc">' + rush.score + '</b> pts <span class="combo" id="cb"></span></span></div>' +
+      '<div class="timer" id="timerWrap"><svg viewBox="0 0 60 60" width="52" height="52" role="img" aria-label="time left">' +
+      '<circle cx="30" cy="30" r="25" fill="none" stroke="rgba(255,255,255,.09)" stroke-width="5"/>' +
+      '<circle id="ring" cx="30" cy="30" r="25" fill="none" stroke="#34d399" stroke-width="5" stroke-linecap="round" stroke-dasharray="' + (2 * Math.PI * 25) + '" stroke-dashoffset="' + (2 * Math.PI * 25 * (1 - Math.max(0, Math.min(1, (rush.end - Date.now()) / ROUND_MS)))) + '" transform="rotate(-90 30 30)" style="transition:stroke-dashoffset .2s linear, stroke .3s"/>' +
+      '<text id="secs" x="30" y="31" text-anchor="middle" dominant-baseline="central" fill="#e4e4e7" font-family="ui-monospace, monospace" font-size="17">' + Math.max(0, Math.ceil((rush.end - Date.now()) / 1000)) + '</text></svg></div>' +
+      '</div>' +
+      '<div class="tbar"><i id="bar"></i></div>' +
+      '<div class="eq" id="eqBox">' +
+      '<div class="e">' + e.text.replace(/([+\−×÷])/g, '<span class="op">$1</span>') + ' = ' + e.shown + '</div>' +
+      '<div class="truth" id="truth"></div>' +
+      '</div>' +
+      '<div class="judge">' +
+      '<button type="button" class="jbtn true" id="btnT">TRUE<small>← left arrow</small></button>' +
+      '<button type="button" class="jbtn false" id="btnF">FALSE<small>right arrow →</small></button>' +
+      '</div>' +
+      '<div class="hint">streak bonus: every 3 in a row adds +1 to each hit</div>';
+    document.getElementById("btnT").addEventListener("click", function () { judge(true); });
+    document.getElementById("btnF").addEventListener("click", function () { judge(false); });
+    document.getElementById("quit").addEventListener("click", function () {
+      if (rush) cancelAnimationFrame(rush.raf);
+      rush = null; renderSetup();
+    });
+  }
+  function updHUD() {
+    document.getElementById("sc").textContent = String(rush.score);
+    var cb = document.getElementById("cb");
+    cb.textContent = rush.streak > 1 ? "· " + rush.streak + " streak" : "";
+    cb.classList.toggle("on", rush.streak >= 3);
+  }
+  function judge(said) {
+    if (!rush || rush.locked) return;
+    rush.locked = true;
+    var box = document.getElementById("eqBox");
+    var truth = document.getElementById("truth");
+    if (said === rush.eq.ok) {
+      rush.right++;
+      rush.streak++;
+      rush.best = Math.max(rush.best, rush.streak);
+      var bonus = Math.floor(rush.streak / 3);
+      rush.score += 5 + bonus;
+      rush.n++;
+      box.className = "eq ok";
+      truth.textContent = "true — " + rush.eq.text + " = " + rush.eq.truth;
+      setTimeout(function () { if (rush) { updHUD(); nextEq(); } }, 380);
+    } else {
+      rush.wrong++;
+      rush.streak = 0;
+      box.className = "eq no";
+      truth.textContent = (rush.eq.ok ? "it was TRUE — " : "it was FALSE — ") + rush.eq.text + " = " + rush.eq.truth;
+      setTimeout(function () { if (rush) { updHUD(); nextEq(); } }, 900);
+    }
+    updHUD();
+  }
+  function finish() {
+    if (rush) cancelAnimationFrame(rush.raf);
+    var hs = Number(LS.get(HS_KEY)) || 0;
+    var isHS = rush.score > hs;
+    if (isHS) { LS.set(HS_KEY, String(rush.score)); hs = rush.score; }
+    var total = rush.right + rush.wrong;
+    var acc = total ? Math.round(rush.right / total * 100) : 0;
+    var medal = rush.score >= 150 ? "unflinchable" : rush.score >= 80 ? "quick call" : rush.score >= 40 ? "getting sharp" : "warm minute";
+    app.innerHTML =
+      '<div class="brand"><b>gn<span>-</span>math</b><em>RUSH RESULTS</em></div>' +
+      '<div class="res">' +
+      '<div class="medal">' + medal + '</div>' +
+      '<h2>' + rush.score + '</h2>' +
+      '<p class="rsub">points in 45 seconds</p>' +
+      '<div class="stats">' +
+      '<div class="stat"><b class="green">' + rush.right + '</b><span>right</span></div>' +
+      '<div class="stat"><b class="red">' + rush.wrong + '</b><span>wrong</span></div>' +
+      '<div class="stat"><b class="amber">' + acc + '%</b><span>accuracy</span></div>' +
+      '</div>' +
+      (rush.best > 2 ? '<div class="newhs" style="margin:0 0 14px">best streak: <b style="color:#fbbf24">&nbsp;' + rush.best + '</b></div>' : "") +
+      (isHS ? '<div class="newhs"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>new best</div>' : '<div class="newhs" style="color:#71717a">best: ' + hs + '</div>') +
+      '<button type="button" class="again" id="again">↵ rush again</button>' +
+      '<button type="button" class="homebtn" id="home">back to the rules</button>' +
+      '</div>';
+    document.getElementById("again").addEventListener("click", startRush);
+    document.getElementById("home").addEventListener("click", renderSetup);
+    rush = null;
+  }
+
+  document.addEventListener("keydown", function (e) {
+    if (!rush) {
+      if (e.key === "Enter") {
+        var go = document.getElementById("go"), ag = document.getElementById("again");
+        if (go) { e.preventDefault(); go.click(); }
+        else if (ag) { e.preventDefault(); ag.click(); }
+      }
+      return;
+    }
+    if (e.key === "ArrowLeft") { e.preventDefault(); judge(true); }
+    else if (e.key === "ArrowRight") { e.preventDefault(); judge(false); }
+    else if (e.key === "t" || e.key === "T") judge(true);
+    else if (e.key === "f" || e.key === "F") judge(false);
+  });
+
+  renderSetup();
+})();
+</script>
+</body>
+</html>

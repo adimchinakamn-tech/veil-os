@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>gn-math — times tables</title>
+<meta name="description" content="GN-Math Times Tables — pick a table, drill it, star every cell.">
+<style>
+:root { color-scheme: dark; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  background-color: #0a0907;
+  background-image:
+    linear-gradient(rgba(245,158,11,.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(245,158,11,.05) 1px, transparent 1px),
+    linear-gradient(rgba(245,158,11,.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(245,158,11,.09) 1px, transparent 1px);
+  background-size: 26px 26px, 26px 26px, 130px 130px, 130px 130px;
+  color: #fafafa; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  padding: 18px; position: relative;
+}
+body::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse at 50% 28%, rgba(255,251,235,.03), transparent 55%),
+    radial-gradient(ellipse at 50% 115%, rgba(0,0,0,.55), transparent 65%);
+}
+button { font: inherit; cursor: pointer; border: 0; background: none; color: inherit; }
+button:focus-visible, input:focus-visible { outline: 2px solid #f59e0b; outline-offset: 2px; border-radius: 8px; }
+
+.app { width: 100%; max-width: 460px; position: relative; z-index: 1; }
+.brand { display: flex; align-items: baseline; gap: 8px; margin-bottom: 18px; user-select: none; }
+.brand b { font-weight: 700; font-size: 15px; letter-spacing: .04em; }
+.brand b span { color: #f59e0b; }
+.brand em { font-style: normal; font-size: 10.5px; color: #71717a; letter-spacing: .14em; }
+
+.setup h1 { font-size: clamp(22px, 5.4vw, 30px); font-weight: 700; line-height: 1.15; margin-bottom: 6px; }
+.setup .sub { color: #a1a1aa; font-size: 12.5px; margin-bottom: 20px; }
+.tbl { display: grid; grid-template-columns: repeat(6, 1fr); gap: 7px; margin-bottom: 16px; }
+.tb {
+  aspect-ratio: 1; border-radius: 11px; background: #18181b; border: 1px solid #27272a;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+  font-weight: 700; font-size: 17px; transition: transform .12s, border-color .12s, background .12s;
+  position: relative;
+}
+.tb:hover { border-color: #3f3f46; transform: translateY(-1px); }
+.tb .st { position: absolute; top: 4px; right: 6px; font-size: 9px; }
+.tb .st.full { color: #34d399; }
+.tb .st.part { color: #71717a; }
+.tb.done { background: rgba(52,211,153,.1); border-color: rgba(52,211,153,.45); color: #34d399; }
+.go {
+  width: 100%; margin-top: 14px; padding: 14px; border-radius: 13px;
+  background: #f59e0b; color: #1c1207; font-weight: 700; font-size: 14px;
+  box-shadow: 0 8px 24px rgba(245,158,11,.25); display: flex; justify-content: center; gap: 8px; align-items: center;
+}
+.go:hover { filter: brightness(1.07); }
+.go[disabled] { opacity: .4; pointer-events: none; }
+
+/* ── drill ── */
+.drill-hud { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.drill-hud .l { font-size: 12px; color: #a1a1aa; }
+.drill-hud .l b { color: #fbbf24; font-size: 16px; }
+.drill-hud .r { font-size: 11px; color: #52525b; }
+.drill-hud .r b { color: #d4d4d8; }
+.stage { text-align: center; margin-bottom: 16px; user-select: none; }
+.q { font-size: clamp(40px, 11vw, 60px); font-weight: 700; line-height: 1; }
+.q .op { color: #f59e0b; padding: 0 .1em; }
+.ans {
+  margin-top: 12px; font-size: clamp(26px, 7vw, 34px); font-weight: 700; color: #34d399;
+  display: inline-flex; align-items: center; padding: 4px 14px; border-radius: 12px; min-width: 110px; min-height: 50px;
+  background: rgba(255,255,255,.03); border: 1px solid #27272a; justify-content: center;
+}
+.ans.empty { color: #52525b; font-weight: 400; }
+@keyframes caret { 0%,45% { opacity: 1; } 50%,100% { opacity: 0; } }
+.ans .caret { width: 2px; height: 1em; background: #f59e0b; margin-left: 3px; animation: caret 1.1s step-end infinite; }
+@keyframes shake { 10%,90% { transform: translateX(-2px); } 20%,80% { transform: translateX(4px); } 30%,50%,70% { transform: translateX(-6px); } 40%,60% { transform: translateX(6px); } }
+.stage.shake { animation: shake .45s cubic-bezier(.36,.07,.19,.97) both; }
+.stage.shake .ans { color: #ef4444; border-color: rgba(239,68,68,.5); }
+.stage.shake .reveal { color: #fbbf24; }
+.pad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; }
+.key {
+  padding: 12px 0; border-radius: 12px; background: #18181b; border: 1px solid #27272a;
+  font-size: 18px; font-weight: 700; min-height: 50px; transition: transform .08s, background .08s, border-color .08s;
+}
+.key:hover { background: #1f1f23; border-color: #3f3f46; }
+.key:active { transform: scale(.94); }
+.key.op { color: #fbbf24; }
+.key.go { background: rgba(52,211,153,.14); border-color: rgba(52,211,153,.4); color: #34d399; grid-column: span 2; }
+.hint { margin-top: 12px; text-align: center; font-size: 10px; color: #52525b; letter-spacing: .08em; }
+.quit { position: absolute; top: 0; right: 0; padding: 7px 10px; border-radius: 9px; color: #71717a; font-size: 11px; }
+.quit:hover { color: #d4d4d8; background: rgba(255,255,255,.05); }
+.prog { display: flex; gap: 4px; margin-bottom: 16px; justify-content: center; flex-wrap: wrap; }
+.prog i { width: 9px; height: 9px; border-radius: 50%; background: #27272a; }
+.prog i.ok { background: #34d399; }
+.prog i.no { background: #ef4444; }
+.prog i.cur { background: #fbbf24; box-shadow: 0 0 8px rgba(251,191,36,.6); }
+.reveal { margin-top: 8px; font-size: 13px; color: #71717a; min-height: 18px; }
+.reveal b { color: #fbbf24; }
+
+/* ── results ── */
+.res { text-align: center; }
+.res .medal { font-size: 12px; letter-spacing: .2em; color: #f59e0b; margin-bottom: 10px; text-transform: uppercase; }
+.res h2 { font-size: clamp(30px, 8vw, 44px); font-weight: 700; line-height: 1; margin-bottom: 4px; }
+.res h2.good { color: #34d399; }
+.res .rsub { color: #a1a1aa; font-size: 12.5px; margin-bottom: 20px; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 18px; }
+.stat { background: #18181b; border: 1px solid #27272a; border-radius: 12px; padding: 12px 8px; }
+.stat b { display: block; font-size: 18px; font-weight: 700; margin-bottom: 3px; }
+.stat span { font-size: 9.5px; color: #71717a; letter-spacing: .1em; text-transform: uppercase; }
+.stat b.amber { color: #fbbf24; } .stat b.green { color: #34d399; } .stat b.red { color: #ef4444; }
+.again { width: 100%; padding: 14px; border-radius: 13px; background: #f59e0b; color: #1c1207; font-weight: 700; font-size: 14px; }
+.homebtn { margin-top: 9px; width: 100%; padding: 11px; border-radius: 13px; border: 1px solid #27272a; color: #a1a1aa; font-size: 12.5px; }
+.homebtn:hover { color: #fafafa; border-color: #3f3f46; }
+
+@media (max-height: 640px) {
+  .stage { margin-bottom: 10px; } .ans { min-height: 40px; margin-top: 8px; }
+  .key { min-height: 42px; padding: 9px 0; } .prog { margin-bottom: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ans .caret, .stage.shake { animation: none; } .tb, .key { transition: none; }
+}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script>
+"use strict";
+/* gn-math times tables — pick tables, drill 2..12, star every row. */
+(function () {
+  var app = document.getElementById("app");
+  var LS = {
+    get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  };
+  var STARS_KEY = "gnm:tt:stars";
+  var stars = {};
+  try { stars = JSON.parse(LS.get(STARS_KEY) || "{}") || {}; } catch (e) { stars = {}; }
+  /* stars[t] = { "2x3": true, ... } */
+  function starKey(t, b) { return b + "x" + t; }
+  function tableDone(t) {
+    var o = stars[t] || {};
+    for (var b = 2; b <= 12; b++) if (!o[b]) return false;
+    return true;
+  }
+  function starCount(t) { var o = stars[t] || {}, n = 0; for (var b = 2; b <= 12; b++) if (o[b]) n++; return n; }
+
+  var sel = null;
+  function renderSetup() {
+    var tbl = "";
+    for (var t = 2; t <= 12; t++) {
+      var n = starCount(t);
+      tbl += '<button type="button" class="tb' + (tableDone(t) ? " done" : "") + '" data-t="' + t + '" aria-pressed="' + (sel === t) + '">' +
+        '<span class="st ' + (n === 11 ? "full" : n ? "part" : "") + '">' + (n ? (n === 11 ? "★" : n) : "") + '</span>' + t + '×</button>';
+    }
+    app.innerHTML =
+      '<div class="brand"><b>gn<span>-</span>math</b><em>TIMES TABLES</em></div>' +
+      '<div class="setup">' +
+      '<h1>Own every table<br>from 2 to 12.</h1>' +
+      '<p class="sub">Pick a table — 11 questions, 2× through 12×. Answer clean and quick to star the row. Fill all eleven and the table turns green.</p>' +
+      '<div class="tbl">' + tbl + '</div>' +
+      '<button type="button" class="go" id="go"' + (sel ? "" : " disabled") + '>Drill the ' + (sel || " ") + '× table</button>' +
+      '</div>';
+    app.querySelectorAll("[data-t]").forEach(function (b) {
+      b.addEventListener("click", function () { sel = Number(b.getAttribute("data-t")); renderSetup(); });
+    });
+    if (sel) document.getElementById("go").addEventListener("click", startDrill);
+  }
+
+  var drill = null;
+  function startDrill() {
+    var bs = [];
+    for (var b = 2; b <= 12; b++) bs.push(b);
+    drill = { t: sel, bs: bs, i: 0, input: "", right: 0, wrong: 0, marks: [] };
+    renderDrill();
+  }
+  function curQ() { var b = drill.bs[drill.i]; return { a: b, b: drill.t, answer: b * drill.t }; }
+  function renderDrill() {
+    var q = curQ();
+    var prog = "";
+    drill.bs.forEach(function (b, i) {
+      var m = i < drill.marks.length ? drill.marks[i] : null;
+      prog += '<i class="' + (m === "ok" ? "ok" : m === "no" ? "no" : i === drill.i ? "cur" : "") + '"></i>';
+    });
+    app.innerHTML =
+      '<button type="button" class="quit" id="quit">✕ quit</button>' +
+      '<div class="drill-hud"><span class="l"><b>' + drill.t + '×</b> table</span><span class="r"><b>' + (drill.i + 1) + '</b> / 11</span></div>' +
+      '<div class="prog">' + prog + '</div>' +
+      '<div class="stage" id="stage">' +
+      '<div class="q">' + q.a + '<span class="op">×</span>' + q.b + '</div>' +
+      '<div class="ans empty" id="ans">…</div>' +
+      '<div class="reveal" id="reveal"></div>' +
+      '</div>' +
+      '<div class="pad" id="pad"></div>' +
+      '<div class="hint">type · enter submits</div>';
+    var pad = document.getElementById("pad");
+    "1234567890".split("").forEach(function (d) {
+      var k = document.createElement("button");
+      k.type = "button"; k.className = "key"; k.textContent = d;
+      k.addEventListener("click", function () { press(d); });
+      pad.appendChild(k);
+    });
+    var bk = document.createElement("button");
+    bk.type = "button"; bk.className = "key op"; bk.innerHTML = "⌫";
+    bk.addEventListener("click", function () { press("bk"); });
+    pad.appendChild(bk);
+    var go = document.createElement("button");
+    go.type = "button"; go.className = "key go"; go.innerHTML = "submit ↵";
+    go.addEventListener("click", submit);
+    pad.appendChild(go);
+    document.getElementById("quit").addEventListener("click", function () { drill = null; renderSetup(); });
+  }
+  function updAns() {
+    var a = document.getElementById("ans");
+    a.className = drill.input ? "ans" : "ans empty";
+    a.innerHTML = drill.input ? drill.input + '<span class="caret"></span>' : "…";
+  }
+  function press(k) {
+    if (!drill) return;
+    if (k === "bk") drill.input = drill.input.slice(0, -1);
+    else if (drill.input.length < 4) drill.input += k;
+    updAns();
+  }
+  function submit() {
+    if (!drill || !drill.input) return;
+    var q = curQ();
+    var val = parseInt(drill.input, 10);
+    if (val === q.answer) {
+      drill.marks[drill.i] = "ok";
+      drill.right++;
+      if (!stars[drill.t]) stars[drill.t] = {};
+      stars[drill.t][q.a] = true;
+      LS.set(STARS_KEY, JSON.stringify(stars));
+      next();
+    } else {
+      drill.marks[drill.i] = "no";
+      drill.wrong++;
+      var st = document.getElementById("stage");
+      st.classList.remove("shake"); void st.offsetWidth; st.classList.add("shake");
+      var rv = document.getElementById("reveal");
+      rv.innerHTML = q.a + " × " + q.b + " = <b>" + q.answer + "</b> — try again";
+      drill.input = "";
+      updAns();
+      /* wrong answers repeat at the end until right */
+      drill.bs.push(q.a);
+    }
+  }
+  function next() {
+    drill.i++;
+    drill.input = "";
+    if (drill.i >= drill.bs.length) { finish(); return; }
+    renderDrill();
+  }
+  function finish() {
+    var t = drill.t;
+    var total = drill.bs.length;
+    var acc = Math.round(drill.right / total * 100);
+    var done = tableDone(t);
+    var starN = starCount(t);
+    app.innerHTML =
+      '<div class="brand"><b>gn<span>-</span>math</b><em>TABLE ' + t + '×</em></div>' +
+      '<div class="res">' +
+      '<div class="medal">' + (done ? "table conquered" : starN + " / 11 starred") + '</div>' +
+      '<h2 class="' + (acc >= 90 ? "good" : "") + '">' + acc + '%</h2>' +
+      '<p class="rsub">' + drill.right + ' right on the first try · ' + drill.wrong + ' needed a retry</p>' +
+      '<div class="stats">' +
+      '<div class="stat"><b class="green">' + starN + '</b><span>stars</span></div>' +
+      '<div class="stat"><b class="amber">' + t + '×</b><span>table</span></div>' +
+      '<div class="stat"><b class="' + (done ? "green" : "red") + '">' + (done ? "done" : "keep") + '</b><span>status</span></div>' +
+      '</div>' +
+      '<button type="button" class="again" id="again">↵ drill it again</button>' +
+      '<button type="button" class="homebtn" id="home">pick another table</button>' +
+      '</div>';
+    document.getElementById("again").addEventListener("click", startDrill);
+    document.getElementById("home").addEventListener("click", function () { drill = null; renderSetup(); });
+    drill = null;
+  }
+
+  document.addEventListener("keydown", function (e) {
+    if (!drill) {
+      if (e.key === "Enter") {
+        var go = document.getElementById("go"), ag = document.getElementById("again");
+        if (go && !go.disabled) { e.preventDefault(); go.click(); }
+        else if (ag) { e.preventDefault(); ag.click(); }
+      }
+      return;
+    }
+    if (/^[0-9]$/.test(e.key)) press(e.key);
+    else if (e.key === "Backspace") { e.preventDefault(); press("bk"); }
+    else if (e.key === "Enter") { e.preventDefault(); submit(); }
+  });
+
+  renderSetup();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+# Veil OS — Railway config
+#
+# Deploy: railway.app → New Project → Deploy from GitHub repo.
+# Railway auto-detects the Dockerfile. Then attach ONE volume:
+#   Service → Settings → Volumes → Add:
+#     mount path: /home/z/my-project/db
+#
+# All state (SQLite db, chat uploads, secrets) lives in that volume.
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+startCommand = "bash deploy/start.sh"
+healthcheckPath = "/"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10

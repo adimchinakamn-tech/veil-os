@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Pomodoro — Sulfur OS</title>
+<style>
+:root{color-scheme:dark;--bg:#09090b;--card:#18181b;--bd:#27272a;--bd2:#3f3f46;--tx:#e4e4e7;--mut:#a1a1aa;--dim:#71717a;--amber:#f59e0b;--amber-h:#fbbf24;--tint:rgba(245,158,11,.14);--mono:ui-monospace,Menlo,Consolas,monospace;--sh:0 10px 30px rgba(0,0,0,.4)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--tx);font:14px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
+:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+svg{display:block}
+.topbar{display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(24,24,27,.92);border-bottom:1px solid var(--bd);flex:none}
+.tb-icon{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#fbbf24,#d97706);color:#1c1206;display:grid;place-items:center;flex:none}
+.tb-name{font-weight:700;font-size:14.5px;white-space:nowrap}
+.chip{font-size:10px;font-weight:800;letter-spacing:.18em;color:var(--amber);background:var(--tint);border:1px solid rgba(245,158,11,.35);padding:2px 8px;border-radius:999px;flex:none}
+.spacer{flex:1}
+.ibtn{width:40px;height:40px;display:grid;place-items:center;border-radius:8px;background:#202024;border:1px solid var(--bd);transition:background .12s,border-color .12s,transform .06s,opacity .12s;color:var(--mut)}
+.ibtn:hover{background:#26262b;border-color:var(--bd2);color:var(--tx)}
+.ibtn:active{transform:scale(.96)}
+.ibtn.on{background:var(--tint);border-color:rgba(245,158,11,.5);color:var(--amber)}
+main{flex:1;overflow-y:auto;display:flex;flex-direction:column;align-items:center;padding:18px 14px 26px;gap:18px}
+.tabs{display:flex;gap:5px;background:#131316;border:1px solid var(--bd);padding:5px;border-radius:12px}
+.tabs button{min-height:40px;padding:0 20px;border-radius:8px;font-size:13px;font-weight:600;color:var(--mut);transition:background .12s,color .12s,transform .06s}
+.tabs button:hover{color:var(--tx)}
+.tabs button:active{transform:scale(.97)}
+.tabs button.on{background:var(--tint);color:var(--amber);box-shadow:inset 0 0 0 1px rgba(245,158,11,.4)}
+.view{display:none;width:100%;max-width:420px;flex-direction:column;align-items:center;gap:20px}
+.view.on{display:flex}
+.ringbox{position:relative;width:min(260px,72vw);aspect-ratio:1}
+.ringbox svg{width:100%;height:100%;transform:rotate(-90deg)}
+.track{fill:none;stroke:#27272a;stroke-width:10}
+.prog{fill:none;stroke:var(--amber);stroke-width:10;stroke-linecap:round;transition:stroke-dashoffset .25s linear}
+.ringtxt{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+.clock{font-family:var(--mono);font-size:clamp(38px,12vw,52px);font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.phase{font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--amber)}
+.dots{display:flex;gap:7px}
+.dots i{width:10px;height:10px;border-radius:50%;background:#27272a;transition:background .2s,box-shadow .2s}
+.dots i.on{background:var(--amber);box-shadow:0 0 8px rgba(245,158,11,.7)}
+.ctrls{display:flex;gap:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 22px;border-radius:8px;background:#202024;border:1px solid var(--bd);font-size:14px;font-weight:600;transition:background .12s,border-color .12s,transform .06s}
+.btn:hover{background:#26262b;border-color:var(--bd2)}
+.btn:active{transform:scale(.97)}
+.btn.amber{background:var(--amber);border-color:transparent;color:#1c1206}
+.btn.amber:hover{background:var(--amber-h)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.card{width:100%;background:var(--card);border:1px solid var(--bd);border-radius:12px;box-shadow:var(--sh);padding:16px 18px}
+.card h2{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin-bottom:12px}
+.strow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:7px 0}
+.strow+.strow{border-top:1px solid #202024}
+.strow .lab{font-size:13.5px;color:var(--mut)}
+.strow .sub{display:block;font-size:11px;color:var(--dim)}
+.stp{display:flex;align-items:center;gap:10px}
+.stp button{width:40px;height:40px;border-radius:8px;background:#202024;border:1px solid var(--bd);display:grid;place-items:center;font-size:19px;color:var(--mut);transition:background .12s,border-color .12s,color .12s,transform .06s}
+.stp button:hover{background:#26262b;color:var(--tx);border-color:var(--bd2)}
+.stp button:active{transform:scale(.94)}
+.stp b{font-family:var(--mono);font-size:19px;font-weight:700;color:var(--amber);min-width:34px;text-align:center;font-variant-numeric:tabular-nums}
+.stp span{font-size:11px;color:var(--dim)}
+.stat{width:100%;text-align:center;font-size:12.5px;color:var(--dim)}
+.stat b{color:var(--amber);font-family:var(--mono);font-weight:700}
+.note{font-size:11.5px;color:var(--dim);text-align:center;line-height:1.6}
+.swlaps{width:100%;max-height:230px;overflow-y:auto;display:flex;flex-direction:column;gap:6px}
+.lap{display:grid;grid-template-columns:56px 1fr 1fr;font-family:var(--mono);font-size:13px;font-variant-numeric:tabular-nums;padding:9px 13px;border-radius:8px;background:#141417;border:1px solid #202024;color:var(--mut)}
+.lap .n{color:var(--dim)}
+.lap .tot{color:var(--tx)}
+.laps-empty{text-align:center;color:var(--dim);font-size:12.5px;padding:18px 0 6px}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(14px);background:#202024;color:var(--tx);border:1px solid rgba(245,158,11,.45);border-left:3px solid var(--amber);padding:9px 16px;border-radius:10px;font-size:13px;box-shadow:var(--sh);opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;z-index:99;max-width:88vw}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+noscript>div{padding:40px;text-align:center;color:var(--mut)}
+</style>
+</head>
+<body>
+<noscript><div>Pomodoro needs JavaScript to run the timer. Please enable it and reload.</div></noscript>
+<header class="topbar">
+  <div class="tb-icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="8" cy="9" r="6.2"/><path d="M8 5.8V9l2.2 1.6"/><path d="M6 1.5h4"/></svg></div>
+  <span class="tb-name">Pomodoro</span>
+  <span class="chip">Sulfur</span>
+  <span class="spacer"></span>
+  <button class="ibtn on" id="mute" aria-label="Mute chime" title="Mute chime" aria-pressed="false"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6v4h2.4L8.5 13V3L4.9 6H2.5z"/><path id="sndOn" d="M10.5 5.5a4 4 0 0 1 0 5M12.3 3.8a6.5 6.5 0 0 1 0 8.4"/><path id="sndOff" d="M10.5 6l4 4M14.5 6l-4 4" style="display:none"/></svg></button>
+</header>
+<main>
+  <div class="tabs" role="tablist" aria-label="Mode">
+    <button id="tabTimer" class="on" role="tab" aria-selected="true" aria-controls="viewTimer">Timer</button>
+    <button id="tabStop" role="tab" aria-selected="false" aria-controls="viewStop">Stopwatch</button>
+  </div>
+
+  <section class="view on" id="viewTimer" role="tabpanel" aria-label="Pomodoro timer">
+    <div class="ringbox">
+      <svg viewBox="0 0 240 240" aria-hidden="true">
+        <circle class="track" cx="120" cy="120" r="104"/>
+        <circle class="prog" id="prog" cx="120" cy="120" r="104"/>
+      </svg>
+      <div class="ringtxt">
+        <div class="clock" id="clock" aria-live="off">25:00</div>
+        <div class="phase" id="phaseLbl">Focus</div>
+        <div class="dots" id="dots" aria-label="Sessions this cycle"><i></i><i></i><i></i><i></i></div>
+      </div>
+    </div>
+    <div class="ctrls">
+      <button class="btn" id="reset">Reset</button>
+      <button class="btn amber" id="start" style="min-width:130px">Start</button>
+    </div>
+    <div class="card">
+      <h2>Settings</h2>
+      <div class="strow">
+        <span class="lab">Focus<span class="sub">5 – 60 min</span></span>
+        <div class="stp">
+          <button data-k="focus" data-d="-1" aria-label="Less focus minutes">−</button>
+          <b id="fVal">25</b><span>min</span>
+          <button data-k="focus" data-d="1" aria-label="More focus minutes">+</button>
+        </div>
+      </div>
+      <div class="strow">
+        <span class="lab">Break<span class="sub">1 – 30 min</span></span>
+        <div class="stp">
+          <button data-k="break" data-d="-1" aria-label="Less break minutes">−</button>
+          <b id="bVal">5</b><span>min</span>
+          <button data-k="break" data-d="1" aria-label="More break minutes">+</button>
+        </div>
+      </div>
+      <p class="note" style="margin-top:10px">Long break of <b id="longVal">15</b> min lands after every 4th focus session.</p>
+    </div>
+    <p class="stat"><b id="done">0</b> focus sessions completed today</p>
+  </section>
+
+  <section class="view" id="viewStop" role="tabpanel" aria-label="Stopwatch">
+    <div class="ringbox" style="display:grid;place-items:center">
+      <div class="clock" id="swClock" style="font-size:clamp(40px,13vw,56px)">00:00<span style="opacity:.55">.00</span></div>
+    </div>
+    <div class="ctrls">
+      <button class="btn" id="swLap" disabled>Lap</button>
+      <button class="btn amber" id="swStart" style="min-width:130px">Start</button>
+      <button class="btn" id="swReset">Reset</button>
+    </div>
+    <div class="swlaps" id="laps" aria-label="Laps">
+      <p class="laps-empty" id="lapsEmpty">No laps yet — hit Lap while the stopwatch runs.</p>
+    </div>
+  </section>
+</main>
+<div id="toast" role="status" aria-live="polite"></div>
+<script>
+(function(){
+'use strict';
+var $ = function(s){ return document.querySelector(s); };
+var BASE_TITLE = 'Pomodoro — Sulfur OS', KEY = 'sulfur.studio.pomodoro';
+
+/* ---- guarded storage ---- */
+var LS = (function(){ var ok = false, mem = {};
+  try { localStorage.setItem('__t','1'); localStorage.removeItem('__t'); ok = true; } catch(e){}
+  return { ok: ok,
+    get: function(k){ if (ok) { try { return localStorage.getItem(k); } catch(e){} }
+      return Object.prototype.hasOwnProperty.call(mem, k) ? mem[k] : null; },
+    set: function(k, v){ if (ok) { try { localStorage.setItem(k, v); return true; } catch(e){} }
+      mem[k] = String(v); return false; } };
+})();
+
+/* ---- toast ---- */
+var toastEl = $('#toast'), toastT = 0;
+function toast(msg, ms){ toastEl.textContent = msg; toastEl.classList.add('show');
+  clearTimeout(toastT); toastT = setTimeout(function(){ toastEl.classList.remove('show'); }, ms || 2100); }
+
+/* ---- settings / persisted state ---- */
+var set = { focus: 25, break: 5, mute: false, done: 0, doneDay: '' };
+try {
+  var raw = LS.get(KEY);
+  if (raw) {
+    var d = JSON.parse(raw);
+    if (d && typeof d === 'object') {
+      if (d.focus >= 5 && d.focus <= 60) set.focus = d.focus;
+      if (d.break >= 1 && d.break <= 30) set.break = d.break;
+      if (typeof d.mute === 'boolean') set.mute = d.mute;
+      if (typeof d.done === 'number') set.done = d.done;
+      if (typeof d.doneDay === 'string') set.doneDay = d.doneDay;
+    }
+  }
+} catch (e) {}
+function today(){ try { return new Date().toISOString().slice(0, 10); } catch (e) { return ''; } }
+if (set.doneDay !== today()) { set.done = 0; set.doneDay = today(); }
+function persist(){
+  LS.set(KEY, JSON.stringify({ focus: set.focus, break: set.break, mute: set.mute, done: set.done, doneDay: set.doneDay }));
+}
+
+/* ---- chime (web audio, muted toggle, fully guarded) ---- */
+var actx = null;
+function chime(){
+  if (set.mute) return;
+  try {
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    if (!actx) actx = new AC();
+    if (actx.state === 'suspended' && actx.resume) actx.resume();
+    var t = actx.currentTime, notes = [880, 1174.7, 1568];
+    for (var i = 0; i < notes.length; i++) {
+      var o = actx.createOscillator(), g = actx.createGain();
+      o.type = 'sine'; o.frequency.value = notes[i];
+      var t0 = t + i * 0.18;
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(0.16, t0 + 0.03);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.55);
+      o.connect(g); g.connect(actx.destination);
+      o.start(t0); o.stop(t0 + 0.65);
+    }
+  } catch (e) {}
+}
+var muteBtn = $('#mute');
+function paintMute(){
+  muteBtn.classList.toggle('on', !set.mute);
+  muteBtn.setAttribute('aria-pressed', String(!set.mute));
+  muteBtn.setAttribute('aria-label', set.mute ? 'Unmute chime' : 'Mute chime');
+  $('#sndOn').style.display = set.mute ? 'none' : '';
+  $('#sndOff').style.display = set.mute ? '' : 'none';
+}
+muteBtn.addEventListener('click', function(){
+  set.mute = !set.mute; persist(); paintMute();
+  toast(set.mute ? 'Chime muted' : 'Chime on');
+});
+
+/* ---- tabs ---- */
+var mode = 'timer';
+function setMode(m){
+  mode = m;
+  $('#tabTimer').classList.toggle('on', m === 'timer');
+  $('#tabStop').classList.toggle('on', m === 'stop');
+  $('#tabTimer').setAttribute('aria-selected', String(m === 'timer'));
+  $('#tabStop').setAttribute('aria-selected', String(m === 'stop'));
+  $('#viewTimer').classList.toggle('on', m === 'timer');
+  $('#viewStop').classList.toggle('on', m === 'stop');
+  paintTitle(); paintSW();
+}
+$('#tabTimer').addEventListener('click', function(){ setMode('timer'); });
+$('#tabStop').addEventListener('click', function(){ setMode('stop'); });
+
+/* ---- timer ---- */
+var T = { phase: 'focus', total: 0, remain: 0, running: false, endAt: 0 };
+var R = 104, CIRC = 2 * Math.PI * R;
+function phaseMin(p){ return p === 'focus' ? set.focus : (p === 'short' ? set.break : longMin()); }
+function longMin(){ return Math.max(1, Math.min(60, set.break * 3)); }
+function phaseName(p){ return p === 'focus' ? 'focus' : (p === 'short' ? 'break' : 'long break'); }
+function setPhase(p, run){
+  T.phase = p; T.total = phaseMin(p) * 60000; T.remain = T.total;
+  T.running = !!run; T.endAt = Date.now() + T.remain;
+  $('#phaseLbl').textContent = p === 'focus' ? 'Focus' : (p === 'short' ? 'Break' : 'Long break');
+  paintT();
+}
+function startPause(){
+  if (T.running) { T.remain = Math.max(0, T.endAt - Date.now()); T.running = false; paintT(); return; }
+  if (T.remain <= 0) T.remain = T.total;
+  T.running = true; T.endAt = Date.now() + T.remain;
+  paintT();
+}
+$('#start').addEventListener('click', startPause);
+$('#reset').addEventListener('click', function(){ T.running = false; setPhase(T.phase, false); });
+function fmt(ms){
+  var s = Math.max(0, Math.ceil(ms / 1000));
+  var m = Math.floor(s / 60);
+  return (m < 10 ? '0' : '') + m + ':' + ((s % 60) < 10 ? '0' : '') + (s % 60);
+}
+function paintT(){
+  var remain = T.running ? Math.max(0, T.endAt - Date.now()) : T.remain;
+  $('#clock').textContent = fmt(remain);
+  var prog = $('#prog');
+  prog.setAttribute('stroke-dasharray', CIRC.toFixed(1));
+  prog.setAttribute('stroke-dashoffset', (CIRC * (T.total ? remain / T.total : 1)).toFixed(1));
+  $('#start').textContent = T.running ? 'Pause' : (remain < T.total ? 'Resume' : 'Start');
+  var dots = $('#dots').children, shown = set.done % 4;
+  if (T.phase === 'long' && set.done > 0) shown = 4;
+  for (var i = 0; i < 4; i++) dots[i].classList.toggle('on', i < shown);
+  $('#done').textContent = set.done;
+  paintTitle();
+}
+function onPhaseEnd(){
+  chime();
+  if (T.phase === 'focus') {
+    set.done++; set.doneDay = today(); persist();
+    var next = (set.done % 4 === 0) ? 'long' : 'short';
+    setPhase(next, true);
+    toast(next === 'long' ? 'Focus complete — long break time' : 'Focus complete — take a break');
+  } else {
+    setPhase('focus', true);
+    toast('Break over — back to focus');
+  }
+}
+setInterval(function(){
+  if (T.running) {
+    if (Date.now() >= T.endAt) { onPhaseEnd(); return; }
+    paintT();
+  }
+}, 200);
+
+/* ---- steppers ---- */
+function bump(key, d){
+  var lim = key === 'focus' ? [5, 60] : [1, 30];
+  var v = set[key] + d;
+  if (v < lim[0] || v > lim[1]) return;
+  set[key] = v;
+  $('#fVal').textContent = set.focus;
+  $('#bVal').textContent = set.break;
+  $('#longVal').textContent = longMin();
+  persist();
+  if (!T.running && ((key === 'focus' && T.phase === 'focus') || (key === 'break' && T.phase !== 'focus'))) {
+    T.total = phaseMin(T.phase) * 60000; T.remain = T.total; paintT();
+  } else if (T.running) toast('Applies from the next phase');
+}
+Array.prototype.forEach.call(document.querySelectorAll('.stp button'), function(b){
+  b.addEventListener('click', function(){ bump(b.dataset.k, parseInt(b.dataset.d, 10)); });
+});
+
+/* ---- stopwatch ---- */
+var SW = { running: false, t0: 0, acc: 0, laps: [] };
+function swNow(){ return SW.acc + (SW.running ? Math.max(0, performance.now() - SW.t0) : 0); }
+function fmtSW(ms){
+  var t = Math.floor(ms), cs = Math.floor((t % 1000) / 10);
+  var s = Math.floor(t / 1000) % 60, m = Math.floor(t / 60000);
+  function p2(n){ return (n < 10 ? '0' : '') + n; }
+  return p2(m) + ':' + p2(s) + '.' + (cs < 10 ? '0' : '') + cs;
+}
+function paintSW(){
+  $('#swClock').innerHTML = '';
+  var txt = fmtSW(swNow()), head = txt.slice(0, 5), tail = txt.slice(5);
+  var a = document.createElement('span'); a.textContent = head;
+  var b = document.createElement('span'); b.style.opacity = '.55'; b.textContent = tail;
+  $('#swClock').appendChild(a); $('#swClock').appendChild(b);
+  $('#swStart').textContent = SW.running ? 'Stop' : (SW.acc > 0 ? 'Resume' : 'Start');
+  $('#swLap').disabled = !SW.running;
+  $('#swReset').disabled = SW.running;
+}
+$('#swStart').addEventListener('click', function(){
+  if (SW.running) { SW.acc = swNow(); SW.running = false; }
+  else { SW.running = true; SW.t0 = performance.now(); }
+  paintSW(); paintTitle();
+});
+$('#swLap').addEventListener('click', function(){
+  if (!SW.running) return;
+  SW.laps.unshift(swNow());
+  if (SW.laps.length > 200) SW.laps.pop();
+  renderLaps();
+});
+$('#swReset').addEventListener('click', function(){
+  SW.running = false; SW.acc = 0; SW.laps = [];
+  renderLaps(); paintSW(); paintTitle();
+});
+function renderLaps(){
+  var box = $('#laps');
+  box.innerHTML = '';
+  if (!SW.laps.length) {
+    var p = document.createElement('p');
+    p.className = 'laps-empty'; p.id = 'lapsEmpty';
+    p.textContent = 'No laps yet — hit Lap while the stopwatch runs.';
+    box.appendChild(p); return;
+  }
+  var total = SW.laps[0];
+  SW.laps.forEach(function(t, i){
+    var n = SW.laps.length - i;
+    var split = t - (SW.laps[i + 1] || 0);
+    var row = document.createElement('div');
+    row.className = 'lap';
+    row.innerHTML = '';
+    var c1 = document.createElement('span'); c1.className = 'n'; c1.textContent = 'LAP ' + (n < 10 ? '0' : '') + n;
+    var c2 = document.createElement('span'); c2.className = 's'; c2.textContent = fmtSW(split);
+    var c3 = document.createElement('span'); c3.className = 'tot'; c3.textContent = fmtSW(t);
+    row.appendChild(c1); row.appendChild(c2); row.appendChild(c3);
+    box.appendChild(row);
+  });
+}
+
+/* ---- title tick ---- */
+function paintTitle(){
+  var t = BASE_TITLE;
+  if (mode === 'timer') {
+    var remain = T.running ? Math.max(0, T.endAt - Date.now()) : T.remain;
+    if (T.running || remain < T.total) t = fmt(remain) + ' · ' + phaseName(T.phase) + ' — Sulfur';
+  } else if (SW.running) t = fmtSW(swNow()).slice(0, 8) + ' · stopwatch — Sulfur';
+  try { document.title = t; } catch (e) {}
+}
+
+/* ---- init ---- */
+$('#fVal').textContent = set.focus;
+$('#bVal').textContent = set.break;
+$('#longVal').textContent = longMin();
+paintMute();
+setPhase('focus', false);
+paintSW();
+renderLaps();
+setInterval(function(){ if (mode === 'stop' && SW.running) { paintSW(); paintTitle(); } }, 53);
+})();
+</script>
+</body>
+</html>

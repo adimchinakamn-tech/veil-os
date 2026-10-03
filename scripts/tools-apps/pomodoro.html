@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Veil Toolkit — Pomodoro</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{color-scheme:dark;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+html,body{height:100%}
+body{background:#09090b;color:#f4f4f5;font:14px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column;padding:14px 16px;gap:12px;overflow:hidden;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:2px solid #34d399;outline-offset:2px}
+
+.btn{border:1px solid rgba(52,211,153,.35);background:rgba(16,185,129,.12);color:#6ee7b7;padding:7px 13px;border-radius:10px;font-size:12.5px;font-weight:600;cursor:pointer;transition:background .12s,color .12s,transform .1s;font-family:inherit}
+.btn:hover{background:rgba(16,185,129,.22)}
+.btn:active{transform:scale(.96)}
+.btn.solid{background:#10b981;border-color:transparent;color:#032015}
+.btn.solid:hover{background:#34d399}
+.btn.ghost{border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:#d4d4d8}
+.btn.ghost:hover{background:rgba(255,255,255,.09);color:#fafafa}
+.btn.danger{border-color:rgba(248,113,113,.35);background:rgba(239,68,68,.12);color:#fca5a5}
+.btn.on{background:#10b981;border-color:transparent;color:#032015}
+input,select,textarea{background:#18181b;border:1px solid rgba(255,255,255,.1);border-radius:10px;color:#f4f4f5;padding:7px 10px;font-size:13.5px;outline:none;font-family:inherit}
+input:focus,select:focus,textarea:focus{border-color:rgba(52,211,153,.55)}
+
+/* ── pomodoro app ─────────────────────────────────────────── */
+.btn{min-height:36px}
+.pill{border-radius:999px}
+.tag{font-size:10.5px;font-weight:700;letter-spacing:.18em;color:#34d399}
+header{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;flex:none}
+.hgroup{display:flex;flex-direction:column;gap:1px}
+h1{font-size:17px;font-weight:700;letter-spacing:-.01em}
+.spacer{flex:1}
+main{flex:1;min-height:0;overflow:auto;background:#131316;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:18px 16px;display:flex;flex-direction:column;align-items:center;gap:16px}
+.view{display:flex;flex-direction:column;align-items:center;gap:16px;width:100%;max-width:420px;flex:none}
+.view[hidden]{display:none}
+.ring{position:relative;width:min(228px,60vw);aspect-ratio:1;flex:none}
+.ring svg{width:100%;height:100%;display:block}
+#ring{transition:stroke-dashoffset .3s linear}
+.tc{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.tval{font-family:var(--mono);font-size:44px;font-weight:600;line-height:1;color:#f4f4f5}
+.ph{font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#71717a}
+.dots{display:flex;gap:8px}
+.dot{width:12px;height:12px;border-radius:50%;border:1px solid rgba(255,255,255,.2);transition:background .25s,border-color .25s}
+.dot.f{background:#10b981;border-color:transparent}
+.mrow{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center}
+#cmin{width:80px;text-align:center}
+.ctrl{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+#swTime{font-family:var(--mono);font-size:44px;font-weight:600;color:#f4f4f5;letter-spacing:.02em;line-height:1.1}
+.laps{width:100%;max-height:30vh;overflow:auto;display:flex;flex-direction:column;gap:6px}
+.lap{display:flex;justify-content:space-between;gap:10px;font-family:var(--mono);font-size:13px;color:#d4d4d8;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:9px 12px}
+.lap .ln{color:#71717a;flex:none}
+.lap .ld{color:#6ee7b7;flex:none}
+.lapempty{color:#71717a;font-size:12.5px;text-align:center;padding:8px}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%) translateY(10px);background:#1b1b20;border:1px solid rgba(52,211,153,.4);color:#a7f3d0;font-size:12.5px;font-weight:600;padding:8px 15px;border-radius:999px;opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;z-index:9;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<header>
+  <div class="hgroup">
+    <span class="tag">VEIL TOOLKIT</span>
+    <h1>Pomodoro</h1>
+  </div>
+  <div class="spacer"></div>
+  <button id="tabPomo" class="btn ghost pill on">pomodoro</button>
+  <button id="tabSw" class="btn ghost pill">stopwatch</button>
+</header>
+<main>
+  <div id="pomoView" class="view">
+    <div class="ring">
+      <svg viewBox="0 0 200 200" aria-hidden="true">
+        <circle cx="100" cy="100" r="90" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="10"/>
+        <circle id="ring" cx="100" cy="100" r="90" fill="none" stroke="#10b981" stroke-width="10" stroke-linecap="round" transform="rotate(-90 100 100)"/>
+      </svg>
+      <div class="tc"><div id="tval" class="tval">25:00</div><div id="ph" class="ph">focus</div></div>
+    </div>
+    <div class="dots" id="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+    <div class="mrow">
+      <button class="btn ghost pill mchip on" data-ph="focus" data-min="25">focus 25</button>
+      <button class="btn ghost pill mchip" data-ph="break" data-min="5">short 5</button>
+      <button class="btn ghost pill mchip" data-ph="break" data-min="15">long 15</button>
+      <input id="cmin" type="number" inputmode="numeric" min="1" max="120" placeholder="min" title="custom minutes (1–120)">
+      <button id="cgo" class="btn">go</button>
+    </div>
+    <div class="ctrl">
+      <button id="startBtn" class="btn solid">start</button>
+      <button id="resetBtn" class="btn ghost">reset</button>
+    </div>
+  </div>
+  <div id="swView" class="view" hidden>
+    <div id="swTime">00:00.00</div>
+    <div class="ctrl">
+      <button id="swStart" class="btn solid">start</button>
+      <button id="swLap" class="btn">lap</button>
+      <button id="swReset" class="btn ghost">reset</button>
+    </div>
+    <div class="laps" id="laps"></div>
+  </div>
+</main>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<script>
+"use strict";
+var store=(function(){try{var k="__v";localStorage.setItem(k,"1");localStorage.removeItem(k);return localStorage}catch(e){var m={};return{getItem:function(k){return k in m?m[k]:null},setItem:function(k,v){m[k]=String(v)},removeItem:function(k){delete m[k]}}}})();
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+
+var toastEl=document.getElementById("toast"),toastT=null;
+function toast(msg){toastEl.textContent=msg;toastEl.classList.add("show");clearTimeout(toastT);toastT=setTimeout(function(){toastEl.classList.remove("show")},1900)}
+
+/* ── view tabs ── */
+var view="pomo";
+var tabPomo=document.getElementById("tabPomo"),tabSw=document.getElementById("tabSw");
+var pomoView=document.getElementById("pomoView"),swView=document.getElementById("swView");
+function setView(v){
+  view=v;
+  tabPomo.classList.toggle("on",v==="pomo");tabPomo.classList.toggle("ghost",v!=="pomo");
+  tabSw.classList.toggle("on",v==="sw");tabSw.classList.toggle("ghost",v!=="sw");
+  pomoView.hidden=v!=="pomo";swView.hidden=v!=="sw";
+  if(v==="sw")renderSw();
+}
+tabPomo.addEventListener("click",function(){setView("pomo")});
+tabSw.addEventListener("click",function(){setView("sw")});
+
+/* ── audio (created lazily on first interaction; sandbox-safe) ── */
+var actx=null;
+function ensureAudio(){
+  if(actx)return actx;
+  try{var AC=window.AudioContext||window.webkitAudioContext;if(AC)actx=new AC()}catch(e){}
+  return actx;
+}
+function primeAudio(){var a=ensureAudio();if(a&&a.state==="suspended"){try{a.resume()}catch(e){}}}
+document.addEventListener("pointerdown",primeAudio,{once:true});
+document.addEventListener("keydown",primeAudio,{once:true});
+function chime(){ /* three short sine beeps: 880Hz, 120ms, 180ms apart */
+  try{
+    var a=ensureAudio();if(!a)return;
+    if(a.state==="suspended"){try{a.resume()}catch(e){}}
+    var t=a.currentTime;
+    for(var i=0;i<3;i++){
+      var t0=t+i*0.18;
+      var o=a.createOscillator(),g=a.createGain();
+      o.type="sine";o.frequency.value=880;
+      g.gain.setValueAtTime(0.0001,t0);
+      g.gain.exponentialRampToValueAtTime(0.25,t0+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001,t0+0.12);
+      o.connect(g);g.connect(a.destination);
+      o.start(t0);o.stop(t0+0.14);
+    }
+  }catch(e){}
+}
+
+/* ── pomodoro (timestamp-based: immune to tab throttling) ── */
+var ringEl=document.getElementById("ring"),tval=document.getElementById("tval"),ph=document.getElementById("ph");
+var dotsEl=document.getElementById("dots"),startBtn=document.getElementById("startBtn"),resetBtn=document.getElementById("resetBtn");
+var CIRC=2*Math.PI*90;
+ringEl.setAttribute("stroke-dasharray",CIRC);
+var pomo={phase:"focus",dur:25*60000,remain:25*60000,run:false,end:0};
+var sessions=0;
+try{var sv=parseInt(store.getItem("veil.tk.pomo"),10);if(sv>0)sessions=sv}catch(e){}
+
+function mmss(ms){
+  var t=Math.ceil(ms/1000);
+  var m=Math.floor(t/60),s=t%60;
+  return (m<10?"0"+m:""+m)+":"+(s<10?"0"+s:""+s);
+}
+function renderDots(){
+  var filled=sessions>0?((sessions-1)%4)+1:0;
+  var ds=dotsEl.children;
+  for(var i=0;i<ds.length;i++)ds[i].classList.toggle("f",i<filled);
+}
+function syncChips(){
+  var chips=document.querySelectorAll(".mchip");
+  var mins=Math.round(pomo.dur/60000);
+  for(var i=0;i<chips.length;i++){
+    var c=chips[i];
+    var on=c.getAttribute("data-ph")===pomo.phase&&+c.getAttribute("data-min")===mins;
+    c.classList.toggle("on",on);c.classList.toggle("ghost",!on);
+  }
+}
+function renderPomo(){
+  var frac=pomo.dur>0?Math.max(0,Math.min(1,pomo.remain/pomo.dur)):0;
+  ringEl.style.strokeDashoffset=String(CIRC*(1-frac));
+  tval.textContent=mmss(pomo.remain);
+  ph.textContent=pomo.phase==="focus"?"focus":"break";
+  startBtn.textContent=pomo.run?"pause":"start";
+}
+function setPhase(phase,dur,run){
+  pomo.phase=phase;pomo.dur=dur;pomo.remain=dur;pomo.run=!!run;
+  if(run)pomo.end=Date.now()+dur;
+  syncChips();renderPomo();
+}
+function finish(){
+  chime();
+  if(pomo.phase==="focus"){
+    sessions++;
+    try{store.setItem("veil.tk.pomo",String(sessions))}catch(e){}
+    renderDots();
+    var longNow=sessions%4===0;
+    setPhase("break",(longNow?15:5)*60000,true);
+    toast(longNow?"4 sessions done — take a long break":"focus done — take a break");
+  }else{
+    setPhase("focus",25*60000,true);
+    toast("break over — back to it");
+  }
+}
+setInterval(function(){ /* re-render every 250ms; remaining is always Date.now()-derived */
+  if(!pomo.run)return;
+  pomo.remain=Math.max(0,pomo.end-Date.now());
+  if(pomo.remain<=0)finish();
+  renderPomo();
+},250);
+
+startBtn.addEventListener("click",function(){
+  if(pomo.run){pomo.remain=Math.max(0,pomo.end-Date.now());pomo.run=false}
+  else{if(pomo.remain<=0)pomo.remain=pomo.dur;pomo.end=Date.now()+pomo.remain;pomo.run=true;primeAudio()}
+  renderPomo();
+});
+resetBtn.addEventListener("click",function(){pomo.run=false;pomo.remain=pomo.dur;renderPomo()});
+(function(){
+  var chips=document.querySelectorAll(".mchip");
+  for(var i=0;i<chips.length;i++){
+    chips[i].addEventListener("click",function(){
+      setPhase(this.getAttribute("data-ph"),+this.getAttribute("data-min")*60000,false);
+    });
+  }
+})();
+var cmin=document.getElementById("cmin"),cgo=document.getElementById("cgo");
+function customGo(){
+  var v=parseInt(cmin.value,10);
+  if(!v||v<1||v>120){toast("enter minutes 1–120");return}
+  setPhase("focus",v*60000,true);
+  primeAudio();
+}
+cgo.addEventListener("click",customGo);
+cmin.addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();customGo()}});
+
+/* ── stopwatch ── */
+var swTime=document.getElementById("swTime"),swStart=document.getElementById("swStart");
+var swLap=document.getElementById("swLap"),swReset=document.getElementById("swReset"),lapsEl=document.getElementById("laps");
+var sw={run:false,start:0,acc:0,laps:[]};
+function swElapsed(){return sw.acc+(sw.run?Date.now()-sw.start:0)}
+function swfmt(ms){
+  var cs=Math.floor(ms/10)%100,s=Math.floor(ms/1000)%60,m=Math.floor(ms/60000);
+  return (m<10?"0"+m:""+m)+":"+(s<10?"0"+s:""+s)+"."+(cs<10?"0"+cs:""+cs);
+}
+function renderSw(){swTime.textContent=swfmt(swElapsed());swStart.textContent=sw.run?"stop":"start"}
+function swToggle(){
+  if(sw.run){sw.acc=swElapsed();sw.run=false}
+  else{sw.start=Date.now();sw.run=true;primeAudio()}
+  renderSw();
+}
+function swLapAdd(){
+  var t=swElapsed();
+  if(t<=0){toast("start the stopwatch first");return}
+  sw.laps.push(t);
+  if(sw.laps.length>40)sw.laps.shift();
+  renderLaps();
+}
+function swReset(){sw.run=false;sw.acc=0;sw.laps=[];renderSw();renderLaps()}
+function renderLaps(){
+  if(!sw.laps.length){lapsEl.innerHTML='<div class="lapempty">no laps yet</div>';return}
+  var h="";
+  for(var i=sw.laps.length-1;i>=0;i--){
+    var prev=i>0?sw.laps[i-1]:0;
+    h+='<div class="lap"><span class="ln">#'+(i+1)+'</span><span>'+swfmt(sw.laps[i])+'</span><span class="ld">Δ '+swfmt(sw.laps[i]-prev)+'</span></div>';
+  }
+  lapsEl.innerHTML=h;
+}
+swStart.addEventListener("click",swToggle);
+swLap.addEventListener("click",swLapAdd);
+swReset.addEventListener("click",swReset);
+setInterval(function(){if(view==="sw"&&sw.run)renderSw()},50);
+
+/* space toggles, R resets — only in stopwatch view, only while focused */
+document.addEventListener("keydown",function(e){
+  if(!document.hasFocus())return;
+  if(e.repeat)return;
+  var t=e.target;
+  if(t&&t.tagName&&/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))return;
+  if(view!=="sw")return;
+  if(e.code==="Space"){e.preventDefault();swToggle()}
+  else if(e.key==="r"||e.key==="R"){e.preventDefault();swReset()}
+});
+
+renderDots();syncChips();renderPomo();renderSw();renderLaps();
+</script>
+</body>
+</html>

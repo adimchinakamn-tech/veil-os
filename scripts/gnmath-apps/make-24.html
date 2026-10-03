@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>gn-math — make 24</title>
+<meta name="description" content="GN-Math Make 24 — four numbers, four operations, one target: 24.">
+<style>
+:root { color-scheme: dark; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  background-color: #0a0907;
+  background-image:
+    linear-gradient(rgba(245,158,11,.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(245,158,11,.05) 1px, transparent 1px),
+    linear-gradient(rgba(245,158,11,.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(245,158,11,.09) 1px, transparent 1px);
+  background-size: 26px 26px, 26px 26px, 130px 130px, 130px 130px;
+  color: #fafafa; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  padding: 18px; position: relative;
+}
+body::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse at 50% 28%, rgba(255,251,235,.03), transparent 55%),
+    radial-gradient(ellipse at 50% 115%, rgba(0,0,0,.55), transparent 65%);
+}
+button { font: inherit; cursor: pointer; border: 0; background: none; color: inherit; }
+button:focus-visible { outline: 2px solid #f59e0b; outline-offset: 2px; border-radius: 10px; }
+
+.app { width: 100%; max-width: 460px; position: relative; z-index: 1; }
+.brand { display: flex; align-items: baseline; gap: 8px; margin-bottom: 18px; user-select: none; }
+.brand b { font-weight: 700; font-size: 15px; letter-spacing: .04em; }
+.brand b span { color: #f59e0b; }
+.brand em { font-style: normal; font-size: 10.5px; color: #71717a; letter-spacing: .14em; }
+
+.hud { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.hud .l { font-size: 11.5px; color: #71717a; }
+.hud .l b { color: #34d399; font-size: 15px; }
+.hud .r { font-size: 11px; color: #52525b; }
+.hud .r b { color: #fbbf24; }
+
+.target { text-align: center; margin-bottom: 18px; user-select: none; }
+.target .t { font-size: 13px; color: #71717a; letter-spacing: .22em; text-transform: uppercase; }
+.target .v { font-size: clamp(44px, 12vw, 64px); font-weight: 700; color: #f59e0b; line-height: 1.05; text-shadow: 0 0 40px rgba(245,158,11,.3); }
+.target .v.done { color: #34d399; text-shadow: 0 0 40px rgba(52,211,153,.35); }
+
+.cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; margin-bottom: 16px; }
+.card {
+  aspect-ratio: 3 / 4; border-radius: 14px; background: #18181b; border: 1px solid #27272a;
+  display: flex; align-items: center; justify-content: center;
+  font-size: clamp(22px, 6.5vw, 32px); font-weight: 700; color: #e4e4e7;
+  transition: transform .14s ease, border-color .14s, background .14s, opacity .2s; position: relative;
+  user-select: none;
+}
+.card:hover { transform: translateY(-2px); border-color: #3f3f46; }
+.card.sel { border-color: #f59e0b; background: rgba(245,158,11,.14); color: #fbbf24; box-shadow: 0 0 0 1px rgba(245,158,11,.4), 0 6px 20px rgba(245,158,11,.15); }
+.card.gone { opacity: 0; pointer-events: none; transform: scale(.7); }
+.card small { position: absolute; bottom: 7px; font-size: 9px; color: #71717a; font-weight: 400; letter-spacing: .06em; }
+
+.ops { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; margin-bottom: 18px; }
+.op {
+  padding: 12px 0; border-radius: 12px; background: #18181b; border: 1px solid #27272a;
+  font-size: 21px; font-weight: 700; color: #fbbf24; min-height: 48px;
+  transition: transform .08s, background .08s, border-color .08s, opacity .15s;
+}
+.op:hover { background: #1f1f23; border-color: #3f3f46; }
+.op:active { transform: scale(.93); }
+.op.sel { background: rgba(245,158,11,.16); border-color: #f59e0b; }
+.ops.disabled .op { opacity: .35; pointer-events: none; }
+
+.work { min-height: 76px; margin-bottom: 14px; background: rgba(255,255,255,.02); border: 1px dashed #27272a; border-radius: 12px; padding: 10px 12px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: center; }
+.work .tk { padding: 4px 10px; border-radius: 8px; background: #18181b; border: 1px solid #27272a; font-size: 14px; font-weight: 600; }
+.work .tk.num { color: #e4e4e7; }
+.work .tk.op { color: #fbbf24; }
+.work .tk.res { color: #34d399; border-color: rgba(52,211,153,.35); }
+.work .hint { color: #52525b; font-size: 11px; letter-spacing: .06em; }
+
+.msg { text-align: center; font-size: 12.5px; min-height: 20px; margin-bottom: 12px; }
+.msg.ok { color: #34d399; }
+.msg.no { color: #ef4444; }
+.msg.info { color: #a1a1aa; }
+
+.actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+.act { padding: 12px; border-radius: 12px; border: 1px solid #27272a; color: #a1a1aa; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 7px; }
+.act:hover { color: #fafafa; border-color: #3f3f46; background: #18181b; }
+.act.next { background: #f59e0b; color: #1c1207; border-color: #f59e0b; }
+.act.next:hover { filter: brightness(1.07); background: #f59e0b; }
+.act.undo[disabled] { opacity: .35; pointer-events: none; }
+
+.win { position: absolute; inset: -10px; display: none; align-items: center; justify-content: center; border-radius: 18px; background: rgba(10,9,7,.82); backdrop-filter: blur(3px); z-index: 10; text-align: center; }
+.win.show { display: flex; }
+@keyframes pop { 0% { transform: scale(.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+.win .in { animation: pop .25s ease-out; padding: 24px; }
+.win .m { font-size: 12px; letter-spacing: .22em; color: #34d399; text-transform: uppercase; margin-bottom: 8px; }
+.win .e { font-size: clamp(22px, 6vw, 30px); font-weight: 700; margin-bottom: 16px; color: #fafafa; }
+.win .nx { padding: 11px 26px; border-radius: 12px; background: #f59e0b; color: #1c1207; font-weight: 700; font-size: 13px; }
+
+.quit { position: absolute; top: -4px; right: -4px; padding: 7px 10px; border-radius: 9px; color: #71717a; font-size: 11px; }
+.quit:hover { color: #d4d4d8; background: rgba(255,255,255,.05); }
+
+@media (max-height: 640px) {
+  .target { margin-bottom: 10px; } .cards { gap: 7px; margin-bottom: 10px; }
+  .op { min-height: 40px; padding: 8px 0; } .work { min-height: 54px; margin-bottom: 8px; }
+  .hud { margin-bottom: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card, .op, .win .in { transition: none; animation: none; }
+}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script>
+"use strict";
+/* gn-math make-24 — pick two numbers + an operator, combine, reach 24. */
+(function () {
+  var app = document.getElementById("app");
+  var OPS = [
+    { id: "+", fn: function (a, b) { return a + b; } },
+    { id: "−", fn: function (a, b) { return a - b; } },
+    { id: "×", fn: function (a, b) { return a * b; } },
+    { id: "÷", fn: function (a, b) { return b === 0 ? NaN : a / b; } }
+  ];
+  var state = null;
+  var solved = 0, skipped = 0;
+  var LS = {
+    get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  };
+
+  /* every puzzle is generated + verified solvable by brute force */
+  function solvable(nums) {
+    var ops = OPS;
+    function go(list) {
+      if (list.length === 1) return Math.abs(list[0] - 24) < 1e-9;
+      for (var i = 0; i < list.length; i++) {
+        for (var j = 0; j < list.length; j++) {
+          if (i === j) continue;
+          for (var k = 0; k < ops.length; k++) {
+            var r = ops[k].fn(list[i], list[j]);
+            if (!isFinite(r)) continue;
+            var next = [];
+            for (var m = 0; m < list.length; m++) if (m !== i && m !== j) next.push(list[m]);
+            next.push(r);
+            if (go(next)) return true;
+          }
+        }
+      }
+      return false;
+    }
+    return go(nums.slice());
+  }
+  function genPuzzle() {
+    for (var tries = 0; tries < 400; tries++) {
+      var n = [rand(1, 13), rand(1, 13), rand(1, 13), rand(1, 13)];
+      if (solvable(n)) return n;
+    }
+    return [3, 3, 8, 8]; /* classic always-solvable */
+  }
+  function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+  function newPuzzle() {
+    state = {
+      nums: genPuzzle().map(function (v, i) { return { v: v, i: i, used: false }; }),
+      sel: -1, opSel: -1, steps: [], msg: "", won: false
+    };
+    render();
+  }
+  function liveNums() { return state.nums.filter(function (n) { return !n.used; }); }
+
+  function render() {
+    var canUndo = state.steps.length > 0;
+    app.innerHTML =
+      '<button type="button" class="quit" id="quit">✕ reset</button>' +
+      '<div class="brand"><b>gn<span>-</span>math</b><em>MAKE 24</em></div>' +
+      '<div class="hud"><span class="l"><b>' + solved + '</b> solved</span><span class="r">target <b>24</b> · fractions allowed</span></div>' +
+      '<div class="target"><div class="t">make</div><div class="v' + (state.won ? " done" : "") + '">24</div></div>' +
+      '<div class="cards" id="cards"></div>' +
+      '<div class="ops' + (state.sel === -1 ? " disabled" : "") + '" id="ops"></div>' +
+      '<div class="work" id="work"></div>' +
+      '<div class="msg ' + (state.msg.indexOf("got it") === 0 ? "ok" : state.msg.indexOf("not") === 0 ? "no" : "info") + '">' + state.msg + '</div>' +
+      '<div class="actions">' +
+      '<button type="button" class="act undo" id="undo"' + (canUndo ? "" : " disabled") + '>↶ undo step</button>' +
+      '<button type="button" class="act next" id="next">new puzzle →</button>' +
+      '</div>' +
+      '<div class="win" id="win"><div class="in"><div class="m">got it</div><div class="e" id="winE"></div><button type="button" class="nx" id="nx">next puzzle →</button></div></div>';
+
+    var cards = document.getElementById("cards");
+    state.nums.forEach(function (n, idx) {
+      var c = document.createElement("button");
+      c.type = "button";
+      c.className = "card" + (n.used ? " gone" : "") + (state.sel === idx ? " sel" : "");
+      c.textContent = n.v;
+      c.setAttribute("aria-label", "number " + n.v + (n.used ? ", used" : ""));
+      c.addEventListener("click", function () { pickNum(idx); });
+      cards.appendChild(c);
+    });
+    var ops = document.getElementById("ops");
+    OPS.forEach(function (o, oi) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "op" + (state.opSel === oi ? " sel" : "");
+      b.textContent = o.id;
+      b.setAttribute("aria-label", o.id);
+      b.addEventListener("click", function () { pickOp(oi); });
+      ops.appendChild(b);
+    });
+    var work = document.getElementById("work");
+    if (state.steps.length) {
+      state.steps.forEach(function (s) {
+        var t = document.createElement("span");
+        t.className = "tk op";
+        t.textContent = s.a + " " + s.op + " " + s.b;
+        work.appendChild(t);
+        var r = document.createElement("span");
+        r.className = "tk res";
+        r.textContent = "= " + fmt(s.r);
+        work.appendChild(r);
+      });
+    } else {
+      var h = document.createElement("span");
+      h.className = "hint";
+      h.textContent = "tap a number, an operator, then the second number";
+      work.appendChild(h);
+    }
+    document.getElementById("undo").addEventListener("click", undo);
+    document.getElementById("next").addEventListener("click", function () { skipped++; newPuzzle(); });
+    document.getElementById("nx").addEventListener("click", newPuzzle);
+    document.getElementById("quit").addEventListener("click", function () { solved = 0; skipped = 0; newPuzzle(); });
+    if (state.won) {
+      var w = document.getElementById("win");
+      document.getElementById("winE").textContent = state.steps.map(function (s) { return s.a + s.op + s.b + "=" + fmt(s.r); }).join("  ·  ");
+      w.classList.add("show");
+    }
+  }
+  function fmt(v) {
+    if (Number.isInteger(v)) return String(v);
+    return String(Math.round(v * 100) / 100);
+  }
+  function pickNum(idx) {
+    if (state.won) return;
+    var n = state.nums[idx];
+    if (n.used) return;
+    if (state.opSel === -1) {
+      state.sel = state.sel === idx ? -1 : idx;
+      state.msg = state.sel !== -1 ? "now pick an operator" : "";
+    } else {
+      if (state.sel === -1) { state.msg = "pick the first number first"; render(); return; }
+      combine(state.sel, idx);
+      return;
+    }
+    render();
+  }
+  function pickOp(oi) {
+    if (state.won || state.sel === -1) return;
+    state.opSel = state.opSel === oi ? -1 : oi;
+    state.msg = state.opSel !== -1 ? "now pick the second number" : "";
+    render();
+  }
+  function combine(i1, i2) {
+    var a = state.nums[i1].v, b = state.nums[i2].v;
+    var o = OPS[state.opSel];
+    var r = o.fn(a, b);
+    if (!isFinite(r)) { state.msg = "not a number — try again"; state.opSel = -1; render(); return; }
+    state.nums[i1].used = true;
+    state.nums[i2].used = true;
+    state.steps.push({ a: a, op: o.id, b: b, r: r });
+    /* the result becomes a new number card */
+    state.nums.push({ v: r, i: state.nums.length, used: false, born: true });
+    state.sel = -1; state.opSel = -1;
+    var live = liveNums();
+    if (live.length === 1) {
+      if (Math.abs(live[0].v - 24) < 1e-9) {
+        state.won = true;
+        state.msg = "got it — 24!";
+        solved++;
+        LS.set("gnm:24:solved", String(solved));
+      } else {
+        state.msg = "not 24 — undo or start a new one";
+      }
+    } else {
+      state.msg = "";
+    }
+    render();
+  }
+  function undo() {
+    if (!state.steps.length || state.won) return;
+    state.steps.pop();
+    /* remove the born card (the last one) and revive the two it consumed */
+    state.nums.pop();
+    var revived = 0;
+    for (var j = state.nums.length - 1; j >= 0 && revived < 2; j--) {
+      if (state.nums[j].used) { state.nums[j].used = false; revived++; }
+    }
+    state.sel = -1; state.opSel = -1; state.msg = "";
+    render();
+  }
+
+  document.addEventListener("keydown", function (e) {
+    if (!state) return;
+    if (e.key === "+" || e.key === "-") pickOp(e.key === "+" ? 0 : 1);
+    else if (e.key === "*" || e.key === "x") pickOp(2);
+    else if (e.key === "/") pickOp(3);
+    else if (/^[1-9]$/.test(e.key)) {
+      var want = Number(e.key);
+      var live = liveNums();
+      for (var i = 0; i < state.nums.length; i++) {
+        if (!state.nums[i].used && state.nums[i].v === want) { pickNum(i); break; }
+      }
+    } else if (e.key === "Backspace") { e.preventDefault(); undo(); }
+    else if (e.key === "n") newPuzzle();
+  });
+
+  try { solved = Number(LS.get("gnm:24:solved")) || 0; } catch (e) {}
+  newPuzzle();
+})();
+</script>
+</body>
+</html>

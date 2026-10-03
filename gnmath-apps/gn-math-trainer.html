@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>gn-math — 60 second trainer</title>
+<meta name="description" content="GN-Math — the 60-second mental-math trainer. Modes, difficulties, streaks, high scores.">
+<style>
+:root { color-scheme: dark; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  background-color: #0a0907;
+  background-image:
+    linear-gradient(rgba(245,158,11,.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(245,158,11,.05) 1px, transparent 1px),
+    linear-gradient(rgba(245,158,11,.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(245,158,11,.09) 1px, transparent 1px);
+  background-size: 26px 26px, 26px 26px, 130px 130px, 130px 130px;
+  color: #fafafa; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  padding: 18px; position: relative;
+}
+body::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% 28%, rgba(255,251,235,.03), transparent 55%),
+    radial-gradient(ellipse at 50% 115%, rgba(0,0,0,.55), transparent 65%);
+}
+button { font: inherit; cursor: pointer; border: 0; background: none; color: inherit; }
+button:focus-visible, [tabindex]:focus-visible { outline: 2px solid #f59e0b; outline-offset: 2px; border-radius: 8px; }
+
+.app { width: 100%; max-width: 460px; position: relative; z-index: 1; }
+.brand { display: flex; align-items: baseline; gap: 8px; margin-bottom: 18px; user-select: none; }
+.brand b { font-weight: 700; font-size: 15px; letter-spacing: .04em; }
+.brand b span { color: #f59e0b; }
+.brand em { font-style: normal; font-size: 10.5px; color: #71717a; letter-spacing: .14em; }
+
+/* ── home ── */
+.home h1 { font-size: clamp(22px, 5.4vw, 30px); font-weight: 700; line-height: 1.15; margin-bottom: 6px; letter-spacing: -.01em; }
+.home .sub { color: #a1a1aa; font-size: 12.5px; margin-bottom: 20px; }
+.group { margin-bottom: 16px; }
+.group .lbl { font-size: 10px; letter-spacing: .18em; color: #71717a; margin-bottom: 7px; text-transform: uppercase; }
+.row { display: grid; gap: 7px; }
+.row.five-wide { grid-template-columns: repeat(5, 1fr); }
+.row.three { grid-template-columns: repeat(3, 1fr); }
+.chip {
+  padding: 10px 4px 9px; border-radius: 11px; background: #18181b; border: 1px solid #27272a;
+  display: flex; flex-direction: column; align-items: center; gap: 2px; transition: transform .12s ease, border-color .12s ease, background .12s ease;
+  min-height: 56px; justify-content: center;
+}
+.chip .sym { font-size: 17px; font-weight: 700; line-height: 1; }
+.chip .nm { font-size: 9px; color: #71717a; letter-spacing: .06em; }
+.chip:hover { border-color: #3f3f46; transform: translateY(-1px); }
+.chip[aria-pressed="true"] { background: rgba(245,158,11,.12); border-color: #f59e0b; }
+.chip[aria-pressed="true"] .sym { color: #fbbf24; }
+.chip[aria-pressed="true"] .nm { color: #d4d4d8; }
+.hs { font-size: 11.5px; color: #52525b; margin-top: 14px; display: flex; align-items: center; gap: 6px; }
+.hs svg { width: 13px; height: 13px; stroke: #f59e0b; }
+.hs b { color: #a1a1aa; font-weight: 600; }
+.play {
+  width: 100%; margin-top: 18px; padding: 15px 18px; border-radius: 14px;
+  background: #f59e0b; color: #1c1207; font-weight: 700; font-size: 15px; letter-spacing: .02em;
+  display: flex; align-items: center; justify-content: center; gap: 9px;
+  box-shadow: 0 8px 24px rgba(245,158,11,.25); transition: transform .12s ease, box-shadow .12s ease;
+}
+.play:hover { transform: translateY(-1px); box-shadow: 0 10px 30px rgba(245,158,11,.35); }
+.play:active { transform: translateY(0); }
+.play svg { width: 15px; height: 15px; }
+.play .ent { font-size: 10px; opacity: .65; font-weight: 600; margin-left: 4px; }
+
+/* ── round ── */
+.hud { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.hud .score { font-size: 13px; color: #d4d4d8; }
+.hud .score b { font-size: 19px; color: #34d399; font-weight: 700; }
+.hud .streak { font-size: 11px; color: #71717a; margin-left: 8px; }
+.hud .streak.on { color: #fbbf24; }
+.timer { position: relative; }
+.timer svg { width: 52px; height: 52px; display: block; }
+.timer text { font-family: ui-monospace, monospace; font-size: 17px; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .45; } }
+.timer.urgent { animation: pulse 1s ease-in-out infinite; }
+.tbar { height: 3px; background: rgba(255,255,255,.07); border-radius: 2px; overflow: hidden; margin-bottom: 26px; }
+.tbar i { display: block; height: 100%; background: #34d399; width: 100%; transition: width .25s linear, background .3s; }
+.tbar.low i { background: #fbbf24; }
+
+.stage { text-align: center; margin-bottom: 26px; user-select: none; }
+.q { font-size: clamp(40px, 11vw, 62px); font-weight: 700; letter-spacing: -.02em; line-height: 1; }
+.q .op { color: #f59e0b; padding: 0 .12em; }
+.ans {
+  min-height: 54px; margin-top: 12px; font-size: clamp(26px, 7vw, 36px); font-weight: 700; color: #34d399;
+  display: inline-flex; align-items: center; gap: 1px; padding: 4px 14px; border-radius: 12px;
+  background: rgba(255,255,255,.03); border: 1px solid #27272a; min-width: 120px; justify-content: center;
+}
+.ans.empty { color: #52525b; font-weight: 400; }
+@keyframes caret { 0%,45% { opacity: 1; } 50%,100% { opacity: 0; } }
+.ans .caret { width: 2px; height: 1.1em; background: #f59e0b; margin-left: 2px; animation: caret 1.1s step-end infinite; }
+@keyframes shake { 10%,90% { transform: translateX(-2px); } 20%,80% { transform: translateX(4px); } 30%,50%,70% { transform: translateX(-6px); } 40%,60% { transform: translateX(6px); } }
+.stage.shake { animation: shake .5s cubic-bezier(.36,.07,.19,.97) both; }
+.stage.shake .ans { color: #ef4444; border-color: rgba(239,68,68,.5); }
+.flash { position: absolute; inset: 0; pointer-events: none; border-radius: 12px; opacity: 0; }
+.flash.ok { animation: okf .4s ease-out; }
+@keyframes okf { 0% { opacity: .8; box-shadow: inset 0 0 0 2px #34d399; } 100% { opacity: 0; } }
+
+.pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+.key {
+  padding: 13px 0; border-radius: 12px; background: #18181b; border: 1px solid #27272a;
+  font-size: 19px; font-weight: 700; min-height: 52px;
+  transition: transform .08s ease, background .08s ease, border-color .08s ease;
+}
+.key:hover { background: #1f1f23; border-color: #3f3f46; }
+.key:active { transform: scale(.94); background: #27272a; }
+.key.op { color: #fbbf24; }
+.key.go { background: rgba(52,211,153,.14); border-color: rgba(52,211,153,.4); color: #34d399; }
+.hint { margin-top: 12px; text-align: center; font-size: 10px; color: #52525b; letter-spacing: .08em; }
+.quit { position: absolute; top: 0; right: 0; padding: 7px 10px; border-radius: 9px; color: #71717a; font-size: 11px; }
+.quit:hover { color: #d4d4d8; background: rgba(255,255,255,.05); }
+
+/* ── results ── */
+.res { text-align: center; }
+.res .medal { font-size: 12px; letter-spacing: .2em; color: #f59e0b; margin-bottom: 10px; text-transform: uppercase; }
+.res h2 { font-size: clamp(34px, 9vw, 52px); font-weight: 700; line-height: 1; color: #34d399; margin-bottom: 4px; }
+.res .rsub { color: #a1a1aa; font-size: 12.5px; margin-bottom: 22px; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+.stat { background: #18181b; border: 1px solid #27272a; border-radius: 12px; padding: 12px 8px; }
+.stat b { display: block; font-size: 18px; font-weight: 700; margin-bottom: 3px; }
+.stat span { font-size: 9.5px; color: #71717a; letter-spacing: .1em; text-transform: uppercase; }
+.stat b.amber { color: #fbbf24; } .stat b.green { color: #34d399; } .stat b.red { color: #ef4444; }
+.streakline { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 12px; color: #71717a; margin: 4px 0 16px; }
+.streakline b { color: #fbbf24; }
+.newhs { display: flex; align-items: center; justify-content: center; gap: 7px; font-size: 12px; color: #fbbf24; margin: 4px 0 16px; }
+.newhs svg { width: 14px; height: 14px; stroke: #fbbf24; }
+.again { width: 100%; padding: 14px; border-radius: 13px; background: #f59e0b; color: #1c1207; font-weight: 700; font-size: 14px; display: flex; justify-content: center; gap: 8px; align-items: center; }
+.again:hover { filter: brightness(1.07); }
+.homebtn { margin-top: 9px; width: 100%; padding: 11px; border-radius: 13px; border: 1px solid #27272a; color: #a1a1aa; font-size: 12.5px; }
+.homebtn:hover { color: #fafafa; border-color: #3f3f46; }
+
+@media (max-height: 640px) {
+  .stage { margin-bottom: 14px; } .ans { min-height: 40px; margin-top: 8px; }
+  .key { padding: 9px 0; min-height: 42px; } .tbar { margin-bottom: 14px; }
+  .home h1 { margin-bottom: 3px; } .home .sub { margin-bottom: 12px; } .group { margin-bottom: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .timer.urgent, .ans .caret, .stage.shake { animation: none; }
+  .chip, .play, .key { transition: none; }
+}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script>
+"use strict";
+/* gn-math trainer — 60 seconds of mental math.
+   Standalone-safe: no external requests, localStorage guarded. */
+(function () {
+  var ROUND_MS = 60000, MAX_LEN = 7;
+  var MODES = [
+    { id: "add", label: "Addition", symbol: "+" },
+    { id: "sub", label: "Subtract", symbol: "−" },
+    { id: "mul", label: "Multiply", symbol: "×" },
+    { id: "div", label: "Divide", symbol: "÷" },
+    { id: "mixed", label: "Mixed", symbol: "±×÷" }
+  ];
+  var DIFFS = [
+    { id: "easy", label: "Easy", hint: "warm-up ranges" },
+    { id: "normal", label: "Normal", hint: "standard ranges" },
+    { id: "hard", label: "Hard", hint: "big-number ranges" }
+  ];
+  var app = document.getElementById("app");
+  var mode = "add", diff = "normal";
+  var LS = {
+    get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  };
+  function hsKey() { return "gnm:hs:" + mode + ":" + diff; }
+  function readHS() { return Number(LS.get(hsKey())) || 0; }
+  function modeOf(id) { for (var i = 0; i < MODES.length; i++) if (MODES[i].id === id) return MODES[i]; return MODES[0]; }
+  function diffOf(id) { for (var i = 0; i < DIFFS.length; i++) if (DIFFS[i].id === id) return DIFFS[i]; return DIFFS[1]; }
+  function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+  function makeQuestion() {
+    var actual = mode === "mixed" ? ["add", "sub", "mul", "div"][rand(0, 3)] : mode;
+    if (actual === "add") {
+      var max = diff === "easy" ? 20 : diff === "normal" ? 99 : 999;
+      var a = rand(1, max), b = rand(1, max);
+      return { a: a, b: b, op: "+", answer: a + b };
+    }
+    if (actual === "sub") {
+      var mx = diff === "easy" ? 20 : diff === "normal" ? 99 : 999;
+      var x = rand(1, mx), y = rand(1, mx);
+      if (y > x) { var t = x; x = y; y = t; }
+      return { a: x, b: y, op: "−", answer: x - y };
+    }
+    if (actual === "mul") {
+      var lo = diff === "easy" ? 1 : diff === "normal" ? 2 : 6;
+      var hi = diff === "easy" ? 10 : diff === "normal" ? 12 : 25;
+      var m = rand(lo, hi), n = rand(lo, hi);
+      return { a: m, b: n, op: "×", answer: m * n };
+    }
+    var dlo = diff === "easy" ? 2 : diff === "normal" ? 2 : 3;
+    var dhi = diff === "easy" ? 9 : diff === "normal" ? 12 : 20;
+    var dv = rand(dlo, dhi), q = rand(dlo, dhi);
+    return { a: dv * q, b: dv, op: "÷", answer: q };
+  }
+
+  /* ── home screen ── */
+  function renderHome() {
+    var hs = readHS();
+    var modeChips = MODES.map(function (m) {
+      return '<button type="button" class="chip" data-mode="' + m.id + '" aria-pressed="' + (m.id === mode) + '">' +
+        '<span class="sym">' + m.symbol + '</span><span class="nm">' + m.label + '</span></button>';
+    }).join("");
+    var diffChips = DIFFS.map(function (d) {
+      return '<button type="button" class="chip" data-diff="' + d.id + '" aria-pressed="' + (d.id === diff) + '">' +
+        '<span class="sym" style="font-size:12px">' + d.label + '</span><span class="nm">' + d.hint + '</span></button>';
+    }).join("");
+    app.innerHTML =
+      '<div class="brand"><b>gn<span>-</span>math</b><em>60 SECOND TRAINER</em></div>' +
+      '<div class="home">' +
+      '<h1>Sixty seconds.<br>As many as you can.</h1>' +
+      '<p class="sub">Mental math, graph paper, one minute on the clock. Streaks multiply your style.</p>' +
+      '<div class="group"><div class="lbl">Mode</div><div class="row five-wide">' + modeChips + '</div></div>' +
+      '<div class="group"><div class="lbl">Difficulty</div><div class="row three">' + diffChips + '</div></div>' +
+      (hs ? '<div class="hs"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>best on ' + modeOf(mode).label.toLowerCase() + ' · ' + diffOf(diff).label.toLowerCase() + ': <b>' + hs + '</b></div>' : "") +
+      '<button type="button" class="play" id="go"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3"/></svg>Start the minute<span class="ent">↵</span></button>' +
+      '</div>';
+    app.querySelectorAll("[data-mode]").forEach(function (b) {
+      b.addEventListener("click", function () { mode = b.getAttribute("data-mode"); renderHome(); });
+    });
+    app.querySelectorAll("[data-diff]").forEach(function (b) {
+      b.addEventListener("click", function () { diff = b.getAttribute("data-diff"); renderHome(); });
+    });
+    document.getElementById("go").addEventListener("click", startRound);
+  }
+
+  /* ── round ── */
+  var round = null;
+  function startRound() {
+    round = {
+      end: Date.now() + ROUND_MS, q: makeQuestion(), input: "",
+      score: 0, correct: 0, wrong: 0, streak: 0, bestStreak: 0, raf: 0
+    };
+    renderRound();
+    round.raf = requestAnimationFrame(tick);
+  }
+  function tick() {
+    if (!round) return;
+    var left = round.end - Date.now();
+    var ring = document.getElementById("ring");
+    var secs = document.getElementById("secs");
+    var bar = document.getElementById("bar");
+    var pct = Math.max(0, Math.min(1, left / ROUND_MS));
+    if (ring) { ring.setAttribute("stroke-dashoffset", 2 * Math.PI * 25 * (1 - pct)); ring.setAttribute("stroke", left < 10000 ? "#fbbf24" : "#34d399"); }
+    if (secs) {
+      secs.textContent = String(Math.max(0, Math.ceil(left / 1000)));
+      var tc = secs.closest(".timer");
+      if (tc) { if (left < 10000) tc.classList.add("urgent"); else tc.classList.remove("urgent"); }
+    }
+    if (bar) { bar.style.width = pct * 100 + "%"; bar.parentElement.classList.toggle("low", left < 10000); }
+    if (left <= 0) { finish(); return; }
+    round.raf = requestAnimationFrame(tick);
+  }
+  function renderRound() {
+    var q = round.q;
+    app.innerHTML =
+      '<button type="button" class="quit" id="quit">✕ quit</button>' +
+      '<div class="hud">' +
+      '<div><span class="score"><b id="sc">0</b> pts <span class="streak" id="stk"></span></span></div>' +
+      '<div class="timer" id="timerWrap"><svg viewBox="0 0 60 60" role="img" aria-label="time left">' +
+      '<circle cx="30" cy="30" r="25" fill="none" stroke="rgba(255,255,255,.09)" stroke-width="5"/>' +
+      '<circle id="ring" cx="30" cy="30" r="25" fill="none" stroke="#34d399" stroke-width="5" stroke-linecap="round" stroke-dasharray="' + (2 * Math.PI * 25) + '" stroke-dashoffset="0" transform="rotate(-90 30 30)" style="transition:stroke-dashoffset .25s linear"/>' +
+      '<text id="secs" x="30" y="31" text-anchor="middle" dominant-baseline="central" fill="#e4e4e7">60</text></svg></div>' +
+      '</div>' +
+      '<div class="tbar"><i id="bar"></i></div>' +
+      '<div class="stage" id="stage">' +
+      '<div class="q">' + q.a + '<span class="op">' + q.op + '</span>' + q.b + '</div>' +
+      '<div class="ans' + (round.input ? "" : " empty") + '" id="ans">' + (round.input || "…") + '</div>' +
+      '<div class="flash" id="flash"></div>' +
+      '</div>' +
+      '<div class="pad" id="pad"></div>' +
+      '<div class="hint">type · enter submits · backspace edits</div>';
+    var pad = document.getElementById("pad");
+    "789456123".split("").forEach(function (d) {
+      var k = document.createElement("button");
+      k.type = "button"; k.className = "key"; k.textContent = d;
+      k.addEventListener("click", function () { press(d); });
+      pad.appendChild(k);
+    });
+    var zero = document.createElement("button");
+    zero.type = "button"; zero.className = "key"; zero.textContent = "0";
+    zero.addEventListener("click", function () { press("0"); });
+    pad.appendChild(zero);
+    var bk = document.createElement("button");
+    bk.type = "button"; bk.className = "key op"; bk.innerHTML = "⌫"; bk.title = "backspace";
+    bk.addEventListener("click", function () { press("bk"); });
+    pad.appendChild(bk);
+    var neg = document.createElement("button");
+    neg.type = "button"; neg.className = "key op"; neg.textContent = "±"; neg.title = "toggle sign";
+    neg.addEventListener("click", function () { press("neg"); });
+    pad.appendChild(neg);
+    var go = document.createElement("button");
+    go.type = "button"; go.className = "key go"; go.innerHTML = "↵"; go.title = "submit";
+    go.addEventListener("click", function () { submit(); });
+    pad.appendChild(go);
+    document.getElementById("quit").addEventListener("click", function () {
+      if (round) cancelAnimationFrame(round.raf);
+      round = null; renderHome();
+    });
+  }
+  function updHUD() {
+    document.getElementById("sc").textContent = String(round.score);
+    var stk = document.getElementById("stk");
+    stk.textContent = round.streak > 1 ? "· " + round.streak + " streak" : "";
+    stk.classList.toggle("on", round.streak >= 3);
+  }
+  function updAns() {
+    var a = document.getElementById("ans");
+    if (!a) return;
+    a.className = round.input ? "ans" : "ans empty";
+    a.innerHTML = round.input ? round.input + '<span class="caret"></span>' : "…";
+  }
+  function press(k) {
+    if (!round) return;
+    if (k === "bk") { round.input = round.input.slice(0, -1); }
+    else if (k === "neg") { if (round.input) round.input = round.input.charAt(0) === "-" ? round.input.slice(1) : "-" + round.input; }
+    else { if (round.input.length < MAX_LEN) round.input += k; }
+    updAns();
+  }
+  function submit() {
+    if (!round || !round.input || round.input === "-") return;
+    var val = parseInt(round.input, 10);
+    if (val === round.q.answer) {
+      round.correct++;
+      round.streak++;
+      round.bestStreak = Math.max(round.bestStreak, round.streak);
+      var gain = 10 + (round.streak >= 3 ? Math.min(round.streak - 2, 8) * 2 : 0);
+      round.score += gain;
+      var fl = document.getElementById("flash");
+      fl.className = "flash"; void fl.offsetWidth; fl.className = "flash ok";
+    } else {
+      round.wrong++;
+      round.streak = 0;
+      var st = document.getElementById("stage");
+      st.classList.remove("shake"); void st.offsetWidth; st.classList.add("shake");
+    }
+    round.input = "";
+    round.q = makeQuestion();
+    updHUD(); updAns();
+    var q = round.q;
+    var qEl = app.querySelector(".q");
+    if (qEl) qEl.innerHTML = q.a + '<span class="op">' + q.op + '</span>' + q.b;
+  }
+  function finish() {
+    if (round) cancelAnimationFrame(round.raf);
+    var hs = readHS();
+    var isHS = round.score > hs;
+    if (isHS) { LS.set(hsKey(), String(round.score)); hs = round.score; }
+    var total = round.correct + round.wrong;
+    var acc = total ? Math.round(round.correct / total * 100) : 0;
+    var medal = round.score >= 300 ? "graph paper legend" : round.score >= 150 ? "sharp shooter" : round.score >= 60 ? "warmed up" : "minute earned";
+    app.innerHTML =
+      '<div class="brand"><b>gn<span>-</span>math</b><em>RESULTS</em></div>' +
+      '<div class="res">' +
+      '<div class="medal">' + medal + '</div>' +
+      '<h2>' + round.score + '</h2>' +
+      '<p class="rsub">points · ' + modeOf(mode).label + " · " + diffOf(diff).label + '</p>' +
+      '<div class="stats">' +
+      '<div class="stat"><b class="green">' + round.correct + '</b><span>correct</span></div>' +
+      '<div class="stat"><b class="red">' + round.wrong + '</b><span>missed</span></div>' +
+      '<div class="stat"><b class="amber">' + acc + '%</b><span>accuracy</span></div>' +
+      '</div>' +
+      (round.bestStreak > 1 ? '<div class="streakline">best streak <b>' + round.bestStreak + '</b></div>' : "") +
+      (isHS ? '<div class="newhs"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>new best on this setup</div>' : '<div class="hs" style="justify-content:center">best on this setup: <b>' + hs + '</b></div>') +
+      '<button type="button" class="again" id="again">↵ run it again</button>' +
+      '<button type="button" class="homebtn" id="home">back to setup</button>' +
+      '</div>';
+    document.getElementById("again").addEventListener("click", startRound);
+    document.getElementById("home").addEventListener("click", renderHome);
+    round = null;
+  }
+
+  document.addEventListener("keydown", function (e) {
+    if (!round) {
+      if (e.key === "Enter") {
+        var go = document.getElementById("go");
+        var ag = document.getElementById("again");
+        if (go) { e.preventDefault(); go.click(); }
+        else if (ag) { e.preventDefault(); ag.click(); }
+      }
+      return;
+    }
+    if (/^[0-9]$/.test(e.key)) press(e.key);
+    else if (e.key === "Backspace") { e.preventDefault(); press("bk"); }
+    else if (e.key === "Enter") { e.preventDefault(); submit(); }
+    else if (e.key === "-" || e.key === "_") press("neg");
+  });
+
+  renderHome();
+})();
+</script>
+</body>
+</html>

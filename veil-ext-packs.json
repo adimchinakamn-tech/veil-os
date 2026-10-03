@@ -1,0 +1,20 @@
+{
+  "_comment": "Veil offline extension split. baseBudgetMB caps the raw game bytes riding inside veil-offline.html (small/mid games first). packs: list ids to curate exactly, or leave games empty to auto-balance the heavy titles across packs. To author the NEXT extension: add a pack entry here (or ship any file with a VEIL-EXT manifest + veil-asset blocks) and rebuild.",
+  "baseBudgetMB": 40,
+  "packs": [
+    {
+      "id": "stash-1",
+      "name": "Stash Pack I",
+      "desc": "The heavy hitters, half one \u2014 drop into the offline file to unlock.",
+      "file": "veil-ext-games-1.html",
+      "games": []
+    },
+    {
+      "id": "stash-2",
+      "name": "Stash Pack II",
+      "desc": "The heavy hitters, half two \u2014 drop into the offline file to unlock.",
+      "file": "veil-ext-games-2.html",
+      "games": []
+    }
+  ]
+}

@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Veil Toolkit — Drawing Pad</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:#09090b;color:#f4f4f5;font:14px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column;gap:12px;padding:14px 16px;overflow:hidden;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:2px solid rgba(52,211,153,.6);outline-offset:2px}
+.tag{font-size:10.5px;font-weight:700;letter-spacing:.18em;color:#34d399}
+h1{font-size:17px;font-weight:700}
+header{display:flex;align-items:baseline;gap:10px;flex:none}
+.panel{background:#131316;border:1px solid rgba(255,255,255,.08);border-radius:14px}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.tools{flex:none;padding:10px 12px;display:flex;flex-direction:column;gap:10px}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:7px}
+.lab{font-size:10.5px;font-weight:700;letter-spacing:.12em;color:#71717a;text-transform:uppercase}
+.sw{width:36px;height:36px;display:grid;place-items:center;background:none;border:0;cursor:pointer;padding:0;flex:none}
+.sw i{display:block;width:26px;height:26px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(255,255,255,.2)}
+.sw.on i{box-shadow:0 0 0 2px #09090b,0 0 0 4px #34d399}
+#cpick{width:44px;height:36px;padding:2px;flex:none}
+#size{flex:1;min-width:110px;max-width:220px}
+#sizeVal{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px;color:#a1a1aa;min-width:22px;text-align:right}
+.dotwrap{width:44px;height:38px;display:grid;place-items:center;flex:none;background:#0c0c0e;border:1px solid rgba(255,255,255,.08);border-radius:9px;overflow:hidden}
+#dot{display:block;border-radius:50%;background:#34d399;transition:width .08s,height .08s}
+.canvasp{flex:1;min-height:0;position:relative;overflow:hidden;background:#0c0c0e;touch-action:none}
+#cv{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair;touch-action:none;display:block}
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,10px);background:#131316;border:1px solid rgba(52,211,153,.35);color:#6ee7b7;padding:9px 18px;border-radius:999px;font-size:12.5px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .22s,transform .22s;z-index:99;box-shadow:0 10px 30px rgba(0,0,0,.45);white-space:nowrap;max-width:calc(100vw - 32px);overflow:hidden;text-overflow:ellipsis}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.btn{border:1px solid rgba(52,211,153,.35);background:rgba(16,185,129,.12);color:#6ee7b7;padding:7px 13px;border-radius:10px;font-size:12.5px;font-weight:600;cursor:pointer;transition:background .12s,color .12s,transform .1s;font-family:inherit}
+.btn:hover{background:rgba(16,185,129,.22)}
+.btn:active{transform:scale(.96)}
+.btn.solid{background:#10b981;border-color:transparent;color:#032015}
+.btn.solid:hover{background:#34d399}
+.btn.ghost{border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:#d4d4d8}
+.btn.ghost:hover{background:rgba(255,255,255,.09);color:#fafafa}
+.btn.danger{border-color:rgba(248,113,113,.35);background:rgba(239,68,68,.12);color:#fca5a5}
+.btn.on{background:#10b981;border-color:transparent;color:#032015}
+input,select,textarea{background:#18181b;border:1px solid rgba(255,255,255,.1);border-radius:10px;color:#f4f4f5;padding:7px 10px;font-size:13.5px;outline:none;font-family:inherit}
+input:focus,select:focus,textarea:focus{border-color:rgba(52,211,153,.55)}
+/* additive sizing on top of the shared button/input base */
+.btn{min-height:36px}
+.btn:disabled{opacity:.45;cursor:default}
+.btn:disabled:active{transform:none}
+.btn.ghost.danger{border-color:rgba(248,113,113,.35);color:#fca5a5}
+.btn.ghost.danger:hover{background:rgba(239,68,68,.15);color:#fecaca}
+input[type=range]{padding:0;accent-color:#10b981;cursor:pointer}
+input[type=color]{cursor:pointer}
+</style>
+</head>
+<body>
+<header><span class="tag">VEIL TOOLKIT</span><h1>Drawing Pad</h1></header>
+
+<section class="panel tools">
+  <div class="row" id="swatches">
+    <button class="sw" data-c="#f4f4f5" title="white"><i style="background:#f4f4f5"></i></button>
+    <button class="sw" data-c="#a1a1aa" title="grey"><i style="background:#a1a1aa"></i></button>
+    <button class="sw on" data-c="#34d399" title="emerald light"><i style="background:#34d399"></i></button>
+    <button class="sw" data-c="#10b981" title="emerald"><i style="background:#10b981"></i></button>
+    <button class="sw" data-c="#38bdf8" title="sky"><i style="background:#38bdf8"></i></button>
+    <button class="sw" data-c="#a78bfa" title="violet"><i style="background:#a78bfa"></i></button>
+    <button class="sw" data-c="#fb7185" title="rose"><i style="background:#fb7185"></i></button>
+    <button class="sw" data-c="#f59e0b" title="amber"><i style="background:#f59e0b"></i></button>
+    <button class="sw" data-c="#e4e4e7" title="silver"><i style="background:#e4e4e7"></i></button>
+    <button class="sw" data-c="#09090b" title="black"><i style="background:#09090b"></i></button>
+    <input type="color" id="cpick" value="#34d399" title="custom color" aria-label="custom color">
+  </div>
+  <div class="row">
+    <span class="lab">brush</span>
+    <input type="range" id="size" min="1" max="40" value="4" aria-label="brush size">
+    <span id="sizeVal">4</span>
+    <span class="dotwrap"><span id="dot"></span></span>
+    <button class="btn ghost on" id="pen">pen</button>
+    <button class="btn ghost" id="eraser">eraser</button>
+    <button class="btn ghost" id="undo" disabled>undo</button>
+    <button class="btn ghost danger" id="clear">clear</button>
+    <button class="btn solid" id="dl">download PNG</button>
+  </div>
+</section>
+
+<section class="panel canvasp" id="canvasp"><canvas id="cv"></canvas></section>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+var store=(function(){try{var k="__v";localStorage.setItem(k,"1");localStorage.removeItem(k);return localStorage}catch(e){var m={};return{getItem:function(k){return k in m?m[k]:null},setItem:function(k,v){m[k]=String(v)},removeItem:function(k){delete m[k]}}}})();
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+
+var toastEl=document.getElementById("toast"),toastT=null;
+function toast(msg){toastEl.textContent=msg;toastEl.classList.add("show");clearTimeout(toastT);toastT=setTimeout(function(){toastEl.classList.remove("show")},1600)}
+
+var panel=document.getElementById("canvasp");
+var cv=document.getElementById("cv"),ctx=cv.getContext("2d");
+var color="#34d399",size=4,tool="pen";
+var undoStack=[],drawing=false,last=null,pmid=null;
+var W=0,H=0;
+var swatches=Array.prototype.slice.call(document.querySelectorAll(".sw"));
+var cpick=document.getElementById("cpick");
+var sizeEl=document.getElementById("size"),sizeVal=document.getElementById("sizeVal");
+var dot=document.getElementById("dot");
+var penBtn=document.getElementById("pen"),eraserBtn=document.getElementById("eraser");
+var undoBtn=document.getElementById("undo"),clearBtn=document.getElementById("clear"),dlBtn=document.getElementById("dl");
+
+function setStyle(){
+  ctx.lineCap="round";
+  ctx.lineJoin="round";
+  ctx.lineWidth=size;
+  ctx.strokeStyle=color;
+  ctx.globalCompositeOperation=(tool==="eraser")?"destination-out":"source-over";
+}
+function sizeDot(){
+  dot.style.width=Math.min(size,32)+"px";
+  dot.style.height=Math.min(size,32)+"px";
+  dot.style.background=color;
+}
+
+/* ---- canvas sizing: dpr-aware, strokes survive resizes ---- */
+function sizeCanvas(){
+  var r=panel.getBoundingClientRect();
+  if(r.width<1||r.height<1)return;
+  var d=window.devicePixelRatio||1;
+  var snap=(cv.width>0&&cv.height>0)?cv.toDataURL():null;
+  W=Math.round(r.width);H=Math.round(r.height);
+  cv.width=Math.round(W*d);
+  cv.height=Math.round(H*d);
+  ctx.setTransform(d,0,0,d,0,0);
+  setStyle();
+  if(snap){
+    var img=new Image();
+    img.onload=function(){ctx.drawImage(img,0,0,W,H);setStyle()};
+    img.src=snap;
+  }
+}
+var rsT=null;
+window.addEventListener("resize",function(){clearTimeout(rsT);rsT=setTimeout(sizeCanvas,150)});
+
+/* ---- undo (dataURL snapshots, max 15) ---- */
+function pushUndo(){
+  if(cv.width===0||cv.height===0)return;
+  undoStack.push(cv.toDataURL());
+  if(undoStack.length>15)undoStack.shift();
+  undoBtn.disabled=false;
+}
+function undo(){
+  if(!undoStack.length)return;
+  var url=undoStack.pop();
+  ctx.globalCompositeOperation="source-over";
+  ctx.clearRect(0,0,W,H);
+  var img=new Image();
+  img.onload=function(){ctx.drawImage(img,0,0,W,H);setStyle()};
+  img.src=url;
+  undoBtn.disabled=!undoStack.length;
+}
+undoBtn.addEventListener("click",undo);
+
+/* ---- pointer drawing with quadratic midpoint smoothing ---- */
+function pos(e){var r=cv.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}}
+cv.addEventListener("pointerdown",function(e){
+  if(e.pointerType==="mouse"&&e.button!==0)return;
+  e.preventDefault();
+  try{cv.setPointerCapture(e.pointerId)}catch(err){/* pointer already gone — keep drawing */}
+  drawing=true;
+  pushUndo();
+  var p=pos(e);
+  last=p;pmid=p;
+  ctx.beginPath();
+  ctx.moveTo(p.x,p.y);
+  ctx.lineTo(p.x+0.01,p.y);
+  ctx.stroke();
+});
+cv.addEventListener("pointermove",function(e){
+  if(!drawing)return;
+  var p=pos(e);
+  var mid={x:(last.x+p.x)/2,y:(last.y+p.y)/2};
+  ctx.beginPath();
+  ctx.moveTo(pmid.x,pmid.y);
+  ctx.quadraticCurveTo(last.x,last.y,mid.x,mid.y);
+  ctx.stroke();
+  last=p;pmid=mid;
+});
+function stopDraw(){drawing=false;last=null;pmid=null}
+cv.addEventListener("pointerup",stopDraw);
+cv.addEventListener("pointercancel",stopDraw);
+cv.addEventListener("contextmenu",function(e){e.preventDefault()});
+
+/* ---- color + brush controls ---- */
+function applyColor(c){
+  color=c;
+  swatches.forEach(function(b){b.classList.toggle("on",b.getAttribute("data-c").toLowerCase()===c.toLowerCase())});
+  cpick.value=c;
+  setStyle();
+  sizeDot();
+}
+swatches.forEach(function(b){
+  b.addEventListener("click",function(){applyColor(b.getAttribute("data-c"))});
+});
+cpick.addEventListener("input",function(){applyColor(cpick.value)});
+sizeEl.addEventListener("input",function(){
+  size=+sizeEl.value;
+  sizeVal.textContent=size;
+  ctx.lineWidth=size;
+  sizeDot();
+});
+function setTool(t){
+  tool=t;
+  penBtn.classList.toggle("on",t==="pen");
+  eraserBtn.classList.toggle("on",t==="eraser");
+  ctx.globalCompositeOperation=(t==="eraser")?"destination-out":"source-over";
+}
+penBtn.addEventListener("click",function(){setTool("pen")});
+eraserBtn.addEventListener("click",function(){setTool("eraser")});
+
+/* ---- clear (click-again confirm; undo can restore) ---- */
+var armed=false,armT=null;
+clearBtn.addEventListener("click",function(){
+  if(!armed){armed=true;clearBtn.textContent="click again to clear";
+    armT=setTimeout(function(){armed=false;clearBtn.textContent="clear"},2200);return}
+  clearTimeout(armT);armed=false;clearBtn.textContent="clear";
+  pushUndo();
+  ctx.globalCompositeOperation="source-over";
+  ctx.clearRect(0,0,W,H);
+  setStyle();
+  toast("canvas cleared");
+});
+
+/* ---- download PNG (works when opened standalone) ---- */
+dlBtn.addEventListener("click",function(){
+  try{
+    var a=document.createElement("a");
+    a.href=cv.toDataURL("image/png");
+    a.download="veil-drawing.png";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    toast("exported veil-drawing.png");
+  }catch(e){toast("export failed")}
+});
+
+/* ---- boot ---- */
+sizeDot();
+sizeCanvas();
+</script>
+</body>
+</html>

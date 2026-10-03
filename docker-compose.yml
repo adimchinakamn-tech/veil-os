@@ -1,0 +1,23 @@
+# Veil OS — local full-stack run (one command)
+#
+#   docker compose up --build
+#   → http://localhost:8080
+#
+# All state (SQLite db, chat uploads, secrets) survives reboots in the
+# `veil-data` volume. To reset everything: `docker compose down -v`.
+
+services:
+  veil:
+    build: .
+    image: veil-os
+    container_name: veil-os
+    ports:
+      - "8080:80" # host:container — container port is ${PORT:-80}
+    volumes:
+      - veil-data:/home/z/my-project/db # db + secrets + uploads (via symlink)
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+
+volumes:
+  veil-data:
