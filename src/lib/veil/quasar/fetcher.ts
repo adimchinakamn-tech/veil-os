@@ -14,6 +14,8 @@ import { siteFixFor, type SiteFix } from "./site-fixes";
 import { rewriteJs } from "./js-ast";
 import { createHtmlStream } from "./html-stream";
 import { assertSafeTarget } from "./security";
+import { quasarDispatcher } from "./http-agent";
+import { injectPoTokenIfNeeded } from "./potoken";
 import { QUASAR_VERSION } from "./version";
 // Raw, UNPATCHED undici fetch. The proxy engine must never go through
 // Next.js's globalThis.fetch wrapper: its dev instrumentation (data-cache
@@ -161,6 +163,23 @@ export async function proxyFetch(
 
   let res: Response;
   try {
+    // v2.0.4 — YouTube innertube calls get a server-generated poToken
+    // (BotGuard attestation) injected into the JSON body when available.
+    // Never throws; requests proceed unchanged without a token.
+    if (body && method === "POST") {
+      try {
+        const tu = new URL(startTarget);
+        if (
+          /(^|\.)youtube\.com$/i.test(tu.hostname) &&
+          tu.pathname.startsWith("/youtubei/") &&
+          body.byteLength <= 2 * 1024 * 1024
+        ) {
+          body = await injectPoTokenIfNeeded(body);
+        }
+      } catch {
+        /* token injection is best-effort */
+      }
+    }
     res = await fetchWithRetry(startTarget, method, headers, body);
   } catch (err) {
     throw enhanceFetchError(err, startTarget);
@@ -192,16 +211,18 @@ function fetchOnce(
     () => ctrl.abort(new DOMException("Timed out waiting for response headers", "TimeoutError")),
     REQUEST_TIMEOUT_MS
   );
-  return undiciFetch(target, {
-    method,
-    // Veil note: cast needed — the global (lib.dom-style) Headers type and
-    // undici's own HeadersInit declaration differ at the TYPE level only;
-    // undici accepts a standard Headers instance at runtime.
-    headers: headers as unknown as import("undici").HeadersInit,
-    body: method === "GET" || method === "HEAD" ? undefined : body,
-    redirect: "manual",
-    signal: ctrl.signal,
-  })
+  return undiciFetch(
+    target,
+    {
+      method,
+      headers,
+      body: method === "GET" || method === "HEAD" ? undefined : body,
+      redirect: "manual",
+      signal: ctrl.signal,
+      // v2.0.4 — pooled dispatcher with HTTP/2 enabled (QUASAR_NO_H2=1 reverts).
+      dispatcher: quasarDispatcher(),
+    } as Parameters<typeof undiciFetch>[1]
+  )
     .then((res) => res as unknown as Response)
     .finally(() => clearTimeout(timer));
 }
@@ -269,6 +290,43 @@ export function buildClientHeaders(res: Response, finalUrl: string): Headers {
 function charsetOf(contentType: string): string {
   const m = contentType.match(/charset=([^;]+)/i);
   return m ? m[1].trim().replace(/["']/g, "") : "utf-8";
+}
+
+/* ------------------------------------------------------------------ */
+/* v2.0.4 — AST-rewrite cache (URL + ETag keyed, LRU)                  */
+/* ------------------------------------------------------------------ */
+
+interface JsCacheEntry {
+  code: string;
+  status: number;
+  headers: [string, string][];
+}
+
+const jsCache = new Map<string, JsCacheEntry>();
+const JS_CACHE_MAX_ENTRIES = 48;
+const JS_CACHE_MAX_BYTES =
+  Math.max(16, Number(process.env.QUASAR_JS_CACHE_MB) || 160) * 1024 * 1024;
+let jsCacheBytes = 0;
+
+function jsCacheGet(key: string): JsCacheEntry | undefined {
+  const hit = jsCache.get(key);
+  if (!hit) return undefined;
+  jsCache.delete(key);
+  jsCache.set(key, hit); // LRU refresh
+  return hit;
+}
+
+function jsCacheSet(key: string, entry: JsCacheEntry): void {
+  if (jsCache.has(key)) jsCache.delete(key);
+  jsCache.set(key, entry);
+  jsCacheBytes += key.length + entry.code.length * 2; // rough UTF-16 footprint
+  while (jsCache.size > JS_CACHE_MAX_ENTRIES || jsCacheBytes > JS_CACHE_MAX_BYTES) {
+    const oldest = jsCache.keys().next().value as string | undefined;
+    if (oldest === undefined) break;
+    const evicted = jsCache.get(oldest);
+    jsCacheBytes -= oldest.length + (evicted ? evicted.code.length * 2 : 0);
+    jsCache.delete(oldest);
+  }
 }
 
 function decodeBuffer(buf: ArrayBuffer, charset: string): string {
@@ -365,9 +423,31 @@ export async function buildResponseBody(
   const noAst = flags.noAst || process.env.QUASAR_NO_AST === "1";
   if (isJs && !noAst && sizeWithin(res, MAX_REWRITE_BYTES)) {
     try {
+      // v2.0.4 — serve previously rewritten chunks without re-running acorn.
+      // Keyed by URL + validator headers, so upstream changes always miss.
+      const etag = res.headers.get("etag") ?? "";
+      const lastMod = res.headers.get("last-modified") ?? "";
+      const cacheKey = `${finalUrl}|${QUASAR_VERSION}|${etag}|${lastMod}`;
+      if (method === "GET" && (etag || lastMod)) {
+        const hit = jsCacheGet(cacheKey);
+        if (hit) {
+          const h = new Headers(hit.headers);
+          h.set("x-quasar-cache", "hit");
+          return { body: hit.code, headers: h, status: hit.status };
+        }
+      }
       const text = decodeBuffer(await res.arrayBuffer(), charsetOf(lower));
-      const result = rewriteJs(text, finalUrl, /\.mjs$/i.test(pathname));
+      const result = rewriteJs(text, finalUrl, /\.mjs$/i.test(pathname), {
+        virtLoc: !!flags.virtLoc,
+      });
       if (result.changed) headers.delete("content-length");
+      if (method === "GET" && (etag || lastMod)) {
+        jsCacheSet(cacheKey, {
+          code: result.code,
+          status,
+          headers: Array.from(headers.entries()),
+        });
+      }
       return { body: result.code, headers, status };
     } catch (err) {
       console.error("[quasar] js rewrite failed", err);

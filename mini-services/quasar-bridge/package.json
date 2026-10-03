@@ -1,8 +1,11 @@
 {
   "name": "quasar-ws-bridge",
-  "version": "1.0.0",
+  "version": "2.0.4",
   "private": true,
   "scripts": {
     "dev": "bun --hot index.ts"
+  },
+  "dependencies": {
+    "ws": "^8.22.0"
   }
 }

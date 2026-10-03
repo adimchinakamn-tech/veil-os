@@ -1,6 +1,6 @@
 /**
- * Quasar Client Hooks (Veil integration, v1.3.8)
- * -----------------------------------------------
+ * Quasar Client Hooks (v2.0.4, Veil integration)
+ * ------------------------------------------------
  * A bundle injected as the first <script> of every proxied HTML page.
  * It installs runtime shims so that dynamic JavaScript inside proxied pages
  * keeps hitting the proxy:
@@ -10,11 +10,12 @@
  *   - Element.setAttribute + src/href/action/srcset property setters
  *   - History API (pushState / replaceState)
  *   - window.open → NEW VEIL TABS (never escapes to the host browser)
+ *   - MutationObserver URL safety net for late-inserted DOM
  *   - document.cookie (in-memory shim synced to the server cookie jar)
+ *   - v2.0.4: per-origin storage partitioning, virtual location layer
+ *     (virtLoc sites), postMessage origin unwrap (pmOrigins), stealth marks
  *   - Service worker isolation (target sites cannot register their own SW)
  *   - Navigation API interception (Chromium) for same-origin escape hatches
- *   - MutationObserver URL safety net for late-inserted DOM
- *   - per-site client fixes (focus/visibility, notifications)
  *
  * VEIL BRIDGES (kept from the previous integration — the shell depends on
  * them): __veil nav/title/mouse/esc/open-tab postMessages drive tab titles,
@@ -27,6 +28,8 @@
 import { CODEC_SOURCE } from "./codec-server";
 import { QUASAR_VERSION } from "./version";
 import { ADBLOCK_SOURCE } from "./adblock";
+import { STEALTH_SOURCE } from "./stealth";
+import { DIRECT_MEDIA_HOSTS } from "./site-fixes";
 import type { SiteFix } from "./site-fixes";
 
 const HOOK_SOURCE = String.raw`
@@ -39,11 +42,43 @@ var APP = location.origin;
 var APP_PREFIX = APP + '/p/';
 var BRIDGE_PORT = 3310;
 
+/* Native-look helper: swaps a wrapper into place with native name/length
+   descriptors and registers it with the stealth layer so that
+   wrapper.toString() reports "function <key>() { [native code] }". */
+function nativeLike(obj, key, wrapper, len) {
+  var st = window.__QUASAR_STEALTH__;
+  try {
+    Object.defineProperty(obj, key, {
+      value: wrapper, writable: true, enumerable: true, configurable: true
+    });
+  } catch (e) { try { obj[key] = wrapper; } catch (e2) {} }
+  try { Object.defineProperty(wrapper, 'name', { value: key, configurable: true }); } catch (e) {}
+  try { if (len != null) Object.defineProperty(wrapper, 'length', { value: len, configurable: true }); } catch (e) {}
+  try { if (st && st.mark) st.mark(wrapper, 'function ' + key + '() { [native code] }'); } catch (e) {}
+  return wrapper;
+}
+
 /* Page context injected by the server. Clients cannot decrypt AES blobs, so
    the real target origin of THIS document is handed over here instead. */
 var PAGE_DATA = window.__QUASAR_DATA__ || {};
 
 function isProxyable(u) { return u.protocol === 'http:' || u.protocol === 'https:'; }
+
+/* v2.0.4 direct-media hosts (server-configured via QUASAR_DIRECT_MEDIA_HOSTS,
+   handed over in PAGE_DATA.dm): the browser fetches these itself instead of
+   the proxy. Empty by default — googlevideo's SABR responses lack CORS
+   headers, so proxied streaming stays the working default. */
+var DIRECT_MEDIA_HOSTS = (PAGE_DATA && PAGE_DATA.dm) || [];
+function isDirectHost(u) {
+  try {
+    var h = String(u.hostname || '').toLowerCase();
+    for (var i = 0; i < DIRECT_MEDIA_HOSTS.length; i++) {
+      var s = DIRECT_MEDIA_HOSTS[i];
+      if (h === s || h.slice(-(s.length + 1)) === '.' + s) return true;
+    }
+  } catch (e) {}
+  return false;
+}
 
 /* Sticky target origin: captured once at document start so URL mapping keeps
    working even if a SPA degrades the visible path away from /p/<blob>/... . */
@@ -53,11 +88,7 @@ try {
     TARGET_ORIGIN = PAGE_DATA.o;
   } else {
     var initBlob = (location.pathname.match(/^\/p\/([A-Za-z0-9_-]+)/) || [])[1];
-    if (initBlob) {
-      var initOrigin = C.decodeOrigin(initBlob);
-      /* shape-check: AES blobs XOR-decode to garbage — only trust origins */
-      if (initOrigin && /^https?:\/\//i.test(initOrigin)) TARGET_ORIGIN = initOrigin;
-    }
+    if (initBlob) TARGET_ORIGIN = C.decodeOrigin(initBlob);
   }
 } catch (e) { TARGET_ORIGIN = TARGET_ORIGIN || null; }
 
@@ -67,8 +98,7 @@ function currentTargetOrigin() {
     var m = location.pathname.match(/^\/p\/([A-Za-z0-9_-]+)/);
     if (m) {
       var o = C.decodeOrigin(m[1]);
-      /* session-XOR blobs only — AES blobs decode to garbage (shape-checked) */
-      if (o && /^https?:\/\//i.test(o)) return o;
+      if (o) return o;
     }
   } catch (e) {}
   return TARGET_ORIGIN;
@@ -79,7 +109,7 @@ function currentRealHref() {
     var m = location.pathname.match(/^\/p\/([A-Za-z0-9_-]+)(\/.*)?$/);
     if (m) {
       var origin = PAGE_DATA.o || C.decodeOrigin(m[1]);
-      if (origin && /^https?:\/\//i.test(origin)) return origin + (m[2] || '/') + location.search;
+      if (origin) return origin + (m[2] || '/') + location.search;
     }
   } catch (e) {}
   return TARGET_ORIGIN ? TARGET_ORIGIN + '/' : null;
@@ -89,6 +119,7 @@ function toProxy(absURL) {
   try {
     var u = new URL(absURL);
     if (!isProxyable(u)) return absURL;
+    if (isDirectHost(u)) return absURL;
     if (u.origin === APP) {
       if (u.pathname.indexOf('/p/') === 0) return u.href;
       var ro = currentTargetOrigin();
@@ -110,6 +141,7 @@ function resolve(u) {
     if (/^(data|blob|javascript|mailto|tel|about|sms|magnet|irc|file):/i.test(s)) return s;
     var abs = new URL(s, location.href);
     if (!isProxyable(abs)) return abs.href;
+    if (isDirectHost(abs)) return abs.href;
     return toProxy(abs.href);
   } catch (e) { return u; }
 }
@@ -205,7 +237,7 @@ var _nativeReplaceState = History.prototype.replaceState; // true native, pre-pa
 
 /* ---------- fetch ---------- */
 if (_fetch) {
-  window.fetch = function (input, init) {
+  var fetchWrapper = function (input, init) {
     try {
       if (typeof input === 'string' || input instanceof URL) {
         input = resolve(input);
@@ -216,23 +248,31 @@ if (_fetch) {
     } catch (e) {}
     return _fetch.call(window, input, init);
   };
+  nativeLike(window, 'fetch', fetchWrapper, 1);
 }
 
 /* ---------- XMLHttpRequest ---------- */
 var _xhrOpen = XMLHttpRequest.prototype.open;
-XMLHttpRequest.prototype.open = function (method, url) {
+var xhrOpenWrapper = function (method, url) {
   var args = Array.prototype.slice.call(arguments);
   try { args[1] = resolve(url); } catch (e) {}
   return _xhrOpen.apply(this, args);
 };
+nativeLike(XMLHttpRequest.prototype, 'open', xhrOpenWrapper, 3);
 
 /* ---------- sendBeacon ---------- */
+/* Patched on Navigator.prototype (not the instance) so the shim leaves no
+   own-property trail on navigator for detection scripts to find. */
 try {
   if (navigator.sendBeacon) {
+    var sbTarget = typeof Navigator === 'function' &&
+      Object.getOwnPropertyDescriptor(Navigator.prototype, 'sendBeacon')
+      ? Navigator.prototype : navigator;
     var _sb = navigator.sendBeacon.bind(navigator);
-    navigator.sendBeacon = function (url, data) {
+    var sbWrapper = function (url, data) {
       try { return _sb(resolve(url), data); } catch (e) { return false; }
     };
+    nativeLike(sbTarget, 'sendBeacon', sbWrapper, 2);
   }
 } catch (e) {}
 
@@ -240,12 +280,30 @@ try {
 try {
   if (window.EventSource) {
     var _ES = window.EventSource;
-    window.EventSource = class extends _ES {
+    var QEventSource = class extends _ES {
       constructor(url, cfg) {
         try { url = resolve(url); } catch (e) {}
         super(url, cfg);
       }
     };
+    nativeLike(window, 'EventSource', QEventSource, 1);
+  }
+} catch (e) {}
+
+/* ---------- blob URL registry ---------- */
+/* blob: URLs (MediaSource / objectURL video flows) are same-origin by
+   design and must NEVER be rewritten. The passthrough keeps them
+   byte-identical while presenting a clean native-looking surface. */
+try {
+  if (window.URL && URL.createObjectURL) {
+    var _cOU = URL.createObjectURL;
+    nativeLike(URL, 'createObjectURL', function (obj) {
+      return _cOU.apply(URL, arguments);
+    }, 1);
+    var _rOU = URL.revokeObjectURL;
+    nativeLike(URL, 'revokeObjectURL', function (obj) {
+      try { return _rOU.apply(URL, arguments); } catch (e) {}
+    }, 1);
   }
 } catch (e) {}
 
@@ -262,7 +320,7 @@ try {
     };
     QWorker.prototype = _Wk.prototype;
     Object.defineProperty(QWorker, 'name', { value: 'Worker' });
-    window.Worker = QWorker;
+    nativeLike(window, 'Worker', QWorker, 1);
   }
   if (window.SharedWorker) {
     var _SWk = window.SharedWorker;
@@ -272,7 +330,7 @@ try {
     };
     QSharedWorker.prototype = _SWk.prototype;
     Object.defineProperty(QSharedWorker, 'name', { value: 'SharedWorker' });
-    window.SharedWorker = QSharedWorker;
+    nativeLike(window, 'SharedWorker', QSharedWorker, 1);
   }
 } catch (e) {}
 
@@ -316,7 +374,7 @@ try {
         }).catch(function () { probeBridge(i + 1); });
       } catch (e) {}
     })(0);
-    window.WebSocket = class extends _WS {
+    var QWebSocket = class extends _WS {
       constructor(url, protocols) {
         var target = url;
         try {
@@ -345,6 +403,7 @@ try {
         } catch (e) {}
       }
     };
+    nativeLike(window, 'WebSocket', QWebSocket, 1);
   }
 } catch (e) {}
 
@@ -355,7 +414,7 @@ var URL_ATTRS = {
 };
 var SRCSET_ATTRS = { srcset: 1, imagesrcset: 1 };
 var _setAttribute = Element.prototype.setAttribute;
-Element.prototype.setAttribute = function (name, value) {
+var setAttrWrapper = function (name, value) {
   try {
     var n = String(name).toLowerCase();
     // Subresource integrity can never match — resources are re-served by the
@@ -375,6 +434,7 @@ Element.prototype.setAttribute = function (name, value) {
   } catch (e) {}
   return _setAttribute.call(this, name, value);
 };
+nativeLike(Element.prototype, 'setAttribute', setAttrWrapper, 2);
 
 /* ---------- element URL properties ---------- */
 /* kind 0 = single URL (resolved), kind 1 = srcset-style list */
@@ -414,6 +474,13 @@ Element.prototype.setAttribute = function (name, value) {
       configurable: true,
       enumerable: true
     });
+    /* accessor toString spoofing: sites inspect descriptor get/set sources */
+    try {
+      var dd = Object.getOwnPropertyDescriptor(ctor.prototype, prop);
+      var st = window.__QUASAR_STEALTH__;
+      if (dd && dd.get && st && st.mark) st.mark(dd.get, 'function get ' + prop + '() { [native code] }');
+      if (dd && dd.set && st && st.mark) st.mark(dd.set, 'function set ' + prop + '() { [native code] }');
+    } catch (e) {}
   } catch (e) {}
 });
 
@@ -421,7 +488,7 @@ Element.prototype.setAttribute = function (name, value) {
 try {
   ['pushState', 'replaceState'].forEach(function (fn) {
     var orig = History.prototype[fn];
-    History.prototype[fn] = function (state, title, url) {
+    var hWrapper = function (state, title, url) {
       try {
         if (url != null && url !== '') url = resolve(url);
         else url = location.href;
@@ -430,6 +497,7 @@ try {
       try { setTimeout(pingParent, 0); } catch (e) {}
       return out;
     };
+    nativeLike(History.prototype, fn, hWrapper, 3);
   });
   window.addEventListener('popstate', function () { try { pingParent(); } catch (e) {} });
 } catch (e) {}
@@ -508,7 +576,7 @@ function openInVeil(url) {
 }
 
 try {
-  window.open = function (url, name, specs) {
+  nativeLike(window, 'open', function open(url, name, specs) {
     try {
       var real = toReal(url);
       if (real && /^https?:/i.test(real)) {
@@ -527,7 +595,7 @@ try {
       if (real) return fakeWindow();
     } catch (e) {}
     return fakeWindow();
-  };
+  }, 3);
 } catch (e) {}
 
 /* target=_blank / named-target anchors + target=_top escape attempts.
@@ -617,6 +685,12 @@ try {
     },
     configurable: true
   });
+  try {
+    var cd = Object.getOwnPropertyDescriptor(document, 'cookie');
+    var stC = window.__QUASAR_STEALTH__;
+    if (cd && cd.get && stC && stC.mark) stC.mark(cd.get, 'function get cookie() { [native code] }');
+    if (cd && cd.set && stC && stC.mark) stC.mark(cd.set, 'function set cookie() { [native code] }');
+  } catch (e) {}
   var real0 = currentRealHref();
   if (real0 && _fetch) {
     _fetch(APP + '/api/cookie?url=' + encodeURIComponent(real0))
@@ -630,21 +704,106 @@ try {
   }
 } catch (e) {}
 
+/* ---------- v2.0.4 storage partitioning ---------- */
+/* localStorage/sessionStorage are namespaced by the REAL target origin so
+   two proxied sites can never read each other's boot state (Discord keeps
+   gateway state in localStorage — unpartitioned it corrupted across sites
+   sharing the app origin). Shims are window-instance accessors presenting
+   native-looking methods via the stealth registry. */
+try {
+  var qNs = '__quasar:' + (currentTargetOrigin() || '@null') + ':';
+  function qOwnKeys(real) {
+    var out = [];
+    try {
+      for (var i = 0; i < real.length; i++) {
+        var k = real.key(i);
+        if (k !== null && k.indexOf(qNs) === 0) out.push(k.slice(qNs.length));
+      }
+    } catch (e) {}
+    return out;
+  }
+  function makeStorageShim(real) {
+    if (!real) return null;
+    var shim = Object.create(Storage.prototype);
+    nativeLike(shim, 'getItem', function getItem(k) { try { return real.getItem(qNs + String(k)); } catch (e) { return null; } }, 1);
+    nativeLike(shim, 'setItem', function setItem(k, v) { real.setItem(qNs + String(k), String(v)); }, 2);
+    nativeLike(shim, 'removeItem', function removeItem(k) { try { real.removeItem(qNs + String(k)); } catch (e) {} }, 1);
+    nativeLike(shim, 'key', function key(i) { var ks = qOwnKeys(real); return i >= 0 && i < ks.length ? ks[i] : null; }, 1);
+    nativeLike(shim, 'clear', function clear() { var ks = qOwnKeys(real); for (var i = 0; i < ks.length; i++) { try { real.removeItem(qNs + ks[i]); } catch (e) {} } }, 0);
+    try {
+      var st0 = window.__QUASAR_STEALTH__;
+      var lenGet = function () { return qOwnKeys(real).length; };
+      if (st0 && st0.mark) st0.mark(lenGet, 'function get length() { [native code] }');
+      Object.defineProperty(shim, 'length', { get: lenGet, set: undefined, configurable: true, enumerable: true });
+    } catch (e) {}
+    return new Proxy(shim, {
+      get: function (t, k) {
+        if (typeof k === 'symbol' || k === 'then' || k === 'toJSON') {
+          try { return t[k]; } catch (e) { return undefined; }
+        }
+        try { if (k in t) return t[k]; } catch (e) {}
+        try { var v = real.getItem(qNs + k); return v === null ? undefined : v; } catch (e) { return undefined; }
+      },
+      set: function (t, k, v) {
+        if (typeof k === 'symbol') { try { t[k] = v; } catch (e) {} return true; }
+        try { if (k in t) { t[k] = v; return true; } } catch (e) {}
+        try { real.setItem(qNs + k, String(v)); } catch (e) {}
+        return true;
+      },
+      deleteProperty: function (t, k) {
+        try { if (typeof k !== 'symbol' && k in t) delete t[k]; } catch (e) {}
+        try { if (typeof k !== 'symbol') real.removeItem(qNs + k); } catch (e) {}
+        return true;
+      },
+      has: function (t, k) {
+        try { if (k in t) return true; } catch (e) {}
+        try { return typeof k !== 'symbol' && real.getItem(qNs + k) !== null; } catch (e) { return false; }
+      },
+      ownKeys: function () { return qOwnKeys(real); },
+      getOwnPropertyDescriptor: function (t, k) {
+        if (typeof k !== 'symbol') {
+          try {
+            var v = real.getItem(qNs + k);
+            if (v !== null) return { value: v, writable: true, enumerable: true, configurable: true };
+          } catch (e) {}
+        }
+        try { return Reflect.getOwnPropertyDescriptor(t, k); } catch (e) { return undefined; }
+      }
+    });
+  }
+  var qLsShim = makeStorageShim(window.localStorage);
+  var qSsShim = makeStorageShim(window.sessionStorage);
+  if (qLsShim) Object.defineProperty(window, 'localStorage', { get: function () { return qLsShim; }, set: undefined, configurable: true, enumerable: true });
+  if (qSsShim) Object.defineProperty(window, 'sessionStorage', { get: function () { return qSsShim; }, set: undefined, configurable: true, enumerable: true });
+  try {
+    var st0b = window.__QUASAR_STEALTH__;
+    if (st0b && st0b.mark) {
+      var dLs = Object.getOwnPropertyDescriptor(window, 'localStorage');
+      var dSs = Object.getOwnPropertyDescriptor(window, 'sessionStorage');
+      if (dLs && dLs.get) st0b.mark(dLs.get, 'function get localStorage() { [native code] }');
+      if (dSs && dSs.get) st0b.mark(dSs.get, 'function get sessionStorage() { [native code] }');
+    }
+  } catch (e) {}
+} catch (e) {}
+
 /* ---------- service worker isolation ---------- */
 try {
   if (navigator.serviceWorker) {
     // Capture the real methods BEFORE no-oping them for target sites — some
     // pages (YouTube) enumerate + unregister foreign service workers.
-    var _swRegister = navigator.serviceWorker.register.bind(navigator.serviceWorker);
-    var _swGetRegs = navigator.serviceWorker.getRegistrations
-      ? navigator.serviceWorker.getRegistrations.bind(navigator.serviceWorker)
+    var swContainer = navigator.serviceWorker;
+    var swTarget = (typeof ServiceWorkerContainer === 'function') ? ServiceWorkerContainer.prototype : swContainer;
+    var _swRegister = swContainer.register.bind(swContainer);
+    var _swGetRegs = swContainer.getRegistrations
+      ? swContainer.getRegistrations.bind(swContainer)
       : null;
-    navigator.serviceWorker.register = function () { return new Promise(function () {}); };
-    if (navigator.serviceWorker.getRegistrations) {
-      navigator.serviceWorker.getRegistrations = function () { return Promise.resolve([]); };
+    /* Patched on the prototype — no own-property trail on the container. */
+    nativeLike(swTarget, 'register', function register() { return new Promise(function () {}); }, 1);
+    if (swContainer.getRegistrations) {
+      nativeLike(swTarget, 'getRegistrations', function getRegistrations() { return Promise.resolve([]); }, 0);
     }
-    if (navigator.serviceWorker.getRegistration) {
-      navigator.serviceWorker.getRegistration = function () { return Promise.resolve(undefined); };
+    if (swContainer.getRegistration) {
+      nativeLike(swTarget, 'getRegistration', function getRegistration() { return Promise.resolve(undefined); }, 1);
     }
     (function ensureOurSw() {
       try {
@@ -667,12 +826,14 @@ try {
   // navigation storms, so we only rewrite the requested URL here.)
   if (window.navigation && typeof window.navigation.navigate === 'function') {
     var _navNavigate = window.navigation.navigate.bind(window.navigation);
-    window.navigation.navigate = function (url, opts) {
+    var navTarget = (typeof Navigation === 'function') ? Navigation.prototype : window.navigation;
+    var navWrapper = function (url, opts) {
       try {
         if (url != null) url = resolve(url);
       } catch (e) {}
       return _navNavigate(url, opts);
     };
+    nativeLike(navTarget, 'navigate', navWrapper, 1);
   }
 } catch (e) {}
 
@@ -710,6 +871,76 @@ try {
   }
 } catch (e) {}
 
+/* ---------- v2.0.4 virtual location (virtLoc sites) ---------- */
+/* The AST rewriter renames free location / window.location /
+   document.location READS to __quasar_loc$. The shim reports the REAL
+   target URL on every read property (href/origin/host/protocol/...) while
+   navigation (href=, pathname=, assign, replace) is steered through the
+   tunnel. Non-configurable descriptors mirror native Location semantics. */
+function qLocRealUrl() {
+  try {
+    var m = location.pathname.match(/^\/p\/([A-Za-z0-9_-]+)(\/.*)?$/);
+    var origin = (PAGE_DATA && PAGE_DATA.o) || (m ? C.decodeOrigin(m[1]) : null);
+    if (!origin) return location.href;
+    return origin + ((m && m[2]) || '/') + location.search + location.hash;
+  } catch (e) { return location.href; }
+}
+function installVirtualLocation() {
+  if (window.__quasar_loc$) return;
+  var shim = {};
+  var stV = window.__QUASAR_STEALTH__;
+  function realStr() { try { return qLocRealUrl(); } catch (e) { return location.href; } }
+  function realURL() { try { return new URL(realStr()); } catch (e) { return null; } }
+  function markGet(key, fn) {
+    try { if (stV && stV.mark) stV.mark(fn, 'function get ' + key + '() { [native code] }'); } catch (e) {}
+    return fn;
+  }
+  function rd(key, fn) {
+    Object.defineProperty(shim, key, { get: markGet(key, fn), set: undefined, configurable: false, enumerable: true });
+  }
+  rd('origin', function () { var u = realURL(); return u ? u.origin : ''; });
+  rd('protocol', function () { var u = realURL(); return u ? u.protocol : 'https:'; });
+  rd('host', function () { var u = realURL(); return u ? u.host : ''; });
+  rd('hostname', function () { var u = realURL(); return u ? u.hostname : ''; });
+  rd('port', function () { var u = realURL(); return u ? u.port : ''; });
+  rd('ancestorOrigins', function () {
+    var o = currentTargetOrigin() || '';
+    return {
+      length: 1,
+      item: function (i) { return i === 0 ? o : null; },
+      contains: function (s) { return String(s) === o; },
+      '0': o
+    };
+  });
+  /* href: reads report the real URL, writes navigate through the tunnel. */
+  Object.defineProperty(shim, 'href', {
+    get: markGet('href', realStr),
+    set: function (v) { try { location.href = resolve(v); } catch (e) { location.href = v; } },
+    configurable: false, enumerable: true
+  });
+  /* pathname/search/hash: relative writes resolve against the proxied URL,
+     which keeps them in-tunnel by construction. */
+  ['pathname', 'search', 'hash'].forEach(function (key) {
+    Object.defineProperty(shim, key, {
+      get: markGet(key, function () {
+        var u = realURL();
+        if (!u) return key === 'pathname' ? '/' : '';
+        return u[key];
+      }),
+      set: function (v) { try { location[key] = v; } catch (e) {} },
+      configurable: false, enumerable: true
+    });
+  });
+  shim.assign = function (u) { try { location.assign(resolve(u)); } catch (e) { try { location.assign(u); } catch (e2) {} } };
+  shim.replace = function (u) { try { location.replace(resolve(u)); } catch (e) { try { location.replace(u); } catch (e2) {} } };
+  shim.reload = function () { try { location.reload(); } catch (e) {} };
+  shim.toString = function () { return realStr(); };
+  shim.valueOf = function () { return realStr(); };
+  try { shim[Symbol.toPrimitive] = function () { return realStr(); }; } catch (e) {}
+  try { if (stV && stV.mark) { stV.mark(shim.toString, 'function toString() { [native code] }'); stV.mark(shim.valueOf, 'function valueOf() { [native code] }'); stV.mark(shim.assign, 'function assign() { [native code] }'); stV.mark(shim.replace, 'function replace() { [native code] }'); stV.mark(shim.reload, 'function reload() { [native code] }'); } } catch (e) {}
+  window.__quasar_loc$ = shim;
+}
+
 /* ---------- per-site client fixes (__QUASAR_SITE__) ---------- */
 var CLIENT_FIXES = {
   fixHasFocus: function () {
@@ -733,10 +964,76 @@ var CLIENT_FIXES = {
         };
       }
     } catch (e) {}
+  },
+  pmOrigins: function () {
+    /* v2.0.4 OAuth/popup handshake: postMessage targetOrigins naming the REAL
+       site origin are remapped to the app origin (the actual receiver), and
+       incoming messages arriving from the app origin (parent frame, sibling
+       proxied windows) are presented with the site's own origin so
+       event.origin === 'https://discord.com' style checks pass. */
+    try {
+      var own = currentTargetOrigin() || '';
+      if (!own) return;
+      var _pm = window.postMessage ? window.postMessage.bind(window) : null;
+      if (_pm) {
+        var pmWrapper = function postMessage(message, targetOrigin, transfer) {
+          try {
+            if (typeof targetOrigin === 'string' && targetOrigin && targetOrigin !== '*') {
+              if (targetOrigin === own || targetOrigin.replace(/\/$/, '') === own) targetOrigin = APP;
+            }
+          } catch (e) {}
+          return _pm(message, targetOrigin, transfer);
+        };
+        nativeLike(window, 'postMessage', pmWrapper, 3);
+      }
+      function wrapEvent(ev) {
+        try {
+          if (!ev || typeof ev !== 'object') return ev;
+          if (ev.origin !== APP) return ev;
+          var fake = {
+            data: ev.data, type: ev.type, origin: own, lastEventId: ev.lastEventId,
+            source: ev.source, ports: ev.ports, target: ev.target,
+            currentTarget: ev.currentTarget, eventPhase: ev.eventPhase,
+            bubbles: ev.bubbles, cancelable: ev.cancelable,
+            defaultPrevented: ev.defaultPrevented, isTrusted: ev.isTrusted,
+            timeStamp: ev.timeStamp
+          };
+          fake.preventDefault = function () { try { ev.preventDefault(); } catch (e) {} };
+          fake.stopPropagation = function () { try { ev.stopPropagation(); } catch (e) {} };
+          fake.stopImmediatePropagation = function () { try { ev.stopImmediatePropagation(); } catch (e) {} };
+          return fake;
+        } catch (e) { return ev; }
+      }
+      function wrapHandler(fn) {
+        return function (ev) { return fn.call(this, wrapEvent(ev)); };
+      }
+      var _wAdd = window.addEventListener ? window.addEventListener.bind(window) : null;
+      if (_wAdd) {
+        nativeLike(window, 'addEventListener', function addEventListener(type, fn, opts) {
+          try {
+            if (type === 'message' && typeof fn === 'function') return _wAdd('message', wrapHandler(fn), opts);
+          } catch (e) {}
+          return _wAdd(type, fn, opts);
+        }, 3);
+      }
+      try {
+        var _omDesc = Object.getOwnPropertyDescriptor(window, 'onmessage') ||
+          (typeof Window !== 'undefined' && Object.getOwnPropertyDescriptor(Window.prototype, 'onmessage'));
+        Object.defineProperty(window, 'onmessage', {
+          get: function () { return _omDesc && _omDesc.get ? _omDesc.get.call(window) : null; },
+          set: function (fn) {
+            var w = (typeof fn === 'function') ? wrapHandler(fn) : fn;
+            if (_omDesc && _omDesc.set) _omDesc.set.call(window, w);
+          },
+          configurable: true, enumerable: true
+        });
+      } catch (e) {}
+    } catch (e) {}
   }
 };
 try {
   var siteCfg = window.__QUASAR_SITE__ || {};
+  if (siteCfg.virtLoc) installVirtualLocation();
   var hookList = siteCfg.hooks || [];
   for (var hi = 0; hi < hookList.length; hi++) {
     var fixFn = CLIENT_FIXES[hookList[hi]];
@@ -804,12 +1101,21 @@ try {
 `;
 
 /**
- * The full client bundle: codec → adblock layer (DOM sweeper, counters,
- * ad-URL matching) → hook engine. Order matters: the adblocker installs
- * first so the engine's window.open can consult its isAd() before opening
- * popups as Veil tabs, and both layers share the codec's encodeOrigin.
+ * The full client bundle: codec → stealth layer (toString spoofing,
+ * webdriver, fingerprint farbling) → adblock layer (popups, DOM sweeper,
+ * counters) → hook engine. Order matters: stealth installs first so every
+ * later patch can register itself as native, the adblocker follows so the
+ * engine's patches never resurrect a popup path, and all layers share the
+ * codec's encodeOrigin. QUASAR_NO_STEALTH=1 drops the stealth bundle.
  */
-export const HOOK_BUNDLE = CODEC_SOURCE + "\n" + ADBLOCK_SOURCE + "\n" + HOOK_SOURCE;
+const STEALTH_ACTIVE = process.env.QUASAR_NO_STEALTH !== "1";
+export const HOOK_BUNDLE =
+  CODEC_SOURCE +
+  "\n" +
+  (STEALTH_ACTIVE ? STEALTH_SOURCE + "\n" : "") +
+  ADBLOCK_SOURCE +
+  "\n" +
+  HOOK_SOURCE;
 
 /* ------------------------------------------------------------------ */
 /* Head injection parts                                                */
@@ -841,7 +1147,10 @@ export function quasarHeadParts(
     origin = "";
   }
   return {
-    pageDataTag: `<script data-quasar="page">window.__QUASAR_DATA__={o:${inlineJson(origin)},u:${inlineJson(targetUrl)},v:${inlineJson(QUASAR_VERSION)}};</script>`,
-    siteConfigTag: `<script data-quasar="site">window.__QUASAR_SITE__=${inlineJson({ hooks: site?.clientHooks ?? [] })};</script>`,
+    pageDataTag: `<script data-quasar="page">window.__QUASAR_DATA__={o:${inlineJson(origin)},u:${inlineJson(targetUrl)},v:${inlineJson(QUASAR_VERSION)},dm:${inlineJson(DIRECT_MEDIA_HOSTS)}};</script>`,
+    siteConfigTag: `<script data-quasar="site">window.__QUASAR_SITE__=${inlineJson({
+      hooks: site?.clientHooks ?? [],
+      virtLoc: !!site?.flags?.virtLoc,
+    })};</script>`,
   };
 }

@@ -17,6 +17,7 @@
 
 import { proxyPath } from "./codec-server";
 import { HOOK_BUNDLE, quasarHeadParts } from "./hooks";
+import { isDirectMediaHost } from "./site-fixes";
 import type { SiteFix } from "./site-fixes";
 
 const SKIP_SCHEME_RE = /^(data|blob|javascript|mailto|tel|about|sms|magnet|irc|file|ws|wss|view-source):/i;
@@ -75,6 +76,9 @@ function rewriteUrlValue(value: string, baseUrl: string): string {
   try {
     const abs = new URL(v, baseUrl);
     if (abs.protocol !== "http:" && abs.protocol !== "https:") return value;
+    // v2.0.4 direct-media hosts stay untouched — the browser fetches them
+    // itself (real TLS fingerprint / real IP, see site-fixes.ts).
+    if (isDirectMediaHost(abs)) return value;
     return proxyPath(abs.href);
   } catch {
     return value;

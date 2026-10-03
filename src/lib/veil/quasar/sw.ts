@@ -16,6 +16,7 @@
  */
 
 import { CODEC_SOURCE } from "./codec-server";
+import { DIRECT_MEDIA_HOSTS } from "./site-fixes";
 
 const SW_SOURCE = String.raw`
 var C = self.__QUASAR_CODEC__;
@@ -51,6 +52,22 @@ var SW_HEADER_BLOCKLIST = {
   host: 1, connection: 1, 'content-length': 1, 'accept-encoding': 1,
   origin: 1, referer: 1, cookie: 1, 'x-quasar-target': 1
 };
+
+/* v2.0.4 direct-media hosts (server-configured, QUASAR_DIRECT_MEDIA_HOSTS):
+   requests to these are NOT intercepted — the browser fetches them itself.
+   Empty by default (googlevideo's SABR responses lack CORS headers, which
+   starves MSE in direct mode; see site-fixes.ts). */
+var QDIRECT_MEDIA = __QUASAR_DIRECT_MEDIA__;
+function isDirectMediaHost(u) {
+  try {
+    var h = String(u.hostname || '').toLowerCase();
+    for (var i = 0; i < QDIRECT_MEDIA.length; i++) {
+      var s = QDIRECT_MEDIA[i];
+      if (h === s || h.slice(-(s.length + 1)) === '.' + s) return true;
+    }
+  } catch (e) {}
+  return false;
+}
 
 /* ---------- v1.3.8 adblock network counter ----------
    The server answers known ad/tracker URLs with 204 + x-quasar-blocked.
@@ -160,6 +177,11 @@ self.addEventListener('fetch', function (e) {
 
   if (!isProxyable(url)) return;
 
+  // v2.0.4 direct-media hosts: do NOT tunnel — let the request fall through
+  // to the network so the browser itself connects with its real Chrome TLS
+  // fingerprint and the user's real IP. Empty by default (see site-fixes.ts).
+  if (isDirectMediaHost(url)) return;
+
   // Cross-origin absolute request from a controlled page -> proxy it.
   e.respondWith(fetch(toProxy(url.href), {
     method: req.method,
@@ -169,4 +191,9 @@ self.addEventListener('fetch', function (e) {
 });
 `;
 
-export const SW_SCRIPT = CODEC_SOURCE + "\n" + SW_SOURCE;
+export const SW_SCRIPT =
+  CODEC_SOURCE +
+  "\nvar __QUASAR_DIRECT_MEDIA__ = " +
+  JSON.stringify(DIRECT_MEDIA_HOSTS) +
+  ";\n" +
+  SW_SOURCE;

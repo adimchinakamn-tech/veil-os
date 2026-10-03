@@ -21,6 +21,15 @@ export interface SiteFlags {
   noStream?: boolean;
   /** Skip conservative JSON media-URL rewriting. */
   noJsonMedia?: boolean;
+  /**
+   * v2.0.4 — virtual location layer. The AST rewriter renames every free
+   * `location` / `window.location` / `document.location` reference to the
+   * `__quasar_loc$` shim whose href/origin/host/protocol/... getters report
+   * the REAL target URL while navigation (href=, assign/replace) stays inside
+   * the tunnel. Gated per site because `location === window.location`
+   * identity checks can still see through the shim.
+   */
+  virtLoc?: boolean;
 }
 
 export interface SiteFix {
@@ -54,8 +63,9 @@ const FIXES: SiteFix[] = [
   {
     id: "discord",
     match: ["discord.com", "discordapp.com", "discordapp.net"],
-    clientHooks: ["fakeNotifications", "fixHasFocus"],
-    note: "Voice/RTC is native WebRTC — WS + REST work through the bridge.",
+    flags: { virtLoc: true },
+    clientHooks: ["fakeNotifications", "fixHasFocus", "pmOrigins"],
+    note: "v2.0.4: virtual location layer (webpack runtime reads location.origin for asset/API URLs) + postMessage origin unwrap for OAuth popups; WS bridge dials with the real Origin/User-Agent; voice/RTC is native WebRTC.",
   },
   {
     id: "spotify",
@@ -128,6 +138,37 @@ const FIXES: SiteFix[] = [
     note: "Leaflet tiles + JS survive the full pipeline; good AST canary.",
   },
 ];
+
+/* ------------------------------------------------------------------ */
+/* v2.0.4 — direct-media hosts (browser-fetched, never tunneled)       */
+/* ------------------------------------------------------------------ */
+
+/**
+ * v2.0.4 — direct-media hosts (browser-fetched, never tunneled).
+ * Configured via QUASAR_DIRECT_MEDIA_HOSTS (comma-separated suffix list).
+ * Empty by default: googlevideo.com — the motivating host — withholds CORS
+ * headers on its SABR (UMP POST) streaming responses for third-party
+ * origins, so MSE playback starves in browser-direct mode; proxied
+ * streaming (server-side fetch) is the proven working default. Deployments
+ * that prefer direct media (real Chrome TLS + real client IP, e.g. for
+ * <video src> progressive playback) can opt in with
+ * QUASAR_DIRECT_MEDIA_HOSTS=googlevideo.com. Rewriters, the AST pass, the
+ * client hooks and the service worker all consult this list.
+ */
+export const DIRECT_MEDIA_HOSTS: string[] = (process.env.QUASAR_DIRECT_MEDIA_HOSTS ?? "")
+  .split(",")
+  .map((s) => s.trim().toLowerCase())
+  .filter(Boolean);
+
+export function isDirectMediaHost(url: string | URL): boolean {
+  if (!DIRECT_MEDIA_HOSTS.length) return false;
+  try {
+    const host = (url instanceof URL ? url : new URL(url)).hostname.toLowerCase();
+    return DIRECT_MEDIA_HOSTS.some((h) => host === h || host.endsWith("." + h));
+  } catch {
+    return false;
+  }
+}
 
 /* ------------------------------------------------------------------ */
 /* Lookup                                                              */

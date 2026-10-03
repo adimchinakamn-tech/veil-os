@@ -3489,12 +3489,22 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
 
   // ---------------------------------------------------------------------------
   // Subscribe to channel whenever channelId changes.
+  // Generation token for channel loads — a slow/stale fetch for a PREVIOUS
+  // channel must never paint its messages under the new channel's header
+  // (the "#general messages appearing in #links" bug: the old channel's
+  // list stayed rendered while the new fetch was in flight or failed).
+  const channelLoadGenRef = useRef(0)
   useEffect(() => {
     if (!socketRef.current || !account) return
     const socket = socketRef.current
     socket.emit("subscribe", { channelId })
     setPresence([])
     setTypingUsers({})
+    // Drop the previous channel's messages IMMEDIATELY — never leave the
+    // old channel rendered under the new header while the fetch runs.
+    setMessages([])
+    setPinned([])
+    const gen = ++channelLoadGenRef.current
     // Fetch recent messages for this channel.
     void (async () => {
       try {
@@ -3503,9 +3513,11 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
             !CHANNELS.some((c) => c.id === channelId) ? `&token=${encodeURIComponent(token)}` : ""
           }`,
         )
+        if (gen !== channelLoadGenRef.current) return // stale — a newer switch won
         setMessages(data.messages || [])
         setPinned((data.messages || []).slice(0, 3))
       } catch (e) {
+        if (gen !== channelLoadGenRef.current) return // stale — ignore
         setMessages([])
         console.error("Failed to load channel messages", e)
       }

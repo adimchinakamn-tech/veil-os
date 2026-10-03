@@ -20,7 +20,11 @@ async function main() {
   const passwordHash = await bcrypt.hash(PASSWORD, 10)
   const account = await db.chatAccount.upsert({
     where: { username: USERNAME },
-    update: {}, // never clobber an existing operator account
+    // Repair the ROLE if a re-created operator landed as a plain member
+    // (register always assigns "member" — a wiped db that got "Veil"
+    // re-registered before this seed ran left the owner without powers).
+    // The password is never clobbered.
+    update: { role: "admin" },
     create: {
       username: USERNAME,
       passwordHash,

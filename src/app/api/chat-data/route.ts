@@ -25,6 +25,20 @@ const PUBLIC_CHANNELS = [
 /** Channels where only moderators and the owner may post. */
 const MOD_ONLY_CHANNELS = ["links", "announcements"] as const
 
+/* The owner is the "Veil" operator — username match, exactly like the
+ * chat UI's isMod() and chat-mod's isSuperAdmin(). Role alone is not a
+ * reliable owner signal: a wiped/restored db can leave the operator
+ * account at role "member", which 403'd the owner in the very channels
+ * the UI had unlocked for them (all three layers must agree). */
+const SUPER_ADMIN_USERNAME = "Veil"
+function isModAccount(a: { username: string; role: string }): boolean {
+  return (
+    a.role === "moderator" ||
+    a.role === "admin" ||
+    a.username.toLowerCase() === SUPER_ADMIN_USERNAME.toLowerCase()
+  )
+}
+
 function isPublicChannel(channelId: string): boolean {
   return (PUBLIC_CHANNELS as readonly string[]).includes(channelId)
 }
@@ -156,8 +170,7 @@ async function handlePost(req: NextRequest): Promise<Response> {
     // #links + #announcements — only moderators and the owner may post.
     if (
       (MOD_ONLY_CHANNELS as readonly string[]).includes(channelId) &&
-      account.role !== "moderator" &&
-      account.role !== "admin"
+      !isModAccount(account)
     ) {
       return NextResponse.json(
         { ok: false, error: `Only moderators and the owner can post in #${channelId}.` },

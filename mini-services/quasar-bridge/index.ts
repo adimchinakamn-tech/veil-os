@@ -1,13 +1,13 @@
 /**
- * Quasar ws-bridge
+ * Quasar WebSocket Bridge (v2.0.4)
  * ----------------
  * Standalone Bun mini-service that bridges WebSockets for the Quasar proxy.
  *
  * Why: the Next.js app cannot proxy WebSocket connections. Proxied pages run
- * injected hooks that open `new WebSocket("/ws-bridge?XTransformPort=3310&target=<ENC>")`
+ * injected hooks that open `new WebSocket("/quasar-bridge?XTransformPort=3310&target=<ENC>")`
  * on the app's origin; the Caddy gateway forwards that request (via the
  * XTransformPort query hint) to this service on port 3310. We decode the
- * `target` blob with the shared multi-format codec (src/lib/proxy/codec-server.ts
+ * `target` blob with the shared multi-format codec (src/lib/veil/quasar/codec-server.ts
  * — accepts AES-256-GCM, session-XOR and legacy "quasar-v1" XOR blobs) or take
  * an explicit raw ws://|wss:// target, dial the real server, and pipe messages
  * bidirectionally.
@@ -26,8 +26,12 @@
  */
 
 import type { ServerWebSocket } from "bun";
-// Veil integration: the shared codec lives in the main project's quasar
-// engine directory (src/lib/veil/quasar/). Bun resolves relative TS imports
+// v2.0.4: outbound dials moved to the `ws` package — Bun's native WebSocket
+// client cannot set custom headers, and Discord's gateway validates the
+// Origin/User-Agent pair of the handshake. `ws` lets the bridge present the
+// REAL target origin (https://discord.com) plus a browser-grade User-Agent.
+import WS from "ws";
+// Shared codec lives in the main project; bun resolves relative TS imports
 // natively (codec-server only uses node:crypto/node:fs/node:path, all
 // available in bun). The key file (.quasar-key) is found by searching upward
 // from cwd, so this nested mini-service shares the deployment key.
@@ -99,8 +103,8 @@ interface Session {
   ready: boolean;
   /** True once the outbound socket is open. */
   targetOpen: boolean;
-  /** Outbound WebSocket to the real server. */
-  targetWs: WebSocket | null;
+  /** Outbound WebSocket to the real server (ws package client). */
+  targetWs: WS | null;
   /** Browser -> target messages held while the target is still connecting. */
   clientToTarget: WireMessage[];
   /** Target -> browser messages held until the client sends READY. */
@@ -136,6 +140,23 @@ function hostOf(url: string): string {
     return url;
   }
 }
+
+/** Origin (scheme + host) of a ws://|wss:// URL — https for wss, http for ws. */
+function originOf(url: string): string | null {
+  try {
+    const u = new URL(url);
+    return `${u.protocol === "wss:" ? "https" : "http"}://${u.host}`;
+  } catch {
+    return null;
+  }
+}
+
+/** Browser-grade handshake headers the target gateway would expect. */
+const OUTBOUND_HEADERS = {
+  "User-Agent":
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+  "Accept-Language": "en-US,en;q=0.9",
+};
 
 /**
  * Clamp a close code to something legal to put on the wire.
@@ -222,17 +243,28 @@ function closeTarget(session: Session, reason: string): void {
   session.targetOpen = false;
 }
 
-/* -------------------------------- websocket -------------------------------- */
-
 const websocket = {
   open(ws: ServerWebSocket<Session>): void {
     const session = ws.data;
     log(`client connected, dialing ${session.target}`);
 
-    // IMMEDIATELY after upgrade: dial the real target server.
-    let tw: WebSocket;
+    // IMMEDIATELY after upgrade: dial the real target server with faithful
+    // handshake headers (Origin = the target's own origin, browser UA).
+    let tw: WS;
     try {
-      tw = new WebSocket(session.target, session.protocols ?? undefined);
+      const origin = originOf(session.target);
+      const protocols = session.protocols
+        ? session.protocols.split(",").map((p) => p.trim()).filter(Boolean)
+        : [];
+      tw = new WS(session.target, protocols, {
+        headers: {
+          ...OUTBOUND_HEADERS,
+          ...(origin ? { Origin: origin } : {}),
+        },
+        // Browsers never negotiate permessage-deflate — stay faithful.
+        perMessageDeflate: false,
+        handshakeTimeout: 15_000,
+      });
     } catch (err) {
       logErr(`failed to create outbound socket for ${session.target}:`, err);
       tryCloseClient(ws, 1011, "bridge dial failed");
@@ -241,38 +273,47 @@ const websocket = {
     tw.binaryType = "arraybuffer";
     session.targetWs = tw;
 
-    tw.onopen = () => {
+    tw.on("open", () => {
       session.targetOpen = true;
       log(`-> ${hostOf(session.target)} (open)`);
       flushClientToTarget(session);
-    };
+    });
 
-    tw.onmessage = (ev: MessageEvent) => {
-      const data = ev.data as string | ArrayBuffer;
+    tw.on("message", (data: WS.RawData, isBinary: boolean) => {
       if (!session.ready) {
         // Client hasn't completed the READY handshake yet -> buffer.
-        if (!bufferMessage(session.targetToClient, data)) {
+        if (!bufferMessage(session.targetToClient, isBinary ? (data as ArrayBuffer) : (data as string))) {
           log(`targetToClient buffer overflow (${BUFFER_CAP}) -> closing client 1011`);
           tryCloseClient(ws, 1011, "bridge buffer overflow");
         }
         return;
       }
-      sendToClient(ws, data);
-    };
+      if (isBinary && !(data instanceof ArrayBuffer)) {
+        // Defensive: ws always honors binaryType, but never ship a Buffer[] on accident.
+        const buf = data as Buffer;
+        const ab = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer;
+        if (!sendToClient(ws, ab)) {
+          /* client backpressure — drop, as before */
+        }
+        return;
+      }
+      sendToClient(ws, data as string | ArrayBuffer);
+    });
 
-    tw.onclose = (ev: CloseEvent) => {
-      const code = clampCloseCode(ev.code);
-      log(`<- close ${code}${ev.reason ? ` (${ev.reason})` : ""}`);
+    tw.on("close", (code: number, reason: Buffer) => {
+      const clamped = clampCloseCode(code);
+      const reasonStr = reason?.toString() ?? "";
+      log(`<- close ${clamped}${reasonStr ? ` (${reasonStr})` : ""}`);
       session.targetWs = null;
       session.targetOpen = false;
-      tryCloseClient(ws, code, ev.reason || undefined);
-    };
+      tryCloseClient(ws, clamped, reasonStr || undefined);
+    });
 
-    tw.onerror = () => {
-      logErr(`-> ${hostOf(session.target)} (error: outbound connection failed)`);
+    tw.on("error", (err: Error) => {
+      logErr(`-> ${hostOf(session.target)} (error: outbound connection failed: ${err?.message ?? "unknown"})`);
       session.targetOpen = false;
       tryCloseClient(ws, 1011, "target connection failed");
-    };
+    });
   },
 
   message(ws: ServerWebSocket<Session>, message: string | Buffer): void {

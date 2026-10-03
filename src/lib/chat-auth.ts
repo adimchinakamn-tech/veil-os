@@ -1,5 +1,5 @@
-import { createHmac, timingSafeEqual } from "crypto"
-import { readFileSync } from "fs"
+import { createHmac, timingSafeEqual, randomBytes } from "crypto"
+import { readFileSync, writeFileSync, mkdirSync } from "fs"
 import { db } from "@/lib/db"
 
 /**
@@ -28,13 +28,32 @@ export type SessionPayload = {
 
 const TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000
 
+const SECRET_PATH = "/home/z/my-project/db/chat-secret.key"
 let cachedSecret: Buffer | null = null
 function sessionSecret(): Buffer {
   if (cachedSecret) return cachedSecret
-  cachedSecret = Buffer.from(
-    readFileSync("/home/z/my-project/db/chat-secret.key", "utf-8").trim(),
-    "utf-8",
-  )
+  let txt: string
+  try {
+    txt = readFileSync(SECRET_PATH, "utf-8")
+    if (!txt.trim()) throw new Error("empty secret")
+  } catch {
+    /* SELF-HEAL (2026-10-03 "server error during log in or sign up" fix):
+     * a sandbox rollback / volume wipe can lose db/chat-secret.key — every
+     * login, register and token verify then died with ENOENT (500). Instead
+     * of failing closed forever, mint a fresh random secret and persist it;
+     * tokens signed with a lost secret are unverifiable anyway, so users
+     * simply sign in again once. The relay (mini-services/chat-service)
+     * re-reads the file until it exists, so it picks this up live. */
+    txt = randomBytes(48).toString("hex")
+    try {
+      mkdirSync("/home/z/my-project/db", { recursive: true })
+      writeFileSync(SECRET_PATH, txt + "\n", { mode: 0o600 })
+      console.warn("[chat-auth] chat-secret.key was missing — generated a new one")
+    } catch {
+      /* read-only filesystem — keep the secret in memory for this boot */
+    }
+  }
+  cachedSecret = Buffer.from(txt.trim(), "utf-8")
   return cachedSecret
 }
 

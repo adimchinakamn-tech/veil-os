@@ -77,6 +77,16 @@ async function handleRegister(req: Request): Promise<Response> {
     }
 
     const passwordHash = await bcrypt.hash(password, 10)
+    /* Wipe self-heal (2026-10-03): a rolled-back/restored db can arrive
+     * with NO admin account at all (the operator seed may not have run,
+     * or its account landed as a plain member) — locking everyone out of
+     * every mod tool forever. When no admin exists, the FIRST account to
+     * register claims owner. On a healthy box the seeded operator ("Veil",
+     * admin) exists, so this never triggers. */
+    const adminExists = await db.chatAccount.findFirst({
+      where: { role: "admin" },
+      select: { id: true },
+    })
     const account = await db.chatAccount.create({
       data: {
         username,
@@ -84,7 +94,7 @@ async function handleRegister(req: Request): Promise<Response> {
         displayName: displayName || username,
         avatarColor: randomAvatarColor(),
         coins: 100,
-        role: "member",
+        role: adminExists ? "member" : "admin",
       },
     })
 

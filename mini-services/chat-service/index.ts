@@ -36,12 +36,21 @@ import { Server, Socket } from "socket.io"
 const PORT = 3004
 
 // Shared with src/lib/chat-auth.ts (same box) — the HMAC signing secret.
+// The Next.js side SELF-HEALS a missing key (mints + persists one on first
+// use), so a failed read here is never cached: the next identify re-reads
+// the file and picks the healed key up live, without a relay restart.
 const SECRET_PATH = "/home/z/my-project/db/chat-secret.key"
 let cachedSecret: Buffer | null = null
-function sessionSecret(): Buffer {
+function sessionSecret(): Buffer | null {
   if (cachedSecret) return cachedSecret
-  cachedSecret = Buffer.from(readFileSync(SECRET_PATH, "utf-8").trim(), "utf-8")
-  return cachedSecret
+  try {
+    const txt = readFileSync(SECRET_PATH, "utf-8").trim()
+    if (!txt) return null
+    cachedSecret = Buffer.from(txt, "utf-8")
+    return cachedSecret
+  } catch {
+    return null // missing/unreadable — retry on the next call
+  }
 }
 
 interface TokenPayload {
@@ -62,7 +71,9 @@ function verifyToken(token: unknown): TokenPayload | null {
   const [body, sig] = parts
   if (!body || !sig) return null
   try {
-    const expected = createHmac("sha256", sessionSecret())
+    const secret = sessionSecret()
+    if (!secret) return null
+    const expected = createHmac("sha256", secret)
       .update(body)
       .digest("base64url")
     const a = Buffer.from(sig)
@@ -291,10 +302,15 @@ io.on("connection", (socket: Socket) => {
         return
       }
       // #links + #announcements — only moderators and the owner may post.
+      // The owner is the "Veil" operator (username match, same as the UI's
+      // isMod + chat-mod's isSuperAdmin) — role alone is not enough: a wiped
+      // db can leave the operator account at role "member", which locked the
+      // owner out of the very channels the UI unlocked for them.
       if (
         (channelId === "links" || channelId === "announcements") &&
         account.role !== "moderator" &&
-        account.role !== "admin"
+        account.role !== "admin" &&
+        account.username.toLowerCase() !== "veil"
       ) {
         socket.emit("error", { message: `only moderators and the owner can post in #${channelId}` })
         return
