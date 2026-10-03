@@ -61,22 +61,55 @@ async function handleRegister(req: Request): Promise<Response> {
       )
     }
 
+    const passwordHash = await bcrypt.hash(password, 10)
+
     // Case-insensitive uniqueness (SQLite's unique constraint is exact-match,
     // but login resolves usernames case-insensitively — registering "veil"
     // when an account "Veil" exists would hijack its login).
     const clashing = await db.chatAccount.findMany({
       where: { username: { contains: username } },
       take: 20,
-      select: { username: true },
     })
-    if (clashing.some((a) => a.username.toLowerCase() === username.toLowerCase())) {
+    const existing = clashing.find(
+      (a) => a.username.toLowerCase() === username.toLowerCase(),
+    )
+
+    /* LEGACY RECLAIM (2026-10-03 wipe-recovery): accounts restored from a
+     * chat backup are placeholders — they hold the username and its
+     * message history but can never log in. Registering the name UPGRADES
+     * the placeholder in place (same row id), so every restored message
+     * instantly belongs to the returning user. The name is therefore never
+     * "taken" by the restore. */
+    if (existing && existing.legacy) {
+      const adminExists = await db.chatAccount.findFirst({
+        where: { role: "admin" },
+        select: { id: true },
+      })
+      const account = await db.chatAccount.update({
+        where: { id: existing.id },
+        data: {
+          passwordHash,
+          legacy: false,
+          displayName: displayName || existing.displayName || username,
+          coins: existing.coins < 100 ? 100 : existing.coins,
+          role: adminExists ? existing.role : "admin",
+        },
+      })
+      const token = makeToken(account)
+      return NextResponse.json({
+        ok: true,
+        reclaimed: true,
+        account: toPublicAccount(account),
+        token,
+      })
+    }
+    if (existing) {
       return NextResponse.json(
         { ok: false, error: "That username is already taken." },
         { status: 409 },
       )
     }
 
-    const passwordHash = await bcrypt.hash(password, 10)
     /* Wipe self-heal (2026-10-03): a rolled-back/restored db can arrive
      * with NO admin account at all (the operator seed may not have run,
      * or its account landed as a plain member) — locking everyone out of

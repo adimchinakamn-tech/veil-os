@@ -146,6 +146,9 @@ export type ChatAccountPublic = {
   tag: string | null
   tagColor: string | null
   pfpAccessory: string | null
+  /** true while this row is a restored-from-backup placeholder awaiting
+   * re-registration (see register route's legacy reclaim path). */
+  legacy: boolean
   createdAt: Date
 }
 
@@ -165,6 +168,7 @@ export function toPublicAccount(a: {
   tag?: string | null
   tagColor?: string | null
   pfpAccessory?: string | null
+  legacy?: boolean
   createdAt: Date
 }): ChatAccountPublic {
   return {
@@ -185,6 +189,7 @@ export function toPublicAccount(a: {
     tag: a.tag ?? null,
     tagColor: a.tagColor ?? null,
     pfpAccessory: a.pfpAccessory ?? null,
+    legacy: a.legacy ?? false,
     createdAt: a.createdAt,
   }
 }

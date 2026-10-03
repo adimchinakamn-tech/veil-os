@@ -75,6 +75,13 @@ import {
   Eye,
   ChevronDown,
   ChevronUp,
+  History,
+  DatabaseBackup,
+  Copy,
+  Check,
+  ExternalLink,
+  RotateCcw,
+  CloudOff,
 } from "lucide-react"
 
 import { BackdropVideo } from "@/components/veil/backdrop-video"
@@ -106,6 +113,8 @@ type ChatAccount = {
   tag: string | null
   tagColor: string | null
   pfpAccessory: string | null
+  /** restored-from-backup placeholder — name is free to re-register */
+  legacy?: boolean
   createdAt: string
 }
 
@@ -120,6 +129,7 @@ type ChatMessageAccount = {
   tag: string | null
   tagColor: string | null
   pfpAccessory: string | null
+  legacy?: boolean
 }
 
 type ChatMessage = {
@@ -1668,6 +1678,14 @@ function UserProfileModal({
                   {roleLabel(who)}
                 </span>
               )}
+              {who.legacy && (
+                <span
+                  className="rounded-md border border-dashed border-amber-300/50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-200/90"
+                  title="Restored from a backup — the username is free to register and will claim this profile and its messages"
+                >
+                  unclaimed
+                </span>
+              )}
             </div>
             <div className="mt-0.5 text-xs text-white/50">@{who.username}</div>
             {who.tag && (
@@ -1691,6 +1709,18 @@ function UserProfileModal({
             )}
           </p>
         </div>
+
+        {who.legacy && (
+          <div className="flex items-start gap-2 rounded-xl border border-amber-300/25 bg-amber-400/5 p-3 text-xs leading-relaxed text-amber-100/80">
+            <History className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-300" />
+            <p>
+              Restored from a chat backup after the data wipe — messages and
+              coins are intact. Nobody has re-registered this username yet:
+              registering <span className="font-semibold">@{who.username}</span> claims
+              this profile and everything in it.
+            </p>
+          </div>
+        )}
 
         {/* Facts strip */}
         <div className="grid grid-cols-3 gap-2">
@@ -2125,6 +2155,286 @@ function NotificationsPanel({
   )
 }
 
+// ---------------------------------------------------------------------------
+// Backup panel (owner/mods) — the "jsDelivr links" safety net
+// ---------------------------------------------------------------------------
+
+type BackupStatus = {
+  ok: boolean
+  repo: string
+  jsdelivr: string
+  purge: string
+  lastBackupAt: string | null
+  lastCounts: { accounts: number; messages: number; dms: number } | null
+  lastPushOk: boolean | null
+  lastPushError: string | null
+  lastPushAt: string | null
+  autoBackupLive: boolean
+  dbCounts: { accounts: number; messages: number; dms: number }
+  historyCount: number
+  seeds: string[]
+}
+
+function relTime(iso: string | null): string {
+  if (!iso) return "never"
+  const ms = Date.now() - new Date(iso).getTime()
+  if (Number.isNaN(ms)) return "never"
+  if (ms < 45_000) return "just now"
+  if (ms < 3_600_000) return `${Math.round(ms / 60_000)} min ago`
+  if (ms < 86_400_000) return `${Math.round(ms / 3_600_000)} h ago`
+  return `${Math.round(ms / 86_400_000)} d ago`
+}
+
+function BackupPanel({
+  token,
+  toast,
+  onClose,
+  onRestored,
+}: {
+  token: string
+  toast: (msg: string, kind?: "ok" | "err") => void
+  onClose: () => void
+  onRestored: () => void
+}) {
+  const [status, setStatus] = useState<BackupStatus | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [busy, setBusy] = useState<"none" | "backup" | "restore">("none")
+  const [copied, setCopied] = useState(false)
+  const [confirming, setConfirming] = useState(false)
+
+  const refresh = useCallback(async () => {
+    try {
+      const data = await apiFetch<BackupStatus>(`/api/chat-backup?token=${encodeURIComponent(token)}`)
+      setStatus(data)
+      setError(null)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not load backup status.")
+    }
+  }, [token])
+
+  useEffect(() => {
+    void refresh()
+  }, [refresh])
+
+  const backupNow = async () => {
+    setBusy("backup")
+    try {
+      await apiFetch("/api/chat-backup", {
+        method: "POST",
+        body: JSON.stringify({ token, action: "backup-now" }),
+      })
+      // The pipeline runs detached — give it a beat, then show the result.
+      await new Promise((r) => setTimeout(r, 2200))
+      await refresh()
+      toast("Backup snapshot taken — committed and queued for publish.")
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "Backup failed.", "err")
+    } finally {
+      setBusy("none")
+    }
+  }
+
+  const restoreNow = async () => {
+    setBusy("restore")
+    try {
+      const data = await apiFetch<{
+        messagesImported: number
+        messagesSkipped: number
+        accountsCreated: number
+      }>("/api/chat-backup", {
+        method: "POST",
+        body: JSON.stringify({ token, action: "restore", source: "jsdelivr" }),
+      })
+      toast(
+        `Restore done — ${data.messagesImported} message(s) imported, ${data.messagesSkipped} already present.`,
+      )
+      onRestored()
+      await refresh()
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "Restore failed.", "err")
+    } finally {
+      setConfirming(false)
+      setBusy("none")
+    }
+  }
+
+  const copyLink = async () => {
+    if (!status) return
+    try {
+      await navigator.clipboard.writeText(status.jsdelivr)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1600)
+    } catch {
+      toast("Could not copy — long-press the link instead.", "err")
+    }
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 20 }}
+      className="absolute right-2 top-14 z-30 w-[22rem] rounded-2xl border border-white/10 bg-zinc-950/92 backdrop-blur-xl p-3 shadow-2xl"
+    >
+      <div className="mb-2 flex items-center justify-between">
+        <span className="flex items-center gap-1.5 text-sm font-semibold text-white">
+          <DatabaseBackup className="h-3.5 w-3.5 text-emerald-400" /> Chat backups
+        </span>
+        <button onClick={onClose} className="text-white/50 hover:text-white">
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+
+      {error && (
+        <p className="rounded-lg border border-red-400/20 bg-red-500/10 p-2 text-xs text-red-200">
+          {error}
+        </p>
+      )}
+      {!status && !error && (
+        <p className="py-6 text-center text-xs text-white/40">Loading backup status…</p>
+      )}
+
+      {status && (
+        <div className="space-y-2 text-xs">
+          {/* Auto-backup loop state */}
+          <div className="flex items-center justify-between rounded-lg border border-white/5 bg-black/30 px-2.5 py-2">
+            <span className="text-white/60">Auto-backup</span>
+            {status.autoBackupLive ? (
+              <span className="flex items-center gap-1.5 font-medium text-emerald-300">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+                </span>
+                Live · every 30s
+              </span>
+            ) : (
+              <span className="font-medium text-amber-300">Loop not running</span>
+            )}
+          </div>
+
+          {/* Snapshot facts */}
+          <div className="grid grid-cols-3 gap-2">
+            <div className="rounded-lg border border-white/5 bg-black/20 px-2 py-1.5 text-center">
+              <p className="text-[9px] uppercase tracking-wide text-white/40">Messages</p>
+              <p className="text-sm font-semibold text-white/90">{status.lastCounts?.messages ?? status.dbCounts.messages}</p>
+            </div>
+            <div className="rounded-lg border border-white/5 bg-black/20 px-2 py-1.5 text-center">
+              <p className="text-[9px] uppercase tracking-wide text-white/40">Accounts</p>
+              <p className="text-sm font-semibold text-white/90">{status.lastCounts?.accounts ?? status.dbCounts.accounts}</p>
+            </div>
+            <div className="rounded-lg border border-white/5 bg-black/20 px-2 py-1.5 text-center">
+              <p className="text-[9px] uppercase tracking-wide text-white/40">Snapshots</p>
+              <p className="text-sm font-semibold text-white/90">{status.historyCount}</p>
+            </div>
+          </div>
+
+          <p className="px-1 text-[11px] text-white/45">
+            Last snapshot {relTime(status.lastBackupAt)}
+            {status.lastCounts ? ` — ${status.lastCounts.messages} messages` : ""}
+          </p>
+
+          {/* Publish state */}
+          <div
+            className={`flex items-start gap-2 rounded-lg border px-2.5 py-2 ${
+              status.lastPushOk
+                ? "border-emerald-400/20 bg-emerald-400/5 text-emerald-100/80"
+                : "border-amber-300/20 bg-amber-400/5 text-amber-100/80"
+            }`}
+          >
+            {status.lastPushOk ? (
+              <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-300" />
+            ) : (
+              <CloudOff className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-300" />
+            )}
+            <p className="leading-relaxed">
+              {status.lastPushOk ? (
+                <>Published to GitHub — the jsDelivr link below is live and purged fresh.</>
+              ) : (
+                <>
+                  Snapshots are committed locally and will publish to GitHub the
+                  moment the repo token gets write access (one toggle — everything
+                  is queued). Nothing is lost either way: the local snapshots roll
+                  every 30 seconds.
+                </>
+              )}
+            </p>
+          </div>
+
+          {/* jsDelivr link */}
+          <div className="rounded-lg border border-white/5 bg-black/30 p-2">
+            <p className="mb-1 text-[9px] font-semibold uppercase tracking-wide text-white/40">
+              Permanent CDN link (jsDelivr)
+            </p>
+            <div className="flex items-center gap-1">
+              <code className="min-w-0 flex-1 truncate rounded bg-black/40 px-2 py-1 text-[10px] text-orange-200/90">
+                {status.jsdelivr}
+              </code>
+              <button
+                onClick={() => void copyLink()}
+                className="rounded-md p-1.5 text-white/60 hover:bg-white/10 hover:text-white"
+                title="Copy link"
+              >
+                {copied ? <Check className="h-3.5 w-3.5 text-emerald-300" /> : <Copy className="h-3.5 w-3.5" />}
+              </button>
+              <a
+                href={status.jsdelivr}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-md p-1.5 text-white/60 hover:bg-white/10 hover:text-white"
+                title="Open backup JSON"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-2 pt-0.5">
+            <button
+              onClick={() => void backupNow()}
+              disabled={busy !== "none"}
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-orange-400 px-3 py-2 text-xs font-semibold text-black transition hover:bg-orange-300 disabled:opacity-50"
+            >
+              {busy === "backup" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <DatabaseBackup className="h-3.5 w-3.5" />}
+              Back up now
+            </button>
+            {!confirming ? (
+              <button
+                onClick={() => setConfirming(true)}
+                disabled={busy !== "none"}
+                className="flex items-center justify-center gap-1.5 rounded-lg border border-white/15 px-3 py-2 text-xs font-semibold text-white/80 transition hover:border-white/30 hover:text-white disabled:opacity-50"
+                title="Pull the latest snapshot back from the jsDelivr CDN"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                Restore
+              </button>
+            ) : (
+              <button
+                onClick={() => void restoreNow()}
+                disabled={busy !== "none"}
+                className="flex items-center justify-center gap-1.5 rounded-lg border border-red-400/40 bg-red-500/15 px-3 py-2 text-xs font-semibold text-red-200 transition hover:bg-red-500/25 disabled:opacity-50"
+              >
+                {busy === "restore" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RotateCcw className="h-3.5 w-3.5" />}
+                Sure?
+              </button>
+            )}
+          </div>
+          {confirming && busy === "none" && (
+            <p className="text-[10px] leading-relaxed text-white/45">
+              Fetches the latest JSON from jsDelivr and imports anything missing
+              (safe to run anytime — existing messages are skipped, and accounts
+              come back as re-registerable placeholders).{" "}
+              <button className="underline hover:text-white/70" onClick={() => setConfirming(false)}>
+                cancel
+              </button>
+            </p>
+          )}
+        </div>
+      )}
+    </motion.div>
+  )
+}
+
 function SearchPanel({
   messages,
   query,
@@ -2509,6 +2819,14 @@ function PlayerList({
               {displayName(m)}
             </span>
             {m.tag && <TagBadge tag={m.tag} color={m.tagColor} />}
+            {m.legacy && (
+              <span
+                className="shrink-0 rounded border border-dashed border-amber-300/50 px-1 py-px text-[8px] font-semibold uppercase tracking-wide text-amber-200/80"
+                title="Restored from backup — register this username to claim it"
+              >
+                unclaimed
+              </span>
+            )}
           </div>
           <div className="truncate text-[10px] text-white/40">@{m.username}</div>
         </div>
@@ -3030,6 +3348,7 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
   const [showPinned, setShowPinned] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
   const [showSearch, setShowSearch] = useState(false)
+  const [showBackup, setShowBackup] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [showDmMenu, setShowDmMenu] = useState(false)
   const [friends, setFriends] = useState<ChatAccount[]>([])
@@ -3552,6 +3871,26 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
        * chat — a backdrop the user couldn't click through. */
     }
   }, [token, account?.id])
+
+  /* Re-fetch the CURRENT channel's messages (used after a backup restore
+   * imports history behind the UI's back). Same generation guard as the
+   * channel-switch effect — a channel switch during the fetch wins. */
+  const reloadCurrentChannel = useCallback(async () => {
+    const gen = ++channelLoadGenRef.current
+    try {
+      const data = await apiFetch<{ messages: ChatMessage[] }>(
+        `/api/chat-data?channel=${encodeURIComponent(channelIdRef.current)}${
+          !CHANNELS.some((c) => c.id === channelIdRef.current) ? `&token=${encodeURIComponent(token)}` : ""
+        }`,
+      )
+      if (gen !== channelLoadGenRef.current) return
+      setMessages(data.messages || [])
+      setPinned((data.messages || []).slice(0, 3))
+    } catch {
+      /* next channel switch / reconnect will re-sync */
+    }
+    void refreshMembers()
+  }, [token, refreshMembers])
 
   /* Open someone's profile card. Prefers the fresh members-list row
    * (role/tag/bio up to date); falls back to the account snapshot
@@ -4243,6 +4582,7 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                 setShowPinned((s) => !s)
                 setShowNotifications(false)
                 setShowSearch(false)
+                setShowBackup(false)
               }}
               className={`rounded-md p-1.5 hover:bg-white/10 ${
                 showPinned ? "bg-white/10 text-orange-300" : "text-white/60"
@@ -4258,6 +4598,7 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                 setShowNotifications((s) => !s)
                 setShowPinned(false)
                 setShowSearch(false)
+                setShowBackup(false)
               }}
               className={`relative rounded-md p-1.5 hover:bg-white/10 ${
                 showNotifications ? "bg-white/10 text-orange-300" : "text-white/60"
@@ -4278,6 +4619,7 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                 setShowSearch((s) => !s)
                 setShowPinned(false)
                 setShowNotifications(false)
+                setShowBackup(false)
               }}
               className={`rounded-md p-1.5 hover:bg-white/10 ${
                 showSearch ? "bg-white/10 text-orange-300" : "text-white/60"
@@ -4297,6 +4639,24 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
             >
               <Users className="h-4 w-4" />
             </button>
+
+            {/* Chat backup (mods/owner) — jsDelivr safety net */}
+            {isMod(account) && (
+              <button
+                onClick={() => {
+                  setShowBackup((s) => !s)
+                  setShowPinned(false)
+                  setShowNotifications(false)
+                  setShowSearch(false)
+                }}
+                className={`rounded-md p-1.5 hover:bg-white/10 ${
+                  showBackup ? "bg-white/10 text-emerald-300" : "text-white/60"
+                }`}
+                title="Chat backups (auto every 30s, published to jsDelivr)"
+              >
+                <DatabaseBackup className="h-4 w-4" />
+              </button>
+            )}
 
             {/* Mod panel */}
             {isMod(account) && (
@@ -4581,6 +4941,16 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                     onQuery={setSearchQuery}
                     onClose={() => setShowSearch(false)}
                     onJump={() => setShowSearch(false)}
+                  />
+                </div>
+              )}
+              {showBackup && (
+                <div className="pointer-events-auto">
+                  <BackupPanel
+                    token={token}
+                    toast={toast}
+                    onClose={() => setShowBackup(false)}
+                    onRestored={() => void reloadCurrentChannel()}
                   />
                 </div>
               )}

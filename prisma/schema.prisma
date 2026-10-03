@@ -92,6 +92,13 @@ model ChatAccount {
   banned       Boolean   @default(false)
   banReason    String?
   ipBanned     Boolean   @default(false)
+  // Placeholder row recreated from a chat backup (2026-10-03 wipe-recovery):
+  // holds the username + its restored messages so the history renders with the
+  // right authors, while keeping the name FREE — the original owner simply
+  // registers it again and the account is upgraded in place (register route),
+  // automatically claiming every restored message. Legacy rows can never log
+  // in (unmatchable password hash + explicit login-route check).
+  legacy       Boolean   @default(false)
   coins        Int       @default(100) // Veil Coins starting balance
   tag          String? // purchased name tag text (e.g. "Cool Dude")
   tagColor     String? // tag badge color

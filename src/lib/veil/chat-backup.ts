@@ -1,0 +1,443 @@
+import { createHash, randomUUID } from "crypto"
+import { mkdirSync, readFileSync, readdirSync, writeFileSync, existsSync, rmSync } from "fs"
+import { db } from "../db"
+
+/**
+ * Veil Chat — backup / restore engine ("jsDelivr links" idea, 2026-10-03).
+ *
+ * WHY: the sandbox rolled back and every chat account + message was lost
+ * twice. Chat data now gets continuously exported to JSON snapshots under
+ * backups/chat/ which are committed to the public GitHub repo
+ * (adimchinakamn-tech/veil-os) — and therefore permanently reachable
+ * through the jsDelivr CDN:
+ *
+ *   https://cdn.jsdelivr.net/gh/adimchinakamn-tech/veil-os@main/backups/chat/latest.json
+ *
+ * If the box is wiped again, the owner restores from that link (chat header
+ * → Backup panel, or POST /api/chat-backup {action:"restore"}) and the whole
+ * community comes back. Password hashes are deliberately NOT exported —
+ * restored accounts become "legacy" placeholders that hold the username +
+ * messages; the original owner simply registers the name again and the
+ * account is upgraded in place, claiming every restored message.
+ */
+
+export const BACKUP_REPO = "adimchinakamn-tech/veil-os"
+export const BACKUP_DIR = "/home/z/my-project/backups/chat"
+export const BACKUP_HISTORY_DIR = BACKUP_DIR + "/history"
+export const BACKUP_STATE_FILE = BACKUP_DIR + "/.state.json"
+export const JSDELIVR_LATEST = `https://cdn.jsdelivr.net/gh/${BACKUP_REPO}@main/backups/chat/latest.json`
+export const JSDELIVR_PURGE = `https://purge.jsdelivr.net/gh/${BACKUP_REPO}@main/backups/chat/latest.json`
+const HISTORY_KEEP = 100
+
+/* jsDelivr (and only jsDelivr) hosts a restore URL may come from. */
+const ALLOWED_RESTORE_HOSTS = new Set([
+  "cdn.jsdelivr.net",
+  "fastly.jsdelivr.net",
+  "gcore.jsdelivr.net",
+  "testingcf.jsdelivr.net",
+])
+
+/** Mirrors the register route's palette so restored members look native. */
+const RESTORE_AVATAR_COLORS = [
+  "#f97316", "#e67e22", "#16a085", "#2980b9", "#8e44ad", "#c0392b",
+  "#27ae60", "#f39c12", "#1abc9c", "#9b59b6", "#e84393", "#2c3e50",
+]
+function restoreAvatarColor(username: string): string {
+  const h = createHash("sha256").update(username.toLowerCase()).digest()
+  return RESTORE_AVATAR_COLORS[h[0] % RESTORE_AVATAR_COLORS.length]
+}
+
+/** A password hash no real password can ever produce — bcrypt.compare()
+ * always fails, so legacy placeholders can never be logged into. */
+function unmatchableHash(): string {
+  return "!legacy:" + randomUUID().replace(/-/g, "")
+}
+
+// ---------------------------------------------------------------------------
+// Backup format
+// ---------------------------------------------------------------------------
+
+export type ChatBackupAccount = {
+  id: string
+  username: string
+  displayName: string
+  avatarColor: string
+  avatarImage: string | null
+  bio: string
+  role: string
+  muted: boolean
+  banned: boolean
+  coins: number
+  tag: string | null
+  tagColor: string | null
+  pfpAccessory: string | null
+  legacy: boolean
+  createdAt: string
+}
+
+export type ChatBackupMessage = {
+  id: string
+  channelId: string
+  accountId: string
+  content: string
+  replyTo: string | null
+  replyToContent: string | null
+  replyToUsername: string | null
+  createdAt: string
+}
+
+export type ChatBackupV1 = {
+  veil: "chat-backup"
+  version: 1
+  exportedAt: string
+  note?: string
+  counts: { accounts: number; messages: number; dms: number }
+  accounts: ChatBackupAccount[]
+  messages: ChatBackupMessage[]
+  dms: { id: string; name: string | null; isGroup: boolean; ownerId: string | null; createdAt: string }[]
+  dmMembers: { dmId: string; accountId: string }[]
+  friends: { accountId: string; friendId: string; createdAt: string }[]
+}
+
+export function isChatBackup(data: unknown): data is ChatBackupV1 {
+  const d = data as ChatBackupV1 | null
+  return !!d &&
+    typeof d === "object" &&
+    (d as { veil?: unknown }).veil === "chat-backup" &&
+    Array.isArray((d as { accounts?: unknown }).accounts) &&
+    Array.isArray((d as { messages?: unknown }).messages)
+}
+
+// ---------------------------------------------------------------------------
+// Collect (DB → backup object)
+// ---------------------------------------------------------------------------
+
+export async function collectChatBackup(): Promise<ChatBackupV1> {
+  const [accounts, messages, dms, dmMembers, friends] = await Promise.all([
+    db.chatAccount.findMany({ orderBy: { createdAt: "asc" } }),
+    db.chatMessage.findMany({ orderBy: { createdAt: "asc" } }),
+    db.chatDM.findMany({ orderBy: { createdAt: "asc" } }),
+    db.dMMember.findMany(),
+    db.chatFriend.findMany(),
+  ])
+  return {
+    veil: "chat-backup",
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    counts: { accounts: accounts.length, messages: messages.length, dms: dms.length },
+    accounts: accounts.map((a) => ({
+      id: a.id,
+      username: a.username,
+      displayName: a.displayName || a.username,
+      avatarColor: a.avatarColor,
+      avatarImage: a.avatarImage,
+      bio: a.bio,
+      role: a.role,
+      muted: a.muted,
+      banned: a.banned,
+      coins: a.coins,
+      tag: a.tag,
+      tagColor: a.tagColor,
+      pfpAccessory: a.pfpAccessory,
+      legacy: a.legacy,
+      createdAt: a.createdAt.toISOString(),
+    })),
+    messages: messages.map((m) => ({
+      id: m.id,
+      channelId: m.channelId,
+      accountId: m.accountId,
+      content: m.content,
+      replyTo: m.replyTo,
+      replyToContent: m.replyToContent,
+      replyToUsername: m.replyToUsername,
+      createdAt: m.createdAt.toISOString(),
+    })),
+    dms: dms.map((d) => ({
+      id: d.id,
+      name: d.name,
+      isGroup: d.isGroup,
+      ownerId: d.ownerId,
+      createdAt: d.createdAt.toISOString(),
+    })),
+    dmMembers: dmMembers.map((m) => ({ dmId: m.dmId, accountId: m.accountId })),
+    friends: friends.map((f) => ({
+      accountId: f.accountId,
+      friendId: f.friendId,
+      createdAt: f.createdAt.toISOString(),
+    })),
+  }
+}
+
+/** Cheap change fingerprint — used by the backup loop to skip no-op runs. */
+export async function backupSignature(): Promise<string> {
+  const [msgCount, accCount, dmCount, lastMsg] = await Promise.all([
+    db.chatMessage.count(),
+    db.chatAccount.count(),
+    db.chatDM.count(),
+    db.chatMessage.findFirst({ orderBy: { createdAt: "desc" }, select: { id: true, createdAt: true } }),
+  ])
+  return [msgCount, accCount, dmCount, lastMsg ? `${lastMsg.id}@${lastMsg.createdAt.getTime()}` : "-"].join("|")
+}
+
+// ---------------------------------------------------------------------------
+// Write snapshots (latest + history + manifest)
+// ---------------------------------------------------------------------------
+
+export function writeBackupFiles(backup: ChatBackupV1): { latestPath: string; historyPath: string } {
+  mkdirSync(BACKUP_HISTORY_DIR, { recursive: true })
+  const json = JSON.stringify(backup, null, 2)
+  const latestPath = `${BACKUP_DIR}/latest.json`
+  writeFileSync(latestPath, json + "\n")
+  const stamp = new Date().toISOString().replace(/[:T]/g, "-").slice(0, 19)
+  const historyPath = `${BACKUP_HISTORY_DIR}/chat-${stamp}.json`
+  writeFileSync(historyPath, json + "\n")
+  // Prune old history snapshots (keep the newest HISTORY_KEEP).
+  const olds = readdirSync(BACKUP_HISTORY_DIR)
+    .filter((f) => /^chat-.*\.json$/.test(f))
+    .sort()
+  for (const f of olds.slice(0, Math.max(0, olds.length - HISTORY_KEEP))) {
+    try { rmSync(`${BACKUP_HISTORY_DIR}/${f}`) } catch { /* best effort */ }
+  }
+  writeFileSync(
+    `${BACKUP_DIR}/manifest.json`,
+    JSON.stringify(
+      {
+        latestWrittenAt: backup.exportedAt,
+        sha256: createHash("sha256").update(json).digest("hex"),
+        counts: backup.counts,
+        jsdelivr: JSDELIVR_LATEST,
+      },
+      null,
+      2,
+    ) + "\n",
+  )
+  return { latestPath, historyPath }
+}
+
+// ---------------------------------------------------------------------------
+// Restore (backup object → DB), idempotent
+// ---------------------------------------------------------------------------
+
+export type RestoreResult = {
+  ok: boolean
+  error?: string
+  accountsCreated: number
+  accountsMapped: number
+  messagesImported: number
+  messagesSkipped: number
+  dmsRestored: number
+  friendsRestored: number
+  restoredFrom?: string
+}
+
+export async function restoreChatBackup(
+  data: unknown,
+  opts: { restoredFrom?: string } = {},
+): Promise<RestoreResult> {
+  const res: RestoreResult = {
+    ok: false,
+    accountsCreated: 0,
+    accountsMapped: 0,
+    messagesImported: 0,
+    messagesSkipped: 0,
+    dmsRestored: 0,
+    friendsRestored: 0,
+    restoredFrom: opts.restoredFrom,
+  }
+  if (!isChatBackup(data)) {
+    res.error = "Not a Veil chat backup (expected veil:\"chat-backup\")."
+    return res
+  }
+
+  // ---- pass 1: accounts → map backup ids onto live rows ------------------
+  const existing = await db.chatAccount.findMany()
+  const byName = new Map(existing.map((a) => [a.username.toLowerCase(), a]))
+  const byId = new Map(existing.map((a) => [a.id, a]))
+  const idMap = new Map<string, string>()
+
+  for (const a of data.accounts) {
+    if (!a.username || typeof a.username !== "string") continue
+    const live = byName.get(a.username.toLowerCase())
+    if (live) {
+      idMap.set(a.id, live.id)
+      res.accountsMapped++
+      continue
+    }
+    // Recreate as a legacy placeholder. Keep the original id when it is free
+    // (stable re-imports); otherwise mint one.
+    let newId = a.id
+    if (!newId || byId.has(newId)) newId = `legacy-${randomUUID().slice(0, 12)}`
+    await db.chatAccount.create({
+      data: {
+        id: newId,
+        username: a.username,
+        passwordHash: unmatchableHash(),
+        displayName: a.displayName || a.username,
+        avatarColor: a.avatarColor || restoreAvatarColor(a.username),
+        avatarImage: typeof a.avatarImage === "string" ? a.avatarImage : null,
+        bio: typeof a.bio === "string" ? a.bio.slice(0, 500) : "",
+        role: ["member", "moderator", "admin"].includes(a.role) ? a.role : "member",
+        muted: !!a.muted,
+        banned: !!a.banned,
+        coins: Number.isFinite(a.coins) ? Math.max(0, Math.floor(a.coins)) : 100,
+        tag: a.tag ?? null,
+        tagColor: a.tagColor ?? null,
+        pfpAccessory: a.pfpAccessory ?? null,
+        legacy: true,
+        createdAt: safeDate(a.createdAt) ?? new Date(),
+      },
+    })
+    byId.set(newId, { id: newId } as (typeof existing)[number])
+    idMap.set(a.id, newId)
+    res.accountsCreated++
+  }
+
+  // ---- pass 2: DM containers + memberships -------------------------------
+  for (const d of data.dms ?? []) {
+    if (!d?.id) continue
+    const live = await db.chatDM.findUnique({ where: { id: d.id } })
+    if (!live) {
+      await db.chatDM.create({
+        data: {
+          id: d.id,
+          name: d.name ?? null,
+          isGroup: !!d.isGroup,
+          ownerId: d.ownerId ? (idMap.get(d.ownerId) ?? null) : null,
+          createdAt: safeDate(d.createdAt) ?? new Date(),
+        },
+      }).catch(() => null)
+      res.dmsRestored++
+    }
+  }
+  for (const m of data.dmMembers ?? []) {
+    const dmId = m?.dmId
+    const accountId = m?.accountId ? idMap.get(m.accountId) : undefined
+    if (!dmId || !accountId) continue
+    await db.dMMember
+      .create({ data: { dmId, accountId } })
+      .catch(() => { /* unique (dmId, accountId) — already there */ })
+  }
+  for (const f of data.friends ?? []) {
+    const accountId = f?.accountId ? idMap.get(f.accountId) : undefined
+    const friendId = f?.friendId ? idMap.get(f.friendId) : undefined
+    if (!accountId || !friendId) continue
+    await db.chatFriend
+      .create({ data: { accountId, friendId } })
+      .catch(() => { /* unique — already friends */ })
+    res.friendsRestored++
+  }
+
+  // ---- pass 3: messages (skip ids that already exist) --------------------
+  const msgIds = new Set(
+    (await db.chatMessage.findMany({ select: { id: true }, take: 100000 })).map((m) => m.id),
+  )
+  for (const m of data.messages) {
+    if (!m?.id || !m.content || typeof m.content !== "string") { res.messagesSkipped++; continue }
+    if (msgIds.has(m.id)) { res.messagesSkipped++; continue }
+    const accountId = idMap.get(m.accountId)
+    if (!accountId) { res.messagesSkipped++; continue }
+    await db.chatMessage
+      .create({
+        data: {
+          id: m.id,
+          channelId: typeof m.channelId === "string" && m.channelId ? m.channelId : "main",
+          accountId,
+          content: m.content.slice(0, 4000),
+          replyTo: m.replyTo ?? null,
+          replyToContent: m.replyToContent ? m.replyToContent.slice(0, 400) : null,
+          replyToUsername: m.replyToUsername ?? null,
+          createdAt: safeDate(m.createdAt) ?? new Date(),
+        },
+      })
+      .catch(() => {
+        /* id / constraint clash on a concurrent import — treat as skipped */
+        res.messagesSkipped++
+        res.messagesImported--
+      })
+    msgIds.add(m.id)
+    res.messagesImported++
+  }
+
+  res.ok = true
+  return res
+}
+
+function safeDate(v: unknown): Date | null {
+  if (typeof v !== "string" && typeof v !== "number") return null
+  const d = new Date(v as string)
+  return Number.isNaN(d.getTime()) ? null : d
+}
+
+// ---------------------------------------------------------------------------
+// Loaders (local snapshot / jsDelivr CDN)
+// ---------------------------------------------------------------------------
+
+export function readLocalBackup(name: string): { data: unknown; restoredFrom: string } | { error: string } {
+  if (!/^[\w.-]+\.json$/.test(name) || name.includes("..")) {
+    return { error: "Invalid backup file name." }
+  }
+  // Allowed locations: backups/chat/<name> and backups/chat/history/<name>
+  for (const dir of [BACKUP_DIR, BACKUP_HISTORY_DIR, `${BACKUP_DIR}/seeds`]) {
+    const p = `${dir}/${name}`
+    if (existsSync(p)) {
+      try {
+        return { data: JSON.parse(readFileSync(p, "utf-8")), restoredFrom: p }
+      } catch {
+        return { error: "Backup file is not valid JSON." }
+      }
+    }
+  }
+  return { error: `No backup named ${name} found.` }
+}
+
+export async function fetchJsDelivrBackup(
+  url: string = JSDELIVR_LATEST,
+): Promise<{ data: unknown; restoredFrom: string } | { error: string }> {
+  let u: URL
+  try {
+    u = new URL(url)
+  } catch {
+    return { error: "Invalid URL." }
+  }
+  if (!ALLOWED_RESTORE_HOSTS.has(u.hostname) || !u.pathname.startsWith("/gh/")) {
+    return { error: "Only jsDelivr /gh/ URLs are allowed for restores." }
+  }
+  try {
+    const r = await fetch(url, {
+      signal: AbortSignal.timeout(15000),
+      headers: { accept: "application/json" },
+      cache: "no-store",
+    })
+    if (!r.ok) return { error: `jsDelivr answered ${r.status}.` }
+    return { data: await r.json(), restoredFrom: url }
+  } catch (e) {
+    return { error: `Could not fetch backup: ${(e as Error).message}` }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Backup loop state (.state.json — local only, gitignored)
+// ---------------------------------------------------------------------------
+
+export type BackupLoopState = {
+  sig: string
+  lastRun: string
+  lastBackupAt: string | null
+  lastPushOk: boolean | null
+  lastPushAt: string | null
+  lastPushError: string | null
+  lastCounts: { accounts: number; messages: number; dms: number } | null
+}
+
+export function readBackupState(): BackupLoopState | null {
+  try {
+    return JSON.parse(readFileSync(BACKUP_STATE_FILE, "utf-8")) as BackupLoopState
+  } catch {
+    return null
+  }
+}
+
+export function writeBackupState(s: BackupLoopState): void {
+  mkdirSync(BACKUP_DIR, { recursive: true })
+  writeFileSync(BACKUP_STATE_FILE, JSON.stringify(s, null, 2) + "\n")
+}

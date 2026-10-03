@@ -50,6 +50,21 @@ async function handleLogin(req: Request): Promise<Response> {
       )
     }
 
+    /* Restored-from-backup placeholder: it deliberately has no usable
+     * password. The original owner reclaims it by REGISTERING the username
+     * (upgraded in place, messages included) — point them there instead of
+     * a misleading "wrong password". */
+    if (account.legacy) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            "This account was restored from a backup. Switch to Register and claim the username — your old messages are waiting.",
+        },
+        { status: 403 },
+      )
+    }
+
     const valid = await bcrypt.compare(password, account.passwordHash)
     if (!valid) {
       return NextResponse.json(
