@@ -5,7 +5,7 @@ import {
   backupSignature,
   readBackupState,
   writeBackupState,
-  JSDELIVR_PURGE,
+  purgeJSDelivrAll,
 } from "../src/lib/veil/chat-backup"
 
 /**
@@ -16,11 +16,11 @@ import {
  *   bun scripts/chat-backup.ts --force    # always snapshot
  *
  * Pipeline: detect change → snapshot to backups/chat/{latest,history,manifest}
+ * → stamp the static CDN mirror (site/) + bump site/version.json
  * → git add+commit → git push (fails quietly until the GitHub token gets
  * Contents:write — the standing watcher will land the backlog) → on a
- * successful push, purge the jsDelivr CDN cache so the public link
- * (cdn.jsdelivr.net/gh/ok5678765s/veil-os@main/backups/chat/latest.json)
- * serves the fresh snapshot immediately.
+ * successful push, purge the jsDelivr CDN cache for the backup JSON and
+ * every site/ page so the public mirror links are fresh within seconds.
  */
 
 const ROOT = "/home/z/my-project"
@@ -47,8 +47,16 @@ async function main(): Promise<void> {
   const backup = await collectChatBackup()
   const { latestPath } = writeBackupFiles(backup)
 
+  // ---- stamp the CDN mirror so its pages + version.json follow along ----
+  try {
+    const r = spawnSync("bun", ["scripts/site-build.ts"], { cwd: ROOT, encoding: "utf-8" })
+    if (r.status !== 0) console.error("SITE-STAMP-FAIL " + (r.stderr || "").slice(0, 200))
+  } catch {
+    /* stamping is best-effort */
+  }
+
   // ---- git: stage + commit + push (all best-effort) ----------------------
-  git(["add", "-A", "backups/chat"])
+  git(["add", "-A", "backups/chat", "site"])
   const staged = git(["diff", "--cached", "--quiet"])
   let committed = false
   if (staged.code !== 0) {
@@ -65,14 +73,12 @@ async function main(): Promise<void> {
   const pushOk = push.code === 0
   const pushError = pushOk ? null : push.err
 
-  // Purge the jsDelivr edge cache after a successful publish so the CDN
-  // link reflects the new snapshot right away (branch refs cache ~12h).
+  // Purge the jsDelivr edge cache after a successful publish so every CDN
+  // link (chat backup + all 7 site pages + assets) reflects the new state
+  // right away (branch refs otherwise cache ~12h).
+  let purged: string[] = []
   if (pushOk) {
-    try {
-      await fetch(JSDELIVR_PURGE, { signal: AbortSignal.timeout(6000) })
-    } catch {
-      /* cache purging is an optimization — never fatal */
-    }
+    purged = await purgeJSDelivrAll()
   }
 
   writeBackupState({
@@ -93,6 +99,7 @@ async function main(): Promise<void> {
       committed,
       pushOk,
       pushError: pushError ? pushError.slice(0, 160) : null,
+      purged: purged.length,
       counts: backup.counts,
     }),
   )

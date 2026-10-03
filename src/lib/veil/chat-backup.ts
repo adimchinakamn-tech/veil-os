@@ -27,6 +27,47 @@ export const BACKUP_HISTORY_DIR = BACKUP_DIR + "/history"
 export const BACKUP_STATE_FILE = BACKUP_DIR + "/.state.json"
 export const JSDELIVR_LATEST = `https://cdn.jsdelivr.net/gh/${BACKUP_REPO}@main/backups/chat/latest.json`
 export const JSDELIVR_PURGE = `https://purge.jsdelivr.net/gh/${BACKUP_REPO}@main/backups/chat/latest.json`
+
+/* The static site mirror (site/*.html) is served by the same jsDelivr
+ * repo. After every push these paths get purged so the CDN mirror is
+ * fresh within seconds — "when the site gets updated, jsDelivr also
+ * gets updated" (the 10 public links live on site/status.html). */
+export const SITE_FILES = [
+  "site/index.html",
+  "site/chat.html",
+  "site/arcade.html",
+  "site/ai.html",
+  "site/stream.html",
+  "site/wallpapers.html",
+  "site/status.html",
+  "site/version.json",
+  "site/assets/veil.css",
+  "site/assets/veil.js",
+  "backups/chat/latest.json",
+  "backups/chat/manifest.json",
+] as const
+
+export const JSDELIVR_PURGE_URLS: string[] = SITE_FILES.map(
+  (f) => `https://purge.jsdelivr.net/gh/${BACKUP_REPO}@main/${f}`,
+)
+
+/** Purge every mirror surface on the jsDelivr edge. Never throws —
+ * cache purging is an optimization; the branch cache expires by itself. */
+export async function purgeJSDelivrAll(): Promise<string[]> {
+  const purged: string[] = []
+  await Promise.all(
+    JSDELIVR_PURGE_URLS.map(async (url) => {
+      try {
+        const r = await fetch(url, { signal: AbortSignal.timeout(8000) })
+        if (r.ok) purged.push(url)
+      } catch {
+        /* ignore individual purge failures */
+      }
+    }),
+  )
+  return purged
+}
+
 const HISTORY_KEEP = 100
 
 /* jsDelivr (and only jsDelivr) hosts a restore URL may come from. */
