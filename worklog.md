@@ -1218,3 +1218,19 @@ Stage Summary:
 - jsDelivr restore path is now cdn.jsdelivr.net/gh/ok5678765s/veil-os@main/backups/chat/latest.json (backup loop purges CDN on successful push).
 - Only remaining blocker: PAT Contents:write — user must flip the toggle; watcher (pid 6674) then pushes main and verifies.
 - After first successful push: verify VERIFIED <sha> in tmp/github-push-watch.log matches `git rev-parse main`; no manual pushes needed after that (chat-backup loop keeps pushing).
+
+---
+Task ID: github-push-success-1
+Agent: main (Z.ai Code)
+Task: User completed the fine-grained PAT permission fix (added Contents: Read and write via "+ Add permissions"); verify the push, the repo, and the jsDelivr CDN restore link.
+
+Work Log:
+- Watcher detected push capability at 18:56:12 UTC, pushed main, logged "PUSH OK" (18:56:44) and "VERIFIED 0fb07f55f7da32389de792cecdd1e29e7bda1dc0 → https://github.com/ok5678765s/veil-os" (18:56:50)
+- Confirmed local main == remote main (0fb07f55) and "Everything up-to-date" on a final manual push
+- jsDelivr restore link LIVE: https://cdn.jsdelivr.net/gh/ok5678765s/veil-os@main/backups/chat/latest.json → HTTP 200, serves the real backup JSON (4 accounts, 11 messages — the restored #general history)
+- The full chain the user asked for on incident day is now operational: 30s backup loop → git commit → push to GitHub → jsDelivr CDN purge/serve. Future backups flow automatically; no further token action needed (token expires Nov 1 2026 — calendar note for renewal).
+
+Stage Summary:
+- GITHUB PUSH BLOCKER RESOLVED. Repo: github.com/ok5678765s/veil-os (public). Watcher exited cleanly after VERIFIED; chat-backup loop now owns ongoing pushes.
+- Disaster-recovery path verified end-to-end: wipe → restore from cdn.jsdelivr.net/gh/ok5678765s/veil-os@main/backups/chat/latest.json (or chat header → Backup panel → Restore).
+- Remaining minor: PAT expires Sun Nov 1 2026 — set a reminder ~Oct 25 to extend it (github.com/settings/personal-access-tokens → Veil → Regenerate/extend, keep Contents: Read and write).
