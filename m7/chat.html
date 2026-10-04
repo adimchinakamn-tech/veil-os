@@ -1,18 +1,20 @@
 <!DOCTYPE html>
-<html lang="en" data-veil-build="2026-10-04T20:17:08Z">
+<html lang="en" data-veil-build="2026-10-04T20:56:05Z">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Veil Chat — Veil</title>
 <meta name="description" content="Veil Chat — the community room. Say hi.">
-<link rel="icon" href="../site/assets/icon.svg?v=2026-10-04T20:17:08Z" type="image/svg+xml" sizes="any">
-<link rel="stylesheet" href="../site/assets/app.css?v=2026-10-04T20:17:08Z">
+<link rel="icon" href="../site/assets/icon.svg?v=2026-10-04T20:56:05Z" type="image/svg+xml" sizes="any">
+<link rel="stylesheet" href="../site/assets/app.css?v=2026-10-04T20:56:05Z">
 </head>
 <body class="__variable_246ccd __variable_c29908 antialiased bg-background text-foreground">
 
 <div data-os-section class="fixed inset-0 z-50">
   <div class="h-full w-full overflow-hidden">
-    <div class="relative flex h-full flex-col overflow-hidden bg-black/30 text-white">
+    <!-- The chat app — the real app returns the AuthScreen INSTEAD of this
+         whole tree while signed out, so it stays hidden until you're in -->
+    <div id="chat-root" class="relative flex h-full flex-col overflow-hidden bg-black/30 text-white hidden">
       <div aria-hidden="true" class="pointer-events-none absolute inset-0 overflow-hidden">
         <div class="absolute inset-0" data-os-wallpaper="flat"></div>
         <div class="absolute inset-0 bg-black/45"></div>
@@ -115,10 +117,17 @@
           </aside>
         </div>
       </div>
+    </div><!-- /chat-root -->
 
-      <!-- The app's auth gate — login/register, exactly like the live site's -->
-      <div id="auth-gate" class="absolute inset-0 z-50 hidden items-center justify-center overflow-y-auto bg-black/30 px-4 py-10 text-white">
-        <button id="gate-back" class="absolute left-4 top-4 z-[60] flex h-9 items-center gap-1.5 rounded-xl border border-white/15 bg-black/45 px-3 text-[13px] font-medium text-zinc-200 backdrop-blur-md transition hover:border-white/30 hover:text-white" title="Back to Veil">
+    <!-- The app's auth screen — replaces the chat entirely while signed
+         out, exactly like the live site's AuthScreen + its own
+         ChatWallpaperBackdrop (nothing but the wallpaper behind it) -->
+    <div id="auth-gate" class="relative flex min-h-screen items-center justify-center overflow-y-auto bg-black/30 px-4 py-10 text-white">
+      <div aria-hidden="true" class="pointer-events-none absolute inset-0 overflow-hidden">
+        <div class="absolute inset-0" data-os-wallpaper="flat"></div>
+        <div class="absolute inset-0 bg-black/45"></div>
+      </div>
+      <button id="gate-back" class="fixed left-4 top-4 z-30 flex h-9 items-center gap-1.5 rounded-xl border border-white/15 bg-black/45 px-3 text-[13px] font-medium text-zinc-200 backdrop-blur-md transition hover:border-white/30 hover:text-white" title="Back to Veil">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left h-4 w-4" aria-hidden="true"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg>
           <span class="hidden sm:inline">Veil</span>
         </button>
@@ -154,7 +163,6 @@
             </button>
           </form>
         </div>
-      </div>
     </div>
   </div>
 </div>
@@ -163,8 +171,8 @@
 
 <button type="button" data-os-refresh onclick="location.reload()" title="A newer version was pushed" style="display:none" class="fixed bottom-4 left-1/2 z-[80] -translate-x-1/2 items-center gap-1.5 rounded-full border border-emerald-400/30 bg-zinc-950/90 px-3.5 py-1.5 text-[11.5px] font-medium text-emerald-300 shadow-[0_8px_24px_rgba(0,0,0,0.5)] backdrop-blur-md transition hover:border-emerald-400/60"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="size-3"><path d="M21 12a9 9 0 1 1-2.6-6.4"></path><path d="M21 3v6h-6"></path></svg>Veil updated — refresh</button>
 <script>window.VEILOS_SHARED_BASE="../site/";</script>
-<script src="../site/assets/os.js?v=2026-10-04T20:17:08Z"></script>
-<script src="../site/assets/live.js?v=2026-10-04T20:17:08Z"></script>
+<script src="../site/assets/os.js?v=2026-10-04T20:56:05Z"></script>
+<script src="../site/assets/live.js?v=2026-10-04T20:56:05Z"></script>
 <script>
 (function () {
   "use strict";
@@ -495,6 +503,7 @@
   /* ---- identity + gate ---- */
   function applyIdentity(idAcc) {
     var gate = document.getElementById("auth-gate");
+    var chatRoot = document.getElementById("chat-root");
     var meAvatar = document.getElementById("me-avatar");
     if (idAcc && state.liveUsers[String(idAcc.username).toLowerCase()]) {
       state.me = L.pseudoAccount(state.liveUsers[String(idAcc.username).toLowerCase()]);
@@ -506,6 +515,7 @@
     if (state.me) {
       gate.classList.add("hidden");
       gate.classList.remove("flex");
+      chatRoot.classList.remove("hidden");
       var name = displayName(state.me);
       meAvatar.style.backgroundColor = state.me.avatarColor || "#2c3e50";
       meAvatar.textContent = initials(name);
@@ -514,6 +524,7 @@
     } else {
       gate.classList.remove("hidden");
       gate.classList.add("flex");
+      chatRoot.classList.add("hidden");
       document.title = "Veil Chat";
     }
     render();

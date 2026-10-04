@@ -632,12 +632,13 @@
   }
   window.VEILOS.wpAsset = wpAsset;
   function mountWallpaper() {
-    var slot = $("[data-os-wallpaper]");
-    if (!slot) return;
+    /* chat.html carries two exclusive trees (chat app / auth screen),
+       each with its own backdrop slot — fill them all */
+    var slots = $$("[data-os-wallpaper]");
+    if (!slots.length) return;
     var dim = lsGet("veil:wp-dim");
     /* "flat" = the chat backdrop: the wallpaper + a plain scrim, no
        vignette/dim stack (the real app's ChatWallpaperBackdrop) */
-    var flat = slot.getAttribute("data-os-wallpaper") === "flat";
     function render() {
       var sel = lsJson("veil.wallpaper", null);
       var kind = sel && sel.kind, src = sel ? wpAsset(sel.src) : "";
@@ -653,10 +654,13 @@
           '<div class="absolute -bottom-32 right-[8%] h-80 w-80 rounded-full bg-black/10 blur-3xl' + (REDUCE_MOTION ? "" : " veil-orb-b") + '"></div></div>';
       }
       var dimCls = dim === "55" ? "bg-black/55" : dim === "25" ? "bg-black/25" : "";
-      slot.innerHTML = inner + (flat ? "" :
-        (dimCls ? '<div class="absolute inset-0 ' + dimCls + '"></div>' : "") +
-        '<div class="veil-vignette absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-black/45 to-transparent"></div>' +
-        '<div class="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/35"></div>');
+      for (var i = 0; i < slots.length; i++) {
+        var flat = slots[i].getAttribute("data-os-wallpaper") === "flat";
+        slots[i].innerHTML = inner + (flat ? "" :
+          (dimCls ? '<div class="absolute inset-0 ' + dimCls + '"></div>' : "") +
+          '<div class="veil-vignette absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-black/45 to-transparent"></div>' +
+          '<div class="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/35"></div>');
+      }
     }
     render();
     window.addEventListener("veil:wallpaper-changed", render);
