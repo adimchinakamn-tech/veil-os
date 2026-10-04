@@ -2,8 +2,8 @@ import { readFileSync, writeFileSync, existsSync, rmSync, mkdirSync } from "fs"
 import { execSync } from "child_process"
 
 /**
- * site-build.ts — stamp the static mirror + generate the jsDelivr XHTML
- * exact copies.
+ * site-build.ts — stamp the static copy + generate the jsDelivr XHTML
+ * exact copies + export REAL data from the live app.
  *
  *   bun scripts/site-build.ts
  *
@@ -14,9 +14,14 @@ import { execSync } from "child_process"
  *      site directory is SELF-CONTAINED — Cloudflare Pages / Vercel
  *      static deploys only serve site/, and the runtime reads the data
  *      same-origin from the same deploy (instant, no CDN lag).
- *   4. Generates site/*.xhtml — IDENTICAL pages that jsDelivr will serve
- *      as application/xhtml+xml (real rendered pages; plain .html is
- *      force-served as text/plain by jsDelivr's anti-phishing policy).
+ *   4. Exports the real app data the pages render from:
+ *        data/arcade.json     — the full 840-title catalog + hot row
+ *        data/wallpapers.json — the curated 4K feed (page 1)
+ *        data/updates.json    — the site updates feed
+ *      (all fetched from the running dev server; skipped when offline)
+ *   5. Generates site/*.xhtml — IDENTICAL pages that jsDelivr serves
+ *      as application/xhtml+xml (plain .html is force-served as
+ *      text/plain by jsDelivr's anti-phishing policy).
  *      Conversion: xmlns on <html>, self-closed void elements, CDATA-
  *      wrapped inline scripts, internal .html links → .xhtml.
  *
@@ -26,7 +31,10 @@ import { execSync } from "child_process"
 
 const ROOT = "/home/z/my-project"
 const SITE = ROOT + "/site"
-const PAGES = ["index", "chat", "arcade", "ai", "stream", "wallpapers", "status"]
+const PAGES = [
+  "index", "chat", "arcade", "ai", "stream", "wallpapers",
+  "music", "links", "history", "updates", "settings",
+]
 
 function stamp(): string {
   const iso = new Date().toISOString().replace(/\.\d+Z$/, "Z")
@@ -53,6 +61,80 @@ function writeVersion(stampIso: string): void {
     pages: PAGES.map((p) => `site/${p}.html`),
     xhtmlPages: PAGES.map((p) => `site/${p}.xhtml`),
   }, null, 2) + "\n")
+}
+
+/* --- live-data exports -------------------------------------------------- */
+
+async function fetchJson(url: string, timeoutMs = 15000): Promise<any | null> {
+  try {
+    const ctl = new AbortController()
+    const t = setTimeout(() => ctl.abort(), timeoutMs)
+    const r = await fetch(url, { signal: ctl.signal, cache: "no-store" })
+    clearTimeout(t)
+    if (!r.ok) return null
+    return await r.json()
+  } catch {
+    return null
+  }
+}
+
+async function exportData(): Promise<Record<string, boolean>> {
+  const out: Record<string, boolean> = {}
+
+  // chat snapshot (same-origin deploy data)
+  try {
+    const snap = readFileSync(ROOT + "/backups/chat/latest.json", "utf-8")
+    mkdirSync(SITE + "/data", { recursive: true })
+    writeFileSync(SITE + "/data/latest.json", snap)
+    out.chat = true
+  } catch {
+    out.chat = false
+  }
+
+  // arcade — walk every page (60/page) + the hot row
+  const arcade: { items: any[]; hot: any[]; total: number } = { items: [], hot: [], total: 0 }
+  for (let page = 1; page <= 40; page++) {
+    const j = await fetchJson(`http://localhost:3000/api/arcade?page=${page}`)
+    if (!j || !Array.isArray(j.items) || j.items.length === 0) break
+    arcade.items.push(...j.items)
+    arcade.total = j.total ?? arcade.items.length
+    if (!j.hasMore) break
+  }
+  const hot = await fetchJson("http://localhost:3000/api/arcade?hot=1")
+  arcade.hot = (hot && Array.isArray(hot.items)) ? hot.items : []
+  if (arcade.items.length) {
+    writeFileSync(SITE + "/data/arcade.json", JSON.stringify(arcade))
+    out.arcade = true
+  } else {
+    out.arcade = existsSync(SITE + "/data/arcade.json") // keep the old copy
+  }
+
+  // wallpapers — curated feed page 1 + the live motionbgs shelf
+  const wp = await fetchJson("http://localhost:3000/api/wallpapers")
+  if (wp && Array.isArray(wp.items) && wp.items.length) {
+    writeFileSync(SITE + "/data/wallpapers.json", JSON.stringify(wp))
+    out.wallpapers = true
+  } else {
+    out.wallpapers = existsSync(SITE + "/data/wallpapers.json")
+  }
+  const wpl = await fetchJson("http://localhost:3000/api/wallpapers/live")
+  if (wpl && Array.isArray(wpl.items) && wpl.items.length) {
+    writeFileSync(SITE + "/data/wallpapers-live.json", JSON.stringify(wpl))
+    out.wallpapersLive = true
+  } else {
+    out.wallpapersLive = existsSync(SITE + "/data/wallpapers-live.json")
+  }
+
+  // updates — the public feed
+  const up = await fetchJson("http://localhost:3000/api/updates")
+  if (up && Array.isArray(up.updates)) {
+    writeFileSync(SITE + "/data/updates.json", JSON.stringify(up))
+    out.updates = true
+  } else {
+    out.updates = existsSync(SITE + "/data/updates.json")
+  }
+
+  return out
 }
 
 /* --- .html → .xhtml conversion (well-formed XML) ----------------------- */
@@ -117,6 +199,18 @@ function addAttrValues(html: string): string {
 
 function toXhtml(html: string): string {
   let out = html
+  // Protect inline script BODIES first — the tag-scanning regexes below
+  // must never see markup-like strings inside JS (game HTML builders,
+  // regex literals like /<base\s/…). Placeholder them out, restore after.
+  const scripts: string[] = []
+  out = out.replace(
+    /(<script>)([\s\S]*?)(<\/script>)/g,
+    (_m, open: string, body: string, close: string) => {
+      if (!body.trim()) return `${open}${body}${close}`
+      const i = scripts.push(body) - 1
+      return `${open}__VEIL_SCRIPT_${i}__${close}`
+    },
+  )
   // XML namespace on the root element (browsers default it, but be proper).
   out = out.replace(/<html(\s)/, '<html xmlns="http://www.w3.org/1999/xhtml"$1')
   // Internal page links point at the xhtml siblings.
@@ -125,37 +219,27 @@ function toXhtml(html: string): string {
   }
   out = addAttrValues(out)
   out = selfCloseVoids(out)
-  out = cdataScripts(out)
+  // Restore the scripts, CDATA-wrapped so their <, &&, ++ are XML-safe.
+  out = out.replace(
+    /(<script>)(__VEIL_SCRIPT_(\d+)__)(<\/script>)/g,
+    (_m, open: string, _ph: string, idx: string, close: string) =>
+      `${open}\n//<![CDATA[\n${scripts[Number(idx)].replace(/\]\]>/g, "]]&gt;")}\n//]]>\n${close}`,
+  )
   return out
-}
-
-function writeData(): boolean {
-  // The site must carry its own copy of the chat snapshot: Cloudflare
-  // Pages and Vercel serve ONLY site/, so backups/chat/latest.json is
-  // unreachable there. veil.js fetches "data/latest.json" (same-origin)
-  // first on every host.
-  try {
-    const snap = readFileSync(ROOT + "/backups/chat/latest.json", "utf-8")
-    mkdirSync(SITE + "/data", { recursive: true })
-    writeFileSync(SITE + "/data/latest.json", snap)
-    return true
-  } catch {
-    return false // no snapshot yet — pages fall back to the CDN copy
-  }
 }
 
 const stampIso = stamp()
 writeVersion(stampIso)
-const dataOk = writeData()
+exportData().then((dataOk) => {
+  for (const p of PAGES) {
+    const src = `${SITE}/${p}.html`
+    if (!existsSync(src)) continue
+    writeFileSync(`${SITE}/${p}.xhtml`, toXhtml(readFileSync(src, "utf-8")))
+  }
 
-for (const p of PAGES) {
-  const src = `${SITE}/${p}.html`
-  if (!existsSync(src)) continue
-  writeFileSync(`${SITE}/${p}.xhtml`, toXhtml(readFileSync(src, "utf-8")))
-}
+  // The MIME probe served its purpose (application/xhtml+xml confirmed).
+  const probe = `${SITE}/mime-test.xhtml`
+  if (existsSync(probe)) rmSync(probe)
 
-// The MIME probe served its purpose (application/xhtml+xml confirmed).
-const probe = `${SITE}/mime-test.xhtml`
-if (existsSync(probe)) rmSync(probe)
-
-console.log(JSON.stringify({ stamped: stampIso, pages: PAGES.length, xhtml: PAGES.length, data: dataOk }))
+  console.log(JSON.stringify({ stamped: stampIso, pages: PAGES.length, xhtml: PAGES.length, data: dataOk }))
+})

@@ -1,71 +1,349 @@
 <!DOCTYPE html>
-<html lang="en" data-veil-build="2026-10-04T12:26:41Z">
+<html lang="en" data-veil-build="2026-10-04T14:52:42Z">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wallpapers — Veil (mirror)</title>
-<meta name="description" content="Veil Wallpapers — curated motion and still backdrops for the OS. Static mirror preview.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f59e0b' stroke-width='2'%3E%3Crect x='3' y='3' width='18' height='18' rx='2'/%3E%3Ccircle cx='8.5' cy='8.5' r='1.5'/%3E%3Cpath d='M21 15l-5-5L5 21'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="assets/veil.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Veil Wallpapers — Veil</title>
+<meta name="description" content="Veil Wallpapers — motion and still backdrops, animated themes and the live shelves. One tap applies them everywhere.">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml" sizes="any">
+<link rel="stylesheet" href="assets/app.css">
 </head>
-<body>
-<div class="shell">
-<nav class="topnav" aria-label="Main">
-  <div class="topnav-inner">
-    <a class="brand" href="index.html">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/></svg>
-      Veil <span class="beta">MIRROR</span>
-    </a>
-    <div class="navlinks">
-      <a href="index.html">Home</a>
-      <a href="chat.html">Chat</a>
-      <a href="arcade.html">Arcade</a>
-      <a href="ai.html">AI</a>
-      <a href="stream.html">Stream</a>
-      <a href="wallpapers.html" class="active">Wallpapers</a>
-      <a href="status.html">Status</a>
+<body class="__variable_246ccd __variable_c29908 antialiased bg-background text-foreground">
+
+<div data-os-section class="fixed inset-0 z-50 bg-zinc-950/80 backdrop-blur-sm">
+  <div class="relative flex h-full w-full flex-col overflow-hidden text-zinc-100">
+    <div aria-hidden="true" class="pointer-events-none absolute inset-0 overflow-hidden">
+      <div class="veil-orb-a absolute -top-40 left-1/2 h-72 w-[36rem] -translate-x-1/2 rounded-full bg-emerald-500/10 blur-3xl"></div>
+      <div class="veil-orb-b absolute -bottom-32 right-[-6rem] h-80 w-80 rounded-full bg-teal-500/10 blur-3xl"></div>
     </div>
-    <span class="nav-clock" data-veil-clock data-seconds aria-label="current time"></span>
-  </div>
-</nav>
 
-<main>
-  <section class="hero" style="padding-top:38px">
-    <span class="kicker">Veil Wallpapers</span>
-    <h1 style="margin-top:8px">The backdrop is the OS.</h1>
-    <p class="tagline">Curated motion and still wallpapers behind every Veil surface — the <em>Sulfur collection</em> and friends. A slice is previewed here as CSS gradients.</p>
-    <div class="hero-badges">
-      <span class="pill">motion .mp4</span>
-      <span class="pill">still .jpg/.png</span>
-      <span class="pill ok">one-tap apply</span>
+    <header class="relative z-10 shrink-0 border-b border-zinc-800/70 bg-zinc-950/70 backdrop-blur-xl">
+      <div class="flex items-center gap-2 px-3 py-2.5 sm:px-4">
+        <button data-os-back class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 size-9 shrink-0 text-zinc-400 hover:bg-zinc-800/70 hover:text-zinc-100" aria-label="Back to the start page">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-arrow-left size-4"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg>
+        </button>
+        <div class="flex min-w-0 flex-1 items-center gap-2.5">
+          <div class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 text-zinc-950 shadow-lg shadow-emerald-500/20 ring-1 ring-emerald-300/30">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-image size-5"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg>
+          </div>
+          <div class="flex min-w-0 items-center gap-2">
+            <h1 class="truncate text-base font-semibold tracking-tight text-zinc-50 sm:text-lg">Veil Wallpapers</h1>
+            <span class="items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap hidden shrink-0 border-emerald-500/30 bg-emerald-500/10 text-emerald-300 sm:inline-flex">Gallery</span>
+          </div>
+        </div>
+        <div class="flex shrink-0 items-center gap-2">
+          <button type="button" id="add-yours-btn" class="inline-flex items-center justify-center whitespace-nowrap disabled:pointer-events-none h-9 gap-1.5 rounded-full border-violet-500/40 bg-violet-500/10 px-3 text-[12.5px] font-medium text-violet-200 transition hover:border-violet-400/70 hover:bg-violet-500/20 hover:text-violet-100 disabled:opacity-50">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-upload size-3.5" aria-hidden="true"><path d="M12 3v12"></path><path d="m17 8-5-5-5 5"></path><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path></svg>
+            <span class="hidden sm:inline">Add yours</span><span class="sm:hidden">Add</span>
+          </button>
+          <div class="hidden rounded-full border border-zinc-800 bg-zinc-900/80 px-3 py-1 text-xs tabular-nums text-zinc-400 sm:block" id="wp-counter">17 uploads · 8 live</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-1 px-3 pb-2.5 sm:px-4">
+        <div role="tablist" aria-label="Wallpaper source" class="flex w-full max-w-md items-center gap-1 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-1">
+          <button type="button" role="tab" aria-selected="true" data-wtab="pack" class="wp-tab flex h-8 flex-1 items-center justify-center gap-1.5 rounded-xl px-3 text-[12.5px] font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70 bg-emerald-500/15 text-emerald-300 shadow-[0_0_16px_-6px_rgba(16,185,129,0.8)] ring-1 ring-emerald-500/40">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-package size-3.5" aria-hidden="true"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"></path><path d="M12 22V12"></path><polyline points="3.29 7 12 12 20.71 7"></polyline><path d="m7.5 4.27 9 5.15"></path></svg>My pack<span class="hidden rounded-full bg-zinc-800 px-1.5 text-[10px] tabular-nums text-zinc-400 sm:inline" id="pack-count">17</span>
+          </button>
+          <button type="button" role="tab" aria-selected="false" data-wtab="live" class="wp-tab flex h-8 flex-1 items-center justify-center gap-1.5 rounded-xl px-3 text-[12.5px] font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70 text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-video size-3.5" aria-hidden="true"><path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5"></path><rect x="2" y="6" width="14" height="12" rx="2"></rect></svg>Live<span class="hidden rounded-full bg-zinc-800 px-1.5 text-[10px] text-zinc-400 sm:inline">motionbgs</span>
+          </button>
+          <button type="button" role="tab" aria-selected="false" data-wtab="themes" class="wp-tab flex h-8 flex-1 items-center justify-center gap-1.5 rounded-xl px-3 text-[12.5px] font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70 text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-palette size-3.5" aria-hidden="true"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"></circle><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"></circle><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"></circle><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"></circle><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"></path></svg>Themes<span class="hidden rounded-full bg-zinc-800 px-1.5 text-[10px] text-zinc-400 sm:inline">7</span>
+          </button>
+          <button type="button" role="tab" aria-selected="false" data-wtab="4k" class="wp-tab flex h-8 flex-1 items-center justify-center gap-1.5 rounded-xl px-3 text-[12.5px] font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70 text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-globe size-3.5" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path><path d="M2 12h20"></path></svg>4K
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div id="wp-controls" class="relative z-10 shrink-0 space-y-3 px-3 py-3 sm:px-4">
+      <div role="tablist" aria-label="Filter wallpapers" class="veil-scroll-slim -mx-1 flex gap-2 overflow-x-auto px-1 pb-1" id="tag-pills">
+        <button role="tab" type="button" aria-selected="true" data-pill="all" class="wp-pill h-8 shrink-0 rounded-full border px-4 text-[13px] font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70 border-emerald-500/60 bg-emerald-500/15 text-emerald-300 shadow-[0_0_16px_-6px_rgba(16,185,129,0.8)]">All</button>
+        <button role="tab" type="button" aria-selected="false" data-pill="favorites" class="wp-pill h-8 shrink-0 rounded-full border px-4 text-[13px] font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70 border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200">Favorites</button>
+        <button role="tab" type="button" aria-selected="false" data-pill="live" class="wp-pill h-8 shrink-0 rounded-full border px-4 text-[13px] font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70 border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200">Live</button>
+        <button role="tab" type="button" aria-selected="false" data-pill="static" class="wp-pill h-8 shrink-0 rounded-full border px-4 text-[13px] font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70 border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200">Static</button>
+        <button role="tab" type="button" aria-selected="false" data-pill="nature" class="wp-pill h-8 shrink-0 rounded-full border px-4 text-[13px] font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70 border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200">Nature</button>
+        <button role="tab" type="button" aria-selected="false" data-pill="abstract" class="wp-pill h-8 shrink-0 rounded-full border px-4 text-[13px] font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70 border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200">Abstract</button>
+        <button role="tab" type="button" aria-selected="false" data-pill="aesthetic" class="wp-pill h-8 shrink-0 rounded-full border px-4 text-[13px] font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70 border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200">Aesthetic</button>
+        <button role="tab" type="button" aria-selected="false" data-pill="minecraft" class="wp-pill h-8 shrink-0 rounded-full border px-4 text-[13px] font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70 border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200">Minecraft</button>
+        <button role="tab" type="button" aria-selected="false" data-pill="superhero" class="wp-pill h-8 shrink-0 rounded-full border px-4 text-[13px] font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70 border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200">Superhero</button>
+        <button role="tab" type="button" aria-selected="false" data-pill="dark" class="wp-pill h-8 shrink-0 rounded-full border px-4 text-[13px] font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70 border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200">Dark</button>
+        <button role="tab" type="button" aria-selected="false" data-pill="fantasy" class="wp-pill h-8 shrink-0 rounded-full border px-4 text-[13px] font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70 border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200">Fantasy</button>
+      </div>
+      <div class="relative">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-zinc-500" aria-hidden="true"><path d="m21 21-4.34-4.34"></path><circle cx="11" cy="11" r="8"></circle></svg>
+        <input id="wp-search" class="flex w-full min-w-0 border px-3 py-1 shadow-xs transition-[color,box-shadow] outline-none h-11 rounded-2xl border-zinc-800 bg-zinc-900/70 pl-10 pr-4 text-sm text-zinc-100 placeholder:text-zinc-600 focus-visible:border-emerald-500/60 focus-visible:ring-[3px] focus-visible:ring-emerald-500/25" placeholder="Search your uploads…" aria-label="Search your wallpapers" inputmode="search" value=""/>
+      </div>
     </div>
-  </section>
 
-  <section class="grid grid-4" aria-label="Wallpaper previews">
-    <div class="tile"><div class="art" style="background:radial-gradient(circle at 30% 30%,#34d399,#065f46 70%)">🌊</div><div class="meta"><div class="t">Deep Current</div><div class="s">motion · teal</div></div></div>
-    <div class="tile"><div class="art" style="background:linear-gradient(120deg,#f59e0b,#7c2d12)">🔥</div><div class="meta"><div class="t">Ember</div><div class="s">motion · amber</div></div></div>
-    <div class="tile"><div class="art" style="background:linear-gradient(200deg,#0ea5e9,#0f172a)">🌌</div><div class="meta"><div class="t">Nebula</div><div class="s">still · night</div></div></div>
-    <div class="tile"><div class="art" style="background:linear-gradient(45deg,#a3e635,#14532d)">🌿</div><div class="meta"><div class="t">Canopy</div><div class="s">still · green</div></div></div>
-    <div class="tile"><div class="art" style="background:linear-gradient(160deg,#e879f9,#3b0764)">💜</div><div class="meta"><div class="t">Dusk</div><div class="s">motion · violet</div></div></div>
-    <div class="tile"><div class="art" style="background:linear-gradient(135deg,#f43f5e,#4c0519)">🌹</div><div class="meta"><div class="t">Rosefall</div><div class="s">still · red</div></div></div>
-    <div class="tile"><div class="art" style="background:linear-gradient(180deg,#e2e8f0,#334155)">🌫️</div><div class="meta"><div class="t">Fogline</div><div class="s">still · gray</div></div></div>
-    <div class="tile"><div class="art" style="background:linear-gradient(120deg,#22d3ee,#083344)">❄️</div><div class="meta"><div class="t">Glacier</div><div class="s">motion · ice</div></div></div>
-  </section>
-
-  <section class="panel" style="margin-top:24px;padding:22px">
-    <span class="kicker">On the live site</span>
-    <p class="sub" style="margin-top:6px">The full Sulfur collection ships as .mp4 and still packs — tap a wallpaper and it becomes the backdrop for the start page, browser tabs, chat and every section instantly. This mirror previews the palette so the vibe survives any wipe.</p>
-  </section>
-</main>
-
-<footer class="site-footer">
-  <div class="footer-inner">
-    <span>Veil Wallpapers mirror · <a href="https://github.com/ok5678765s/veil-os" target="_blank" rel="noopener noreferrer">ok5678765s/veil-os</a></span>
-    <span>full collection on the live site</span>
+    <div class="veil-scroll-slim relative z-10 min-h-0 flex-1 overflow-y-auto px-3 pb-10 sm:px-4">
+      <div class="mx-auto grid max-w-6xl grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4" id="wp-grid"></div>
+      <div class="mx-auto mt-8 max-w-6xl rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-4">
+        <p class="text-[13px] leading-relaxed text-zinc-400">Tap a card to preview it full-bleed — <span class="text-zinc-200">Apply</span> sets it as the backdrop for the start page and every section, instantly. ♥ favorites float to the top and stay yours.</p>
+      </div>
+    </div>
   </div>
-</footer>
 </div>
-<button id="refresh-pill" onclick="location.reload()" title="A newer version was pushed to GitHub">✨ Veil updated — tap to refresh</button>
-<script src="assets/veil.js"></script>
+
+<input type="file" id="wp-file" accept="image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm" class="hidden"/>
+
+<!-- lightbox preview -->
+<div id="wp-lightbox" class="fixed inset-0 z-[90] hidden items-center justify-center bg-black/80 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Wallpaper preview">
+  <div class="relative w-full max-w-3xl overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-950/95 shadow-2xl">
+    <div class="relative aspect-video w-full overflow-hidden bg-zinc-900" id="lb-media"></div>
+    <div class="flex items-center gap-3 p-4">
+      <div class="min-w-0 flex-1">
+        <p class="truncate text-[15px] font-semibold text-zinc-50" id="lb-name">—</p>
+        <p class="truncate text-[12px] text-zinc-500" id="lb-desc">—</p>
+      </div>
+      <button type="button" id="lb-apply" class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition h-10 rounded-xl bg-emerald-500 px-5 text-emerald-950 shadow-lg shadow-emerald-500/25 hover:bg-emerald-400">Apply</button>
+      <button type="button" id="lb-close" aria-label="Close preview" class="inline-flex items-center justify-center size-10 rounded-xl border border-zinc-800 bg-zinc-900/70 text-zinc-400 transition hover:text-zinc-100">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-x size-4"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/os.js"></script>
+<script>
+(function () {
+  "use strict";
+  var V = window.VEILOS;
+  var $ = V.$, $$ = V.$$;
+  var pack = [], themes = {}, liveItems = [], fourk = [];
+  var selected = null, tab = "pack", pill = "all", query = "";
+
+  function asset(p) { return V.wpAsset(p); }
+  function favs() { try { return JSON.parse(V.ls("veil.wallpaper.favs") || "[]"); } catch (e) { return []; } }
+  function setFavs(list) { V.lsSet("veil.wallpaper.favs", JSON.stringify(list)); }
+  function applied() { try { return JSON.parse(V.ls("veil.wallpaper") || "null"); } catch (e) { return null; } }
+  function apply(sel) {
+    V.lsSet("veil.wallpaper", JSON.stringify(sel));
+    window.dispatchEvent(new CustomEvent("veil:wallpaper-changed"));
+  }
+
+  var ADD_CARD = '<button type="button" aria-label="Upload your own wallpaper (image or mp4)" id="add-card" class="group relative flex aspect-video w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-zinc-700/80 bg-zinc-900/40 text-zinc-400 outline-none transition-all duration-200 hover:-translate-y-1 hover:border-violet-400/60 hover:bg-violet-500/10 hover:text-violet-200 focus-visible:ring-2 focus-visible:ring-violet-400/70 disabled:opacity-50"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-upload size-7 transition-transform duration-200 group-hover:scale-110" aria-hidden="true"><path d="M12 3v12"></path><path d="m17 8-5-5-5 5"></path><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path></svg><span class="text-[13px] font-semibold">Add yours</span><span class="px-4 text-center text-[11px] leading-snug text-zinc-500 group-hover:text-violet-300/80">images &amp; mp4/webm · up to 300 MB</span></button>';
+
+  function packCard(w) {
+    var faved = favs().indexOf(w.id) > -1;
+    var isApplied = applied() && applied().id === w.id;
+    var media = w.kind === "video"
+      ? '<video muted="" loop="" playsinline="" preload="none" poster="' + V.esc(asset(w.thumb)) + '" class="size-full object-cover transition-all duration-500 group-hover:scale-[1.04]" data-hover-video="' + V.esc(asset(w.src)) + '"></video>'
+      : '<img alt="" loading="lazy" decoding="async" class="size-full object-cover transition-all duration-500 group-hover:scale-[1.04]" src="' + V.esc(asset(w.thumb)) + '"/>';
+    return '<button type="button" aria-label="Preview ' + V.esc(w.name) + '" data-wp=\'' + V.esc(JSON.stringify({ id: w.id, kind: w.kind, name: w.name, src: w.src, thumb: w.thumb, desc: w.desc || "" })) + '\' class="group relative block w-full overflow-hidden rounded-2xl border ' + (isApplied ? "border-emerald-500/70" : "border-zinc-800/80") + ' bg-zinc-900 text-left outline-none transition-all duration-200 hover:-translate-y-1 hover:border-emerald-500/60 hover:shadow-[0_18px_42px_-14px_rgba(16,185,129,0.45)] focus-visible:ring-2 focus-visible:ring-emerald-500/70">' +
+      '<div class="relative aspect-video w-full overflow-hidden">' + media +
+      '<span role="button" tabindex="0" aria-pressed="' + faved + '" aria-label="' + (faved ? "Remove" : "Add") + ' ' + V.esc(w.name) + ' ' + (faved ? "from" : "to") + ' favorites" data-fav="' + V.esc(w.id) + '" class="absolute right-2.5 top-2.5 z-20 flex size-8 items-center justify-center rounded-full border backdrop-blur-md transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400/70 border-zinc-700/60 bg-zinc-950/60 ' + (faved ? "text-rose-400" : "text-zinc-300") + ' opacity-70 hover:border-rose-400/40 hover:text-rose-300 sm:opacity-0 sm:group-hover:opacity-100">' +
+      '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="' + (faved ? "#fb7185" : "none") + '" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-heart size-4"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg></span>' +
+      (w.kind === "video" ? '<span class="absolute left-2.5 top-2.5 z-10 flex items-center gap-1 rounded-full border border-emerald-400/25 bg-emerald-500/15 px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-wider text-emerald-300 backdrop-blur-md"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-2.5" aria-hidden="true"><path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5"></path><rect x="2" y="6" width="14" height="12" rx="2"></rect></svg>live</span>' : "") +
+      (isApplied ? '<span class="absolute left-2.5 bottom-11 z-10 rounded-full border border-emerald-400/30 bg-emerald-500/20 px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-wider text-emerald-300 backdrop-blur-md">applied</span>' : "") +
+      "</div>" +
+      '<div class="absolute inset-x-0 bottom-0 p-3"><p class="truncate text-sm font-semibold leading-tight text-zinc-50 drop-shadow-sm">' + V.esc(w.name) + '</p><p class="mt-0.5 truncate text-[11px] leading-tight text-zinc-400">' + V.esc(w.desc || "") + "</p></div></button>";
+  }
+
+  function themeCard(name, gradient) {
+    var isApplied = applied() && applied().theme === name;
+    return '<button type="button" data-theme="' + name + '" aria-label="Apply the ' + name + ' theme" class="group relative block w-full overflow-hidden rounded-2xl border ' + (isApplied ? "border-emerald-500/70" : "border-zinc-800/80") + ' bg-zinc-900 text-left outline-none transition-all duration-200 hover:-translate-y-1 hover:border-emerald-500/60 hover:shadow-[0_18px_42px_-14px_rgba(16,185,129,0.45)] focus-visible:ring-2 focus-visible:ring-emerald-500/70">' +
+      '<div class="relative aspect-video w-full overflow-hidden"><div class="absolute inset-0 bg-gradient-to-br ' + gradient + '"><div class="absolute -top-10 left-[20%] h-24 w-44 rounded-full bg-white/10 blur-2xl"></div><div class="absolute -bottom-8 right-[10%] h-20 w-20 rounded-full bg-black/10 blur-2xl"></div></div>' +
+      (isApplied ? '<span class="absolute left-2.5 top-2.5 z-10 rounded-full border border-emerald-400/30 bg-emerald-500/20 px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-wider text-emerald-300 backdrop-blur-md">applied</span>' : "") +
+      "</div>" +
+      '<div class="absolute inset-x-0 bottom-0 p-3"><p class="truncate text-sm font-semibold leading-tight text-zinc-50 drop-shadow-sm">' + name.charAt(0).toUpperCase() + name.slice(1) + '</p><p class="mt-0.5 truncate text-[11px] leading-tight text-zinc-400">animated theme</p></div></button>';
+  }
+
+  function feedCard(c, isLive) {
+    if (isLive) {
+      return '<button type="button" aria-label="Preview ' + V.esc(c.name) + '" data-live=\'' + V.esc(JSON.stringify({ id: "mbgs-" + c.id, kind: "video", name: c.name, src: c.video, thumb: c.thumb, desc: "motionbgs · live wallpaper" })) + '\' class="group relative block w-full overflow-hidden rounded-2xl border border-zinc-800/80 bg-zinc-900 text-left outline-none transition-all duration-200 hover:-translate-y-1 hover:border-emerald-500/60 hover:shadow-[0_18px_42px_-14px_rgba(16,185,129,0.45)] focus-visible:ring-2 focus-visible:ring-emerald-500/70">' +
+        '<div class="relative aspect-video w-full overflow-hidden"><img alt="" loading="lazy" decoding="async" class="size-full object-cover transition-all duration-500 group-hover:scale-[1.04]" src="' + V.esc(c.thumb) + '"/>' +
+        '<span class="absolute left-2.5 top-2.5 z-10 flex items-center gap-1 rounded-full border border-emerald-400/25 bg-emerald-500/15 px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-wider text-emerald-300 backdrop-blur-md"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-2.5" aria-hidden="true"><path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5"></path><rect x="2" y="6" width="14" height="12" rx="2"></rect></svg>live</span></div>' +
+        '<div class="absolute inset-x-0 bottom-0 p-3"><p class="truncate text-sm font-semibold leading-tight text-zinc-50 drop-shadow-sm">' + V.esc(c.name) + '</p><p class="mt-0.5 truncate text-[11px] leading-tight text-zinc-400">motionbgs · 4K motion</p></div></button>';
+    }
+    return '<a href="' + V.esc(c.detail) + '" target="_blank" rel="noopener noreferrer" aria-label="' + V.esc(c.name) + ' — open the 4K page" class="group relative block w-full overflow-hidden rounded-2xl border border-zinc-800/80 bg-zinc-900 text-left outline-none transition-all duration-200 hover:-translate-y-1 hover:border-emerald-500/60 hover:shadow-[0_18px_42px_-14px_rgba(16,185,129,0.45)] focus-visible:ring-2 focus-visible:ring-emerald-500/70">' +
+      '<div class="relative aspect-video w-full overflow-hidden"><img alt="" loading="lazy" decoding="async" class="size-full object-cover transition-all duration-500 group-hover:scale-[1.04]" src="' + V.esc(c.thumb) + '"/>' +
+      '<span class="absolute left-2.5 top-2.5 z-10 rounded-full border border-white/10 bg-black/50 px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-wider text-zinc-200 backdrop-blur-md">' + V.esc(c.category) + "</span></div>" +
+      '<div class="absolute inset-x-0 bottom-0 p-3"><p class="truncate text-sm font-semibold leading-tight text-zinc-50 drop-shadow-sm">' + V.esc(c.name) + '</p><p class="mt-0.5 truncate text-[11px] leading-tight text-zinc-400">4K · opens the source</p></div></a>';
+  }
+
+  function currentList() {
+    if (tab === "themes") return null;
+    if (tab === "live") return liveItems.map(function (c) { return { type: "live", c: c }; });
+    if (tab === "4k") return fourk.map(function (c) { return { type: "4k", c: c }; });
+    var f = favs();
+    var list = pack.map(function (w) { return { type: "pack", w: w }; });
+    /* filters */
+    if (pill !== "all") {
+      if (pill === "favorites") list = list.filter(function (x) { return f.indexOf(x.w.id) > -1; });
+      else if (pill === "live") list = list.filter(function (x) { return x.w.kind === "video"; });
+      else if (pill === "static") list = list.filter(function (x) { return x.w.kind === "image"; });
+      else list = list.filter(function (x) { return (x.w.tags || []).indexOf(pill) > -1; });
+    }
+    if (query) {
+      var q = query.toLowerCase();
+      list = list.filter(function (x) {
+        return x.w.name.toLowerCase().indexOf(q) > -1 || (x.w.desc || "").toLowerCase().indexOf(q) > -1 || (x.w.tags || []).join(" ").toLowerCase().indexOf(q) > -1;
+      });
+    }
+    /* favorites float first */
+    list.sort(function (a, b) { return (f.indexOf(b.w.id) > -1 ? 1 : 0) - (f.indexOf(a.w.id) > -1 ? 1 : 0); });
+    return list;
+  }
+
+  function render() {
+    var grid = document.getElementById("wp-grid");
+    if (tab === "themes") {
+      var html = "";
+      Object.keys(themes).forEach(function (name) { html += themeCard(name, themes[name]); });
+      grid.innerHTML = html;
+      $$("[data-theme]").forEach(function (b) {
+        b.addEventListener("click", function () {
+          apply({ id: "theme-" + b.getAttribute("data-theme"), src: "", kind: "animated", name: b.getAttribute("data-theme"), theme: b.getAttribute("data-theme") });
+          render();
+        });
+      });
+      return;
+    }
+    var list = currentList();
+    var html = tab === "pack" ? ADD_CARD : "";
+    list.forEach(function (x) {
+      html += x.type === "pack" ? packCard(x.w) : feedCard(x.c, x.type === "live");
+    });
+    if (!list.length && tab === "pack") {
+      html += '<div class="col-span-full rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-8 text-center text-[13px] text-zinc-500">Nothing matches that filter.</div>';
+    }
+    grid.innerHTML = html;
+    bindCards();
+  }
+
+  function bindCards() {
+    var addCard = document.getElementById("add-card");
+    if (addCard) addCard.addEventListener("click", function () { document.getElementById("wp-file").click(); });
+    $$("[data-wp]").forEach(function (b) {
+      b.addEventListener("click", function (e) {
+        if (e.target.closest("[data-fav]")) return;
+        openLightbox(JSON.parse(b.getAttribute("data-wp")));
+      });
+    });
+    $$("[data-live]").forEach(function (b) {
+      b.addEventListener("click", function () { openLightbox(JSON.parse(b.getAttribute("data-live"))); });
+    });
+    $$("[data-fav]").forEach(function (h) {
+      h.addEventListener("click", function (e) {
+        e.stopPropagation();
+        e.preventDefault();
+        var id = h.getAttribute("data-fav");
+        var f = favs();
+        var i = f.indexOf(id);
+        if (i > -1) f.splice(i, 1); else f.push(id);
+        setFavs(f);
+        render();
+      });
+    });
+    /* hover video previews — the app's 450ms cadence */
+    $$("[data-hover-video]").forEach(function (v) {
+      var t = null;
+      var card = v.closest(".group");
+      card.addEventListener("mouseenter", function () {
+        t = setTimeout(function () { v.src = v.getAttribute("data-hover-video"); v.play().catch(function () {}); }, 450);
+      });
+      card.addEventListener("mouseleave", function () {
+        if (t) clearTimeout(t);
+        v.pause();
+      });
+    });
+  }
+
+  function openLightbox(w) {
+    selected = w;
+    document.getElementById("lb-name").textContent = w.name;
+    document.getElementById("lb-desc").textContent = w.desc || (w.kind === "video" ? "motion backdrop" : "still backdrop");
+    document.getElementById("lb-media").innerHTML = w.kind === "video"
+      ? '<video src="' + V.esc(asset(w.src)) + '" autoplay loop muted playsinline class="size-full object-cover"></video>'
+      : '<img src="' + V.esc(asset(w.src)) + '" alt="' + V.esc(w.name) + '" class="size-full object-cover" />';
+    var lb = document.getElementById("wp-lightbox");
+    lb.classList.remove("hidden");
+    lb.classList.add("flex");
+  }
+  document.getElementById("lb-close").addEventListener("click", function () {
+    var lb = document.getElementById("wp-lightbox");
+    lb.classList.add("hidden");
+    lb.classList.remove("flex");
+    document.getElementById("lb-media").innerHTML = "";
+  });
+  document.getElementById("wp-lightbox").addEventListener("click", function (e) {
+    if (e.target === this) document.getElementById("lb-close").click();
+  });
+  document.getElementById("lb-apply").addEventListener("click", function () {
+    if (selected) {
+      apply({ id: selected.id, src: selected.src, kind: selected.kind, name: selected.name, thumb: selected.thumb });
+      render();
+      document.getElementById("lb-close").click();
+    }
+  });
+
+  /* upload — genuinely works: the file becomes a data-URI wallpaper */
+  document.getElementById("add-yours-btn").addEventListener("click", function () { document.getElementById("wp-file").click(); });
+  document.getElementById("wp-file").addEventListener("change", function () {
+    var f = this.files && this.files[0];
+    if (!f) return;
+    if (f.size > 300 * 1024 * 1024) return;
+    var rd = new FileReader();
+    rd.onload = function () {
+      var kind = f.type.indexOf("video/") === 0 ? "video" : "image";
+      var w = { id: "own-" + Date.now().toString(36), kind: kind, name: f.name.replace(/\.[a-z0-9]+$/i, ""), src: rd.result, thumb: rd.result, desc: "your upload", tags: [] };
+      pack.unshift(w);
+      document.getElementById("wp-counter").textContent = pack.length + " uploads · " + pack.filter(function (x) { return x.kind === "video"; }).length + " live";
+      document.getElementById("pack-count").textContent = pack.length;
+      apply({ id: w.id, src: w.src, kind: w.kind, name: w.name, thumb: w.thumb });
+      render();
+    };
+    rd.readAsDataURL(f);
+    this.value = "";
+  });
+
+  /* tabs + pills + search */
+  $$(".wp-tab").forEach(function (t) {
+    t.addEventListener("click", function () {
+      tab = t.getAttribute("data-wtab");
+      $$(".wp-tab").forEach(function (x) {
+        var on = x === t;
+        x.setAttribute("aria-selected", on);
+        x.className = x.className.replace(/bg-emerald-500\/15 text-emerald-300 shadow-\[0_0_16px_-6px_rgba\(16,185,129,0\.8\)\] ring-1 ring-emerald-500\/40|text-zinc-400 hover:bg-zinc-800\/60 hover:text-zinc-200/g, "").trim() + " " +
+          (on ? "bg-emerald-500/15 text-emerald-300 shadow-[0_0_16px_-6px_rgba(16,185,129,0.8)] ring-1 ring-emerald-500/40" : "text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200");
+      });
+      var controls = document.getElementById("wp-controls");
+      controls.style.display = tab === "pack" ? "" : "none";
+      render();
+    });
+  });
+  $$(".wp-pill").forEach(function (p) {
+    p.addEventListener("click", function () {
+      pill = p.getAttribute("data-pill");
+      $$(".wp-pill").forEach(function (x) {
+        var on = x === p;
+        x.setAttribute("aria-selected", on);
+        x.className = x.className.replace(/border-emerald-500\/60 bg-emerald-500\/15 text-emerald-300 shadow-\[0_0_16px_-6px_rgba\(16,185,129,0\.8\)\]|border-zinc-800 bg-zinc-900\/60 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200/g, "").trim() + " " +
+          (on ? "border-emerald-500/60 bg-emerald-500/15 text-emerald-300 shadow-[0_0_16px_-6px_rgba(16,185,129,0.8)]" : "border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200");
+      });
+      render();
+    });
+  });
+  document.getElementById("wp-search").addEventListener("input", function () { query = this.value.trim(); render(); });
+
+  /* load + boot */
+  Promise.all([
+    V.dataOf("wallpapers-pack.json"),
+    V.dataOf("wallpapers.json"),
+    V.dataOf("wallpapers-live.json"),
+  ]).then(function (res) {
+    pack = (res[0] && res[0].pack) || [];
+    themes = (res[0] && res[0].themes) || {};
+    fourk = (res[1] && res[1].items) || [];
+    liveItems = (res[2] && res[2].items) || [];
+    var liveCount = pack.filter(function (w) { return w.kind === "video" || w.fallback; }).length;
+    document.getElementById("wp-counter").textContent = pack.length + " uploads · " + liveCount + " live";
+    document.getElementById("pack-count").textContent = pack.length;
+    render();
+  }).catch(function () {});
+})();
+</script>
 </body>
 </html>
