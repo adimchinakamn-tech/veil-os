@@ -127,10 +127,25 @@ export async function POST(req: NextRequest) {
     }
 
     if (!isMod(account)) {
-      return NextResponse.json(
-        { ok: false, error: "You do not have moderator privileges." },
-        { status: 403 },
-      )
+      // Non-mods are allowed exactly ONE action: deleting their own
+      // messages (the chat UI's Delete button is shown for your own
+      // messages — it used to 403 here for regular members).
+      if (action !== "delete_message") {
+        return NextResponse.json(
+          { ok: false, error: "You do not have moderator privileges." },
+          { status: 403 },
+        )
+      }
+      const ownId = (body.messageId || "").trim()
+      const own = ownId
+        ? await db.chatMessage.findUnique({ where: { id: ownId } })
+        : null
+      if (!own || own.accountId !== account.id) {
+        return NextResponse.json(
+          { ok: false, error: "You can only delete your own messages." },
+          { status: 403 },
+        )
+      }
     }
 
     if (!MOD_ACTIONS.has(action)) {
