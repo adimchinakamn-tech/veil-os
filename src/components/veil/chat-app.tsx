@@ -3767,7 +3767,41 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
       }
     })
 
+    // Polling fallback for socketless hosts (Vercel import of the repo):
+    // there is no /?XTransformPort=3004 chat relay there, so the socket
+    // never connects. While it's down, poll the REST channel every 5s and
+    // id-union merge — same shape as the reconnect backfill above, so the
+    // live feed still updates (just without typing/presency niceties).
+    // On the dev box the socket connects and these polls are no-ops.
+    const pollFallback = setInterval(() => {
+      if (socket.connected) return
+      const cid = channelIdRef.current
+      void apiFetch<{ messages: ChatMessage[] }>(
+        `/api/chat-data?channel=${encodeURIComponent(cid)}${
+          !CHANNELS.some((c) => c.id === cid)
+            ? `&token=${encodeURIComponent(token)}`
+            : ""
+        }`,
+      )
+        .then((data) => {
+          const fresh = data.messages || []
+          setMessages((prev) => {
+            const seen = new Set(prev.map((m) => m.id))
+            const merged = [...prev]
+            for (const m of fresh) if (!seen.has(m.id)) merged.push(m)
+            merged.sort(
+              (a, b) =>
+                new Date(a.createdAt).getTime() -
+                new Date(b.createdAt).getTime(),
+            )
+            return merged
+          })
+        })
+        .catch(() => {})
+    }, 5000)
+
     return () => {
+      clearInterval(pollFallback)
       socket.disconnect()
       socketRef.current = null
     }

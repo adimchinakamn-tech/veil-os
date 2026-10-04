@@ -20,6 +20,11 @@
     base: SITE_BASE,
     asset: function (p) { return SITE_BASE + p; },
     repoFile: function (p) { return REPO_BASE + p; },
+    // Absolute CDN source for the backup data — works from ANY host
+    // (githack, Vercel, Pages, local) because jsDelivr sends
+    // access-control-allow-origin: *. Relative repo path is the fallback.
+    cdnLatest: "https://cdn.jsdelivr.net/gh/ok5678765s/veil-os@main/backups/chat/latest.json",
+    cdnVersion: "https://cdn.jsdelivr.net/gh/ok5678765s/veil-os@main/site/version.json",
     latestJson: function () { return REPO_BASE + "backups/chat/latest.json"; },
     versionJson: function () { return REPO_BASE + "site/version.json"; },
   };
@@ -88,7 +93,7 @@
       if (/^https?:\/\/\S+$/i.test(tok)) {
         var url = tok.replace(/[.,!?]+$/, "");
         if (GIF_RE.test(url)) {
-          out += '<a href="' + esc(url) + '" target="_blank" rel="noopener noreferrer"><img class="gif" src="' + esc(url) + '" alt="GIF shared in chat" loading="lazy"></a>';
+          out += '<a href="' + esc(url) + '" target="_blank" rel="noopener noreferrer"><img class="gif" src="' + esc(url) + '" alt="GIF shared in chat" loading="lazy" /></a>';
         } else {
           out += '<a href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">' + esc(url) + "</a>";
         }
@@ -146,7 +151,7 @@
       var reply = "";
       if (m.replyTo && byId[m.replyTo]) {
         var ra = accounts[byId[m.replyTo].accountId] || { displayName: "unknown" };
-        reply = '<div class="pill" style="display:inline-block;margin-bottom:4px">↩ ' + esc(ra.displayName || "?") + ": " + esc(String(byId[m.replyTo].content || "").slice(0, 60)) + "</div><br>";
+        reply = '<div class="pill" style="display:inline-block;margin-bottom:4px">↩ ' + esc(ra.displayName || "?") + ": " + esc(String(byId[m.replyTo].content || "").slice(0, 60)) + "</div><br/>";
       }
       html += '<div class="mtext">' + reply + renderContent(m.content) + "</div></div></div>";
 
@@ -184,7 +189,15 @@
   }
 
   function loadChat() {
-    fetch(window.VEIL.latestJson(), { cache: "no-store" })
+    // Primary: absolute jsDelivr (CORS-enabled, always fresh, host-agnostic).
+    // Fallback: relative repo path (githack / local full-repo serves).
+    // Covers BOTH network failures and non-2xx answers on the primary.
+    var primary = fetch(window.VEIL.cdnLatest, { cache: "no-store" });
+    var withFallback = primary.then(
+      function (r) { return r.ok ? r : fetch(window.VEIL.latestJson(), { cache: "no-store" }); },
+      function () { return fetch(window.VEIL.latestJson(), { cache: "no-store" }); },
+    );
+    withFallback
       .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
       .then(function (data) {
         renderChat(data);
@@ -205,7 +218,7 @@
 
   /* ---------- version pill: "site updated — refresh" ---------- */
   function pollVersion() {
-    fetch(window.VEIL.versionJson() + "?t=" + Date.now(), { cache: "no-store" })
+    fetch(window.VEIL.cdnVersion + "?t=" + Date.now(), { cache: "no-store" })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (v) {
         if (!v || !v.built) return;

@@ -58,7 +58,11 @@ server.log
 # ---------------------------------------------------------------------------
 # Veil state & sandbox machinery — NEVER commit (secrets, user data, caches)
 # ---------------------------------------------------------------------------
-/db/
+/db/*
+# …but the sanitized schema-only seed IS committed: serverless deploys
+# (Vercel import) copy it to /tmp on cold boot, then restore the chat from
+# the committed backup JSON — no secrets, no password hashes, 0 rows.
+!/db/seed.db
 /upload/
 # Whole-box tar snapshots stay local-only (big, box-specific)…
 /backups/*
@@ -77,6 +81,7 @@ server.log
 /qa-shots/
 *.db
 *.db-journal
+!db/seed.db
 *.key
 *.tar.gz
 *.zip

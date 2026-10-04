@@ -19,6 +19,14 @@ const nextConfig: NextConfig = {
   // inside our own URL path (`/api/p/https/example.com/dir/`), so Next must
   // never "normalise" trailing slashes on those requests.
   skipTrailingSlashRedirect: true,
+  // Serverless deploys (Vercel import of the GitHub repo) boot the DB from
+  // files that are only read at RUNTIME, so file tracing can't see them —
+  // list them explicitly or /api/* cold-boots without them and 500s:
+  //   db/seed.db               — sanitized schema-only SQLite (0 rows)
+  //   backups/chat/latest.json — committed backup the boot restore imports
+  outputFileTracingIncludes: {
+    "/api/**": ["./db/seed.db", "./backups/chat/latest.json"],
+  },
   // 4GB-box survival kit (2026-09-10 OOM forensics): the dev cold-compile
   // peaks at next-server ~2.7GB + postcss ~0.6GB + base ~0.4GB = right at
   // the memory ceiling — the kernel OOM-killed every dev boot in a loop

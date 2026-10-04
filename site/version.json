@@ -1,6 +1,6 @@
 {
-  "built": "2026-10-04T01:18:22Z",
-  "commit": "e71aa6b",
+  "built": "2026-10-04T01:30:54Z",
+  "commit": "9226008",
   "pages": [
     "site/index.html",
     "site/chat.html",
@@ -9,5 +9,14 @@
     "site/stream.html",
     "site/wallpapers.html",
     "site/status.html"
+  ],
+  "xhtmlPages": [
+    "site/index.xhtml",
+    "site/chat.xhtml",
+    "site/arcade.xhtml",
+    "site/ai.xhtml",
+    "site/stream.xhtml",
+    "site/wallpapers.xhtml",
+    "site/status.xhtml"
   ]
 }

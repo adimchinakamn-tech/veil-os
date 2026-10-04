@@ -66,8 +66,59 @@ function withTimeout<T>(p: Promise<T>, ms: number, what: string): Promise<T> {
  * fails transiently so the next attempt rebuilds credentials from disk. */
 let cachedZai: ZaiInstance | null = null;
 
+/* The SDK reads a .z-ai-config file from cwd / $HOME / /etc (in that
+ * order). On the dev box /etc/.z-ai-config exists — nothing to do. On
+ * serverless deploys (Vercel) none of them exist, so before the first
+ * create() we materialize the config from ZAI_* env vars (set in the
+ * Vercel dashboard — never committed). */
+async function ensureZaiConfig(): Promise<void> {
+  try {
+    const { existsSync, writeFileSync } = await import("fs");
+    const { join } = await import("path");
+    const os = await import("os");
+    const existing = [
+      join(process.cwd(), ".z-ai-config"),
+      join(os.homedir(), ".z-ai-config"),
+      "/etc/.z-ai-config",
+    ].some((p) => existsSync(p));
+    if (existing) return;
+
+    const env = process.env;
+    const cfg = {
+      baseUrl: env.ZAI_BASE_URL,
+      apiKey: env.ZAI_API_KEY,
+      chatId: env.ZAI_CHAT_ID,
+      token: env.ZAI_TOKEN,
+      userId: env.ZAI_USER_ID,
+    };
+    if (!cfg.apiKey && !cfg.token) return; // nothing to materialize
+    const json = JSON.stringify(cfg);
+
+    // Prefer cwd (SDK's first search path); fall back to $HOME; last
+    // resort /tmp + chdir so the SDK's cwd-relative lookup finds it.
+    const spots = [process.cwd(), os.homedir()];
+    for (const dir of spots) {
+      try {
+        writeFileSync(join(dir, ".z-ai-config"), json);
+        return;
+      } catch {
+        /* read-only */
+      }
+    }
+    try {
+      writeFileSync("/tmp/.z-ai-config", json);
+      process.chdir("/tmp");
+    } catch {
+      /* give up — the create() below will surface the error */
+    }
+  } catch {
+    /* config bootstrap must never block the call */
+  }
+}
+
 async function getZai(fresh: boolean): Promise<ZaiInstance> {
   if (!fresh && cachedZai) return cachedZai;
+  await ensureZaiConfig();
   const mod = (await import("z-ai-web-dev-sdk")) as unknown as {
     default: { create: () => Promise<ZaiInstance> } | null;
   };
