@@ -3,8 +3,8 @@
 	 viewBox="0 0 30 30" style="enable-background:new 0 0 30 30;" xml:space="preserve">
 <defs>
   <style type="text/css">
-    .st194{fill:#2D2D2D;stroke:#FFFFFF;stroke-width:0.6317;stroke-miterlimit:10;}
-    .st23{fill:#FFFFFF;}
+    .st194{fill:#0E6953;stroke:#084B3B;stroke-width:0.6;stroke-miterlimit:10;}
+    .st23{fill:#4BE3A3;}
 
     .z-breathe {
       animation: breathe 2.5s ease-in-out infinite;
@@ -20,10 +20,13 @@
 <g>
   <path class="st194" d="M24.51,28.51H5.49c-2.21,0-4-1.79-4-4V5.49c0-2.21,1.79-4,4-4h19.03c2.21,0,4,1.79,4,4v19.03
     C28.51,26.72,26.72,28.51,24.51,28.51z"/>
+  
   <g class="z-breathe">
-    <path class="st23" d="M15.47,7.1l-1.3,1.85c-0.2,0.29-0.54,0.47-0.9,0.47h-7.1V7.09C6.16,7.1,15.47,7.1,15.47,7.1z"/>
-    <polygon class="st23" points="24.3,7.1 13.14,22.91 5.7,22.91 16.86,7.1"/>
-    <path class="st23" d="M14.53,22.91l1.31-1.86c0.2-0.29,0.54-0.47,0.9-0.47h7.09v2.33H14.53z"/>
+    <path class="st23" d="M15,6.25 l7.5,3.25 v5.5 c0,4.75 -3.25,8.75 -7.5,10.25 c-4.25,-1.5 -7.5,-5.5 -7.5,-10.25 v-5.5 z 
+                         M15,8.25 l-5.5,2.4 v4.85 c0,3.65 2.5,6.75 5.5,8 c3,-1.25 5.5,-4.35 5.5,-8 v-4.85 z"/>
+    
+    <path class="st23" d="M12.5,14.5 h2.5 c0.5,0 0.5,0 0.5,0.5 v4 c0,0.55 -0.45,1 -1,1 h0 c-0.55,0 -1,-0.45 -1,-1 v-2.5 h-1 c-0.55,0 -1,-0.45 -1,-1v0 c0,-0.55 0.45,-1 1,-1 z"/>
   </g>
 </g>
 </svg>
+
