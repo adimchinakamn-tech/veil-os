@@ -1,4 +1,14 @@
-
-name = "veil-os"
-compatibility_date = "2025-01-01"
+# Cloudflare Pages configuration — deliberately MINIMAL.
+#
+# Deploy: dash.cloudflare.com → Workers & Pages → Create → **Pages** tab
+#         → Connect to Git → ok5678765s/veil-os → Save and Deploy.
+#
+# Why so minimal:
+#   - NO `name` here. A name in this file must EXACTLY match the Cloudflare
+#     project name or the deploy fails ("error occurred while running
+#     deploy command"). Omitted, it's inferred — name the project anything.
+#   - NO `compatibility_date` — that's only for Workers/Functions; this is
+#     a pure static site.
+#   - Just the output directory: site/ (pages + chat data deploy together,
+#     atomically, on every push — no build command, no cache purging).
 pages_build_output_dir = "./site"

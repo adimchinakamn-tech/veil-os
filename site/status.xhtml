@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" data-veil-build="2026-10-04T02:50:48Z">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" data-veil-build="2026-10-04T11:56:34Z">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -74,6 +74,7 @@
         <li>Leave everything as-is (wrangler.toml sets output dir <span class="mono">site</span>, no build command) → <strong>Save and Deploy</strong></li>
       </ol>
       <p class="sub" style="margin-top:12px">That's it. Your <span class="mono">*.pages.dev</span> link updates itself: the backup daemon pushes every 30s when chat data changes → Cloudflare redeploys automatically. Fastest, lag-free mirror there is.</p>
+      <p class="sub" style="margin-top:10px"><strong>Got "error occurred while running deploy command"?</strong> That was a name-match bug in the config (fixed now — the project name can be anything). Just push <span class="mono">Retry deployment</span> on the failed build, or delete the project and import it again. Make sure you're on the <strong>Pages</strong> tab — not the default Workers one — when importing.</p>
     </div>
   </section>
 
