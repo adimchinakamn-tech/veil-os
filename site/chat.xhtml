@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" data-veil-build="2026-10-04T01:52:02Z">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" data-veil-build="2026-10-04T02:02:02Z">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -35,9 +35,10 @@
       <div class="chat-head">
         <span class="chan-hash">#</span>
         <span class="chan-name">general</span>
-        <span class="pill ok" id="chat-count" title="restored messages">…</span>
-        <span class="pill">read-only mirror</span>
-        <span class="pill warn" id="backup-age" title="backup snapshot age" style="margin-left:auto">snapshot …</span>
+        <span class="pill live" id="live-pill"><span class="pulse-dot" aria-hidden="true"></span>LIVE</span>
+        <span class="pill ok" id="chat-count" title="messages in #general">…</span>
+        <span class="pill" title="static pages have no sign-in — that's the live app">read-only copy</span>
+        <span class="pill warn" id="backup-age" title="backup snapshot age" style="margin-left:auto">syncing…</span>
       </div>
 
       <div class="chat-scroll" id="chat-messages" aria-live="polite">
@@ -49,28 +50,39 @@
         </div>
       </div>
 
+      <button id="new-msgs" class="new-msgs" type="button" style="display:none">↓ new messages</button>
+
       <div id="chat-error" style="display:none;margin:14px;padding:12px;border-radius:10px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.35);color:#fca5a5;font-size:13px">
         Couldn't load the chat backup from the CDN — retrying every 30s.
       </div>
 
       <div class="chat-inputbar">
-        <span aria-hidden="true" style="font-size:17px">📎</span>
-        <div class="fake-input">Message #general — post on the live site, this mirror updates itself</div>
-        <span aria-hidden="true" style="font-size:15px">😀</span>
+        <div class="livebar">
+          <span class="pulse-dot big" aria-hidden="true"></span>
+          <div class="livebar-text">
+            <strong>Public mirror — refreshes itself every 30 seconds.</strong>
+            <span>Sign-up, sending &amp; the members list live in the real Veil app — static hosts can't run its database or chat server.</span>
+          </div>
+          <button class="btn js-open-live" id="open-live-btn" type="button">Open the live app →</button>
+        </div>
       </div>
     </section>
 
     <aside class="panel players" aria-label="Members">
-      <div style="padding:14px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px">
+      <div class="players-head">
         <span aria-hidden="true">👥</span><h3>Members</h3>
+        <span class="pill ok" id="members-count" style="margin-left:auto">…</span>
       </div>
       <div id="players-list" style="padding:6px">
         <div class="skel" style="height:44px;margin:8px"></div>
         <div class="skel" style="height:44px;margin:8px"></div>
         <div class="skel" style="height:44px;margin:8px"></div>
       </div>
-      <div style="padding:12px 16px;border-top:1px solid var(--line);font-size:11.5px;color:var(--text-2);line-height:1.6">
-        Legacy accounts hold restored messages. Registering the name on the live site claims the account in place.
+      <div class="players-foot">
+        <div class="dot-legend">
+          <span><i class="dot-sample on"></i> active account</span>
+          <span><i class="dot-sample"></i> restored — register the name in the live app to claim it</span>
+        </div>
       </div>
     </aside>
   </div>
@@ -79,6 +91,7 @@
     <span class="kicker">Restore info</span>
     <p class="sub" style="margin-top:6px">This mirror renders <span class="mono">backups/chat/latest.json</span> — auto-published every 30 seconds by the backup daemon, then CDN-purged so it's fresh within a minute of any message posted on the live site. Wiped box? This link brings the community back.</p>
     <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn-ghost js-open-live" type="button">How do I chat for real?</button>
       <a class="btn" href="../backups/chat/latest.json" target="_blank" rel="noopener noreferrer">View raw backup JSON</a>
       <a class="btn-ghost" href="status.xhtml">Backup status →</a>
     </div>
@@ -92,6 +105,20 @@
   </div>
 </footer>
 </div>
+
+<dialog id="live-dialog" class="live-dialog" aria-label="Where the real Veil lives">
+  <div class="live-dialog-body">
+    <span class="kicker">Where the real Veil lives</span>
+    <h2 style="margin-top:8px">Chat for real in the live app</h2>
+    <p class="sub" style="margin-top:10px">This public link is a <strong>live-updating, read-only copy</strong> — a broadcast of #general. Static hosts (Vercel, jsDelivr) only serve files: they can't run Veil's database or chat server, so sign-up and sending don't exist here. That's by design, not a bug.</p>
+    <p class="sub" style="margin-top:8px">The real Veil — accounts, members list, sending, coins, blackjack, arcade — is the app in the project's sandbox preview panel. If it's your project: open the preview panel next to the editor, click <strong>"Open in New Tab"</strong>, and bookmark that page. It's always current because it <em>is</em> the source, and anything posted there shows up here within about a minute.</p>
+    <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn" id="live-dialog-close" type="button">Got it</button>
+      <a class="btn-ghost" href="https://github.com/ok5678765s/veil-os" target="_blank" rel="noopener noreferrer">View the repo ↗</a>
+    </div>
+  </div>
+</dialog>
+
 <button id="refresh-pill" onclick="location.reload()" title="A newer version was pushed to GitHub">✨ Veil updated — tap to refresh</button>
 <script src="assets/veil.js"></script>
 </body>

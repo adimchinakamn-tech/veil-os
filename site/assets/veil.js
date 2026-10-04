@@ -106,7 +106,31 @@
   window.VEIL.renderContent = renderContent;
 
   /* ---------- chat renderer (site/chat.html) ---------- */
-  var chatState = { rendered: 0, lastSig: null };
+  var chatState = { rendered: 0, firstRender: true, lastData: null };
+
+  function setLive(ok) {
+    var p = document.getElementById("live-pill");
+    if (!p) return;
+    p.className = "pill live" + (ok ? "" : " err");
+    p.innerHTML = '<span class="pulse-dot" aria-hidden="true"></span>' + (ok ? "LIVE" : "RECONNECTING");
+  }
+
+  function updateSyncStamp() {
+    var stamp = document.getElementById("backup-age");
+    if (!stamp || !chatState.lastData || !chatState.lastData.exportedAt) return;
+    stamp.textContent = "synced " + relTime(chatState.lastData.exportedAt);
+  }
+
+  function showNewMsgs(n) {
+    var b = document.getElementById("new-msgs");
+    if (!b) return;
+    b.textContent = "↓ " + n + (n === 1 ? " new message" : " new messages");
+    b.style.display = "inline-flex";
+  }
+  function hideNewMsgs() {
+    var b = document.getElementById("new-msgs");
+    if (b) b.style.display = "none";
+  }
 
   function renderChat(data) {
     var list = document.getElementById("chat-messages");
@@ -122,7 +146,7 @@
       .filter(function (m) { return !m.channelId || m.channelId === "main" || m.channelId === "general"; })
       .sort(function (a, b) { return new Date(a.createdAt) - new Date(b.createdAt); });
 
-    if (count) count.textContent = msgs.length;
+    if (count) count.textContent = msgs.length + (msgs.length === 1 ? " message" : " messages");
 
     var html = "";
     var prevAuthor = null, prevDay = null;
@@ -161,7 +185,19 @@
     if (!msgs.length) {
       html = '<div style="text-align:center;padding:60px 20px;color:var(--text-2)"><div style="font-size:44px;margin-bottom:10px">💬</div>No messages yet — the live site has them first.</div>';
     }
+    // Capture scroll position BEFORE swapping the DOM so the list behaves
+    // like the real chat: stick to the bottom when parked there, otherwise
+    // surface a "↓ new messages" pill instead of yanking the reader around.
+    var nearBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 140;
+    var grew = msgs.length - chatState.rendered;
     list.innerHTML = html;
+    if (chatState.firstRender || nearBottom) {
+      list.scrollTop = list.scrollHeight;
+      hideNewMsgs();
+    } else if (grew > 0) {
+      showNewMsgs(grew);
+    }
+    chatState.firstRender = false;
     chatState.rendered = msgs.length;
   }
 
@@ -184,8 +220,8 @@
     });
     box.innerHTML = html;
 
-    var stamp = document.getElementById("backup-age");
-    if (stamp && data.exportedAt) stamp.textContent = "snapshot " + relTime(data.exportedAt);
+    var mcount = document.getElementById("members-count");
+    if (mcount) mcount.textContent = (data.accounts || []).length + " total";
   }
 
   function loadChat() {
@@ -200,12 +236,16 @@
     withFallback
       .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
       .then(function (data) {
+        chatState.lastData = data;
         renderChat(data);
         renderPlayers(data);
+        setLive(true);
+        updateSyncStamp();
         var err = document.getElementById("chat-error");
         if (err) err.style.display = "none";
       })
       .catch(function () {
+        setLive(false);
         var err = document.getElementById("chat-error");
         if (err) err.style.display = "block";
       });
@@ -214,7 +254,38 @@
   if (document.getElementById("chat-messages")) {
     loadChat();
     setInterval(loadChat, 30000); // mirror of the 30s backup loop
+    setInterval(updateSyncStamp, 10000); // keep "synced Xs ago" counting up
+
+    var newMsgsBtn = document.getElementById("new-msgs");
+    if (newMsgsBtn) newMsgsBtn.addEventListener("click", function () {
+      var l = document.getElementById("chat-messages");
+      if (l) l.scrollTop = l.scrollHeight;
+      hideNewMsgs();
+    });
+    var scrollBox = document.getElementById("chat-messages");
+    if (scrollBox) scrollBox.addEventListener("scroll", function () {
+      var b = document.getElementById("new-msgs");
+      if (!b || b.style.display === "none") return;
+      if (scrollBox.scrollHeight - scrollBox.scrollTop - scrollBox.clientHeight < 140) hideNewMsgs();
+    });
   }
+
+  /* ---------- "open the live app" dialog (read-only mirror explainer) ---------- */
+  var liveDialog = document.getElementById("live-dialog");
+  document.querySelectorAll(".js-open-live").forEach(function (b) {
+    b.addEventListener("click", function () {
+      if (!liveDialog) return;
+      if (typeof liveDialog.showModal === "function") liveDialog.showModal();
+      else liveDialog.setAttribute("open", "open");
+    });
+  });
+  var liveClose = document.getElementById("live-dialog-close");
+  if (liveClose) liveClose.addEventListener("click", function () {
+    if (liveDialog && liveDialog.close) liveDialog.close();
+  });
+  if (liveDialog) liveDialog.addEventListener("click", function (e) {
+    if (e.target === liveDialog && liveDialog.close) liveDialog.close();
+  });
 
   /* ---------- version pill: "site updated — refresh" ---------- */
   function pollVersion() {

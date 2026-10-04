@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" data-veil-build="2026-10-04T01:52:02Z">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" data-veil-build="2026-10-04T02:02:02Z">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -61,6 +61,21 @@
     <div class="linkrow"><span class="ln">⚙️ Runtime JS</span><span class="lu" id="ln10">…</span><button class="copy-btn" data-copy="">copy</button></div>
 
     <p class="sub" style="margin-top:12px">All links point at <span class="mono">@main</span> — they always serve the latest pushed version, and the backup daemon purges the CDN cache after every push so updates appear within seconds. The pages are <span class="mono">.xhtml</span> exact copies (jsDelivr renders those as real pages).</p>
+  </section>
+
+  <section style="margin-top:26px" aria-label="Vercel setup">
+    <span class="kicker">Vercel deployment</span>
+    <h2 style="margin:8px 0 14px">Vercel link showing a broken chat? 60-second fix.</h2>
+    <div class="panel" style="padding:18px 22px">
+      <p class="sub">If your Vercel project says "not signed in", shows an empty member list and a register form that does nothing, it imported the <strong>whole Next.js app</strong> — Vercel can't run Veil's database or chat server, so that version can never work. Point it at the static <span class="mono">site/</span> mirror instead:</p>
+      <ol class="steps">
+        <li>In Vercel, open your project → <strong>Settings</strong> → <strong>General</strong></li>
+        <li>Framework Preset → <strong>Other</strong> · Build Command → leave empty · Output Directory → <span class="mono">site</span></li>
+        <li><strong>Save</strong>, then Deployments → newest → the ⋯ menu → <strong>Redeploy</strong></li>
+      </ol>
+      <p class="sub" style="margin-top:12px">The repo now ships a <span class="mono">vercel.json</span> with these exact settings, so any <em>new</em> Vercel project you import from <span class="mono">ok5678765s/veil-os</span> configures itself automatically — no settings needed.</p>
+      <p class="sub" style="margin-top:6px">Remember: the Vercel link is the <strong>read-only mirror</strong>. Sign-up, sending and the live member list only exist in the real Veil app (the sandbox preview panel) — nothing hosted on static files can change that.</p>
+    </div>
   </section>
 </main>
 
