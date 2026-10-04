@@ -56,12 +56,18 @@ function stamp(): string {
   return iso
 }
 
-/* internal page links carry the build stamp — a pushed update can never
- * be blocked by a 7-day-cached plain URL */
+/* internal page links + asset tags carry the build stamp — a pushed update
+ * can never be blocked by a 7-day-cached plain URL (jsDelivr sends
+ * max-age=604800 straight into visitors' browsers) */
 function linkStamp(html: string, stampIso: string): string {
   for (const p of PAGES) {
     html = html.split(`href="${p}.html"`).join(`href="${p}.html?v=${stampIso}"`)
   }
+  /* assets: scripts, styles, icon — idempotent (skips already-stamped) */
+  html = html
+    .replace(/(src|href)="(assets\/(?:os|live)\.js)(\?v=[^"]*)?"/g, `$1="$2?v=${stampIso}"`)
+    .replace(/(src|href)="(assets\/app\.css)(\?v=[^"]*)?"/g, `$1="$2?v=${stampIso}"`)
+    .replace(/(href)="(assets\/icon\.svg)(\?v=[^"]*)?"/g, `$1="$2?v=${stampIso}"`)
   return html
 }
 
