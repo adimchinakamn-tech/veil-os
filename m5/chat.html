@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-veil-build="2026-10-04T19:01:55Z">
+<html lang="en" data-veil-build="2026-10-04T19:11:32Z">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -450,17 +450,42 @@
     }).catch(function () {});
   }
 
+  /* union by id, oldest first — keeps just-sent messages on screen while
+     the CDN catches up with the write that landed seconds ago */
+  function mergeLiveMsgs(a, b) {
+    var seen = {}, out = [];
+    (a || []).concat(b || []).forEach(function (m) {
+      if (m && m.id && !seen[m.id]) { seen[m.id] = 1; out.push(m); }
+    });
+    out.sort(function (x, y) { return new Date(x.createdAt || 0) - new Date(y.createdAt || 0); });
+    return out;
+  }
+
   function loadLive() {
     L.fetchCdn().then(function (s) {
       if (!s) { state.liveOk = false; return; }
       state.liveOk = true;
       state.liveUsers = s.users || {};
-      state.liveMsgs = (s.messages || []).map(function (m) { return L.msgToRow(m); });
-      /* my identity must still exist in the room — otherwise sign back in */
+      state.liveMsgs = mergeLiveMsgs(state.liveMsgs, (s.messages || []).map(function (m) { return L.msgToRow(m); }));
+      /* my identity must still exist in the room — otherwise sign back in.
+         The CDN can lag a write that landed moments ago, so confirm against
+         the GitHub API (the source of truth) before dropping the session. */
       var id = L.identity();
       if (id && !L.findUser(s, id.username)) {
-        L.clearIdentity();
-        applyIdentity(null);
+        L.fetchApi().then(function (cur) {
+          if (!cur || !cur.json) return;
+          state.liveUsers = cur.json.users || {};
+          state.liveMsgs = mergeLiveMsgs(state.liveMsgs, (cur.json.messages || []).map(function (m) { return L.msgToRow(m); }));
+          var id2 = L.identity();
+          if (id2 && !L.findUser(cur.json, id2.username)) {
+            L.clearIdentity();
+            applyIdentity(null);
+          } else if (id2) {
+            applyIdentity(id2);
+          }
+          render();
+          renderMembers();
+        }).catch(function () { /* no token / API down — keep the CDN view */ });
       } else if (id) {
         applyIdentity(id);
       }

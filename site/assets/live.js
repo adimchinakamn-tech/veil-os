@@ -379,6 +379,7 @@
     saveIdentity: saveIdentity,
     clearIdentity: clearIdentity,
     fetchCdn: fetchCdn,
+    fetchApi: fetchApi,
     register: register,
     login: login,
     sendMessage: sendMessage,
