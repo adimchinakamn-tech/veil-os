@@ -189,7 +189,9 @@
           count = count + extra;
         }).catch(function () {});
       }).then(function () {
-        render(count);
+        /* the real app's page-level heartbeat always counts you — the
+           CDN copy can only see chat-room heartbeats, so floor at 1 */
+        render(Math.max(count, 1));
       });
     };
     load();

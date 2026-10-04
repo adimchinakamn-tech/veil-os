@@ -47,7 +47,13 @@ const eslintConfig = [...nextCoreWebVitals, ...nextTypescript, {
     "no-useless-escape": "off",
   },
 }, {
-  ignores: ["node_modules/**", ".next/**", "out/**", "build/**", "next-env.d.ts", "examples/**", "skills"]
+  ignores: [
+    "node_modules/**", ".next/**", "out/**", "build/**", "next-env.d.ts",
+    "examples/**", "skills",
+    // static CDN copies — generated, never linted
+    "site/**", "m1/**", "m2/**", "m3/**", "m4/**", "m5/**",
+    "m6/**", "m7/**", "m8/**", "m9/**", "m10/**",
+  ]
 }];
 
 export default eslintConfig;

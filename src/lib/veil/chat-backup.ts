@@ -31,7 +31,8 @@ export const JSDELIVR_PURGE = `https://purge.jsdelivr.net/gh/${BACKUP_REPO}@main
 /* The static site mirror (site/*.html) is served by the same jsDelivr
  * repo. After every push these paths get purged so the CDN mirror is
  * fresh within seconds — "when the site gets updated, jsDelivr also
- * gets updated" (the 10 public links live on site/status.html). */
+ * gets updated". The 10 public links are m1..m10/index.xhtml (+ their
+ * siblings); their entry pages ride along so every link wakes up fast. */
 export const SITE_FILES = [
   "site/index.html",
   "site/chat.html",
@@ -57,14 +58,36 @@ export const SITE_FILES = [
   "site/settings.xhtml",
   "site/version.json",
   "site/data/latest.json",
+  "site/data/chat-live.json",
   "site/data/arcade.json",
   "site/data/wallpapers.json",
   "site/data/wallpapers-live.json",
   "site/data/wallpapers-pack.json",
   "site/data/updates.json",
   "site/assets/os.js",
+  "site/assets/live.js",
   "site/assets/app.css",
   "site/assets/icon.svg",
+  "m1/index.xhtml",
+  "m2/index.xhtml",
+  "m3/index.xhtml",
+  "m4/index.xhtml",
+  "m5/index.xhtml",
+  "m6/index.xhtml",
+  "m7/index.xhtml",
+  "m8/index.xhtml",
+  "m9/index.xhtml",
+  "m10/index.xhtml",
+  "m1/index.html",
+  "m2/index.html",
+  "m3/index.html",
+  "m4/index.html",
+  "m5/index.html",
+  "m6/index.html",
+  "m7/index.html",
+  "m8/index.html",
+  "m9/index.html",
+  "m10/index.html",
   "backups/chat/latest.json",
   "backups/chat/manifest.json",
 ] as const

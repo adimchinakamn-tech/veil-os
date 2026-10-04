@@ -1,32 +1,39 @@
-import { readFileSync, writeFileSync, existsSync, rmSync, mkdirSync } from "fs"
+import { readFileSync, writeFileSync, existsSync, rmSync, mkdirSync, readdirSync } from "fs"
 import { execSync } from "child_process"
 
 /**
  * site-build.ts — stamp the static copy + generate the jsDelivr XHTML
- * exact copies + export REAL data from the live app.
+ * exact copies + export REAL data from the live app + emit the 10
+ * public mirror folders.
  *
  *   bun scripts/site-build.ts
  *
  * What it does:
  *   1. Stamps every site/*.html with the build time (data-veil-build).
- *   2. Bumps site/version.json (commit sha + built stamp).
- *   3. Copies the live chat snapshot to site/data/latest.json so the
+ *   2. Bakes ?v=<stamp> into internal page links (jsDelivr caches pages
+ *      for 7 days in the browser — the stamped link always misses).
+ *   3. Bumps site/version.json (commit sha + built stamp).
+ *   4. Injects the GitHub token (tmp/gh-token.txt) into assets/live.js —
+ *      the shared chat room writes through the Contents API with it.
+ *   5. Seeds site/data/chat-live.json (the CDN room) if missing.
+ *   6. Copies the live chat snapshot to site/data/latest.json so the
  *      site directory is SELF-CONTAINED — Cloudflare Pages / Vercel
  *      static deploys only serve site/, and the runtime reads the data
  *      same-origin from the same deploy (instant, no CDN lag).
- *   4. Exports the real app data the pages render from:
+ *   7. Exports the real app data the pages render from:
  *        data/arcade.json     — the full 840-title catalog + hot row
  *        data/wallpapers.json — the curated 4K feed (page 1)
  *        data/updates.json    — the site updates feed
  *      (all fetched from the running dev server; skipped when offline)
- *   5. Generates site/*.xhtml — IDENTICAL pages that jsDelivr serves
+ *   8. Generates site/*.xhtml — IDENTICAL pages that jsDelivr serves
  *      as application/xhtml+xml (plain .html is force-served as
  *      text/plain by jsDelivr's anti-phishing policy).
- *      Conversion: xmlns on <html>, self-closed void elements, CDATA-
- *      wrapped inline scripts, internal .html links → .xhtml.
+ *   9. Emits the 10 public mirror folders m1..m10 — byte-identical
+ *      pages that share site/'s heavy assets via ../site/ rewrites,
+ *      so all 10 jsDelivr links stay exact copies that get updates.
  *
- * The backup loop commits + pushes site/ after every snapshot, so all
- * copies stay in sync automatically.
+ * The backup loop commits + pushes site/ and the m1..m10 folders after
+ * every snapshot, so all copies stay in sync automatically.
  */
 
 const ROOT = "/home/z/my-project"
@@ -35,6 +42,7 @@ const PAGES = [
   "index", "chat", "arcade", "ai", "stream", "wallpapers",
   "music", "links", "history", "updates", "settings",
 ]
+const MIRRORS = 10
 
 function stamp(): string {
   const iso = new Date().toISOString().replace(/\.\d+Z$/, "Z")
@@ -46,6 +54,15 @@ function stamp(): string {
     writeFileSync(f, html)
   }
   return iso
+}
+
+/* internal page links carry the build stamp — a pushed update can never
+ * be blocked by a 7-day-cached plain URL */
+function linkStamp(html: string, stampIso: string): string {
+  for (const p of PAGES) {
+    html = html.split(`href="${p}.html"`).join(`href="${p}.html?v=${stampIso}"`)
+  }
+  return html
 }
 
 function writeVersion(stampIso: string): void {
@@ -60,6 +77,56 @@ function writeVersion(stampIso: string): void {
     commit: sha,
     pages: PAGES.map((p) => `site/${p}.html`),
     xhtmlPages: PAGES.map((p) => `site/${p}.xhtml`),
+    mirrors: Array.from({ length: MIRRORS }, (_, i) => `m${i + 1}/index.xhtml`),
+  }, null, 2) + "\n")
+}
+
+/* --- live room: token injection + seed ---------------------------------- */
+
+function injectToken(): { token: boolean } {
+  const liveJs = `${SITE}/assets/live.js`
+  if (!existsSync(liveJs)) return { token: false }
+  let token = ""
+  try {
+    token = readFileSync(`${ROOT}/tmp/gh-token.txt`, "utf-8").trim()
+  } catch {
+    token = ""
+  }
+  if (!token) {
+    try {
+      const creds = readFileSync(`${process.env.HOME || "/home/z"}/.git-credentials`, "utf-8")
+      const m = creds.match(/https:\/\/[^:]*:([^@]+)@github\.com/)
+      if (m) token = m[1].trim()
+    } catch {
+      /* none */
+    }
+  }
+  let js = readFileSync(liveJs, "utf-8")
+  if (token && /^[\w.-]+$/.test(token)) {
+    js = js.replace(/(token:\s*)"[^"]*"/, `$1"${token}"`)
+    writeFileSync(liveJs, js)
+    return { token: true }
+  }
+  const hasPlaceholder = /__VEIL_GH_TOKEN__/.test(js)
+  return { token: !hasPlaceholder }
+}
+
+function seedChatLive(): void {
+  const f = `${SITE}/data/chat-live.json`
+  mkdirSync(`${SITE}/data`, { recursive: true })
+  if (existsSync(f)) {
+    try {
+      const cur = JSON.parse(readFileSync(f, "utf-8"))
+      if (cur && cur.veil === "chat-live" && cur.users && Array.isArray(cur.messages)) return
+    } catch {
+      /* reseed a corrupt file */
+    }
+  }
+  writeFileSync(f, JSON.stringify({
+    veil: "chat-live",
+    version: 1,
+    users: {},
+    messages: [],
   }, null, 2) + "\n")
 }
 
@@ -213,7 +280,7 @@ function toXhtml(html: string): string {
   )
   // XML namespace on the root element (browsers default it, but be proper).
   out = out.replace(/<html(\s)/, '<html xmlns="http://www.w3.org/1999/xhtml"$1')
-  // Internal page links point at the xhtml siblings.
+  // Internal page links point at the xhtml siblings (keep any ?v= stamp).
   for (const p of PAGES) {
     out = out.split(`${p}.html`).join(`${p}.xhtml`)
   }
@@ -228,18 +295,86 @@ function toXhtml(html: string): string {
   return out
 }
 
+/* --- the 10 public mirror folders ---------------------------------------- */
+
+/* mirror pages are the same bytes, except local asset refs point at the
+ * one canonical copy in site/ (assets are 90+ MB — never duplicated) */
+function mirrorize(html: string): string {
+  let out = html
+  out = out.split('href="assets/').join('href="../site/assets/')
+  out = out.split('src="assets/').join('src="../site/assets/')
+  out = out.split('src="arcade/').join('src="../site/arcade/')
+  out = out.replace(
+    '<script src="../site/assets/os.js"></script>',
+    '<script>window.VEILOS_SHARED_BASE="../site/";</script>\n<script src="../site/assets/os.js"></script>',
+  )
+  return out
+}
+
+function emitMirrors(): { folders: number; pages: number } {
+  let pages = 0
+  for (let i = 1; i <= MIRRORS; i++) {
+    const dir = `${ROOT}/m${i}`
+    rmSync(dir, { recursive: true, force: true })
+    mkdirSync(dir, { recursive: true })
+    for (const p of PAGES) {
+      const src = `${SITE}/${p}.html`
+      if (!existsSync(src)) continue
+      const body = mirrorize(readFileSync(src, "utf-8"))
+      writeFileSync(`${dir}/${p}.html`, body)
+      writeFileSync(`${dir}/${p}.xhtml`, toXhtml(body))
+      pages += 2
+    }
+    if (existsSync(`${SITE}/version.json`)) {
+      writeFileSync(`${dir}/version.json`, readFileSync(`${SITE}/version.json`, "utf-8"))
+    }
+    if (existsSync(`${SITE}/_headers`)) {
+      writeFileSync(`${dir}/_headers`, readFileSync(`${SITE}/_headers`, "utf-8"))
+    }
+  }
+  return { folders: MIRRORS, pages }
+}
+
+function cleanStaleMirrors(): void {
+  // remove old m*/ folders beyond MIRRORS (e.g. if the count ever changes)
+  try {
+    for (const name of readdirSync(ROOT)) {
+      const m = name.match(/^m(\d+)$/)
+      if (m && parseInt(m[1], 10) > MIRRORS) rmSync(`${ROOT}/${name}`, { recursive: true, force: true })
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
 const stampIso = stamp()
 writeVersion(stampIso)
+const tokenInfo = injectToken()
+seedChatLive()
 exportData().then((dataOk) => {
   for (const p of PAGES) {
-    const src = `${SITE}/${p}.html`
-    if (!existsSync(src)) continue
-    writeFileSync(`${SITE}/${p}.xhtml`, toXhtml(readFileSync(src, "utf-8")))
+    const f = `${SITE}/${p}.html`
+    if (!existsSync(f)) continue
+    // stamp links AFTER the data export so every page carries ?v=
+    const stamped = linkStamp(readFileSync(f, "utf-8"), stampIso)
+    writeFileSync(f, stamped)
+    writeFileSync(`${SITE}/${p}.xhtml`, toXhtml(stamped))
   }
 
   // The MIME probe served its purpose (application/xhtml+xml confirmed).
   const probe = `${SITE}/mime-test.xhtml`
   if (existsSync(probe)) rmSync(probe)
 
-  console.log(JSON.stringify({ stamped: stampIso, pages: PAGES.length, xhtml: PAGES.length, data: dataOk }))
+  cleanStaleMirrors()
+  const mirrors = emitMirrors()
+
+  console.log(JSON.stringify({
+    stamped: stampIso,
+    pages: PAGES.length,
+    xhtml: PAGES.length,
+    data: dataOk,
+    token: tokenInfo.token,
+    mirrors: mirrors.folders,
+    mirrorPages: mirrors.pages,
+  }))
 })

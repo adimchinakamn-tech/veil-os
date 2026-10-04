@@ -27,7 +27,11 @@ const ROOT = "/home/z/my-project"
 const force = process.argv.includes("--force")
 
 function git(args: string[]): { code: number; err: string } {
-  const r = spawnSync("git", args, { cwd: ROOT, encoding: "utf-8" })
+  const r = spawnSync("git", args, {
+    cwd: ROOT,
+    encoding: "utf-8",
+    env: { ...process.env, GIT_TERMINAL_PROMPT: "0" },
+  })
   return { code: r.status ?? 1, err: (r.stderr || "").slice(0, 400) }
 }
 
@@ -56,7 +60,12 @@ async function main(): Promise<void> {
   }
 
   // ---- git: stage + commit + push (all best-effort) ----------------------
-  git(["add", "-A", "backups/chat", "site"])
+  // Browsers on the CDN copies write site/data/chat-live.json straight to
+  // GitHub through the Contents API — adopt the room's remote state first
+  // so a backup commit can never clobber messages sent from the links.
+  git(["fetch", "origin", "main", "--quiet"])
+  git(["checkout", "origin/main", "--", "site/data/chat-live.json"])
+  git(["add", "-A", "backups/chat", "site", "m1", "m2", "m3", "m4", "m5", "m6", "m7", "m8", "m9", "m10"])
   const staged = git(["diff", "--cached", "--quiet"])
   let committed = false
   if (staged.code !== 0) {
@@ -69,7 +78,17 @@ async function main(): Promise<void> {
     committed = c.code === 0
     if (!committed) console.error("COMMIT-FAIL " + c.err)
   }
-  const push = git(["push", "origin", "main"])
+  let push = git(["push", "origin", "main"])
+  if (push.code !== 0) {
+    // remote moved (a CDN room write landed between fetch and push) —
+    // rebase this box's commit on top and retry once
+    const pull = git(["pull", "--rebase", "--autostash", "origin", "main"])
+    if (pull.code === 0) {
+      push = git(["push", "origin", "main"])
+    } else {
+      git(["rebase", "--abort"])
+    }
+  }
   const pushOk = push.code === 0
   const pushError = pushOk ? null : push.err
 
