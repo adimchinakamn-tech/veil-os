@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" data-veil-build="2026-10-04T19:01:55Z">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Veil AI — Veil</title>
+<meta name="description" content="Veil AI — the assistant that knows the site, the arcade and the wallpapers." />
+<link rel="icon" href="../site/assets/icon.svg" type="image/svg+xml" sizes="any" />
+<link rel="stylesheet" href="../site/assets/app.css" />
+</head>
+<body class="__variable_246ccd __variable_c29908 antialiased bg-background text-foreground">
+
+<div data-os-section="" class="fixed inset-0 z-50 bg-zinc-950/80 backdrop-blur-sm">
+  <div role="region" aria-label="Veil AI — AI assistant" class="relative flex h-full w-full flex-col overflow-hidden text-zinc-100">
+    <div aria-hidden="true" class="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+      <div class="veil-orb-a absolute -top-32 left-1/2 h-[360px] w-[560px] -translate-x-1/2 rounded-full bg-emerald-500/15 blur-[120px]"></div>
+      <div class="veil-orb-b absolute top-40 right-[14%] h-48 w-48 rounded-full bg-teal-500/10 blur-[90px]"></div>
+      <div class="absolute inset-0 opacity-[0.10]" style="background-image: linear-gradient(to right, rgb(63, 63, 70) 1px, transparent 1px), linear-gradient(rgb(63, 63, 70) 1px, transparent 1px); background-size: 52px 52px; mask-image: radial-gradient(70% 55% at 50% 30%, black 30%, transparent 100%);"></div>
+    </div>
+
+    <header class="relative z-20 flex shrink-0 items-center gap-2 border-b border-zinc-800/80 bg-zinc-950/85 px-4 py-3.5 backdrop-blur-xl sm:gap-2.5 sm:px-6">
+      <button data-os-back="" class="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] border shadow-xs dark:bg-input/30 dark:border-input dark:hover:bg-input/50 has-[&amp;>svg]:px-2.5 h-8 shrink-0 gap-1.5 rounded-xl border-zinc-800 bg-zinc-900/60 px-2.5 text-zinc-300 hover:border-emerald-500/40 hover:bg-zinc-900 hover:text-emerald-200 sm:px-3" aria-label="Close the assistant">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left h-4 w-4" aria-hidden="true"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg>
+        <span class="hidden sm:inline">Back</span>
+      </button>
+      <span aria-hidden="true" class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 ring-1 ring-emerald-500/30"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bot h-4 w-4 text-emerald-400" aria-hidden="true"><path d="M12 8V4H8"></path><rect width="16" height="12" x="4" y="8" rx="2"></rect><path d="M2 14h2"></path><path d="M20 14h2"></path><path d="M15 13v2"></path><path d="M9 13v2"></path></svg></span>
+      <h1 class="truncate text-lg font-semibold tracking-tight">Veil AI</h1>
+      <span class="inline-flex items-center justify-center border py-0.5 w-fit whitespace-nowrap transition-[color,box-shadow] overflow-hidden shrink-0 rounded-full border-emerald-500/25 bg-emerald-500/10 px-2.5 text-[11px] font-medium text-emerald-300">AI assistant</span>
+      <div class="ml-auto flex items-center gap-2">
+        <button type="button" aria-pressed="false" title="Extension Maker — describe an app or game and Veil AI builds it as an installable Veil extension" class="inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-[12px] font-semibold transition border-zinc-700/80 bg-zinc-900/60 text-zinc-300 hover:border-violet-400/50 hover:text-violet-200">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-package h-3.5 w-3.5" aria-hidden="true"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"></path><path d="M12 22V12"></path><polyline points="3.29 7 12 12 20.71 7"></polyline><path d="m7.5 4.27 9 5.15"></path></svg>
+          Extension Maker
+        </button>
+      </div>
+    </header>
+
+    <div id="ai-log" role="log" aria-live="polite" aria-label="Conversation with the Veil AI" class="veil-scroll-slim relative z-10 min-h-0 flex-1 overflow-y-auto">
+      <div id="ai-welcome" class="mx-auto flex h-full max-w-2xl flex-col items-center justify-center px-4 py-8 text-center sm:px-6">
+        <div class="flex flex-col items-center">
+          <div class="relative mb-5">
+            <span aria-hidden="true" class="veil-pulse-ring flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/15 ring-1 ring-emerald-500/30">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bot h-9 w-9 text-emerald-300" aria-hidden="true"><path d="M12 8V4H8"></path><rect width="16" height="12" x="4" y="8" rx="2"></rect><path d="M2 14h2"></path><path d="M20 14h2"></path><path d="M15 13v2"></path><path d="M9 13v2"></path></svg>
+            </span>
+            <span aria-hidden="true" class="absolute -right-1 -top-1 flex h-7 w-7 items-center justify-center rounded-full border border-zinc-700 bg-zinc-900"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles h-3.5 w-3.5 text-teal-300" aria-hidden="true"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"></path><path d="M20 3v4"></path><path d="M22 5h-4"></path><path d="M4 17v2"></path><path d="M5 18H3"></path></svg></span>
+          </div>
+          <h2 class="text-xl font-bold tracking-tight sm:text-2xl">Hey — I'm the Veil AI.</h2>
+          <p class="mt-2.5 max-w-md text-[13.5px] leading-relaxed text-zinc-400">I know which sites run well through the veil, what's inside the Arcade (2,000+ titles to pick from), the wallpaper packs, and how to get you moving fast. Links I suggest open straight through Veil.</p>
+          <div class="mt-6 grid w-full gap-2.5 sm:grid-cols-3">
+            <button type="button" data-suggest="What works well through Veil?" class="group flex items-center gap-2.5 rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-3 text-left transition hover:-translate-y-0.5 hover:border-emerald-500/40 hover:bg-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50">
+              <span aria-hidden="true" class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 ring-1 ring-emerald-500/25"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-globe h-4 w-4 text-emerald-300" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path><path d="M2 12h20"></path></svg></span>
+              <span class="text-[13px] font-medium text-zinc-200 group-hover:text-emerald-200">What works well through Veil?</span>
+            </button>
+            <button type="button" data-suggest="Find me a title to play" class="group flex items-center gap-2.5 rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-3 text-left transition hover:-translate-y-0.5 hover:border-emerald-500/40 hover:bg-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50">
+              <span aria-hidden="true" class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 ring-1 ring-emerald-500/25"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-joystick h-4 w-4 text-emerald-300" aria-hidden="true"><path d="M21 17a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2Z"></path><path d="M6 15v-2"></path><path d="M12 15V9"></path><circle cx="12" cy="6" r="3"></circle></svg></span>
+              <span class="text-[13px] font-medium text-zinc-200 group-hover:text-emerald-200">Find me a title to play</span>
+            </button>
+            <button type="button" data-suggest="Suggest a new wallpaper" class="group flex items-center gap-2.5 rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-3 text-left transition hover:-translate-y-0.5 hover:border-emerald-500/40 hover:bg-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50">
+              <span aria-hidden="true" class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 ring-1 ring-emerald-500/25"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-image h-4 w-4 text-emerald-300" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg></span>
+              <span class="text-[13px] font-medium text-zinc-200 group-hover:text-emerald-200">Suggest a new wallpaper</span>
+            </button>
+          </div>
+          <button type="button" data-suggest="Build me an extension" class="group mt-2.5 flex w-full items-center gap-3 rounded-2xl border border-violet-500/30 bg-violet-500/[0.07] p-3.5 text-left transition hover:-translate-y-0.5 hover:border-violet-400/60 hover:bg-violet-500/[0.12] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50">
+            <span aria-hidden="true" class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-500/15 ring-1 ring-violet-400/30"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-package h-4 w-4 text-violet-300" aria-hidden="true"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"></path><path d="M12 22V12"></path><polyline points="3.29 7 12 12 20.71 7"></polyline><path d="m7.5 4.27 9 5.15"></path></svg></span>
+            <span class="min-w-0"><span class="block text-[13.5px] font-semibold text-zinc-100 group-hover:text-violet-100">Extension Maker</span><span class="block truncate text-[12px] text-zinc-400">Describe an app or game — I build it as an extension for the offline Veil file</span></span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles ml-auto h-4 w-4 shrink-0 text-violet-300/70 group-hover:text-violet-300" aria-hidden="true"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"></path><path d="M20 3v4"></path><path d="M22 5h-4"></path><path d="M4 17v2"></path><path d="M5 18H3"></path></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="relative z-20 shrink-0 border-t border-zinc-800/80 bg-zinc-950/85 px-4 py-3 backdrop-blur-xl sm:px-6">
+      <form id="ai-form" class="mx-auto w-full max-w-2xl">
+        <div class="flex w-full items-end gap-2">
+          <input multiple="" aria-label="Attach files" class="hidden" type="file"/>
+          <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium disabled:pointer-events-none disabled:opacity-50 h-11 w-11 shrink-0 rounded-2xl border border-zinc-800 bg-zinc-900/90 text-zinc-400 shadow-xl shadow-black/30 transition hover:text-zinc-100" type="button" aria-label="Attach images or files" title="Attach images or files — images are seen by the assistant, text files are read, anything up to 100 MB is stored">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-paperclip h-4 w-4" aria-hidden="true"><path d="m16 6-8.414 8.586a2 2 0 0 0 2.829 2.829l8.414-8.586a4 4 0 1 0-5.657-5.657l-8.379 8.551a6 6 0 1 0 8.485 8.485l8.379-8.551"></path></svg>
+          </button>
+          <textarea id="ai-input" class="veil-scroll-slim min-h-11 max-h-44 flex-1 resize-none rounded-2xl border-zinc-800 bg-zinc-900/90 px-4 py-2.5 text-[14px] text-zinc-100 shadow-xl shadow-black/30 outline-none transition placeholder:text-zinc-500 focus-visible:border-emerald-500/60 focus-visible:ring-[3px] focus-visible:ring-emerald-500/25" placeholder="Ask about sites, titles, wallpapers…" aria-label="Message the Veil AI" rows="1" spellcheck="false"></textarea>
+          <button id="ai-send" class="inline-flex items-center justify-center gap-2 text-sm font-medium disabled:pointer-events-none disabled:opacity-40 h-11 w-11 shrink-0 rounded-2xl shadow-lg transition bg-emerald-500 text-emerald-950 shadow-emerald-500/25 hover:bg-emerald-400" type="submit" aria-label="Send message" disabled="">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-send h-4 w-4" aria-hidden="true"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"></path><path d="m21.854 2.147-10.94 10.939"></path></svg>
+          </button>
+        </div>
+      </form>
+      <p class="mx-auto mt-2 max-w-2xl text-center text-[11px] text-zinc-600">Powered by GLM · Enter sends · Shift+Enter adds a line</p>
+    </div>
+  </div>
+</div>
+
+<script>
+//<![CDATA[
+window.VEILOS_SHARED_BASE="../site/";
+//]]>
+</script>
+<script src="../site/assets/os.js"></script>
+<script>
+//<![CDATA[
+
+(function () {
+  "use strict";
+  var V = window.VEILOS;
+  var $ = V.$;
+  var log = document.getElementById("ai-log");
+  var welcome = document.getElementById("ai-welcome");
+  var input = document.getElementById("ai-input");
+  var send = document.getElementById("ai-send");
+  var arcade = null;
+
+  function esc(s) { return V.esc(s); }
+  function save(list) { V.lsSet("veil.mirror.ai", JSON.stringify(list.slice(-40))); }
+  function load() { try { return JSON.parse(V.ls("veil.mirror.ai") || "[]"); } catch (e) { return []; } }
+
+  function scrollBottom() { log.scrollTop = log.scrollHeight; }
+
+  function typingDots() {
+    return '<span aria-hidden="true" class="inline-flex items-center gap-1"><span class="h-1.5 w-1.5 animate-bounce rounded-full bg-emerald-400/80 [animation-delay:0ms]"></span><span class="h-1.5 w-1.5 animate-bounce rounded-full bg-emerald-400/80 [animation-delay:150ms]"></span><span class="h-1.5 w-1.5 animate-bounce rounded-full bg-emerald-400/80 [animation-delay:300ms]"></span></span>';
+  }
+
+  function bubble(role, content) {
+    if (role === "user") {
+      return '<div class="flex justify-end" style="padding:2px 16px"><div class="max-w-[85%] rounded-2xl rounded-tr-md bg-emerald-500/15 px-4 py-2.5 text-[13.5px] leading-relaxed text-emerald-50 ring-1 ring-emerald-500/25">' + esc(content).replace(/\n/g, "<br>") + "</div></div>";
+    }
+    return '<div class="flex justify-start" style="padding:2px 16px"><div class="max-w-[85%] rounded-2xl rounded-tl-md border border-zinc-800 bg-zinc-900 px-4 py-3 text-[13.5px] leading-relaxed">' + content + "</div></div>";
+  }
+
+  /* the answer brain — grounded in the real data this copy carries */
+  function reply(q) {
+    var lq = q.toLowerCase();
+    if (/wallpaper|background|backdrop/.test(lq)) {
+      return "The wallpaper shelf lives one door over — <b>Wallpapers</b> in the dock. The uploaded pack runs 17 motion and still backdrops (Backrooms, Cherry Blossom, Minecraft Earth…), the animated themes shift the whole OS palette, and the live 4K shelf pulls fresh drops. Pick one and it becomes the backdrop everywhere, instantly.";
+    }
+    if (/title|game|play|arcade/.test(lq)) {
+      if (arcade && arcade.items && arcade.items.length) {
+        var picks = [];
+        var pool = (arcade.hot.length ? arcade.hot : arcade.items).filter(function (g) { return !g.external; });
+        for (var i = 0; i < pool.length && picks.length < 5; i += Math.max(1, Math.floor(pool.length / 5))) {
+          picks.push(pool[i].name);
+        }
+        return "The Arcade is stacked — <b>" + arcade.items.length + " titles</b> right now, all instant-play. A few that get picked a lot: " + picks.slice(0, 4).map(function (n) { return "<b>" + esc(n) + "</b>"; }).join(", ") + ". Hit the Arcade in the dock and search anything — covers load straight from the shelf.";
+      }
+      return "The Arcade carries a couple thousand instant-play titles — open it from the dock and search anything.";
+    }
+    if (/site|works well|read/.test(lq)) {
+      return "Through the veil, the sites that read best are the light ones: <b>Wikipedia</b>, <b>Hacker News</b>, <b>Lite CNN</b>, <b>BBC News</b> and <b>MDN Docs</b> — all sitting in the Links section of the dock. Text-first pages load fast and stay readable; anything heavy gets leaner the moment it crosses.";
+    }
+    if (/extension|build|app/.test(lq)) {
+      return "The Extension Maker builds apps and games as installable Veil extensions — describe what you want and it writes the whole thing. That part of me runs in the main app (the builder needs the full model); everything else — the arcade, wallpapers, chat — is right here.";
+    }
+    if (/hi|hey|hello|yo\b/.test(lq) && lq.length < 24) {
+      return "Hey. Ask me what plays well, what to read, or where the wallpapers live — or just wander the dock. Everything here is live data.";
+    }
+    if (/who are you|what are you|veil/.test(lq)) {
+      return "I'm the Veil AI — the assistant for this site. I keep tabs on the arcade library, the wallpaper packs, and which sites read well through the veil. The full conversational model runs in the main app; this copy of me answers from the live data the site carries.";
+    }
+    return "Good question. The deep answers run on the full model in the main app — meanwhile the whole OS is around you: the Arcade (" + (arcade && arcade.items ? arcade.items.length + " titles" : "a couple thousand titles") + "), Chat with the crew, Wallpapers, Stream and Links. Ask me about any of those and I'll point you right.";
+  }
+
+  function ask(q) {
+    var list = load();
+    list.push({ role: "user", content: q });
+    welcome.style.display = "none";
+    log.insertAdjacentHTML("beforeend", bubble("user", q));
+    scrollBottom();
+
+    /* the thinking state — the app's own dots */
+    var thinkId = "think-" + Date.now();
+    log.insertAdjacentHTML("beforeend", '<div id="' + thinkId + '" class="flex justify-start" style="padding:2px 16px"><div class="max-w-[85%] rounded-2xl rounded-tl-md border border-zinc-800 bg-zinc-900 px-4 py-3 text-[13.5px] leading-relaxed"><div class="flex items-center gap-2.5">' + typingDots() + '<span class="text-[12.5px] text-zinc-500">Veil AI is thinking…</span></div></div></div>');
+    scrollBottom();
+
+    setTimeout(function () {
+      var think = document.getElementById(thinkId);
+      if (think) think.remove();
+      var text = reply(q);
+      log.insertAdjacentHTML("beforeend", bubble("assistant", text));
+      scrollBottom();
+      list.push({ role: "assistant", content: text.replace(/<[^>]+>/g, "") });
+      save(list);
+    }, 900 + Math.random() * 900);
+  }
+
+  function restore() {
+    var list = load();
+    if (!list.length) return;
+    welcome.style.display = "none";
+    var html = "";
+    list.forEach(function (m) {
+      html += m.role === "user" ? bubble("user", m.content) : bubble("assistant", esc(m.content).replace(/\n/g, "<br>"));
+    });
+    log.insertAdjacentHTML("beforeend", html);
+    scrollBottom();
+  }
+
+  function updateSend() { send.disabled = !input.value.trim(); }
+  input.addEventListener("input", function () {
+    updateSend();
+    input.style.height = "auto";
+    input.style.height = Math.min(input.scrollHeight, 176) + "px";
+  });
+  input.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      if (input.value.trim()) { ask(input.value.trim()); input.value = ""; updateSend(); input.style.height = "auto"; }
+    }
+  });
+  document.getElementById("ai-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    if (input.value.trim()) { ask(input.value.trim()); input.value = ""; updateSend(); input.style.height = "auto"; }
+  });
+  document.querySelectorAll("[data-suggest]").forEach(function (b) {
+    b.addEventListener("click", function () { ask(b.getAttribute("data-suggest")); });
+  });
+
+  restore();
+  V.dataOf("arcade.json").then(function (d) { arcade = d; }).catch(function () {});
+})();
+
+//]]>
+</script>
+</body>
+</html>

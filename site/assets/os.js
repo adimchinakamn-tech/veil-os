@@ -19,13 +19,24 @@
   var HERE = window.location.href.split("#")[0].split("?")[0];
   var SITE_BASE = HERE.replace(/[^/]*$/, "");          // .../site/ or /
   var REPO_BASE = SITE_BASE.replace(/[^/]*\/$/, "");   // .../veil-os@main/
+  /* mirror folders (m1..m10) share the canonical site/ assets+data:
+     the page sets window.VEILOS_SHARED_BASE="../site/" before os.js */
+  var SHARED = (typeof window.VEILOS_SHARED_BASE === "string" && window.VEILOS_SHARED_BASE) || SITE_BASE;
   var ON_REPO_HOST = /githubusercontent\.com|githack\.com|jsdelivr\.net/.test(HERE) && SITE_BASE !== "/";
 
   window.VEILOS = {
     base: SITE_BASE,
     asset: function (p) { return SITE_BASE.replace(/[^/]*$/, "") + p; },
-    page: function (name) { return SITE_BASE + name + ".html"; },
-    data: function (f) { return SITE_BASE + "data/" + f; },
+    page: function (name) {
+      /* keep the entry extension (.xhtml on jsDelivr — .html is served
+         as text/plain there) and carry this build's stamp so a pushed
+         update can't be blocked by the 7-day browser cache */
+      var ext = /\.xhtml$/.test(window.location.pathname) ? ".xhtml" : ".html";
+      var v = document.documentElement.getAttribute("data-veil-build") || "";
+      return SITE_BASE + name + ext + (v ? "?v=" + encodeURIComponent(v) : "");
+    },
+    shared: SHARED,
+    data: function (f) { return SHARED + "data/" + f; },
     cdnData: function (f) { return "https://cdn.jsdelivr.net/gh/ok5678765s/veil-os@main/site/data/" + f; },
     repoData: function (f) { return REPO_BASE + "site/data/" + f; },
     onRepoHost: ON_REPO_HOST,
@@ -48,7 +59,7 @@
     return tryNext();
   }
   function dataOf(file) {
-    return fetchJson([window.VEILOS.data(file), window.VEILOS.cdnData(file), window.VEILOS.repoData(file)]);
+    return fetchJson([SHARED + "data/" + file, window.VEILOS.cdnData(file), window.VEILOS.repoData(file)]);
   }
   window.VEILOS.dataOf = dataOf;
 
@@ -137,17 +148,51 @@
   }
 
   /* ============================================================
-     PRESENCE — "N online" pill, fed by the synced member list.
+     PRESENCE — "N online" pill. Real presence: CDN room heartbeats
+     (chat-live.json) + accounts that just talked in the live chat.
      ============================================================ */
   function mountPresence() {
-    var el = $("[data-os-presence]");
-    if (!el) return;
-    var render = function (n) { el.textContent = n > 0 ? n + " online" : "connecting…"; };
+    var el = $$("[data-os-presence]");
+    if (!el.length) return;
+    var WINDOW_MS = 4 * 60 * 1000;
+    var render = function (n) {
+      var label = n > 0 ? n + " online" : "connecting…";
+      for (var i = 0; i < el.length; i++) el[i].textContent = label;
+    };
     var load = function () {
-      dataOf("latest.json").then(function (d) {
-        var n = (d.accounts || []).filter(function (a) { return !a.banned; }).length;
-        render(n);
-      }).catch(function () {});
+      var count = 0;
+      var seen = {};
+      var finish = dataOf("latest.json").then(function (d) {
+        var now = Date.now();
+        (d.messages || []).forEach(function (m) {
+          var t = new Date(m.createdAt).getTime();
+          if (isFinite(t) && now - t < WINDOW_MS && !seen[m.accountId]) {
+            seen[m.accountId] = true;
+            count++;
+          }
+        });
+      }).catch(function () {}).then(function () {
+        return dataOf("chat-live.json").then(function (s) {
+          var now = Date.now();
+          var online = {};
+          for (var k in (s.users || {})) {
+            var u = s.users[k];
+            var t = u && u.lastSeen ? new Date(u.lastSeen).getTime() : 0;
+            if (isFinite(t) && now - t < WINDOW_MS) online[k.toLowerCase()] = true;
+          }
+          (s.messages || []).forEach(function (m) {
+            var t = new Date(m.createdAt).getTime();
+            if (isFinite(t) && now - t < WINDOW_MS) online[String(m.username || "").toLowerCase()] = true;
+          });
+          var extra = 0;
+          for (var kk in online) extra++;
+          count = count + extra;
+        }).catch(function () {});
+      }).then(function () {
+        /* the real app's page-level heartbeat always counts you — the
+           CDN copy can only see chat-room heartbeats, so floor at 1 */
+        render(Math.max(count, 1));
+      });
     };
     load();
     setInterval(function () { if (!document.hidden) load(); }, 30000);
@@ -581,8 +626,9 @@
   function wpAsset(src) {
     if (!src) return "";
     if (/^https?:\/\//.test(src) || src.indexOf("data:") === 0) return src;
-    /* root-relative in the real app → same path inside site/ */
-    return SITE_BASE + src.replace(/^\//, "");
+    /* root-relative in the real app → shared site/ path (mirror folders
+       keep one canonical copy of the heavy assets) */
+    return SHARED + src.replace(/^\//, "");
   }
   window.VEILOS.wpAsset = wpAsset;
   function mountWallpaper() {
@@ -702,13 +748,24 @@
   function mountRefresh() {
     var pill = $("[data-os-refresh]");
     if (!pill) return;
+    var latest = null;
+    /* location.reload() can re-serve the 7-day-cached page — reload with
+       a fresh query string instead so the CDN edge (purged on push) is hit */
+    try { pill.removeAttribute("onclick"); } catch (e) { /* ignore */ }
+    pill.addEventListener("click", function () {
+      var v = (latest && latest.built) || String(Date.now());
+      var q = location.search.replace(/^[?]/, "").split("&").filter(function (kv) { return kv && kv.indexOf("v=") !== 0; });
+      q.push("v=" + encodeURIComponent(v));
+      location.href = location.pathname + "?" + q.join("&") + location.hash;
+    });
     function poll() {
       var stamp = document.documentElement.getAttribute("data-veil-build") || "0";
       fetchJson([
-        SITE_BASE + "version.json?t=" + Date.now(),
+        SHARED + "version.json?t=" + Date.now(),
         "https://cdn.jsdelivr.net/gh/ok5678765s/veil-os@main/site/version.json?t=" + Date.now(),
         REPO_BASE + "site/version.json?t=" + Date.now(),
       ]).then(function (v) {
+        latest = v;
         if (v && v.built && v.built > stamp) pill.style.display = "inline-flex";
       }).catch(function () {});
     }

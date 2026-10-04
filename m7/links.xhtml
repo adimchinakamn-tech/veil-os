@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" data-veil-build="2026-10-04T19:01:55Z">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Quick links — Veil</title>
+<meta name="description" content="Quick links — sites that render beautifully through the veil." />
+<link rel="icon" href="../site/assets/icon.svg" type="image/svg+xml" sizes="any" />
+<link rel="stylesheet" href="../site/assets/app.css" />
+</head>
+<body class="__variable_246ccd __variable_c29908 antialiased bg-background text-foreground">
+
+<div data-os-section="" class="fixed inset-0 z-50 bg-zinc-950/80 backdrop-blur-sm">
+  <div class="relative flex h-full w-full flex-col overflow-hidden text-zinc-100">
+    <div aria-hidden="true" class="pointer-events-none absolute inset-0 overflow-hidden">
+      <div class="veil-orb-a absolute -top-40 left-1/2 h-72 w-[36rem] -translate-x-1/2 rounded-full bg-emerald-500/10 blur-3xl"></div>
+      <div class="veil-orb-b absolute -bottom-32 right-[-6rem] h-80 w-80 rounded-full bg-teal-500/10 blur-3xl"></div>
+    </div>
+    <header class="relative z-10 shrink-0 border-b border-zinc-800/70 bg-zinc-950/70 backdrop-blur-xl">
+      <div class="flex items-center gap-2 px-3 py-2.5 sm:px-4">
+        <button data-os-back="" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 size-9 shrink-0 text-zinc-400 hover:bg-zinc-800/70 hover:text-zinc-100" aria-label="Back to the start page">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-arrow-left size-4"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg>
+        </button>
+        <div class="flex min-w-0 flex-1 items-center gap-2.5">
+          <div class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 text-zinc-950 shadow-lg shadow-emerald-500/20 ring-1 ring-emerald-300/30">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-globe size-5"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path><path d="M2 12h20"></path></svg>
+          </div>
+          <div class="min-w-0">
+            <h1 class="truncate text-base font-semibold tracking-tight text-zinc-50 sm:text-lg">Quick links</h1>
+            <p class="truncate text-[12px] text-zinc-500">Sites that render beautifully through the veil</p>
+          </div>
+        </div>
+      </div>
+    </header>
+    <div class="veil-scroll-slim relative z-10 min-h-0 flex-1 overflow-y-auto">
+      <div class="mx-auto w-full max-w-4xl px-4 py-6 sm:px-6">
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3" id="links-grid"></div>
+
+        <div class="mt-9">
+          <div class="mb-3 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-plus size-3.5 text-emerald-400"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
+            Your links <span class="font-normal normal-case tracking-normal text-zinc-600" id="your-count"></span>
+          </div>
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3" id="custom-grid"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+//<![CDATA[
+window.VEILOS_SHARED_BASE="../site/";
+//]]>
+</script>
+<script src="../site/assets/os.js"></script>
+<script>
+//<![CDATA[
+
+(function () {
+  "use strict";
+  var V = window.VEILOS;
+  var QUICK_LINKS = [
+    { name: "Wikipedia", url: "https://en.wikipedia.org/wiki/Main_Page", host: "en.wikipedia.org", desc: "The free encyclopedia", featured: true, tag: "Reads well" },
+    { name: "Hacker News", url: "https://news.ycombinator.com/", host: "news.ycombinator.com", desc: "Tech news, distilled", tag: "Reads well" },
+    { name: "MDN Docs", url: "https://developer.mozilla.org/en-US/", host: "developer.mozilla.org", desc: "Web documentation" },
+    { name: "BBC News", url: "https://www.bbc.com/news", host: "www.bbc.com", desc: "World headlines" },
+    { name: "Lite CNN", url: "https://lite.cnn.com/", host: "lite.cnn.com", desc: "Text-only edition" },
+    { name: "Bing", url: "https://www.bing.com/", host: "www.bing.com", desc: "Web search" },
+    { name: "FreeTube", url: "https://freetube.veil.local/", host: "freetube.veil.local", desc: "Veil's private YouTube — the program", featured: true, tag: "Private tube" },
+  ];
+
+  function favicon(host) { return "https://icons.duckduckgo.com/ip3/" + host + ".ico"; }
+  function open(url, name) {
+    V.pushHistory(url, name || "");
+    window.open(url, "_blank", "noopener");
+  }
+
+  function card(s) {
+    var featured = s.featured;
+    return '<div class="group relative flex items-center gap-4 overflow-hidden rounded-2xl border ' + (featured ? "border-emerald-500/25 hover:border-emerald-500/50" : "border-zinc-800/80 hover:border-emerald-500/40") + ' bg-zinc-900/50 p-4 text-left transition hover:-translate-y-0.5 hover:bg-zinc-900 focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-emerald-500">' +
+      (featured ? '<span aria-hidden="true" class="absolute inset-y-0 left-0 w-[3px] bg-gradient-to-b from-emerald-400 via-teal-400/60 to-transparent opacity-70 transition group-hover:opacity-100"></span>' : "") +
+      '<button type="button" data-open="' + V.esc(s.url) + '" data-name="' + V.esc(s.name) + '" class="flex min-w-0 flex-1 items-center gap-4" aria-label="Open ' + V.esc(s.name) + '">' +
+      '<img src="' + favicon(s.host) + '" alt="" width="48" height="48" loading="lazy" class="h-12 w-12 shrink-0 rounded-xl bg-zinc-800 object-contain p-1" data-fb="' + V.esc(s.name.charAt(0)) + '" />' +
+      '<span class="min-w-0 flex-1"><span class="flex items-center gap-2"><span class="truncate text-[14.5px] font-semibold text-zinc-100">' + V.esc(s.name) + "</span>" +
+      (s.tag ? '<span class="shrink-0 rounded-full border ' + (featured ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300" : "border-zinc-700 bg-zinc-800/50 text-zinc-400") + ' px-1.5 py-[1.5px] text-[9px] font-bold uppercase tracking-wide">' + V.esc(s.tag) + "</span>" : "") + "</span>" +
+      '<span class="mt-0.5 block truncate text-[12px] text-zinc-500">' + V.esc(s.desc) + '</span>' +
+      '<span class="mt-1 block truncate text-[11px] text-zinc-600">' + V.esc(s.host) + "</span></span>" +
+      '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-arrow-right size-4 shrink-0 text-zinc-600 transition group-hover:translate-x-0.5 group-hover:text-emerald-400"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></button></div>';
+  }
+
+  function customCard(l) {
+    return '<div class="group relative flex items-center gap-4 rounded-2xl border border-emerald-500/20 bg-zinc-900/50 p-4 transition hover:-translate-y-0.5 hover:border-emerald-500/40 hover:bg-zinc-900">' +
+      '<button type="button" data-open="' + V.esc(l.url) + '" data-name="' + V.esc(l.name) + '" class="flex min-w-0 flex-1 items-center gap-4 text-left" aria-label="Open ' + V.esc(l.name) + '">' +
+      '<img src="' + favicon(l.host) + '" alt="" width="48" height="48" loading="lazy" class="h-12 w-12 shrink-0 rounded-xl bg-zinc-800 object-contain p-1"/>' +
+      '<span class="min-w-0 flex-1"><span class="block truncate text-[14.5px] font-semibold text-zinc-100">' + V.esc(l.name) + '</span><span class="mt-0.5 block truncate text-[12px] text-zinc-500">Your link</span><span class="mt-1 block truncate text-[11px] text-zinc-600">' + V.esc(l.host) + "</span></span>" +
+      '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-arrow-up-right size-4 shrink-0 text-zinc-600 opacity-0 transition group-hover:translate-x-0.5 group-hover:opacity-100 group-hover:text-emerald-400"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg></button>' +
+      '<button type="button" data-remove="' + V.esc(l.url) + '" aria-label="Remove ' + V.esc(l.name) + ' from your links" title="Remove this link" class="absolute right-2.5 top-2.5 flex size-7 shrink-0 items-center justify-center rounded-lg text-zinc-500 opacity-0 transition hover:bg-red-500/15 hover:text-red-300 group-hover:opacity-100"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-x size-3.5"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button></div>';
+  }
+
+  function customLinks() { try { return JSON.parse(V.ls("veil.mirror.links") || "[]"); } catch (e) { return []; } }
+  function saveCustom(list) { V.lsSet("veil.mirror.links", JSON.stringify(list.slice(0, 12))); }
+
+  function render() {
+    document.getElementById("links-grid").innerHTML = QUICK_LINKS.map(card).join("");
+    var custom = customLinks();
+    document.getElementById("your-count").textContent = custom.length ? custom.length + " saved" : "";
+    var html = custom.map(customCard).join("");
+    html += '<button type="button" id="add-link" class="group flex aspect-[2.4/1] flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-zinc-700/70 bg-zinc-900/30 text-zinc-400 outline-none transition-all duration-200 hover:-translate-y-0.5 hover:border-emerald-500/50 hover:bg-emerald-500/5 hover:text-emerald-300"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-plus size-6 transition-transform duration-200 group-hover:scale-110"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg><span class="text-[13px] font-semibold">Add a link</span><span class="px-4 text-center text-[11px] leading-snug text-zinc-500 group-hover:text-emerald-300/70">any site — saved on this device</span></button>';
+    document.getElementById("custom-grid").innerHTML = html;
+
+    document.querySelectorAll("[data-open]").forEach(function (b) {
+      b.addEventListener("click", function () { open(b.getAttribute("data-open"), b.getAttribute("data-name")); });
+    });
+    document.querySelectorAll("[data-remove]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        saveCustom(customLinks().filter(function (l) { return l.url !== b.getAttribute("data-remove"); }));
+        render();
+      });
+    });
+    document.getElementById("add-link").addEventListener("click", addFlow);
+  }
+
+  function addFlow() {
+    var url = window.prompt("Site URL — e.g. example.com");
+    if (!url || !url.trim()) return;
+    var input = url.trim();
+    var withScheme = /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(input) ? input : "https://" + input.replace(/^\/+/, "");
+    var host;
+    try {
+      var u = new URL(withScheme);
+      if (u.protocol !== "http:" && u.protocol !== "https:") throw new Error("bad");
+      host = u.hostname;
+    } catch (e) {
+      window.alert("That doesn't look like a URL — try example.com");
+      return;
+    }
+    if (!host.includes(".")) {
+      window.alert("That looks like a search, not a site — include a domain like example.com");
+      return;
+    }
+    var name = (window.prompt("Name for the link (optional)", host.replace(/^www\./, "")) || "").trim().slice(0, 40) || host.replace(/^www\./, "");
+    var list = customLinks();
+    if (list.some(function (l) { return l.url === withScheme; })) {
+      window.alert("That link is already saved.");
+      return;
+    }
+    list.push({ name: name, url: withScheme, host: host });
+    saveCustom(list);
+    render();
+  }
+
+  render();
+})();
+
+//]]>
+</script>
+</body>
+</html>
