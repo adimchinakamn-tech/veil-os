@@ -1678,14 +1678,6 @@ function UserProfileModal({
                   {roleLabel(who)}
                 </span>
               )}
-              {who.legacy && (
-                <span
-                  className="rounded-md border border-dashed border-amber-300/50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-200/90"
-                  title="Restored from a backup — the username is free to register and will claim this profile and its messages"
-                >
-                  unclaimed
-                </span>
-              )}
             </div>
             <div className="mt-0.5 text-xs text-white/50">@{who.username}</div>
             {who.tag && (
@@ -2819,14 +2811,6 @@ function PlayerList({
               {displayName(m)}
             </span>
             {m.tag && <TagBadge tag={m.tag} color={m.tagColor} />}
-            {m.legacy && (
-              <span
-                className="shrink-0 rounded border border-dashed border-amber-300/50 px-1 py-px text-[8px] font-semibold uppercase tracking-wide text-amber-200/80"
-                title="Restored from backup — register this username to claim it"
-              >
-                unclaimed
-              </span>
-            )}
           </div>
           <div className="truncate text-[10px] text-white/40">@{m.username}</div>
         </div>
