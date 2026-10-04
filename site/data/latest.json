@@ -1,9 +1,9 @@
 {
   "veil": "chat-backup",
   "version": 1,
-  "exportedAt": "2026-10-04T02:50:48.431Z",
+  "exportedAt": "2026-10-04T12:26:41.135Z",
   "counts": {
-    "accounts": 5,
+    "accounts": 6,
     "messages": 13,
     "dms": 0
   },
@@ -92,6 +92,23 @@
       "pfpAccessory": null,
       "legacy": false,
       "createdAt": "2026-10-04T00:54:15.621Z"
+    },
+    {
+      "id": "cmutsozuh0008llq0367da1bo",
+      "username": "cdnqa",
+      "displayName": "cdnqa",
+      "avatarColor": "#c0392b",
+      "avatarImage": null,
+      "bio": "",
+      "role": "member",
+      "muted": false,
+      "banned": false,
+      "coins": 100,
+      "tag": null,
+      "tagColor": null,
+      "pfpAccessory": null,
+      "legacy": false,
+      "createdAt": "2026-10-04T12:26:34.746Z"
     }
   ],
   "messages": [
