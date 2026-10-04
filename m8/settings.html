@@ -1,157 +1,1265 @@
 <!DOCTYPE html>
-<html lang="en" data-veil-build="2026-10-04T19:20:51Z">
+<html lang="en" data-veil-build="2026-10-04T20:17:08Z">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Settings — Veil</title>
-<meta name="description" content="Veil settings — appearance, search, browsing and about.">
-<link rel="icon" href="../site/assets/icon.svg?v=2026-10-04T19:20:51Z" type="image/svg+xml" sizes="any">
-<link rel="stylesheet" href="../site/assets/app.css?v=2026-10-04T19:20:51Z">
+<meta name="description" content="Veil settings — privacy, appearance, browsing, security and data.">
+<link rel="icon" href="../site/assets/icon.svg?v=2026-10-04T20:17:08Z" type="image/svg+xml" sizes="any">
+<link rel="stylesheet" href="../site/assets/app.css?v=2026-10-04T20:17:08Z">
+<style>
+  @keyframes veil-tab-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .veil-tab-in { animation: veil-tab-in .2s ease-out; }
+  @keyframes veil-flash-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+  .veil-flash-in { animation: veil-flash-in .18s ease-out; }
+</style>
 </head>
 <body class="__variable_246ccd __variable_c29908 antialiased bg-background text-foreground">
+<div data-os-wallpaper aria-hidden="true" class="pointer-events-none fixed inset-0 overflow-hidden"></div>
+
 
 <div data-os-section class="fixed inset-0 z-50 bg-zinc-950/80 backdrop-blur-sm">
-  <div class="relative flex h-full w-full flex-col overflow-hidden text-zinc-100">
-    <div aria-hidden="true" class="pointer-events-none absolute inset-0 overflow-hidden">
-      <div class="veil-orb-a absolute -top-40 left-1/2 h-72 w-[36rem] -translate-x-1/2 rounded-full bg-emerald-500/10 blur-3xl"></div>
-      <div class="veil-orb-b absolute -bottom-32 right-[-6rem] h-80 w-80 rounded-full bg-teal-500/10 blur-3xl"></div>
-    </div>
-    <header class="relative z-10 shrink-0 border-b border-zinc-800/70 bg-zinc-950/70 backdrop-blur-xl">
-      <div class="flex items-center gap-2 px-3 py-2.5 sm:px-4">
-        <button data-os-back class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 size-9 shrink-0 text-zinc-400 hover:bg-zinc-800/70 hover:text-zinc-100" aria-label="Back to the start page">
+  <div class="flex h-full w-full flex-col text-zinc-100">
+
+    <!-- Header -->
+    <header class="shrink-0 border-b border-zinc-800/80 px-4 pb-4 pt-5 sm:px-6">
+      <div class="mx-auto flex w-full max-w-3xl items-center gap-3">
+        <button type="button" data-os-back aria-label="Back to the start page" class="inline-flex items-center justify-center gap-1.5 whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 h-9 rounded-xl border border-zinc-800 bg-zinc-900/60 px-3 text-zinc-300 hover:border-zinc-700 hover:bg-zinc-800 hover:text-zinc-100">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-arrow-left size-4"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg>
+          <span class="hidden sm:inline">Back</span>
         </button>
         <div class="flex min-w-0 flex-1 items-center gap-2.5">
-          <div class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 text-zinc-950 shadow-lg shadow-emerald-500/20 ring-1 ring-emerald-300/30">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-settings size-5"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-          </div>
+          <span class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 ring-1 ring-emerald-500/30">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-settings-2 size-4.5 text-emerald-300"><path d="M14 17H5"></path><path d="M19 7h-9"></path><circle cx="17" cy="17" r="3"></circle><circle cx="7" cy="7" r="3"></circle></svg>
+          </span>
           <div class="min-w-0">
-            <h1 class="truncate text-base font-semibold tracking-tight text-zinc-50 sm:text-lg">Settings</h1>
-            <p class="truncate text-[12px] text-zinc-500">Appearance, search, browsing &amp; about</p>
+            <h2 class="truncate text-[17px] font-semibold tracking-tight">Settings<span class="text-emerald-400">.</span></h2>
           </div>
         </div>
       </div>
+
+      <!-- Tabs -->
+      <div role="tablist" aria-label="Settings sections" class="mx-auto mt-4 flex w-full max-w-3xl items-center gap-1 overflow-x-auto rounded-xl border border-zinc-800 bg-zinc-900/60 p-1">
+        <button type="button" role="tab" aria-selected="true" data-tab="privacy" class="tab-btn flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg px-3 text-[12.5px] font-medium transition bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/40">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-shield-check size-3.5"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></svg>
+          Privacy
+        </button>
+        <button type="button" role="tab" aria-selected="false" data-tab="appearance" class="tab-btn flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg px-3 text-[12.5px] font-medium transition text-zinc-400 hover:bg-zinc-800/70 hover:text-zinc-200">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-settings-2 size-3.5"><path d="M14 17H5"></path><path d="M19 7h-9"></path><circle cx="17" cy="17" r="3"></circle><circle cx="7" cy="7" r="3"></circle></svg>
+          Appearance
+        </button>
+        <button type="button" role="tab" aria-selected="false" data-tab="browsing" class="tab-btn flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg px-3 text-[12.5px] font-medium transition text-zinc-400 hover:bg-zinc-800/70 hover:text-zinc-200">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-app-window size-3.5"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="M10 4v4"></path><path d="M2 8h20"></path><path d="M6 4v4"></path></svg>
+          Browsing
+        </button>
+        <button type="button" role="tab" aria-selected="false" data-tab="security" class="tab-btn flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg px-3 text-[12.5px] font-medium transition text-zinc-400 hover:bg-zinc-800/70 hover:text-zinc-200">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-venetian-mask size-3.5"><path d="M18 11c-1.5 0-2.5.5-3 2"></path><path d="M4 6a2 2 0 0 0-2 2v4a5 5 0 0 0 5 5 8 8 0 0 1 5 2 8 8 0 0 1 5-2 5 5 0 0 0 5-5V8a2 2 0 0 0-2-2h-3a8 8 0 0 0-5 2 8 8 0 0 0-5-2z"></path><path d="M6 11c1.5 0 2.5.5 3 2"></path></svg>
+          Security
+        </button>
+        <button type="button" role="tab" aria-selected="false" data-tab="data" class="tab-btn flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg px-3 text-[12.5px] font-medium transition text-zinc-400 hover:bg-zinc-800/70 hover:text-zinc-200">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-database size-3.5"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M3 5V19A9 3 0 0 0 21 19V5"></path><path d="M3 12A9 3 0 0 0 21 12"></path></svg>
+          Data
+        </button>
+      </div>
     </header>
-    <div class="veil-scroll-slim relative z-10 min-h-0 flex-1 overflow-y-auto">
-      <div class="mx-auto w-full max-w-4xl px-4 py-6 sm:px-6">
 
-        <div class="grid gap-3">
-          <div class="rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-4 sm:p-5">
-            <div class="flex items-center gap-2.5">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-sun size-4 text-amber-300"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path></svg>
-              <h2 class="text-[15px] font-semibold tracking-tight text-zinc-50">Appearance</h2>
-            </div>
-            <div class="mt-4 space-y-3">
-              <div class="flex items-center justify-between gap-3">
-                <div class="min-w-0"><p class="text-[13.5px] font-medium text-zinc-200">Clock format</p><p class="text-[12px] text-zinc-500">The start page's big clock</p></div>
-                <div class="flex items-center gap-1 rounded-xl border border-zinc-800 bg-zinc-900/80 p-1" role="radiogroup" aria-label="Clock format">
-                  <button type="button" data-clock="12" class="clock-opt h-8 rounded-lg px-3 text-[12.5px] font-medium transition bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/40">12h</button>
-                  <button type="button" data-clock="24" class="clock-opt h-8 rounded-lg px-3 text-[12.5px] font-medium transition text-zinc-400 hover:text-zinc-200">24h</button>
-                </div>
-              </div>
-              <div class="flex items-center justify-between gap-3">
-                <div class="min-w-0"><p class="text-[13.5px] font-medium text-zinc-200">Temperature unit</p><p class="text-[12px] text-zinc-500">Tap the temperature to flip it too</p></div>
-                <div class="flex items-center gap-1 rounded-xl border border-zinc-800 bg-zinc-900/80 p-1" role="radiogroup" aria-label="Temperature unit">
-                  <button type="button" data-unit="C" class="unit-opt h-8 rounded-lg px-3 text-[12.5px] font-medium transition bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/40">°C</button>
-                  <button type="button" data-unit="F" class="unit-opt h-8 rounded-lg px-3 text-[12.5px] font-medium transition text-zinc-400 hover:text-zinc-200">°F</button>
-                </div>
-              </div>
-              <div class="flex items-center justify-between gap-3">
-                <div class="min-w-0"><p class="text-[13.5px] font-medium text-zinc-200">Wallpaper dim</p><p class="text-[12px] text-zinc-500">A scrim over the backdrop, for readability</p></div>
-                <div class="flex items-center gap-1 rounded-xl border border-zinc-800 bg-zinc-900/80 p-1" role="radiogroup" aria-label="Wallpaper dim">
-                  <button type="button" data-dim="0" class="dim-opt h-8 rounded-lg px-3 text-[12.5px] font-medium transition bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/40">Off</button>
-                  <button type="button" data-dim="25" class="dim-opt h-8 rounded-lg px-3 text-[12.5px] font-medium transition text-zinc-400 hover:text-zinc-200">25%</button>
-                  <button type="button" data-dim="55" class="dim-opt h-8 rounded-lg px-3 text-[12.5px] font-medium transition text-zinc-400 hover:text-zinc-200">55%</button>
-                </div>
-              </div>
+    <!-- Body -->
+    <div class="veil-scroll-slim min-h-0 flex-1 overflow-y-auto px-4 pb-16 pt-6 sm:px-6">
+      <div class="mx-auto w-full max-w-3xl">
+
+        <!-- ══════════ Privacy ══════════ -->
+        <section data-panel="privacy" class="tab-panel space-y-4">
+          <!-- Totals + bulk actions -->
+          <div class="flex flex-wrap items-center gap-3 rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-shield-check size-5 shrink-0 text-emerald-400/90"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></svg>
+            <p id="privacy-totals" class="min-w-0 flex-1 text-[13px] text-zinc-300">Loading the veil’s site store…</p>
+            <div class="flex items-center gap-2">
+              <button type="button" id="privacy-wipe-cookies" disabled class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 h-8 rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-[12.5px] text-zinc-300 hover:border-emerald-500/50 hover:bg-zinc-800 hover:text-emerald-300 disabled:opacity-40">
+                <span data-idle><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-cookie size-3.5"><path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5"></path><path d="M8.5 8.5v.01"></path><path d="M16 15.5v.01"></path><path d="M12 12v.01"></path><path d="M11 17v.01"></path><path d="M7 14v.01"></path></svg></span>
+                <span data-busy class="hidden"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-loader-circle size-3.5 animate-spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg></span>
+                Wipe all cookies
+              </button>
+              <button type="button" id="privacy-wipe-history" disabled class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 h-8 rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-[12.5px] text-zinc-300 hover:border-emerald-500/50 hover:bg-zinc-800 hover:text-emerald-300 disabled:opacity-40">
+                <span data-idle><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-globe size-3.5"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path><path d="M2 12h20"></path></svg></span>
+                <span data-busy class="hidden"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-loader-circle size-3.5 animate-spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg></span>
+                Wipe history
+              </button>
             </div>
           </div>
 
-          <div class="rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-4 sm:p-5">
-            <div class="flex items-center gap-2.5">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-search size-4 text-emerald-300"><path d="m21 21-4.34-4.34"></path><circle cx="11" cy="11" r="8"></circle></svg>
-              <h2 class="text-[15px] font-semibold tracking-tight text-zinc-50">Search</h2>
-            </div>
-            <div class="mt-4 space-y-3">
-              <div class="flex items-center justify-between gap-3">
-                <div class="min-w-0"><p class="text-[13.5px] font-medium text-zinc-200">Search engine</p><p class="text-[12px] text-zinc-500">What the command bar queries</p></div>
-                <div class="flex flex-wrap items-center justify-end gap-1 rounded-xl border border-zinc-800 bg-zinc-900/80 p-1" role="radiogroup" aria-label="Search engine">
-                  <button type="button" data-engine="brave" class="engine-opt h-8 rounded-lg px-3 text-[12.5px] font-medium transition bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/40">Brave</button>
-                  <button type="button" data-engine="duckduckgo" class="engine-opt h-8 rounded-lg px-3 text-[12.5px] font-medium transition text-zinc-400 hover:text-zinc-200">DuckDuckGo</button>
-                  <button type="button" data-engine="bing" class="engine-opt h-8 rounded-lg px-3 text-[12.5px] font-medium transition text-zinc-400 hover:text-zinc-200">Bing</button>
-                  <button type="button" data-engine="google" class="engine-opt h-8 rounded-lg px-3 text-[12.5px] font-medium transition text-zinc-400 hover:text-zinc-200">Google</button>
-                  <button type="button" data-engine="ecosia" class="engine-opt h-8 rounded-lg px-3 text-[12.5px] font-medium transition text-zinc-400 hover:text-zinc-200">Ecosia</button>
-                </div>
-              </div>
-            </div>
+          <!-- Search -->
+          <div class="relative">
+            <input id="privacy-search" placeholder="Filter sites…" aria-label="Filter sites" autocomplete="off" spellcheck="false" class="h-10 w-full rounded-xl border border-zinc-800 bg-zinc-900/70 pl-4 pr-4 text-[13.5px] text-zinc-100 placeholder:text-zinc-500 outline-none transition focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20">
           </div>
 
-          <div class="rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-4 sm:p-5">
-            <div class="flex items-center gap-2.5">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-shield size-4 text-emerald-300"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path></svg>
-              <h2 class="text-[15px] font-semibold tracking-tight text-zinc-50">About</h2>
-            </div>
-            <div class="mt-4 flex items-center gap-4">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="size-10 shrink-0 drop-shadow-[0_4px_14px_rgba(16,185,129,0.45)]"><path d="M12 22s8-3.6 8-10V5.5L12 2 4 5.5V12c0 6.4 8 10 8 10Z"></path><path d="M9 12h2v4"></path></svg>
+          <!-- Sites list -->
+          <div id="privacy-loading" class="flex items-center justify-center gap-2 rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-10 text-zinc-400">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-loader-circle size-4 animate-spin text-emerald-400"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>
+            <span class="text-[13px]">Reading the site store…</span>
+          </div>
+          <div id="privacy-error" hidden class="flex flex-col items-center gap-3 rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-10">
+            <p class="text-[13px] text-rose-300/90">The privacy panel couldn’t reach the veil’s site store.</p>
+            <button type="button" id="privacy-retry" class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 h-8 rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-[12.5px] text-zinc-300 hover:border-emerald-500/50 hover:bg-zinc-800 hover:text-emerald-300">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-rotate-cw size-3.5"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path></svg>
+              Try again
+            </button>
+          </div>
+          <div id="privacy-empty" hidden class="rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-10 text-center text-[13px] text-zinc-500">No sites visited through the veil yet.</div>
+          <ul id="privacy-list" hidden class="veil-scroll-slim max-h-[46vh] divide-y divide-zinc-800/60 overflow-y-auto rounded-2xl border border-zinc-800/80 bg-zinc-900/40"></ul>
+        </section>
+
+        <!-- ══════════ Appearance ══════════ -->
+        <section data-panel="appearance" class="tab-panel space-y-3" hidden>
+          <div class="flex flex-col gap-3 rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-4 lg:flex-row lg:items-center">
+            <div class="flex min-w-0 flex-1 items-start gap-3">
+              <span class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-zinc-800/80 text-zinc-300"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-timer size-4"><line x1="10" x2="14" y1="2" y2="2"></line><line x1="12" x2="15" y1="14" y2="11"></line><circle cx="12" cy="14" r="8"></circle></svg></span>
               <div class="min-w-0">
-                <p class="text-[14.5px] font-semibold text-zinc-100">Veil</p>
-                <p class="mt-0.5 text-[12px] text-zinc-500">The whole web, through the veil.</p>
-                <p class="mt-1 text-[11px] text-zinc-600" id="about-version">build —</p>
+                <p class="text-[14px] font-medium text-zinc-100">Clock format</p>
+                <p class="mt-0.5 text-[12px] leading-snug text-zinc-500">The start-page clock — 12-hour or 24-hour time.</p>
               </div>
             </div>
-            <p class="mt-4 text-[12.5px] leading-relaxed text-zinc-400">Pages load through the veil, history stays local, nothing calls out from your browser. Built as one Next.js app — this copy renders from the same deploy pipeline, updated automatically.</p>
+            <div role="radiogroup" aria-label="Clock format" class="flex flex-wrap items-center gap-1 rounded-xl border border-zinc-800 bg-zinc-950/70 p-1">
+              <button type="button" role="radio" aria-checked="true" data-seg="clock" data-val="12" class="flex h-8 items-center gap-1 rounded-lg px-3 text-[12.5px] font-medium transition bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/40"><svg data-check xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-check size-3"><path d="M20 6 9 17l-5-5"></path></svg>12h</button>
+              <button type="button" role="radio" aria-checked="false" data-seg="clock" data-val="24" class="flex h-8 items-center gap-1 rounded-lg px-3 text-[12.5px] font-medium transition text-zinc-400 hover:bg-zinc-800/70 hover:text-zinc-200"><svg data-check xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-check size-3"><path d="M20 6 9 17l-5-5"></path></svg>24h</button>
+            </div>
           </div>
-        </div>
+
+          <div class="flex flex-col gap-3 rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-4 lg:flex-row lg:items-center">
+            <div class="flex min-w-0 flex-1 items-start gap-3">
+              <span class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-zinc-800/80 text-zinc-300"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-thermometer size-4"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"></path></svg></span>
+              <div class="min-w-0">
+                <p class="text-[14px] font-medium text-zinc-100">Weather units</p>
+                <p class="mt-0.5 text-[12px] leading-snug text-zinc-500">The start-page weather chip — Celsius or Fahrenheit.</p>
+              </div>
+            </div>
+            <div role="radiogroup" aria-label="Weather units" class="flex flex-wrap items-center gap-1 rounded-xl border border-zinc-800 bg-zinc-950/70 p-1">
+              <button type="button" role="radio" aria-checked="true" data-seg="unit" data-val="C" class="flex h-8 items-center gap-1 rounded-lg px-3 text-[12.5px] font-medium transition bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/40"><svg data-check xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-check size-3"><path d="M20 6 9 17l-5-5"></path></svg>°C</button>
+              <button type="button" role="radio" aria-checked="false" data-seg="unit" data-val="F" class="flex h-8 items-center gap-1 rounded-lg px-3 text-[12.5px] font-medium transition text-zinc-400 hover:bg-zinc-800/70 hover:text-zinc-200"><svg data-check xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-check size-3"><path d="M20 6 9 17l-5-5"></path></svg>°F</button>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-3 rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-4 lg:flex-row lg:items-center">
+            <div class="flex min-w-0 flex-1 items-start gap-3">
+              <span class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-zinc-800/80 text-zinc-300"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-search size-4"><path d="m21 21-4.34-4.34"></path><circle cx="11" cy="11" r="8"></circle></svg></span>
+              <div class="min-w-0">
+                <p class="text-[14px] font-medium text-zinc-100">Search engine</p>
+                <p class="mt-0.5 text-[12px] leading-snug text-zinc-500">What the command bar queries when input isn’t a URL. Bing renders server-side; the others may show their JS shells through the veil.</p>
+              </div>
+            </div>
+            <div role="radiogroup" aria-label="Search engine" class="flex flex-wrap items-center gap-1 rounded-xl border border-zinc-800 bg-zinc-950/70 p-1">
+              <button type="button" role="radio" aria-checked="true" data-seg="engine" data-val="brave" class="flex h-8 items-center gap-1 rounded-lg px-3 text-[12.5px] font-medium transition bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/40"><svg data-check xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-check size-3"><path d="M20 6 9 17l-5-5"></path></svg>Brave</button>
+              <button type="button" role="radio" aria-checked="false" data-seg="engine" data-val="bing" class="flex h-8 items-center gap-1 rounded-lg px-3 text-[12.5px] font-medium transition text-zinc-400 hover:bg-zinc-800/70 hover:text-zinc-200"><svg data-check xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-check size-3"><path d="M20 6 9 17l-5-5"></path></svg>Bing</button>
+              <button type="button" role="radio" aria-checked="false" data-seg="engine" data-val="duckduckgo" class="flex h-8 items-center gap-1 rounded-lg px-3 text-[12.5px] font-medium transition text-zinc-400 hover:bg-zinc-800/70 hover:text-zinc-200"><svg data-check xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-check size-3"><path d="M20 6 9 17l-5-5"></path></svg>DuckDuckGo</button>
+              <button type="button" role="radio" aria-checked="false" data-seg="engine" data-val="google" class="flex h-8 items-center gap-1 rounded-lg px-3 text-[12.5px] font-medium transition text-zinc-400 hover:bg-zinc-800/70 hover:text-zinc-200"><svg data-check xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-check size-3"><path d="M20 6 9 17l-5-5"></path></svg>Google</button>
+              <button type="button" role="radio" aria-checked="false" data-seg="engine" data-val="ecosia" class="flex h-8 items-center gap-1 rounded-lg px-3 text-[12.5px] font-medium transition text-zinc-400 hover:bg-zinc-800/70 hover:text-zinc-200"><svg data-check xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-check size-3"><path d="M20 6 9 17l-5-5"></path></svg>Ecosia</button>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-3 rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-4 lg:flex-row lg:items-center">
+            <div class="flex min-w-0 flex-1 items-start gap-3">
+              <span class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-zinc-800/80 text-zinc-300"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-globe size-4"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path><path d="M2 12h20"></path></svg></span>
+              <div class="min-w-0">
+                <p class="text-[14px] font-medium text-zinc-100">Proxy engine</p>
+                <p class="mt-0.5 text-[12px] leading-snug text-zinc-500">Which machinery loads remote pages in the browser. Quasar (the default) rewrites server-side with runtime hooks, a service-worker safety net and WebSocket bridging; Veil is the classic built-in lane. Every site — youtube.com included — loads through the engine you pick; video searches still land on the local library.</p>
+              </div>
+            </div>
+            <div role="radiogroup" aria-label="Proxy engine" class="flex flex-wrap items-center gap-1 rounded-xl border border-zinc-800 bg-zinc-950/70 p-1">
+              <button type="button" role="radio" aria-checked="false" data-seg="proxy" data-val="veil" class="flex h-8 items-center gap-1 rounded-lg px-3 text-[12.5px] font-medium transition text-zinc-400 hover:bg-zinc-800/70 hover:text-zinc-200"><svg data-check xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-check size-3"><path d="M20 6 9 17l-5-5"></path></svg>Veil (built-in)</button>
+              <button type="button" role="radio" aria-checked="true" data-seg="proxy" data-val="quasar" class="flex h-8 items-center gap-1 rounded-lg px-3 text-[12.5px] font-medium transition bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/40"><svg data-check xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-check size-3"><path d="M20 6 9 17l-5-5"></path></svg>Quasar</button>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-3 rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-4 lg:flex-row lg:items-center">
+            <div class="flex min-w-0 flex-1 items-start gap-3">
+              <span class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-zinc-800/80 text-zinc-300"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-monitor-play size-4"><path d="M10 7.75a.75.75 0 0 1 1.142-.638l3.664 2.249a.75.75 0 0 1 0 1.278l-3.664 2.25a.75.75 0 0 1-1.142-.64z"></path><path d="M12 17v4"></path><path d="M8 21h8"></path><rect x="2" y="3" width="20" height="14" rx="2"></rect></svg></span>
+              <div class="min-w-0">
+                <p class="text-[14px] font-medium text-zinc-100">Hover previews</p>
+                <p class="mt-0.5 text-[12px] leading-snug text-zinc-500">Resting on a live wallpaper card streams a quiet 1080p preview. Off saves bandwidth and decoders.</p>
+              </div>
+            </div>
+            <div role="radiogroup" aria-label="Hover previews" class="flex flex-wrap items-center gap-1 rounded-xl border border-zinc-800 bg-zinc-950/70 p-1">
+              <button type="button" role="radio" aria-checked="true" data-seg="hover" data-val="on" class="flex h-8 items-center gap-1 rounded-lg px-3 text-[12.5px] font-medium transition bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/40"><svg data-check xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-check size-3"><path d="M20 6 9 17l-5-5"></path></svg>On</button>
+              <button type="button" role="radio" aria-checked="false" data-seg="hover" data-val="off" class="flex h-8 items-center gap-1 rounded-lg px-3 text-[12.5px] font-medium transition text-zinc-400 hover:bg-zinc-800/70 hover:text-zinc-200"><svg data-check xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-check size-3"><path d="M20 6 9 17l-5-5"></path></svg>Off</button>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-3 rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-4 lg:flex-row lg:items-center">
+            <div class="flex min-w-0 flex-1 items-start gap-3">
+              <span class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-zinc-800/80 text-zinc-300"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-moon size-4"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg></span>
+              <div class="min-w-0">
+                <p class="text-[14px] font-medium text-zinc-100">Backdrop dim</p>
+                <p class="mt-0.5 text-[12px] leading-snug text-zinc-500">A dark scrim between the wallpaper and the page — easier reading on bright wallpapers.</p>
+              </div>
+            </div>
+            <div role="radiogroup" aria-label="Backdrop dim" class="flex flex-wrap items-center gap-1 rounded-xl border border-zinc-800 bg-zinc-950/70 p-1">
+              <button type="button" role="radio" aria-checked="true" data-seg="dim" data-val="0" class="flex h-8 items-center gap-1 rounded-lg px-3 text-[12.5px] font-medium transition bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/40"><svg data-check xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-check size-3"><path d="M20 6 9 17l-5-5"></path></svg>Off</button>
+              <button type="button" role="radio" aria-checked="false" data-seg="dim" data-val="25" class="flex h-8 items-center gap-1 rounded-lg px-3 text-[12.5px] font-medium transition text-zinc-400 hover:bg-zinc-800/70 hover:text-zinc-200"><svg data-check xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-check size-3"><path d="M20 6 9 17l-5-5"></path></svg>Subtle</button>
+              <button type="button" role="radio" aria-checked="false" data-seg="dim" data-val="55" class="flex h-8 items-center gap-1 rounded-lg px-3 text-[12.5px] font-medium transition text-zinc-400 hover:bg-zinc-800/70 hover:text-zinc-200"><svg data-check xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-check size-3"><path d="M20 6 9 17l-5-5"></path></svg>Deep</button>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-3 rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-4 sm:flex-row sm:items-center">
+            <div class="flex min-w-0 flex-1 items-start gap-3">
+              <span class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-zinc-800/80 text-zinc-300"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-user-round size-4"><circle cx="12" cy="8" r="5"></circle><path d="M20 21a8 8 0 0 0-16 0"></path></svg></span>
+              <div class="min-w-0">
+                <p class="text-[14px] font-medium text-zinc-100">Greeting name</p>
+                <p class="mt-0.5 text-[12px] leading-snug text-zinc-500">The weather chip’s greeting learns your name — “Good evening, Sam”.</p>
+              </div>
+            </div>
+            <input data-text="greeting" placeholder="Your name (optional)" aria-label="Greeting name" spellcheck="false" autocomplete="off" class="h-9 w-full min-w-0 rounded-xl border border-zinc-800 bg-zinc-950/70 px-3 py-1 text-[13px] text-zinc-100 placeholder:text-zinc-600 outline-none transition focus-visible:border-emerald-500/50 focus-visible:ring-[3px] focus-visible:ring-emerald-500/20 sm:w-56">
+          </div>
+        </section>
+
+        <!-- ══════════ Browsing ══════════ -->
+        <section data-panel="browsing" class="tab-panel space-y-3" hidden>
+          <div class="flex flex-col gap-3 rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-4 lg:flex-row lg:items-center">
+            <div class="flex min-w-0 flex-1 items-start gap-3">
+              <span class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-zinc-800/80 text-zinc-300"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-app-window size-4"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="M10 4v4"></path><path d="M2 8h20"></path><path d="M6 4v4"></path></svg></span>
+              <div class="min-w-0">
+                <p class="text-[14px] font-medium text-zinc-100">When I come back</p>
+                <p class="mt-0.5 text-[12px] leading-snug text-zinc-500">Opening another browser tab (or switching away) and returning — Veil can reset to the start page or keep the page you were on. Read live: the very next switch obeys this.</p>
+              </div>
+            </div>
+            <div role="radiogroup" aria-label="When I come back" class="flex flex-wrap items-center gap-1 rounded-xl border border-zinc-800 bg-zinc-950/70 p-1">
+              <button type="button" role="radio" aria-checked="true" data-seg="session" data-val="reset" class="flex h-8 items-center gap-1 rounded-lg px-3 text-[12.5px] font-medium transition bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/40"><svg data-check xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-check size-3"><path d="M20 6 9 17l-5-5"></path></svg>Start page</button>
+              <button type="button" role="radio" aria-checked="false" data-seg="session" data-val="keep" class="flex h-8 items-center gap-1 rounded-lg px-3 text-[12.5px] font-medium transition text-zinc-400 hover:bg-zinc-800/70 hover:text-zinc-200"><svg data-check xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-check size-3"><path d="M20 6 9 17l-5-5"></path></svg>Keep my page</button>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-3 rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-4 lg:flex-row lg:items-center">
+            <div class="flex min-w-0 flex-1 items-start gap-3">
+              <span class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-zinc-800/80 text-zinc-300"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-rotate-cw size-4"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path></svg></span>
+              <div class="min-w-0">
+                <p class="text-[14px] font-medium text-zinc-100">Restart behavior</p>
+                <p class="mt-0.5 text-[12px] leading-snug text-zinc-500">
+                  Always the start page. Reloading the veil (or reopening it later) never restores the previous
+                  browsing session — sessions live only while the veil tab is open.
+                </p>
+              </div>
+            </div>
+            <span class="shrink-0 rounded-lg bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-300 ring-1 ring-emerald-500/25">
+              Fixed
+            </span>
+          </div>
+        </section>
+
+        <!-- ══════════ Security ══════════ -->
+        <section data-panel="security" class="tab-panel space-y-3" hidden>
+          <p id="security-flash" role="status" hidden class="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-[12.5px] text-emerald-300"></p>
+
+          <!-- ── the panic key ── -->
+          <div class="rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-5">
+            <div class="flex items-start gap-3">
+              <span class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-rose-500/10 text-rose-300 ring-1 ring-rose-500/25">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-siren size-5"><path d="M7 18v-6a5 5 0 1 1 10 0v6"></path><path d="M5 21a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-1a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2z"></path><path d="M21 12h1"></path><path d="M18.5 4.5 18 5"></path><path d="M2 12h1"></path><path d="M12 2v1"></path><path d="m4.929 4.929.707.707"></path><path d="M12 12v6"></path></svg>
+              </span>
+              <div class="min-w-0">
+                <h3 class="text-[15px] font-semibold text-zinc-100">Panic key</h3>
+                <p class="mt-1 text-[12.5px] leading-relaxed text-zinc-500">
+                  One combo and the veil is gone — the page is replaced instantly (no Back trail, the
+                  tab’s history entry is erased) with the site below. Works while typing, in every
+                  section, even inside a veiled page or a running game.
+                </p>
+              </div>
+            </div>
+            <div class="mt-4 space-y-3">
+              <div class="flex flex-col gap-3 rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-4 lg:flex-row lg:items-center">
+                <div class="flex min-w-0 flex-1 items-start gap-3">
+                  <span class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-zinc-800/80 text-zinc-300"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-siren size-4"><path d="M7 18v-6a5 5 0 1 1 10 0v6"></path><path d="M5 21a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-1a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2z"></path><path d="M21 12h1"></path><path d="M18.5 4.5 18 5"></path><path d="M2 12h1"></path><path d="M12 2v1"></path><path d="m4.929 4.929.707.707"></path><path d="M12 12v6"></path></svg></span>
+                  <div class="min-w-0">
+                    <p class="text-[14px] font-medium text-zinc-100">Panic key enabled</p>
+                    <p class="mt-0.5 text-[12px] leading-snug text-zinc-500">Off means the combo does nothing — the safety is disarmed.</p>
+                  </div>
+                </div>
+                <div role="radiogroup" aria-label="Panic key enabled" class="flex flex-wrap items-center gap-1 rounded-xl border border-zinc-800 bg-zinc-950/70 p-1">
+                  <button type="button" role="radio" aria-checked="true" data-seg="panicon" data-val="on" class="flex h-8 items-center gap-1 rounded-lg px-3 text-[12.5px] font-medium transition bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/40"><svg data-check xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-check size-3"><path d="M20 6 9 17l-5-5"></path></svg>Armed</button>
+                  <button type="button" role="radio" aria-checked="false" data-seg="panicon" data-val="off" class="flex h-8 items-center gap-1 rounded-lg px-3 text-[12.5px] font-medium transition text-zinc-400 hover:bg-zinc-800/70 hover:text-zinc-200"><svg data-check xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-check size-3"><path d="M20 6 9 17l-5-5"></path></svg>Off</button>
+                </div>
+              </div>
+
+              <div class="flex flex-col gap-3 rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-4 sm:flex-row sm:items-center">
+                <div class="flex min-w-0 flex-1 items-start gap-3">
+                  <span class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-300 ring-1 ring-amber-500/25"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-venetian-mask size-4"><path d="M18 11c-1.5 0-2.5.5-3 2"></path><path d="M4 6a2 2 0 0 0-2 2v4a5 5 0 0 0 5 5 8 8 0 0 1 5 2 8 8 0 0 1 5-2 5 5 0 0 0 5-5V8a2 2 0 0 0-2-2h-3a8 8 0 0 0-5 2 8 8 0 0 0-5-2z"></path><path d="M6 11c1.5 0 2.5.5 3 2"></path></svg></span>
+                  <div class="min-w-0">
+                    <p class="text-[14px] font-medium text-zinc-100">Panic shortcut</p>
+                    <p class="mt-0.5 text-[12px] leading-snug text-zinc-500">Ctrl+Y by default — click the combo to re-record it. Any combo with a real key works; Escape never will.</p>
+                    <p data-err="panic" hidden class="mt-1 text-[12px] text-rose-300"></p>
+                  </div>
+                </div>
+                <button type="button" data-keycap="panic" aria-label="Change the Panic shortcut shortcut" class="flex h-9 shrink-0 items-center gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-3.5 font-mono text-[12.5px] font-semibold transition text-amber-200 hover:border-amber-400/60 hover:bg-amber-500/20"><kbd>Ctrl Y</kbd></button>
+              </div>
+
+              <div class="flex flex-col gap-3 rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-4 sm:flex-row sm:items-center">
+                <div class="flex min-w-0 flex-1 items-start gap-3">
+                  <span class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-zinc-800/80 text-zinc-300"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-globe size-4"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path><path d="M2 12h20"></path></svg></span>
+                  <div class="min-w-0">
+                    <p class="text-[14px] font-medium text-zinc-100">Where it goes</p>
+                    <p class="mt-0.5 text-[12px] leading-snug text-zinc-500">
+                      The site the panic key opens — something that looks like homework.
+                    </p>
+                  </div>
+                </div>
+                <input data-text="panic-url" placeholder="https://www.google.com" aria-label="Panic target URL" spellcheck="false" inputmode="url" autocomplete="off" class="h-9 w-full min-w-0 rounded-xl border border-zinc-800 bg-zinc-950/70 px-3 py-1 text-[13px] text-zinc-100 placeholder:text-zinc-600 outline-none transition focus-visible:border-rose-500/50 focus-visible:ring-[3px] focus-visible:ring-rose-500/20 sm:w-64">
+              </div>
+            </div>
+          </div>
+
+          <!-- ── the about:blank cloak ── -->
+          <div class="rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-5">
+            <div class="flex items-start gap-3">
+              <span class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-500/25">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-eye-off size-5"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"></path><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"></path><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"></path><path d="m2 2 20 20"></path></svg>
+              </span>
+              <div class="min-w-0">
+                <h3 class="text-[15px] font-semibold text-zinc-100">About:blank cloak</h3>
+                <p class="mt-1 text-[12.5px] leading-relaxed text-zinc-500">
+                  Opens the whole veil inside a new window whose address bar just reads
+                  <span class="font-mono text-zinc-300">about:blank</span> — history and the URL bar
+                  never learn the veil’s address. The panic key works inside the cloak too.
+                </p>
+              </div>
+            </div>
+            <div class="mt-4 space-y-3">
+              <div class="flex flex-col gap-3 rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-4 sm:flex-row sm:items-center">
+                <div class="flex min-w-0 flex-1 items-start gap-3">
+                  <span class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-zinc-800/80 text-zinc-300"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-eye-off size-4"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"></path><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"></path><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"></path><path d="m2 2 20 20"></path></svg></span>
+                  <div class="min-w-0">
+                    <p class="text-[14px] font-medium text-zinc-100">Cloak shortcut</p>
+                    <p class="mt-0.5 text-[12px] leading-snug text-zinc-500">Alt+B by default — presses it anywhere to pop the veil into an about:blank window.</p>
+                    <p data-err="cloak" hidden class="mt-1 text-[12px] text-rose-300"></p>
+                  </div>
+                </div>
+                <button type="button" data-keycap="cloak" aria-label="Change the Cloak shortcut shortcut" class="flex h-9 shrink-0 items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-950/70 px-3.5 font-mono text-[12.5px] font-semibold transition text-zinc-200 hover:border-emerald-500/50 hover:bg-zinc-800"><kbd>Alt B</kbd></button>
+              </div>
+
+              <div class="flex flex-col gap-3 rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-4 sm:flex-row sm:items-center">
+                <div class="flex min-w-0 flex-1 items-start gap-3">
+                  <span class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-zinc-800/80 text-zinc-300"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-timer size-4"><line x1="10" x2="14" y1="2" y2="2"></line><line x1="12" x2="15" y1="14" y2="11"></line><circle cx="12" cy="14" r="8"></circle></svg></span>
+                  <div class="min-w-0">
+                    <p class="text-[14px] font-medium text-zinc-100">Cloak tab title</p>
+                    <p class="mt-0.5 text-[12px] leading-snug text-zinc-500">
+                      What the cloaked window calls itself — keep it boring.
+                    </p>
+                  </div>
+                </div>
+                <input data-text="cloak-title" placeholder="Home" aria-label="Cloak tab title" spellcheck="false" autocomplete="off" class="h-9 w-full min-w-0 rounded-xl border border-zinc-800 bg-zinc-950/70 px-3 py-1 text-[13px] text-zinc-100 placeholder:text-zinc-600 outline-none transition focus-visible:border-emerald-500/50 focus-visible:ring-[3px] focus-visible:ring-emerald-500/20 sm:w-48">
+              </div>
+
+              <div class="flex flex-col gap-3 rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-4 sm:flex-row sm:items-center">
+                <div class="flex min-w-0 flex-1 items-start gap-3">
+                  <span class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-zinc-800/80 text-zinc-300"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-app-window size-4"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="M10 4v4"></path><path d="M2 8h20"></path><path d="M6 4v4"></path></svg></span>
+                  <div class="min-w-0">
+                    <p class="text-[14px] font-medium text-zinc-100">Open in about:blank now</p>
+                    <p class="mt-0.5 text-[12px] leading-snug text-zinc-500">
+                      Launch the cloaked window from here — or use the shortcut above, any time, in any
+                      section. (If nothing happens, allow popups for this site.)
+                    </p>
+                  </div>
+                </div>
+                <button type="button" id="cloak-now" class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 h-9 shrink-0 rounded-xl bg-emerald-500/90 px-4 text-[13px] font-semibold text-emerald-950 hover:bg-emerald-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-eye-off size-3.5"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"></path><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"></path><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"></path><path d="m2 2 20 20"></path></svg>
+                  Cloak it
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── tab disguise ── -->
+          <div class="rounded-3xl border border-zinc-800/80 bg-zinc-950/60 p-5">
+            <div class="flex items-start gap-3">
+              <span class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-500/25">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-venetian-mask size-5"><path d="M18 11c-1.5 0-2.5.5-3 2"></path><path d="M4 6a2 2 0 0 0-2 2v4a5 5 0 0 0 5 5 8 8 0 0 1 5 2 8 8 0 0 1 5-2 5 5 0 0 0 5-5V8a2 2 0 0 0-2-2h-3a8 8 0 0 0-5 2 8 8 0 0 0-5-2z"></path><path d="M6 11c1.5 0 2.5.5 3 2"></path></svg>
+              </span>
+              <div class="min-w-0">
+                <h3 class="text-[15px] font-semibold text-zinc-100">Tab disguise</h3>
+                <p class="mt-1 text-[12.5px] leading-relaxed text-zinc-500">
+                  One tap dresses THIS tab up as school work — the title and the favicon switch
+                  instantly (no reload), and the about:blank cloak wears the same disguise. All
+                  icons are drawn locally; nothing is fetched.
+                </p>
+              </div>
+            </div>
+            <div class="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4" role="radiogroup" aria-label="Tab disguise preset">
+              <button type="button" role="radio" aria-checked="true" data-cloak="off" title="Veil — Full-Screen Web Viewer" class="group flex flex-col items-start gap-2 rounded-2xl border p-3 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 border-emerald-500/60 bg-emerald-500/10">
+                <span class="flex w-full items-center justify-between">
+                  <img src="../site/assets/icon.svg?v=2026-10-04T19:20:51Z" alt="" width="20" height="20" class="size-5 shrink-0 rounded" aria-hidden="true">
+                  <svg data-check xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-check size-3.5 text-emerald-400"><path d="M20 6 9 17l-5-5"></path></svg>
+                </span>
+                <span class="text-[13px] font-medium text-zinc-100">Veil</span>
+                <span class="text-[11px] leading-snug text-zinc-500">no disguise</span>
+              </button>
+              <button type="button" role="radio" aria-checked="false" data-cloak="classroom" title="Classes" class="group flex flex-col items-start gap-2 rounded-2xl border p-3 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 border-zinc-800/80 bg-zinc-900/50 hover:border-zinc-700 hover:bg-zinc-900">
+                <span class="flex w-full items-center justify-between">
+                  <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230f9d58'/%3E%3Crect x='12' y='18' width='40' height='28' rx='4' fill='%230b8043'/%3E%3Crect x='18' y='24' width='12' height='4' rx='2' fill='%23ffffff'/%3E%3Crect x='18' y='32' width='20' height='4' rx='2' fill='%238fd6b0'/%3E%3Ccircle cx='44' cy='26' r='4' fill='%23fbbc04'/%3E%3Crect x='28' y='10' width='8' height='10' rx='2' fill='%230b8043'/%3E%3Crect x='24' y='8' width='16' height='6' rx='3' fill='%230f9d58'/%3E%3C/svg%3E" alt="" width="20" height="20" class="size-5 shrink-0 rounded" aria-hidden="true">
+                  <svg data-check xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-check size-3.5 text-emerald-400 hidden"><path d="M20 6 9 17l-5-5"></path></svg>
+                </span>
+                <span class="text-[13px] font-medium text-zinc-100">Classroom</span>
+                <span class="text-[11px] leading-snug text-zinc-500">Google Classroom look</span>
+              </button>
+              <button type="button" role="radio" aria-checked="false" data-cloak="gmail" title="Inbox (3) - Gmail" class="group flex flex-col items-start gap-2 rounded-2xl border p-3 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 border-zinc-800/80 bg-zinc-900/50 hover:border-zinc-700 hover:bg-zinc-900">
+                <span class="flex w-full items-center justify-between">
+                  <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23ffffff'/%3E%3Crect x='4' y='14' width='56' height='36' rx='6' fill='%23ffffff' stroke='%23dadce0' stroke-width='2'/%3E%3Cpath d='M6 20 L32 40 L58 20' fill='none' stroke='%23ea4335' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M6 18 L32 38 L58 18 L58 14 Q58 10 54 10 L10 10 Q6 10 6 14 Z' fill='%23ea4335'/%3E%3Ccircle cx='50' cy='14' r='9' fill='%23ffffff'/%3E%3Ctext x='50' y='19' font-family='Arial' font-size='13' font-weight='bold' fill='%23ea4335' text-anchor='middle'%3E3%3C/text%3E%3C/svg%3E" alt="" width="20" height="20" class="size-5 shrink-0 rounded" aria-hidden="true">
+                  <svg data-check xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-check size-3.5 text-emerald-400 hidden"><path d="M20 6 9 17l-5-5"></path></svg>
+                </span>
+                <span class="text-[13px] font-medium text-zinc-100">Gmail</span>
+                <span class="text-[11px] leading-snug text-zinc-500">mail inbox look</span>
+              </button>
+              <button type="button" role="radio" aria-checked="false" data-cloak="drive" title="My Drive - Google Drive" class="group flex flex-col items-start gap-2 rounded-2xl border p-3 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 border-zinc-800/80 bg-zinc-900/50 hover:border-zinc-700 hover:bg-zinc-900">
+                <span class="flex w-full items-center justify-between">
+                  <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23ffffff'/%3E%3Cpath d='M22 10 L42 10 L58 38 L38 38 Z' fill='%23fbbc04'/%3E%3Cpath d='M22 10 L42 10 L26 38 L6 38 Z' fill='%234285f4'/%3E%3Cpath d='M6 38 L26 38 L34 52 L16 54 Z' fill='%2334a853'/%3E%3Cpath d='M26 38 L58 38 L44 54 L16 54 Z' fill='%230f9d58' opacity='0.85'/%3E%3C/svg%3E" alt="" width="20" height="20" class="size-5 shrink-0 rounded" aria-hidden="true">
+                  <svg data-check xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-check size-3.5 text-emerald-400 hidden"><path d="M20 6 9 17l-5-5"></path></svg>
+                </span>
+                <span class="text-[13px] font-medium text-zinc-100">Drive</span>
+                <span class="text-[11px] leading-snug text-zinc-500">file storage look</span>
+              </button>
+              <button type="button" role="radio" aria-checked="false" data-cloak="docs" title="Untitled document - Google Docs" class="group flex flex-col items-start gap-2 rounded-2xl border p-3 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 border-zinc-800/80 bg-zinc-900/50 hover:border-zinc-700 hover:bg-zinc-900">
+                <span class="flex w-full items-center justify-between">
+                  <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%234285f4'/%3E%3Crect x='16' y='10' width='32' height='44' rx='4' fill='%23ffffff'/%3E%3Crect x='22' y='22' width='20' height='4' rx='2' fill='%23dadce0'/%3E%3Crect x='22' y='30' width='20' height='4' rx='2' fill='%23dadce0'/%3E%3Crect x='22' y='38' width='12' height='4' rx='2' fill='%23dadce0'/%3E%3Cpath d='M16 10 Q16 6 20 6 L36 6 L48 18 L20 18 Q16 18 16 14 Z' fill='%234285f4' opacity='0.25'/%3E%3Cpath d='M36 6 L48 18 L36 18 Z' fill='%23a1c2fa'/%3E%3C/svg%3E" alt="" width="20" height="20" class="size-5 shrink-0 rounded" aria-hidden="true">
+                  <svg data-check xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-check size-3.5 text-emerald-400 hidden"><path d="M20 6 9 17l-5-5"></path></svg>
+                </span>
+                <span class="text-[13px] font-medium text-zinc-100">Docs</span>
+                <span class="text-[11px] leading-snug text-zinc-500">essay doc look</span>
+              </button>
+              <button type="button" role="radio" aria-checked="false" data-cloak="calendar" title="Calendar" class="group flex flex-col items-start gap-2 rounded-2xl border p-3 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 border-zinc-800/80 bg-zinc-900/50 hover:border-zinc-700 hover:bg-zinc-900">
+                <span class="flex w-full items-center justify-between">
+                  <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23ffffff'/%3E%3Crect x='6' y='8' width='52' height='48' rx='6' fill='%23ffffff' stroke='%23dadce0' stroke-width='2'/%3E%3Crect x='6' y='8' width='52' height='14' rx='6' fill='%234285f4'/%3E%3Crect x='6' y='16' width='52' height='6' fill='%234285f4'/%3E%3Ctext x='32' y='46' font-family='Arial' font-size='24' font-weight='bold' fill='%234285f4' text-anchor='middle'%3E23%3C/text%3E%3C/svg%3E" alt="" width="20" height="20" class="size-5 shrink-0 rounded" aria-hidden="true">
+                  <svg data-check xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-check size-3.5 text-emerald-400 hidden"><path d="M20 6 9 17l-5-5"></path></svg>
+                </span>
+                <span class="text-[13px] font-medium text-zinc-100">Calendar</span>
+                <span class="text-[11px] leading-snug text-zinc-500">today’s date look</span>
+              </button>
+              <button type="button" role="radio" aria-checked="false" data-cloak="blank" title="New Tab" class="group flex flex-col items-start gap-2 rounded-2xl border p-3 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 border-zinc-800/80 bg-zinc-900/50 hover:border-zinc-700 hover:bg-zinc-900">
+                <span class="flex w-full items-center justify-between">
+                  <img src="data:," alt="" width="20" height="20" class="size-5 shrink-0 rounded opacity-0" aria-hidden="true">
+                  <svg data-check xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-check size-3.5 text-emerald-400 hidden"><path d="M20 6 9 17l-5-5"></path></svg>
+                </span>
+                <span class="text-[13px] font-medium text-zinc-100">Blank</span>
+                <span class="text-[11px] leading-snug text-zinc-500">empty-tab look</span>
+              </button>
+            </div>
+            <p class="mt-3 text-[11.5px] leading-relaxed text-zinc-600">
+              The Blank preset (and the about:blank cloak) uses the “Cloak tab title” above. Disguise
+              is per-browser — it lives in this device’s storage only.
+            </p>
+          </div>
+        </section>
+
+        <!-- ══════════ Data ══════════ -->
+        <section data-panel="data" class="tab-panel space-y-3" hidden>
+          <p id="data-flash" role="status" hidden class="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-[12.5px] text-emerald-300"></p>
+
+          <!-- Full device backup -->
+          <div class="rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-5">
+            <div class="flex items-start gap-3">
+              <span class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-zinc-800/80 text-zinc-300"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-database size-4"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M3 5V19A9 3 0 0 0 21 19V5"></path><path d="M3 12A9 3 0 0 0 21 12"></path></svg></span>
+              <div class="min-w-0 flex-1">
+                <h3 class="text-[14px] font-medium text-zinc-100">Your Veil data — full backup</h3>
+                <p class="mt-0.5 text-[12px] leading-snug text-zinc-500">
+                  Export everything Veil keeps on this device — wallpaper, watch history, subscriptions,
+                  playlists, likes, start-page layout &amp; links, arcade favourites and every setting —
+                  as one portable JSON. Merge it back on any device; nothing is ever deleted.
+                </p>
+              </div>
+            </div>
+
+            <div class="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+              <div class="rounded-xl border border-zinc-800 bg-zinc-950/70 px-3 py-2.5 text-center">
+                <p class="text-[10px] uppercase tracking-wider text-zinc-500">Wallpaper</p>
+                <p class="mt-0.5 text-[15px] font-semibold text-zinc-100" data-stat="wallpaper">…</p>
+              </div>
+              <div class="rounded-xl border border-zinc-800 bg-zinc-950/70 px-3 py-2.5 text-center">
+                <p class="text-[10px] uppercase tracking-wider text-zinc-500">History</p>
+                <p class="mt-0.5 text-[15px] font-semibold text-zinc-100" data-stat="history">…</p>
+              </div>
+              <div class="rounded-xl border border-zinc-800 bg-zinc-950/70 px-3 py-2.5 text-center">
+                <p class="text-[10px] uppercase tracking-wider text-zinc-500">Subscriptions</p>
+                <p class="mt-0.5 text-[15px] font-semibold text-zinc-100" data-stat="subs">…</p>
+              </div>
+              <div class="rounded-xl border border-zinc-800 bg-zinc-950/70 px-3 py-2.5 text-center">
+                <p class="text-[10px] uppercase tracking-wider text-zinc-500">Playlists</p>
+                <p class="mt-0.5 text-[15px] font-semibold text-zinc-100" data-stat="playlists">…</p>
+              </div>
+              <div class="rounded-xl border border-zinc-800 bg-zinc-950/70 px-3 py-2.5 text-center">
+                <p class="text-[10px] uppercase tracking-wider text-zinc-500">Liked</p>
+                <p class="mt-0.5 text-[15px] font-semibold text-zinc-100" data-stat="liked">…</p>
+              </div>
+              <div class="rounded-xl border border-zinc-800 bg-zinc-950/70 px-3 py-2.5 text-center">
+                <p class="text-[10px] uppercase tracking-wider text-zinc-500">Settings</p>
+                <p class="mt-0.5 text-[15px] font-semibold text-zinc-100" data-stat="prefs">…</p>
+              </div>
+            </div>
+
+            <div class="mt-4 flex flex-wrap items-center gap-2">
+              <button type="button" id="data-export" class="inline-flex items-center justify-center gap-1.5 whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 h-8 rounded-xl bg-emerald-500/90 text-black hover:bg-emerald-400">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-download size-3.5"><path d="M12 15V3"></path><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="m7 10 5 5 5-5"></path></svg>
+                Export data
+              </button>
+              <button type="button" id="data-import-btn" class="inline-flex items-center justify-center gap-1.5 whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 h-8 rounded-xl border border-zinc-700 bg-zinc-900/60 text-zinc-300 hover:bg-zinc-800">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-upload size-3.5"><path d="M12 3v12"></path><path d="m17 8-5-5-5 5"></path><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path></svg>
+                Import data
+              </button>
+              <span class="text-[11px] text-zinc-600">
+                wallpaper · history · subs · settings — everything, on this device, moves with the file
+              </span>
+            </div>
+
+            <input id="data-import-file" type="file" accept=".json,application/json" class="hidden" aria-hidden="true" tabindex="-1">
+          </div>
+
+          <!-- Chat account -->
+          <div id="chat-card" class="rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-5">
+            <div class="flex items-start gap-3">
+              <span class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-zinc-800/80 text-zinc-500"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-message-circle size-4"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path></svg></span>
+              <div class="min-w-0 flex-1">
+                <h3 class="text-[14px] font-medium text-zinc-400">Your Chat account</h3>
+                <p class="mt-0.5 text-[12px] leading-snug text-zinc-600">
+                  Sign into Chat first — then your profile, picture and message archive
+                  can be exported (and restored) from here.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Danger rows -->
+          <div class="flex flex-col gap-3 rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-4 sm:flex-row sm:items-center">
+            <div class="flex min-w-0 flex-1 items-start gap-3">
+              <span class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-rose-500/10 text-rose-300/90 ring-1 ring-rose-500/20"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-trash-2 size-4"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg></span>
+              <div class="min-w-0">
+                <p class="text-[14px] font-medium text-zinc-100">Wallpaper selection</p>
+                <p class="mt-0.5 text-[12px] leading-snug text-zinc-500">The currently applied background (keeps your saved pack).</p>
+              </div>
+            </div>
+            <button type="button" data-danger="wp-sel" class="inline-flex h-9 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl px-4 text-[13px] font-medium transition-all disabled:pointer-events-none disabled:opacity-50 border border-zinc-700 bg-zinc-900 text-zinc-300 hover:border-rose-500/50 hover:bg-zinc-800 hover:text-rose-300">Clear</button>
+          </div>
+
+          <div class="flex flex-col gap-3 rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-4 sm:flex-row sm:items-center">
+            <div class="flex min-w-0 flex-1 items-start gap-3">
+              <span class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-rose-500/10 text-rose-300/90 ring-1 ring-rose-500/20"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-trash-2 size-4"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg></span>
+              <div class="min-w-0">
+                <p class="text-[14px] font-medium text-zinc-100">Saved wallpapers</p>
+                <p class="mt-0.5 text-[12px] leading-snug text-zinc-500">The live/4K wallpapers you ♥-saved into My pack.</p>
+              </div>
+            </div>
+            <button type="button" data-danger="wp-favs" class="inline-flex h-9 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl px-4 text-[13px] font-medium transition-all disabled:pointer-events-none disabled:opacity-50 border border-zinc-700 bg-zinc-900 text-zinc-300 hover:border-rose-500/50 hover:bg-zinc-800 hover:text-rose-300">Clear</button>
+          </div>
+
+          <div class="flex flex-col gap-3 rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-4 sm:flex-row sm:items-center">
+            <div class="flex min-w-0 flex-1 items-start gap-3">
+              <span class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-rose-500/10 text-rose-300/90 ring-1 ring-rose-500/20"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-trash-2 size-4"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg></span>
+              <div class="min-w-0">
+                <p class="text-[14px] font-medium text-zinc-100">All site data</p>
+                <p class="mt-0.5 text-[12px] leading-snug text-zinc-500">Every cookie, every history row, every local store — a fresh veil.</p>
+              </div>
+            </div>
+            <button type="button" data-danger="all" class="inline-flex h-9 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl px-4 text-[13px] font-medium transition-all disabled:pointer-events-none disabled:opacity-50 border border-zinc-700 bg-zinc-900 text-zinc-300 hover:border-rose-500/50 hover:bg-zinc-800 hover:text-rose-300">Clear</button>
+          </div>
+        </section>
 
       </div>
     </div>
   </div>
 </div>
 
-<script src="../site/assets/os.js?v=2026-10-04T19:20:51Z"></script>
+<button type="button" data-os-refresh onclick="location.reload()" title="A newer version was pushed" style="display:none" class="fixed bottom-4 left-1/2 z-[80] -translate-x-1/2 items-center gap-1.5 rounded-full border border-emerald-400/30 bg-zinc-950/90 px-3.5 py-1.5 text-[11.5px] font-medium text-emerald-300 shadow-[0_8px_24px_rgba(0,0,0,0.5)] backdrop-blur-md transition hover:border-emerald-400/60"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="size-3"><path d="M21 12a9 9 0 1 1-2.6-6.4"></path><path d="M21 3v6h-6"></path></svg>Veil updated — refresh</button>
+<script>window.VEILOS_SHARED_BASE="../site/";</script>
+<script src="../site/assets/os.js?v=2026-10-04T20:17:08Z"></script>
 <script>
 (function () {
   "use strict";
-  var V = window.VEILOS;
+  var V = window.VEILOS || {
+    esc: function (s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); },
+    page: function (n) { return n + ".html"; }
+  };
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  function ls(k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v) { try { window.localStorage.setItem(k, v); } catch (e) { /* ignore */ } }
+  function lsDel(k) { try { window.localStorage.removeItem(k); } catch (e) { /* ignore */ } }
+  function lsJson(k, d) { try { var r = window.localStorage.getItem(k); return r ? JSON.parse(r) : d; } catch (e) { return d; } }
+  function changed() { window.dispatchEvent(new CustomEvent("veil:settings-changed")); }
 
-  function seg(group, current, attr) {
-    var btns = document.querySelectorAll("[" + attr + "]");
-    btns.forEach(function (b) {
-      var on = b.getAttribute(attr) === String(current);
-      b.className = "h-8 rounded-lg px-3 text-[12.5px] font-medium transition " +
-        (on ? "bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/40" : "text-zinc-400 hover:text-zinc-200");
+  /* svg markup reused by the JS-rendered bits */
+  var IC = {
+    globe4: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-globe size-4 shrink-0 text-zinc-500"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path><path d="M2 12h20"></path></svg>',
+    trash: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-trash-2 size-3.5"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg>',
+    spin: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-loader-circle size-3.5 animate-spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>',
+    msg: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-message-circle size-4"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path></svg>'
+  };
+
+  /* ══════════ tabs ══════════ */
+  var TAB_BASE = "tab-btn flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg px-3 text-[12.5px] font-medium transition";
+  function showTab(id) {
+    $$(".tab-panel").forEach(function (p) { p.hidden = p.getAttribute("data-panel") !== id; });
+    var el = $('[data-panel="' + id + '"]');
+    if (el) { el.classList.remove("veil-tab-in"); void el.offsetWidth; el.classList.add("veil-tab-in"); }
+    $$(".tab-btn").forEach(function (b) {
+      var on = b.getAttribute("data-tab") === id;
+      b.setAttribute("aria-selected", on ? "true" : "false");
+      b.className = TAB_BASE + (on ? " bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/40" : " text-zinc-400 hover:bg-zinc-800/70 hover:text-zinc-200");
     });
   }
-  function bindSeg(attr, apply) {
-    document.querySelectorAll("[" + attr + "]").forEach(function (b) {
-      b.addEventListener("click", function () { apply(b.getAttribute(attr)); });
+  $$(".tab-btn").forEach(function (b) {
+    b.addEventListener("click", function () { showTab(b.getAttribute("data-tab")); });
+  });
+  showTab("privacy");
+
+  /* ══════════ segmented switches ══════════ */
+  var SEG_ON = "bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/40";
+  var SEG_OFF = "text-zinc-400 hover:bg-zinc-800/70 hover:text-zinc-200";
+  var storedEngine = ls("veil:search-engine");
+  var S = {
+    clock: ls("veil:clock-24h") === "1" ? "24" : "12",
+    unit: ls("veil:temp-unit") === "F" ? "F" : "C",
+    engine: ["brave", "bing", "duckduckgo", "google", "ecosia"].indexOf(storedEngine) !== -1 ? storedEngine : "brave",
+    proxy: ls("veil:proxy-engine:v2") === "veil" ? "veil" : "quasar",
+    hover: ls("veil:hover-previews") !== "0" ? "on" : "off",
+    dim: (function () { var d = ls("veil:wp-dim") || ls("veil:backdrop-dim"); return d === "25" || d === "55" ? d : "0"; })(),
+    session: ls("veil:keep-session") === "1" ? "keep" : "reset",
+    panicon: ls("veil:panic-enabled") !== "0" ? "on" : "off"
+  };
+  function paintSeg(group) {
+    $$('[data-seg="' + group + '"]').forEach(function (b) {
+      var on = b.getAttribute("data-val") === S[group];
+      b.setAttribute("aria-checked", on ? "true" : "false");
+      b.className = "flex h-8 items-center gap-1 rounded-lg px-3 text-[12.5px] font-medium transition " + (on ? SEG_ON : SEG_OFF);
+      var ck = b.querySelector("[data-check]");
+      if (ck) { if (on) ck.classList.remove("hidden"); else ck.classList.add("hidden"); }
+    });
+  }
+  function bindSeg(group, apply) {
+    $$('[data-seg="' + group + '"]').forEach(function (b) {
+      b.addEventListener("click", function () {
+        apply(b.getAttribute("data-val"));
+        paintSeg(group);
+        changed();
+      });
+    });
+  }
+  bindSeg("clock", function (v) { S.clock = v; lsSet("veil:clock-24h", v === "24" ? "1" : "0"); });
+  bindSeg("unit", function (v) { S.unit = v; lsSet("veil:temp-unit", v); });
+  bindSeg("engine", function (v) { S.engine = v; lsSet("veil:search-engine", v); });
+  bindSeg("proxy", function (v) { S.proxy = v; lsSet("veil:proxy-engine:v2", v); window.dispatchEvent(new CustomEvent("veil:proxy-engine")); });
+  bindSeg("hover", function (v) { S.hover = v; lsSet("veil:hover-previews", v === "on" ? "1" : "0"); });
+  bindSeg("dim", function (v) { S.dim = v; lsSet("veil:wp-dim", v); lsSet("veil:backdrop-dim", v); });
+  bindSeg("session", function (v) { S.session = v; lsSet("veil:keep-session", v === "keep" ? "1" : "0"); });
+  bindSeg("panicon", function (v) { S.panicon = v; lsSet("veil:panic-enabled", v === "on" ? "1" : "0"); });
+  ["clock", "unit", "engine", "proxy", "hover", "dim", "session", "panicon"].forEach(paintSeg);
+
+  /* ══════════ text rows ══════════ */
+  var greet = $('[data-text="greeting"]');
+  if (greet) {
+    greet.value = (ls("veil:greeting-name") || "").slice(0, 24);
+    greet.addEventListener("input", function () {
+      var v = this.value.slice(0, 24);
+      if (this.value.length > 24) this.value = v;
+      if (v.trim()) lsSet("veil:greeting-name", v.trim());
+      else lsDel("veil:greeting-name");
+      changed();
     });
   }
 
-  var clock = V.ls("veil:clock-24h") === "1" ? "24" : "12";
-  function paintClock() { seg("clock", clock, "data-clock"); }
-  bindSeg("data-clock", function (v) { clock = v; V.lsSet("veil:clock-24h", v === "24" ? "1" : "0"); paintClock(); });
+  /* ══════════ Privacy tab ══════════ */
+  function readHistory() { var a = lsJson("veil.mirror.history", []); return Array.isArray(a) ? a : []; }
+  function cookieCount(host) {
+    var raw = ls("veil.cookies." + host);
+    if (!raw) return 0;
+    var v = lsJson("veil.cookies." + host, 0);
+    if (typeof v === "number") return v;
+    if (Array.isArray(v)) return v.length;
+    if (v && typeof v === "object") return Object.keys(v).length;
+    return 0;
+  }
+  function timeAgo(ts) {
+    if (!ts || !isFinite(ts) || ts <= 0) return "—";
+    var s = Math.max(1, Math.round((Date.now() - ts) / 1000));
+    if (s < 60) return s + "s ago";
+    var m = Math.round(s / 60);
+    if (m < 60) return m + "m ago";
+    var h = Math.round(m / 60);
+    if (h < 24) return h + "h ago";
+    return Math.round(h / 24) + "d ago";
+  }
+  function fmt(n) { try { return Number(n).toLocaleString(); } catch (e) { return String(n); } }
+  function computeSites() {
+    var map = {};
+    readHistory().forEach(function (r) {
+      if (!r || !r.host) return;
+      var e = map[r.host] || (map[r.host] = { host: r.host, visits: 0, lastAt: 0, cookies: 0 });
+      e.visits++;
+      if (r.at && r.at > e.lastAt) e.lastAt = r.at;
+    });
+    return Object.keys(map).map(function (h) {
+      var e = map[h];
+      e.cookies = cookieCount(h);
+      return e;
+    }).sort(function (a, b) { return b.lastAt - a.lastAt; });
+  }
 
-  var unit = V.ls("veil:temp-unit") === "F" ? "F" : "C";
-  function paintUnit() { seg("unit", unit, "data-unit"); }
-  bindSeg("data-unit", function (v) { unit = v; V.lsSet("veil:temp-unit", v); paintUnit(); });
+  var query = "";
+  function renderPrivacy() {
+    var sites = computeSites();
+    var visits = 0, cookies = 0;
+    sites.forEach(function (s) { visits += s.visits; cookies += s.cookies; });
+    $("#privacy-totals").textContent =
+      sites.length + " site" + (sites.length === 1 ? "" : "s") + " · " + fmt(visits) + " visits · " + fmt(cookies) + " cookies stored server-side";
+    $("#privacy-wipe-cookies").disabled = !cookies;
+    $("#privacy-wipe-history").disabled = !visits;
+    var q = query.trim().toLowerCase();
+    var filtered = q ? sites.filter(function (s) { return s.host.toLowerCase().indexOf(q) !== -1; }) : sites;
+    var list = $("#privacy-list"), empty = $("#privacy-empty");
+    if (!filtered.length) {
+      list.hidden = true;
+      empty.hidden = false;
+      empty.textContent = q ? "No sites match that filter." : "No sites visited through the veil yet.";
+      return;
+    }
+    empty.hidden = true;
+    list.hidden = false;
+    list.innerHTML = filtered.map(function (s) {
+      return '<li class="flex items-center gap-3 px-4 py-3 transition hover:bg-zinc-900/70">' +
+        IC.globe4 +
+        '<div class="min-w-0 flex-1"><p class="truncate text-[13.5px] font-medium text-zinc-100">' + V.esc(s.host) + '</p>' +
+        '<p class="text-[11.5px] text-zinc-500">' + fmt(s.visits) + " visit" + (s.visits === 1 ? "" : "s") + " · last " + timeAgo(s.lastAt) +
+        (s.cookies > 0 ? '<span class="text-amber-300/80"> · ' + s.cookies + " cookie" + (s.cookies === 1 ? "" : "s") + "</span>" : "") +
+        "</p></div>" +
+        '<button type="button" data-wipe-host="' + V.esc(s.host) + '" aria-label="Wipe ' + V.esc(s.host) + ' — cookies and history" class="inline-flex h-8 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl px-3 text-[12.5px] font-medium text-zinc-400 transition-all hover:bg-rose-500/10 hover:text-rose-300 disabled:pointer-events-none disabled:opacity-40">' +
+        IC.trash + "Wipe</button></li>";
+    }).join("");
+    $$("[data-wipe-host]", list).forEach(function (b) {
+      b.addEventListener("click", function () { wipeHost(b.getAttribute("data-wipe-host"), b); });
+    });
+  }
 
-  var dim = V.ls("veil:wp-dim") || "0";
-  function paintDim() { seg("dim", dim, "data-dim"); }
-  bindSeg("data-dim", function (v) { dim = v; V.lsSet("veil:wp-dim", v); paintDim(); });
+  function busyBtn(btn, on) {
+    var idle = btn.querySelector("[data-idle]"), busy = btn.querySelector("[data-busy]");
+    btn.disabled = on;
+    if (idle) idle.classList.toggle("hidden", on);
+    if (busy) busy.classList.toggle("hidden", !on);
+  }
+  function wipeCookiesBulk() {
+    var btn = $("#privacy-wipe-cookies");
+    busyBtn(btn, true);
+    setTimeout(function () {
+      try {
+        for (var i = window.localStorage.length - 1; i >= 0; i--) {
+          var k = window.localStorage.key(i);
+          if (k && k.indexOf("veil.cookies.") === 0) window.localStorage.removeItem(k);
+        }
+      } catch (e) { /* ignore */ }
+      busyBtn(btn, false);
+      renderPrivacy();
+    }, 300);
+  }
+  function wipeHistoryBulk() {
+    var btn = $("#privacy-wipe-history");
+    busyBtn(btn, true);
+    setTimeout(function () {
+      lsSet("veil.mirror.history", "[]");
+      busyBtn(btn, false);
+      renderPrivacy();
+    }, 300);
+  }
+  function wipeHost(host, btn) {
+    btn.disabled = true;
+    btn.innerHTML = IC.spin + "Wipe";
+    setTimeout(function () {
+      var rows = readHistory().filter(function (v) { return v && v.host !== host; });
+      lsSet("veil.mirror.history", JSON.stringify(rows));
+      lsDel("veil.cookies." + host);
+      renderPrivacy();
+    }, 260);
+  }
+  $("#privacy-wipe-cookies").addEventListener("click", wipeCookiesBulk);
+  $("#privacy-wipe-history").addEventListener("click", wipeHistoryBulk);
+  $("#privacy-search").addEventListener("input", function () { query = this.value; renderPrivacy(); });
 
-  var engine = (V.ls("veil:search-engine") || "brave");
-  function paintEngine() { seg("engine", engine, "data-engine"); }
-  bindSeg("data-engine", function (v) { engine = v; V.lsSet("veil:search-engine", v); paintEngine(); });
+  function loadPrivacy() {
+    $("#privacy-loading").hidden = false;
+    $("#privacy-error").hidden = true;
+    $("#privacy-list").hidden = true;
+    $("#privacy-empty").hidden = true;
+    $("#privacy-totals").textContent = "Loading the veil’s site store…";
+    $("#privacy-wipe-cookies").disabled = true;
+    $("#privacy-wipe-history").disabled = true;
+    setTimeout(function () {
+      $("#privacy-loading").hidden = true;
+      renderPrivacy();
+    }, 350);
+  }
+  $("#privacy-retry").addEventListener("click", loadPrivacy);
+  loadPrivacy();
 
-  paintClock(); paintUnit(); paintDim(); paintEngine();
+  /* ══════════ Security tab ══════════ */
+  var DEFAULT_URL = "https://www.google.com";
+  function sanitizeUrl(raw) {
+    var v = (raw || "").trim();
+    if (!v) return DEFAULT_URL;
+    if (v.charAt(0) === "/" && v.charAt(1) !== "/") return v;
+    try {
+      var u = new URL(v);
+      if (u.protocol === "http:" || u.protocol === "https:") return u.href;
+    } catch (e) { /* not a URL */ }
+    return DEFAULT_URL;
+  }
 
-  V.fetchJson([V.data("version.json"), V.cdnData("version.json"), V.repoData("version.json")])
-    .then(function (v) {
-      if (v && v.built) {
-        document.getElementById("about-version").textContent = "build " + v.built + (v.commit ? " · " + v.commit : "");
+  var flashT = null;
+  function ping(msg) {
+    var el = $("#security-flash");
+    el.textContent = msg;
+    el.hidden = false;
+    el.classList.remove("veil-flash-in"); void el.offsetWidth; el.classList.add("veil-flash-in");
+    if (flashT) clearTimeout(flashT);
+    flashT = setTimeout(function () { el.hidden = true; }, 2800);
+  }
+
+  var panicKey = (ls("veil:panic-key") || "ctrl+y").toLowerCase();
+  var cloakKey = (ls("veil:cloak-key") || "alt+b").toLowerCase();
+  var cloakTitle = ((ls("veil:cloak-title") || "Home").slice(0, 60)) || "Home";
+
+  var urlInput = $('[data-text="panic-url"]');
+  var savedUrl = sanitizeUrl(ls("veil:panic-url") || DEFAULT_URL);
+  urlInput.value = savedUrl;
+  urlInput.addEventListener("blur", function () {
+    var url = sanitizeUrl(this.value);
+    this.value = url;
+    lsSet("veil:panic-url", url);
+    changed();
+    if (url !== savedUrl) ping("Panic target saved.");
+    savedUrl = url;
+  });
+
+  var titleInput = $('[data-text="cloak-title"]');
+  titleInput.value = cloakTitle;
+  titleInput.addEventListener("input", function () {
+    var v = this.value.slice(0, 60);
+    if (this.value.length > 60) this.value = v;
+    cloakTitle = v;
+    lsSet("veil:cloak-title", v || "Home");
+    changed();
+  });
+
+  function comboLabel(combo) {
+    return String(combo || "").split("+").map(function (p) {
+      return p.length === 1 ? p.toUpperCase() : p.charAt(0).toUpperCase() + p.slice(1);
+    }).join(" ");
+  }
+
+  var CAP_BASE = "flex h-9 shrink-0 items-center gap-2 rounded-xl border px-3.5 font-mono text-[12.5px] font-semibold transition";
+  var recording = null; /* "panic" | "cloak" | null */
+  function paintCap(which) {
+    var b = $('[data-keycap="' + which + '"]');
+    if (!b) return;
+    var val = which === "panic" ? panicKey : cloakKey;
+    if (recording === which) {
+      b.className = CAP_BASE + " animate-pulse border-rose-500/50 bg-rose-500/10 text-rose-300";
+      b.textContent = "press any combo… (esc cancels)";
+    } else {
+      b.className = CAP_BASE + (which === "panic"
+        ? " border-amber-500/40 bg-amber-500/10 text-amber-200 hover:border-amber-400/60 hover:bg-amber-500/20"
+        : " border-zinc-700 bg-zinc-950/70 text-zinc-200 hover:border-emerald-500/50 hover:bg-zinc-800");
+      b.innerHTML = "<kbd>" + V.esc(comboLabel(val)) + "</kbd>";
+    }
+  }
+  ["panic", "cloak"].forEach(function (which) {
+    var b = $('[data-keycap="' + which + '"]');
+    if (!b) return;
+    b.addEventListener("click", function () {
+      var errEl = $('[data-err="' + which + '"]');
+      if (errEl) errEl.hidden = true;
+      recording = recording === which ? null : which;
+      paintCap("panic");
+      paintCap("cloak");
+    });
+  });
+  paintCap("panic");
+  paintCap("cloak");
+
+  /* ── tab disguise ── */
+  var BASE_TITLE = "Settings — Veil";
+  var CLOAKS = {
+    classroom: { title: "Classes" },
+    gmail: { title: "Inbox (3) - Gmail" },
+    drive: { title: "My Drive - Google Drive" },
+    docs: { title: "Untitled document - Google Docs" },
+    calendar: { title: "Calendar" },
+    blank: { title: "New Tab" }
+  };
+  var CLOAK_NAMES = { classroom: "Classroom", gmail: "Gmail", drive: "Drive", docs: "Docs", calendar: "Calendar", blank: "Blank" };
+  var CLOAK_ICONS = {
+    classroom: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230f9d58'/%3E%3Crect x='12' y='18' width='40' height='28' rx='4' fill='%230b8043'/%3E%3Crect x='18' y='24' width='12' height='4' rx='2' fill='%23ffffff'/%3E%3Crect x='18' y='32' width='20' height='4' rx='2' fill='%238fd6b0'/%3E%3Ccircle cx='44' cy='26' r='4' fill='%23fbbc04'/%3E%3Crect x='28' y='10' width='8' height='10' rx='2' fill='%230b8043'/%3E%3Crect x='24' y='8' width='16' height='6' rx='3' fill='%230f9d58'/%3E%3C/svg%3E",
+    gmail: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23ffffff'/%3E%3Crect x='4' y='14' width='56' height='36' rx='6' fill='%23ffffff' stroke='%23dadce0' stroke-width='2'/%3E%3Cpath d='M6 20 L32 40 L58 20' fill='none' stroke='%23ea4335' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M6 18 L32 38 L58 18 L58 14 Q58 10 54 10 L10 10 Q6 10 6 14 Z' fill='%23ea4335'/%3E%3Ccircle cx='50' cy='14' r='9' fill='%23ffffff'/%3E%3Ctext x='50' y='19' font-family='Arial' font-size='13' font-weight='bold' fill='%23ea4335' text-anchor='middle'%3E3%3C/text%3E%3C/svg%3E",
+    drive: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23ffffff'/%3E%3Cpath d='M22 10 L42 10 L58 38 L38 38 Z' fill='%23fbbc04'/%3E%3Cpath d='M22 10 L42 10 L26 38 L6 38 Z' fill='%234285f4'/%3E%3Cpath d='M6 38 L26 38 L34 52 L16 54 Z' fill='%2334a853'/%3E%3Cpath d='M26 38 L58 38 L44 54 L16 54 Z' fill='%230f9d58' opacity='0.85'/%3E%3C/svg%3E",
+    docs: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%234285f4'/%3E%3Crect x='16' y='10' width='32' height='44' rx='4' fill='%23ffffff'/%3E%3Crect x='22' y='22' width='20' height='4' rx='2' fill='%23dadce0'/%3E%3Crect x='22' y='30' width='20' height='4' rx='2' fill='%23dadce0'/%3E%3Crect x='22' y='38' width='12' height='4' rx='2' fill='%23dadce0'/%3E%3Cpath d='M16 10 Q16 6 20 6 L36 6 L48 18 L20 18 Q16 18 16 14 Z' fill='%234285f4' opacity='0.25'/%3E%3Cpath d='M36 6 L48 18 L36 18 Z' fill='%23a1c2fa'/%3E%3C/svg%3E",
+    calendar: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23ffffff'/%3E%3Crect x='6' y='8' width='52' height='48' rx='6' fill='%23ffffff' stroke='%23dadce0' stroke-width='2'/%3E%3Crect x='6' y='8' width='52' height='14' rx='6' fill='%234285f4'/%3E%3Crect x='6' y='16' width='52' height='6' fill='%234285f4'/%3E%3Ctext x='32' y='46' font-family='Arial' font-size='24' font-weight='bold' fill='%234285f4' text-anchor='middle'%3E23%3C/text%3E%3C/svg%3E",
+    blank: "data:,"
+  };
+  function readCloakId() { var v = ls("veil:tab-cloak"); return v === null ? "off" : v; }
+  function cloakTitleFor(id) {
+    if (id === "off") return BASE_TITLE;
+    var p = CLOAKS[id];
+    if (!p) return BASE_TITLE;
+    if (id === "blank") return cloakTitle || "New Tab";
+    return p.title;
+  }
+  var savedIcons = null;
+  function iconLinks() { return $$('link[rel="icon"], link[rel="shortcut icon"], link[rel="apple-touch-icon"]', document.head); }
+  function setFavicon(href) {
+    var links = iconLinks();
+    if (savedIcons === null) {
+      savedIcons = links.map(function (l) { return { rel: l.rel, href: l.href, type: l.getAttribute("type") }; });
+    }
+    links.forEach(function (l) { l.remove(); });
+    var el = document.createElement("link");
+    el.rel = "icon";
+    el.href = href;
+    if (href.indexOf("data:image/svg") === 0) el.type = "image/svg+xml";
+    document.head.appendChild(el);
+  }
+  function restoreFavicon() {
+    /* nothing was ever swapped — the page's own icon link is still in place */
+    if (savedIcons === null) return;
+    iconLinks().forEach(function (l) { l.remove(); });
+    savedIcons.forEach(function (s) {
+      var el = document.createElement("link");
+      el.rel = s.rel;
+      el.href = s.href;
+      if (s.type) el.setAttribute("type", s.type);
+      document.head.appendChild(el);
+    });
+    /* keep savedIcons — repeated restores stay idempotent (the direct
+       applyTabCloak() call and the veil:settings-changed listener both
+       run after a pick, and the second must not wipe the first's work) */
+  }
+  function applyTabCloak() {
+    var id = readCloakId();
+    if (id === "off" || !CLOAKS[id]) {
+      document.title = BASE_TITLE;
+      restoreFavicon();
+      return;
+    }
+    document.title = cloakTitleFor(id);
+    setFavicon(CLOAK_ICONS[id]);
+  }
+  function paintCloaks() {
+    var active = readCloakId();
+    $$("[data-cloak]").forEach(function (b) {
+      var on = b.getAttribute("data-cloak") === active;
+      b.setAttribute("aria-checked", on ? "true" : "false");
+      b.className = "group flex flex-col items-start gap-2 rounded-2xl border p-3 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 " +
+        (on ? "border-emerald-500/60 bg-emerald-500/10" : "border-zinc-800/80 bg-zinc-900/50 hover:border-zinc-700 hover:bg-zinc-900");
+      var ck = b.querySelector("[data-check]");
+      if (ck) { if (on) ck.classList.remove("hidden"); else ck.classList.add("hidden"); }
+    });
+  }
+  function pickCloak(id) {
+    lsSet("veil:tab-cloak", id);
+    changed();
+    paintCloaks();
+    applyTabCloak();
+    ping(id === "off"
+      ? "Disguise off — the tab is Veil again."
+      : "Disguised as " + (CLOAK_NAMES[id] || id) + " — look at your tab.");
+  }
+  $$("[data-cloak]").forEach(function (b) {
+    b.addEventListener("click", function () { pickCloak(b.getAttribute("data-cloak")); });
+  });
+  paintCloaks();
+  applyTabCloak();
+  window.addEventListener("veil:settings-changed", applyTabCloak);
+
+  /* ── the about:blank cloak ── */
+  function openVeilInAboutBlank() {
+    var w = null;
+    try { w = window.open("about:blank", "_blank"); } catch (e) { return false; }
+    if (!w) return false;
+    var cloakId = readCloakId();
+    var preset = cloakId !== "off" ? CLOAKS[cloakId] : null;
+    var winTitle = preset ? cloakTitleFor(cloakId) : cloakTitle;
+    var winIcon = preset && cloakId !== "blank" ? CLOAK_ICONS[cloakId] : "data:,";
+    var src = V.page("index");
+    try {
+      var doc = w.document;
+      doc.open();
+      doc.write(
+        '<!doctype html><html><head><meta charset="utf-8">' +
+        "<title>" + V.esc(winTitle) + "</title>" +
+        '<link rel="icon" href="' + winIcon + '">' +
+        "<style>html,body{margin:0;height:100%;overflow:hidden;background:#09090b}iframe{position:fixed;inset:0;width:100vw;height:100vh;border:0}</style>" +
+        "</head><body>" +
+        '<iframe src="' + V.esc(src) + '" allow="fullscreen;autoplay;clipboard-write;encrypted-media;picture-in-picture" title="' + V.esc(winTitle) + '"></iframe>' +
+        "<scr" + "ipt>(function(){" +
+        'var D=function(){try{return{on:localStorage.getItem("veil:panic-enabled")!=="0",key:(localStorage.getItem("veil:panic-key")||"ctrl+y").toLowerCase(),url:localStorage.getItem("veil:panic-url")||"https://www.google.com"}}catch(e){return null}};' +
+        'document.addEventListener("keydown",function(e){try{' +
+        'var k=(e.key||"").toLowerCase();if(!k||k==="control"||k==="shift"||k==="alt"||k==="meta")return;' +
+        'var m=[];if(e.ctrlKey)m.push("ctrl");if(e.metaKey)m.push("meta");if(e.altKey)m.push("alt");if(e.shiftKey)m.push("shift");m.push(k);' +
+        'var c=D();if(c&&c.on&&m.join("+")===c.key){e.preventDefault();e.stopPropagation();' +
+        "try{window.location.replace(c.url)}catch(x){}}" +
+        "}catch(x){}},true);" +
+        "})();</scr" + "ipt></body></html>"
+      );
+      doc.close();
+      return true;
+    } catch (e) { return false; }
+  }
+  $("#cloak-now").addEventListener("click", function () {
+    var ok = openVeilInAboutBlank();
+    ping(ok ? "Cloaked — the veil is running in an about:blank window." : "The popup was blocked — allow popups for this site.");
+  });
+
+  /* ── global panic + cloak key (capture phase, works while typing) ── */
+  window.addEventListener("keydown", function (e) {
+    var key = (e.key || "").toLowerCase();
+    if (["control", "shift", "alt", "meta"].indexOf(key) !== -1) return;
+    if (recording) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (key === "escape") {
+        recording = null;
+        paintCap("panic");
+        paintCap("cloak");
+        return;
       }
-    }).catch(function () {});
+      var mods = [];
+      if (e.ctrlKey) mods.push("ctrl");
+      if (e.metaKey) mods.push("meta");
+      if (e.altKey) mods.push("alt");
+      if (e.shiftKey) mods.push("shift");
+      var combo = mods.concat([key]).join("+");
+      var which = recording;
+      var other = which === "panic" ? cloakKey : panicKey;
+      var errEl = $('[data-err="' + which + '"]');
+      if (combo === other) {
+        if (errEl) {
+          errEl.hidden = false;
+          errEl.textContent = which === "panic"
+            ? "That's the cloak shortcut — pick a different combo."
+            : "That's the panic key — pick a different combo.";
+        }
+        return; /* keep recording — they get another try */
+      }
+      if (errEl) errEl.hidden = true;
+      if (which === "panic") panicKey = combo; else cloakKey = combo;
+      lsSet(which === "panic" ? "veil:panic-key" : "veil:cloak-key", combo);
+      changed();
+      recording = null;
+      paintCap("panic");
+      paintCap("cloak");
+      return;
+    }
+    var mods = [];
+    if (e.ctrlKey) mods.push("ctrl");
+    if (e.metaKey) mods.push("meta");
+    if (e.altKey) mods.push("alt");
+    if (e.shiftKey) mods.push("shift");
+    var combo = mods.concat([key]).join("+");
+    var pk = (ls("veil:panic-key") || "ctrl+y").toLowerCase();
+    var ck = (ls("veil:cloak-key") || "alt+b").toLowerCase();
+    if (combo === pk && ls("veil:panic-enabled") !== "0") {
+      e.preventDefault();
+      e.stopPropagation();
+      var target = sanitizeUrl(ls("veil:panic-url") || DEFAULT_URL);
+      try {
+        if (window.top && window.top !== window.self) { window.top.location.replace(target); return; }
+      } catch (x) { /* cross-origin top */ }
+      try { window.location.replace(target); } catch (x2) { /* ignore */ }
+    } else if (combo === ck) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (openVeilInAboutBlank()) { try { window.close(); } catch (x) { /* ignore */ } }
+    }
+  }, true);
+
+  /* ══════════ Data tab ══════════ */
+  var dataFlashT = null;
+  function pingData(msg, bad) {
+    var el = $("#data-flash");
+    el.textContent = msg;
+    el.className = "rounded-xl border px-4 py-2.5 text-[12.5px] " + (bad
+      ? "border-rose-500/30 bg-rose-500/10 text-rose-300"
+      : "border-emerald-500/30 bg-emerald-500/10 text-emerald-300");
+    el.hidden = false;
+    el.classList.remove("veil-flash-in"); void el.offsetWidth; el.classList.add("veil-flash-in");
+    if (dataFlashT) clearTimeout(dataFlashT);
+    dataFlashT = setTimeout(function () { el.hidden = true; }, 4200);
+  }
+
+  function countOf(key) {
+    var v = lsJson(key, null);
+    if (v === null || v === undefined) return 0;
+    if (Array.isArray(v)) return v.length;
+    if (typeof v === "number") return v;
+    if (typeof v === "object") return Object.keys(v).length;
+    return 0;
+  }
+  function backupStats() {
+    var s = {
+      wallpaperSet: !!ls("veil.wallpaper"),
+      wallpaperFavs: countOf("veil.wallpaper.favs"),
+      savedWallpapers: countOf("veil.wallpaper.library"),
+      history: countOf("veil.mirror.history") || countOf("veil.stream.history.v1"),
+      subs: countOf("veil.stream.subs.v1") || countOf("veil.music.subs"),
+      playlists: countOf("veil.stream.playlists.v1") || countOf("veil.music.playlists"),
+      liked: countOf("veil.stream.ratings.v1") || countOf("veil.music.liked"),
+      prefs: 0
+    };
+    try {
+      for (var i = 0; i < window.localStorage.length; i++) {
+        var k = window.localStorage.key(i);
+        if (!k || !/^veil[.:]/.test(k)) continue;
+        if (k.indexOf("veil.stream.") === 0 || k === "veil.wallpaper") continue;
+        s.prefs++;
+      }
+    } catch (e) { /* ignore */ }
+    return s;
+  }
+  function setStat(name, val) { var el = $('[data-stat="' + name + '"]'); if (el) el.textContent = val; }
+  function refreshStats() {
+    var s = backupStats();
+    setStat("wallpaper", (s.wallpaperSet || s.wallpaperFavs || s.savedWallpapers) ? "♥ " + (s.wallpaperFavs + s.savedWallpapers) : "—");
+    setStat("history", String(s.history));
+    setStat("subs", String(s.subs));
+    setStat("playlists", String(s.playlists));
+    setStat("liked", String(s.liked));
+    setStat("prefs", String(s.prefs));
+  }
+  setTimeout(refreshStats, 250);
+  ["veil:settings-changed", "veil:wallpaper-changed", "veil:wallpaper-favs-changed", "veil:wallpaper-library-changed"].forEach(function (ev) {
+    window.addEventListener(ev, refreshStats);
+  });
+
+  function exportBackup() {
+    var keys = {};
+    try {
+      for (var i = 0; i < window.localStorage.length; i++) {
+        var k = window.localStorage.key(i);
+        if (k && /^veil[.:]/.test(k)) keys[k] = window.localStorage.getItem(k) || "";
+      }
+    } catch (e) { /* ignore */ }
+    var names = Object.keys(keys);
+    if (!names.length) { pingData("Nothing to export yet — this browser has no Veil data at all.", true); return; }
+    var d = new Date();
+    var pad = function (n) { return String(n).length < 2 ? "0" + n : String(n); };
+    var fname = "veil-backup-" + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + ".json";
+    var payload = { format: "veil.backup.v2", app: "Veil", exportedAt: new Date().toISOString(), keys: keys };
+    var blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = fname;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+    var s = backupStats();
+    var bits = [];
+    if (s.wallpaperSet || s.wallpaperFavs) bits.push("wallpaper");
+    if (s.history) bits.push(s.history + " history");
+    if (s.subs) bits.push(s.subs + " subs");
+    if (s.playlists) bits.push(s.playlists + " playlists");
+    if (s.prefs) bits.push(s.prefs + " settings/prefs");
+    pingData("Exported " + names.length + " keys — " + (bits.join(" · ") || "state") + " → " + fname);
+  }
+  $("#data-export").addEventListener("click", exportBackup);
+
+  $("#data-import-btn").addEventListener("click", function () { $("#data-import-file").click(); });
+  $("#data-import-file").addEventListener("change", function () {
+    var f = this.files && this.files[0];
+    if (!f) return;
+    var input = this;
+    f.text().then(function (text) {
+      var parsed = JSON.parse(text);
+      var map = (parsed && typeof parsed === "object" && parsed.keys && typeof parsed.keys === "object" && !Array.isArray(parsed.keys)) ? parsed.keys : parsed;
+      if (!map || typeof map !== "object" || Array.isArray(map)) throw new Error("That file isn't a Veil backup.");
+      var n = 0;
+      Object.keys(map).forEach(function (k) {
+        if (/^veil[.:]/.test(k)) { lsSet(k, String(map[k])); n++; }
+      });
+      refreshStats();
+      if (!n) pingData("That file parsed, but it carries no Veil data keys.", true);
+      else {
+        pingData("Restored: " + n + " keys — reloading…");
+        setTimeout(function () { window.location.reload(); }, 1400);
+      }
+    }).catch(function (e) {
+      pingData((e && e.message) || "The import didn't complete.", true);
+    }).then(function () { input.value = ""; });
+  });
+
+  /* chat account card — the CDN room identity */
+  (function chatCard() {
+    var card = $("#chat-card");
+    if (!card) return;
+    var acc = lsJson("veil:live:account", null);
+    if (!acc || !acc.username) return;
+    var coins = (typeof acc.coins === "number") ? acc.coins : 100;
+    var since = "—";
+    if (acc.createdAt) {
+      var d = new Date(acc.createdAt);
+      if (isFinite(d.getTime())) {
+        try { since = d.toLocaleDateString([], { month: "short", year: "numeric" }); } catch (e) { /* ignore */ }
+      }
+    }
+    function tile(label, value) {
+      return '<div class="rounded-xl border border-zinc-800 bg-zinc-950/70 px-3 py-2.5 text-center">' +
+        '<p class="text-[10px] uppercase tracking-wider text-zinc-500">' + label + "</p>" +
+        '<p class="mt-0.5 text-[15px] font-semibold text-zinc-100">' + V.esc(value) + "</p></div>";
+    }
+    card.innerHTML =
+      '<div class="flex items-start gap-3">' +
+      '<span class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-zinc-800/80 text-zinc-300">' + IC.msg + "</span>" +
+      '<div class="min-w-0 flex-1">' +
+      '<h3 class="text-[14px] font-medium text-zinc-100">Your Chat account <span class="font-normal text-zinc-500">@' + V.esc(acc.username) + "</span></h3>" +
+      '<p class="mt-0.5 text-[12px] leading-snug text-zinc-500">Signed into the shared chat room from this browser — the profile lives here and in the room file; messages and friends sync through it.</p>' +
+      "</div></div>" +
+      '<div class="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">' +
+      tile("Messages", "—") + tile("Friends", "—") + tile("Coins", String(coins)) + tile("Member since", since) +
+      "</div>" +
+      '<p class="mt-3 text-[11px] text-zinc-600">coins, purchased tags &amp; accessories stay server-side — they can never be imported</p>';
+  })();
+
+  /* danger rows — two-step confirm */
+  var DANGER_BASE = "inline-flex h-9 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl px-4 text-[13px] font-medium transition-all disabled:pointer-events-none disabled:opacity-50";
+  function bindDanger(name, onConfirm) {
+    var btn = $('[data-danger="' + name + '"]');
+    if (!btn) return;
+    var armed = false, t = null;
+    function paint() {
+      btn.textContent = armed ? "Confirm" : "Clear";
+      btn.className = DANGER_BASE + (armed
+        ? " bg-rose-500 text-rose-950 hover:bg-rose-400"
+        : " border border-zinc-700 bg-zinc-900 text-zinc-300 hover:border-rose-500/50 hover:bg-zinc-800 hover:text-rose-300");
+    }
+    btn.addEventListener("click", function () {
+      if (armed) {
+        armed = false;
+        if (t) clearTimeout(t);
+        paint();
+        onConfirm();
+      } else {
+        armed = true;
+        paint();
+        t = setTimeout(function () { armed = false; paint(); }, 3500);
+      }
+    });
+    paint();
+  }
+  bindDanger("wp-sel", function () {
+    lsDel("veil.wallpaper");
+    window.dispatchEvent(new CustomEvent("veil:wallpaper-changed"));
+    pingData("Wallpaper selection cleared — the default look is back.");
+  });
+  bindDanger("wp-favs", function () {
+    lsDel("veil.wallpaper.favs");
+    lsDel("veil.wallpaper.library");
+    window.dispatchEvent(new CustomEvent("veil:wallpaper-favs-changed"));
+    pingData("Saved wallpapers cleared.");
+  });
+  bindDanger("all", function () {
+    try { window.localStorage.clear(); } catch (e) { /* ignore */ }
+    window.dispatchEvent(new CustomEvent("veil:wallpaper-changed"));
+    pingData("Everything wiped — reload the page for a clean slate.");
+    setTimeout(function () { window.location.reload(); }, 1200);
+  });
 })();
 </script>
 </body>

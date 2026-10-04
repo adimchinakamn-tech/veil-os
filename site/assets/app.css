@@ -12727,3 +12727,16 @@
   }
 }
 
+
+/* ============================================================
+   Mirror-required utilities — classes the static pages use that
+   the app's compiled bundle never generated (they exist only in
+   runtime-built markup). Kept in sync with the pages.
+   ============================================================ */
+.z-\[60\] { z-index: 60; }
+.z-\[80\] { z-index: 80; }
+.z-\[90\] { z-index: 90; }
+.shadow-\[0_8px_24px_rgba\(0\,0\,0\,0\.5\)\] { box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+@media (min-width: 1280px) { .xl\:grid-cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+.backdrop-blur-\[2px\] { backdrop-filter: blur(2px); }
+@media (min-width: 1536px) { .\32 xl\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); } }

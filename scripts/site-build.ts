@@ -315,9 +315,13 @@ function mirrorize(html: string): string {
   out = out.split('href="assets/').join('href="../site/assets/')
   out = out.split('src="assets/').join('src="../site/assets/')
   out = out.split('src="arcade/').join('src="../site/arcade/')
+  /* SHARED_BASE must be set BEFORE os.js loads — the tag carries a ?v=
+     stamp after linkStamp(), so match the stamped form too (a plain
+     string match missed it and mirrors resolved data/ + /wp-* against
+     their own folder → pack wallpapers 404'd on m1..m10) */
   out = out.replace(
-    '<script src="../site/assets/os.js"></script>',
-    '<script>window.VEILOS_SHARED_BASE="../site/";</script>\n<script src="../site/assets/os.js"></script>',
+    /<script src="\.\.\/site\/assets\/os\.js(\?v=[^"]*)?"><\/script>/,
+    (m) => '<script>window.VEILOS_SHARED_BASE="../site/";</script>\n' + m,
   )
   return out
 }
