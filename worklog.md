@@ -1234,3 +1234,26 @@ Stage Summary:
 - GITHUB PUSH BLOCKER RESOLVED. Repo: github.com/ok5678765s/veil-os (public). Watcher exited cleanly after VERIFIED; chat-backup loop now owns ongoing pushes.
 - Disaster-recovery path verified end-to-end: wipe → restore from cdn.jsdelivr.net/gh/ok5678765s/veil-os@main/backups/chat/latest.json (or chat header → Backup panel → Restore).
 - Remaining minor: PAT expires Sun Nov 1 2026 — set a reminder ~Oct 25 to extend it (github.com/settings/personal-access-tokens → Veil → Regenerate/extend, keep Contents: Read and write).
+
+---
+Task ID: unclaimed-fix-1
+Agent: main (Z.ai Code)
+Task: User asked: remove the visible "unclaimed" text from member/message names (accounts must STAY unclaimed/reclaimable); noted https://ok5678765s.github.io/veil-os/ 404s; plans to deploy Vercel links themselves as long as the repo holds the entire actual site.
+
+Work Log:
+- Removed the dashed "unclaimed" badge from chat-app.tsx in BOTH spots: profile-card name row (~1681) and message-author rows (~2822). Zero "unclaimed" strings remain in src/. The `legacy` flag, reclaim-on-register path, and the profile-card "Restored from a chat backup…" explanation box all REMAIN — accounts are still unclaimed in chat, just no label next to names.
+- Removed " · legacy" suffix from the CDN mirror member list (site/assets/veil.js) — also fixed a stray ")" rendering bug in the same line.
+- Fixed wallpapers.html favicon typo (mismatched quote in data URI).
+- DISCOVERED: box wiped itself again ~22:24 UTC Oct 3 (same event that killed bash earlier). ~/.git-credentials GONE, .gitconfig rewritten (credential.helper line lost), backups/chat/{loop.log,.state.json} gone, DB wiped to 1 bootstrap account / 0 messages.
+- RESTORED chat from backups/chat/latest.json (21:49 snapshot — newer than the seeds): 5 accounts (Canadian Spy, SpiffyBoss5111, ppJA, Veil, errertr6) + 10 messages. `{"ok":true,"accountsCreated":4,"accountsMapped":1,"messagesImported":10}` — the jsDelivr backup system survived its first REAL disaster.
+- Re-added `git config --global credential.helper store`; restarted the backup loop (pid 14402). Commits queue locally; pushes fail until a new GitHub token is provided (the old one is unrecoverable — GitHub shows tokens once).
+- Committed: 8cc56bc (unclaimed removal + favicon + restore note). Loop committed fresh snapshot 110dae9. ~3 commits pending push.
+- Verified: dev server alive (3 procs, no compile errors in dev.log tail), ports 3000/3031 → 200, ws services 3003/3004 respond (400 on bare GET = alive).
+- GitHub Pages: 404 + API "Bad credentials" (token gone, so can't query) → Pages was never enabled. User prefers Vercel anyway.
+- Repo is Vercel-ready: 679 tracked files = complete Next.js app + static mirror in site/. Only env var in .env is DATABASE_URL.
+
+Stage Summary:
+- "unclaimed" labels: GONE from all name surfaces; reclaim behavior 100% intact.
+- Chat data: restored post-wipe from the auto-backup — system works end-to-end.
+- BLOCKER: GitHub token wiped from box. Need user to generate + paste a new fine-grained PAT (veil-os access, Contents: Read and write). Until then: local snapshots/commits continue, pushes paused, CDN serves the last-pushed state.
+- Pages: not enabled (404 is expected). If wanted: Settings → Pages → Deploy from a branch → main → /site. Vercel alternative: import repo, Framework "Other", output dir "site" (zero env vars) for the mirror, or full Next.js deploy with DATABASE_URL.
