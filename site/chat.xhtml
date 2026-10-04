@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" data-veil-build="2026-10-04T19:14:12Z">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" data-veil-build="2026-10-04T19:20:51Z">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Veil Chat — Veil</title>
 <meta name="description" content="Veil Chat — the community room. Say hi." />
-<link rel="icon" href="assets/icon.svg?v=2026-10-04T19:14:12Z" type="image/svg+xml" sizes="any" />
-<link rel="stylesheet" href="assets/app.css?v=2026-10-04T19:14:12Z" />
+<link rel="icon" href="assets/icon.svg?v=2026-10-04T19:20:51Z" type="image/svg+xml" sizes="any" />
+<link rel="stylesheet" href="assets/app.css?v=2026-10-04T19:20:51Z" />
 </head>
 <body class="__variable_246ccd __variable_c29908 antialiased bg-background text-foreground">
 
@@ -166,8 +166,8 @@
 
 <div id="chat-toast" class="pointer-events-none fixed bottom-6 left-1/2 z-[70] hidden -translate-x-1/2 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2 text-xs text-red-200 shadow-lg backdrop-blur-md"></div>
 
-<script src="assets/os.js?v=2026-10-04T19:14:12Z"></script>
-<script src="assets/live.js?v=2026-10-04T19:14:12Z"></script>
+<script src="assets/os.js?v=2026-10-04T19:20:51Z"></script>
+<script src="assets/live.js?v=2026-10-04T19:20:51Z"></script>
 <script>
 //<![CDATA[
 
@@ -462,36 +462,38 @@
     return out;
   }
 
-  function loadLive() {
-    L.fetchCdn().then(function (s) {
-      if (!s) { state.liveOk = false; return; }
-      state.liveOk = true;
-      state.liveUsers = s.users || {};
-      state.liveMsgs = mergeLiveMsgs(state.liveMsgs, (s.messages || []).map(function (m) { return L.msgToRow(m); }));
-      /* my identity must still exist in the room — otherwise sign back in.
-         The CDN can lag a write that landed moments ago, so confirm against
-         the GitHub API (the source of truth) before dropping the session. */
-      var id = L.identity();
-      if (id && !L.findUser(s, id.username)) {
+  function applyRoom(s, fromApi) {
+    if (!s) { state.liveOk = false; return; }
+    state.liveOk = true;
+    state.liveUsers = s.users || {};
+    state.liveMsgs = mergeLiveMsgs(state.liveMsgs, (s.messages || []).map(function (m) { return L.msgToRow(m); }));
+    var id = L.identity();
+    if (id && !L.findUser(s, id.username)) {
+      if (fromApi) {
+        /* the source of truth says the account is gone — sign back in */
+        L.clearIdentity();
+        applyIdentity(null);
+      } else {
+        /* CDN lag — confirm against the API before dropping the session */
         L.fetchApi().then(function (cur) {
-          if (!cur || !cur.json) return;
-          state.liveUsers = cur.json.users || {};
-          state.liveMsgs = mergeLiveMsgs(state.liveMsgs, (cur.json.messages || []).map(function (m) { return L.msgToRow(m); }));
-          var id2 = L.identity();
-          if (id2 && !L.findUser(cur.json, id2.username)) {
-            L.clearIdentity();
-            applyIdentity(null);
-          } else if (id2) {
-            applyIdentity(id2);
-          }
-          render();
-          renderMembers();
-        }).catch(function () { /* no token / API down — keep the CDN view */ });
-      } else if (id) {
-        applyIdentity(id);
+          if (cur && cur.json) applyRoom(cur.json, true);
+        }).catch(function () { /* keep the CDN view */ });
+        return;
       }
-      render();
-      renderMembers();
+    } else if (id) {
+      applyIdentity(id);
+    }
+    render();
+    renderMembers();
+  }
+
+  /* poll the source of truth (conditional GET — 304s are free); the CDN
+     copy is only a fallback for when the API is unreachable */
+  function loadLive() {
+    L.fetchApi().then(function (cur) {
+      applyRoom(cur.json, true);
+    }, function () {
+      return L.fetchCdn().then(function (s) { applyRoom(s, false); });
     });
   }
 

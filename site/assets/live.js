@@ -148,14 +148,23 @@
       .then(function (j) { return j ? cleanState(j) : null; })
       .catch(function () { return null; });
   }
+  /* conditional-GET cache — 304 responses are free on GitHub's rate
+     limit, so the room can poll the source of truth every few seconds
+     without ever hitting the cap */
+  var apiCache = { etag: null, json: null, sha: null };
   function fetchApi() {
     if (!hasToken()) return Promise.reject(new Error("no token"));
+    var headers = {
+      Authorization: "Bearer " + TOK(),
+      Accept: "application/vnd.github+json",
+    };
+    if (apiCache.etag) headers["If-None-Match"] = apiCache.etag;
     return fetch(API_FILE + "?t=" + Date.now(), {
-      headers: {
-        Authorization: "Bearer " + TOK(),
-        Accept: "application/vnd.github+json",
-      },
+      headers: headers,
     }).then(function (r) {
+      if (r.status === 304 && apiCache.json) {
+        return { json: apiCache.json, sha: apiCache.sha };
+      }
       if (r.status === 404) return { json: emptyState(), sha: null };
       if (!r.ok) throw new Error("github " + r.status);
       return r.json().then(function (f) {
@@ -165,6 +174,8 @@
         }
         var s = emptyState();
         try { s = cleanState(JSON.parse(txt)); } catch (e) { /* keep empty */ }
+        var etag = r.headers.get("ETag");
+        if (etag) { apiCache.etag = etag; apiCache.json = s; apiCache.sha = f.sha || null; }
         return { json: s, sha: f.sha || null };
       });
     });
@@ -187,7 +198,7 @@
       },
       body: JSON.stringify(body),
     }).then(function (r) {
-      if (r.ok) return r.json();
+      if (r.ok) { apiCache.etag = null; return r.json(); }
       if (r.status === 409) { var e = new Error("conflict"); e.conflict = true; throw e; }
       if (r.status === 401 || r.status === 403) {
         return r.json().then(function (j) {
