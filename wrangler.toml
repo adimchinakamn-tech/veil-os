@@ -1,0 +1,13 @@
+# Cloudflare Pages configuration.
+#
+# Makes the GitHub import ZERO-CONFIG on Cloudflare:
+#   Workers & Pages → Create → Pages → Connect to Git
+#   → pick ok5678765s/veil-os → Deploy.
+# Cloudflare reads pages_build_output_dir from this file, so no build
+# command and no dashboard settings are needed. Every push to main
+# (the 30s backup daemon pushes automatically when chat data changes)
+# triggers a fresh atomic deploy — pages AND data together, no CDN
+# purge, no cache lag.
+name = "veil-os"
+compatibility_date = "2025-01-01"
+pages_build_output_dir = "./site"

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-veil-build="2026-10-04T02:19:24Z">
+<html lang="en" data-veil-build="2026-10-04T02:41:16Z">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -33,7 +33,7 @@
   <section class="hero" style="padding-top:38px">
     <span class="kicker">Status</span>
     <h1 style="margin-top:8px">Backup pipeline health</h1>
-    <p class="tagline">The 30-second loop: snapshot → commit → push → CDN purge. Everything below reads <em>live</em> from the published backup files.</p>
+    <p class="tagline">The 30-second loop: snapshot → commit → push → CDN purge → Cloudflare auto-deploy. Everything below reads <em>live</em> from the published backup files.</p>
   </section>
 
   <section class="panel" aria-label="Backup status">
@@ -61,6 +61,20 @@
     <div class="linkrow"><span class="ln">⚙️ Runtime JS</span><span class="lu" id="ln10">…</span><button class="copy-btn" data-copy="">copy</button></div>
 
     <p class="sub" style="margin-top:12px">All links point at <span class="mono">@main</span> — they always serve the latest pushed version, and the backup daemon purges the CDN cache after every push so updates appear within seconds. The pages are <span class="mono">.xhtml</span> exact copies (jsDelivr renders those as real pages).</p>
+  </section>
+
+  <section style="margin-top:26px" aria-label="Cloudflare setup">
+    <span class="kicker" style="color:#f6821f">Cloudflare Pages — recommended</span>
+    <h2 style="margin:8px 0 14px">Deploy on Cloudflare in ~60 seconds</h2>
+    <div class="panel" style="padding:18px 22px;border-color:rgba(246,130,31,.35)">
+      <p class="sub">Cloudflare renders plain <span class="mono">.html</span> (no <span class="mono">.xhtml</span> tricks), serves the site from its global edge, and — unlike jsDelivr — needs <strong>no cache purging</strong>: every push triggers an atomic redeploy with pages <em>and</em> chat data together. The repo ships a <span class="mono">wrangler.toml</span>, so the import configures itself:</p>
+      <ol class="steps">
+        <li>Go to <strong>dash.cloudflare.com</strong> → <strong>Workers &amp; Pages</strong> → <strong>Create</strong> → <strong>Pages</strong> tab</li>
+        <li><strong>Connect to Git</strong> → pick <span class="mono">ok5678765s/veil-os</span> → <strong>Begin setup</strong></li>
+        <li>Leave everything as-is (wrangler.toml sets output dir <span class="mono">site</span>, no build command) → <strong>Save and Deploy</strong></li>
+      </ol>
+      <p class="sub" style="margin-top:12px">That's it. Your <span class="mono">*.pages.dev</span> link updates itself: the backup daemon pushes every 30s when chat data changes → Cloudflare redeploys automatically. Fastest, lag-free mirror there is.</p>
+    </div>
   </section>
 
   <section style="margin-top:26px" aria-label="Vercel setup">
@@ -109,9 +123,13 @@
     if (btn) btn.setAttribute("data-copy", url);
   });
 
-  /* live backup stats — absolute CDN source, host-agnostic */
-  fetch(window.VEIL.cdnLatest, { cache: "no-store" })
-    .then(function (r) { return r.ok ? r.json() : null; })
+  /* live backup stats — same-origin data first (Cloudflare/Vercel deploys
+     are always fresh), absolute CDN as fallback */
+  window.VEIL.fetchJson([
+    window.VEIL.dataLatest,
+    window.VEIL.cdnLatest,
+    window.VEIL.latestJson(),
+  ])
     .then(function (d) {
       if (!d) return;
       var ago = Math.round((Date.now() - new Date(d.exportedAt).getTime()) / 60000);

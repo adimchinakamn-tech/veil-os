@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" data-veil-build="2026-10-04T02:19:24Z">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" data-veil-build="2026-10-04T02:41:16Z">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -89,7 +89,7 @@
 
   <section class="panel" style="margin-top:18px;padding:18px 22px">
     <span class="kicker">Restore info</span>
-    <p class="sub" style="margin-top:6px">This mirror renders <span class="mono">backups/chat/latest.json</span> — auto-published every 30 seconds by the backup daemon, then CDN-purged so it's fresh within a minute of any message posted on the live site. Wiped box? This link brings the community back.</p>
+    <p class="sub" style="margin-top:6px">This mirror renders the live backup snapshot — auto-published every 30 seconds by the backup daemon. On Cloudflare Pages / Vercel the data ships <em>inside the same deploy</em> as the page (zero CDN lag); on jsDelivr it's CDN-purged within a minute of any message posted on the live site. Wiped box? These links bring the community back.</p>
     <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
       <button class="btn-ghost js-open-live" type="button">How do I chat for real?</button>
       <a class="btn" href="https://cdn.jsdelivr.net/gh/ok5678765s/veil-os@main/backups/chat/latest.json" target="_blank" rel="noopener noreferrer">View raw backup JSON</a>

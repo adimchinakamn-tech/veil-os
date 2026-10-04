@@ -16,6 +16,7 @@
  */
 
 import {
+  memo,
   useCallback,
   useEffect,
   useMemo,
@@ -311,6 +312,23 @@ function DayDivider({ label, count }: { label: string; count: number }) {
 
 function formatClock(d: Date): string {
   return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })
+}
+
+/** Isolated ticking clock — owns its own 1-second interval so the main
+ * ChatApp tree does NOT re-render every second (a top-level setNow used
+ * to re-render this whole 5000-line component 60×/minute). */
+function LiveClock() {
+  const [now, setNow] = useState(() => new Date())
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 1000)
+    return () => clearInterval(t)
+  }, [])
+  return (
+    <span className="hidden items-center gap-1 rounded-md bg-white/5 px-2 py-1 text-xs text-white/70 sm:flex">
+      <Clock className="h-3 w-3" />
+      {formatClock(now)}
+    </span>
+  )
 }
 
 function initials(name: string): string {
@@ -3135,7 +3153,7 @@ function MessageContent({ content }: { content: string }) {
   )
 }
 
-function MessageRow({
+const MessageRow = memo(function MessageRow({
   msg,
   prev,
   isMe,
@@ -3255,7 +3273,7 @@ function MessageRow({
       </div>
     </div>
   )
-}
+})
 
 // ---------------------------------------------------------------------------
 // Main ChatApp
@@ -3343,9 +3361,6 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
   // Extensions
   const [extensions, setExtensions] = useState<ExtensionState>(DEFAULT_EXTENSIONS)
   const [blockedAds, setBlockedAds] = useState(0)
-
-  // Clock
-  const [now, setNow] = useState(() => new Date())
 
   // Socket ref + active channel ref (so we can resubscribe on channel change).
   const socketRef = useRef<Socket | null>(null)
@@ -3534,11 +3549,7 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
   }, [url])
 
   // ---------------------------------------------------------------------------
-  // Clock tick.
-  useEffect(() => {
-    const t = setInterval(() => setNow(new Date()), 1000)
-    return () => clearInterval(t)
-  }, [])
+  // (clock moved into <LiveClock /> — see component above)
 
   // ---------------------------------------------------------------------------
   // Socket connection (after auth).
@@ -3813,12 +3824,16 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
     const t = setInterval(() => {
       const cutoff = Date.now() - 5000
       setTypingUsers((prev) => {
+        let changed = false
         const next: typeof prev = {}
         for (const [cid, list] of Object.entries(prev)) {
           const fresh = list.filter((u) => u.ts > cutoff)
           if (fresh.length > 0) next[cid] = fresh
+          if (fresh.length !== list.length) changed = true
         }
-        return next
+        // Identity-stable no-op when nothing expired — avoids re-rendering
+        // the whole app every 4s for nothing.
+        return changed ? next : prev
       })
     }, 4000)
     return () => clearInterval(t)
@@ -4234,19 +4249,34 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
     }
   }
 
+  // Day message counts — computed once per messages change. The render
+  // below used to run a nested filter PER message (O(n²) on every render).
+  const dayCounts = useMemo(() => {
+    const c: Record<string, number> = {}
+    for (const m of messages) {
+      const k = dayKeyOf(m.createdAt)
+      c[k] = (c[k] || 0) + 1
+    }
+    return c
+  }, [messages])
+
+  // Stable handlers for the memoized MessageRow — new function identities
+  // here would defeat the memo on every parent render.
+  const handleReply = useCallback((msg: ChatMessage) => setReplyTo(msg), [])
+
   // Pin / unpin.
-  const togglePin = (msg: ChatMessage) => {
+  const togglePin = useCallback((msg: ChatMessage) => {
     setPinned((prev) => {
       const exists = prev.some((m) => m.id === msg.id)
       if (exists) return prev.filter((m) => m.id !== msg.id)
       return [msg, ...prev].slice(0, 12)
     })
     setShowPinned(true)
-  }
+  }, [])
 
   // Delete message — your own, or (as a mod) anyone's. Deletes directly
   // instead of opening the mod panel.
-  const deleteMessage = async (msg: ChatMessage) => {
+  const deleteMessage = useCallback(async (msg: ChatMessage) => {
     const isMine = msg.account.id === account?.id
     if (!isMine && !isMod(account)) return
     try {
@@ -4264,7 +4294,7 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
     } catch (e) {
       toast(e instanceof Error ? e.message : "Delete failed.", "err")
     }
-  }
+  }, [account, token, channelId])
 
   // Create a DM.
   const createDm = async () => {
@@ -4566,11 +4596,8 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
           </span>
 
           <div className="ml-auto flex items-center gap-1">
-            {/* Clock */}
-            <span className="hidden items-center gap-1 rounded-md bg-white/5 px-2 py-1 text-xs text-white/70 sm:flex">
-              <Clock className="h-3 w-3" />
-              {formatClock(now)}
-            </span>
+            {/* Clock — isolated so its 1s tick never re-renders the app */}
+            <LiveClock />
 
             {/* Coins */}
             <button
@@ -4744,16 +4771,14 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                         {newDay && (
                           <DayDivider
                             label={dayLabelOf(m.createdAt)}
-                            count={messages.filter(
-                              (x) => dayKeyOf(x.createdAt) === dayKeyOf(m.createdAt)
-                            ).length}
+                            count={dayCounts[dayKeyOf(m.createdAt)] || 0}
                           />
                         )}
                         <MessageRow
                           msg={m}
                           prev={prev}
                           isMe={m.account.id === account.id || isMod(account)}
-                          onReply={(msg) => setReplyTo(msg)}
+                          onReply={handleReply}
                           onPin={togglePin}
                           onDelete={deleteMessage}
                           onOpenProfile={openProfile}

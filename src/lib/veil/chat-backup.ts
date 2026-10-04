@@ -48,6 +48,7 @@ export const SITE_FILES = [
   "site/wallpapers.xhtml",
   "site/status.xhtml",
   "site/version.json",
+  "site/data/latest.json",
   "site/assets/veil.css",
   "site/assets/veil.js",
   "backups/chat/latest.json",

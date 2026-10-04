@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, existsSync, rmSync } from "fs"
+import { readFileSync, writeFileSync, existsSync, rmSync, mkdirSync } from "fs"
 import { execSync } from "child_process"
 
 /**
@@ -10,7 +10,11 @@ import { execSync } from "child_process"
  * What it does:
  *   1. Stamps every site/*.html with the build time (data-veil-build).
  *   2. Bumps site/version.json (commit sha + built stamp).
- *   3. Generates site/*.xhtml — IDENTICAL pages that jsDelivr will serve
+ *   3. Copies the live chat snapshot to site/data/latest.json so the
+ *      site directory is SELF-CONTAINED — Cloudflare Pages / Vercel
+ *      static deploys only serve site/, and the runtime reads the data
+ *      same-origin from the same deploy (instant, no CDN lag).
+ *   4. Generates site/*.xhtml — IDENTICAL pages that jsDelivr will serve
  *      as application/xhtml+xml (real rendered pages; plain .html is
  *      force-served as text/plain by jsDelivr's anti-phishing policy).
  *      Conversion: xmlns on <html>, self-closed void elements, CDATA-
@@ -125,8 +129,24 @@ function toXhtml(html: string): string {
   return out
 }
 
+function writeData(): boolean {
+  // The site must carry its own copy of the chat snapshot: Cloudflare
+  // Pages and Vercel serve ONLY site/, so backups/chat/latest.json is
+  // unreachable there. veil.js fetches "data/latest.json" (same-origin)
+  // first on every host.
+  try {
+    const snap = readFileSync(ROOT + "/backups/chat/latest.json", "utf-8")
+    mkdirSync(SITE + "/data", { recursive: true })
+    writeFileSync(SITE + "/data/latest.json", snap)
+    return true
+  } catch {
+    return false // no snapshot yet — pages fall back to the CDN copy
+  }
+}
+
 const stampIso = stamp()
 writeVersion(stampIso)
+const dataOk = writeData()
 
 for (const p of PAGES) {
   const src = `${SITE}/${p}.html`
@@ -138,4 +158,4 @@ for (const p of PAGES) {
 const probe = `${SITE}/mime-test.xhtml`
 if (existsSync(probe)) rmSync(probe)
 
-console.log(JSON.stringify({ stamped: stampIso, pages: PAGES.length, xhtml: PAGES.length }))
+console.log(JSON.stringify({ stamped: stampIso, pages: PAGES.length, xhtml: PAGES.length, data: dataOk }))
