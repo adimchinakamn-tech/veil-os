@@ -1305,3 +1305,31 @@ Stage Summary:
 - Vercel full-app: after the user sets env vars (DATABASE_URL + 5 ZAI vars) in Vercel → chat register/login/post + Veil AI should work there (ephemeral DB, cold-boot restores from committed backup; polling instead of realtime).
 - Honest limits: Vercel data is per-warm-instance (cold starts re-seed from the repo backup; box remains canonical). Realtime typing/presence only on the box.
 - githack links still work but are superseded by the .xhtml jsDelivr links.
+
+---
+Task ID: vercel-static-fix-1
+Agent: main (Z.ai Code)
+Task: User reported the Vercel deploy broken (register does nothing, no member list, "not signed in" when sending) and asked for an "actual website" with updates. Fix the Vercel deployment, upgrade the mirror, verify the whole update pipeline end to end.
+
+Work Log:
+- Diagnosed: the user's Vercel project auto-detected Next.js (no vercel.json existed) → deployed the full app → API routes fail without a DB → register/members/sign-in all dead. Live box fully healthy (dev :3000, chat-service :3004, backup loop pid 14402, 0 errors in dev.log).
+- Added vercel.json (framework: null, outputDirectory: "site") — any NEW Vercel import now auto-serves the static mirror. Committed separately (root file is outside the loop's `git add` scope).
+- Mirror upgrades (chat.html + veil.js + veil.css):
+  - LIVE pill (pulse animation; RECONNECTING state on fetch failure), "synced Xs ago" ticker (10s), "#general message count" pill, "N total" members count.
+  - Stick-to-bottom autoscroll + "↓ N new messages" jump pill (real-chat feel).
+  - Read-only CTA bar + "Open the live app" dialog explaining mirror vs live app (backdrop-click + Got it close).
+  - Members legend (active vs restored-claim dots) — avoids the word "unclaimed" per earlier request.
+- status.html: "60-second Vercel fix" card (Settings → Framework Other → Output site → Redeploy) + note that vercel.json automates new imports.
+- index.html: mirror-notice panel under the hero (read-only, updates every 30s, where the real app lives).
+- FIXED future Vercel 404s: all `../backups/chat/latest.json` links → absolute cdn.jsdelivr.net URLs (chat.html ×2, index.html, status.html) — relative repo paths 404 on Vercel which only serves site/.
+- Published: 2× `bun scripts/chat-backup.ts --force` → commits pushed, 19 URLs purged (×2) + one manual purge round. XHTML conversion of the new <dialog>/<button> markup verified (xmlns, closed tags, no raw &).
+- LIVE APP QA (agent-browser on localhost:3000): registered "mirrorqa" through the real Register form → auto-login → sent "sync test…" to #general → Players sidebar showed all 6 accounts incl. mirrorqa → 0 console/page errors.
+- SYNC VERIFIED BOTH WAYS: test message + account appeared in CDN latest.json (02:03:41Z, 6 accounts / 13 msgs) → cleanup via scripts/cleanup-test.mjs (+ 'mirrorqa' added to names) → removal propagated (02:05:16Z, 5 / 12, no test artifacts left).
+- Mirror QA on the CDN (chat.xhtml via gcore edge): LIVE pill "LIVE", "10 messages", "5 total" members, "synced just now", members SpiffyBoss5111/errertr6 rendered, dialog open+close OK, test message gone. Screenshot: tool-results/qa-mirror-chat-2026-10-04.png. Browser closed after QA (memory rule).
+- ESLint: full `bun run lint` OOM-killed on the 4GB box (environmental — no src/ files touched this session); targeted eslint on the 3 touched scripts → clean, exit 0.
+- CDN edge note: gcore picked up the newest build instantly; cdn/fastly lag a few minutes on chat.xhtml despite successful purges (jsDelivr eventual consistency; the data file latest.json was fresh on every check; pages self-heal).
+
+Stage Summary:
+- VERCEL PATH (recommended): delete the project and re-import ok5678765s/veil-os — vercel.json auto-configures the static mirror; OR the 3-click settings change documented on status.html. The full-app-on-Vercel path from vercel-xhtml-1 needs env vars the user never set and has ephemeral data — static mirror is the honest recommendation.
+- The "actual website": the live app in the sandbox preview panel IS the real website (register / members / send all verified working this session); Vercel + jsDelivr can only ever be the read-only self-updating mirror because static hosts cannot run the database or chat server.
+- Update flow re-verified end-to-end in BOTH directions (add + delete) within ~30–60s: chat → 30s snapshot → commit → push → purge → mirror.

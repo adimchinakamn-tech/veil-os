@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client'
 const p = new PrismaClient()
-const names = ['e2echeck', 'e2efresh2']
+const names = ['e2echeck', 'e2efresh2', 'mirrorqa']
 const accs = await p.chatAccount.findMany({ where: { username: { in: names } } })
 const ids = accs.map(a => a.id)
 const delMsgs = await p.chatMessage.deleteMany({ where: { accountId: { in: ids } } })
