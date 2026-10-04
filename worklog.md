@@ -1257,3 +1257,24 @@ Stage Summary:
 - Chat data: restored post-wipe from the auto-backup — system works end-to-end.
 - BLOCKER: GitHub token wiped from box. Need user to generate + paste a new fine-grained PAT (veil-os access, Contents: Read and write). Until then: local snapshots/commits continue, pushes paused, CDN serves the last-pushed state.
 - Pages: not enabled (404 is expected). If wanted: Settings → Pages → Deploy from a branch → main → /site. Vercel alternative: import repo, Framework "Other", output dir "site" (zero env vars) for the mirror, or full Next.js deploy with DATABASE_URL.
+
+---
+Task ID: token-restore-1
+Agent: main (Z.ai Code)
+Task: User supplied a fresh GitHub PAT after the box wipe deleted the old one. Restore push capability, flush queued commits, purge CDN, and verify the mirror end-to-end.
+
+Work Log:
+- Stored new PAT in ~/.git-credentials (chmod 600) + verified via API: authenticates as ok5678765s, sees ok5678765s/veil-os
+- Pushed 3 queued commits (77402ab..dea5279): the 10-message backup snapshot, the unclaimed-badge removal + favicon fix, restore note. Local == remote ✅
+- Purged all 12 jsDelivr URLs ({"purged":12}); CDN now serves the updated mirror — veil.js has no "· legacy" text (only the invisible online/offline dot logic remains)
+- CDN latest.json verified: 5 accounts / 10 messages / exported 00:55 UTC
+- Backup loop healthy (pid 14402): runs, sig unchanged → no-op correctly, pushes when data changes
+- dev.log clean after the chat-app.tsx badge removals; no compile errors
+- DISCOVERY: raw.githack.com now shows a security interstitial ("One more step — Open the page") before HTML pages, once per browser per repo per 24h. Clicked through via agent-browser and VERIFIED the mirror end-to-end: 10 msgs rendered, 5 players in sidebar, "Veil said: yo", counter = 10, no error banner, build stamp fresh (2026-10-04T00:55:36Z)
+- Chrome killed after QA per standing memory rule
+
+Stage Summary:
+- GitHub pipeline fully restored: snapshot → commit → push → purge all working again with the new token.
+- Mirror verified rendering REAL data on githack (with 24h click-gate caveat) — jsDelivr serves data/assets perfectly but HTML as text/plain (policy), so the RENDERED site links should be the user's upcoming Vercel deploy (repo is Vercel-ready: import ok5678765s/veil-os, Framework "Other", output dir "site", no env vars) — or GitHub Pages (Settings → Pages → main /site).
+- All 10 links live: 7 githack-rendered pages (gate on first visit per browser), latest.json + veil.css + veil.js on jsDelivr (no gate).
+- Chat data current: 5 accounts, 10 messages (Veil, Canadian Spy, SpiffyBoss5111, ppJA, errertr6), backups every 30s.
