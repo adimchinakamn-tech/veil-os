@@ -1,113 +1,261 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" data-veil-build="2026-10-04T11:56:34Z">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" data-veil-build="2026-10-04T12:07:45Z">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Veil — The whole web, through the veil</title>
-<meta name="description" content="Veil OS static mirror — multi-tab proxy browsing, arcade, chat, AI, stream. Served live from GitHub via jsDelivr." />
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2310b981' stroke-width='2'%3E%3Cpath d='M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z'/%3E%3C/svg%3E" />
+<meta name="description" content="Veil — a full-screen web OS: proxy browsing, arcade, chat, AI and stream. Live-updating public mirror." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2310b981' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z'/%3E%3Cpath d='M9 12l2 2 4-4'/%3E%3C/svg%3E" />
 <link rel="stylesheet" href="assets/veil.css" />
 </head>
 <body>
-<div class="shell">
-<nav class="topnav" aria-label="Main">
-  <div class="topnav-inner">
-    <a class="brand" href="index.xhtml">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/></svg>
-      Veil <span class="beta">MIRROR</span>
-    </a>
-    <div class="navlinks">
-      <a href="index.xhtml" class="active">Home</a>
-      <a href="chat.xhtml">Chat</a>
-      <a href="arcade.xhtml">Arcade</a>
-      <a href="ai.xhtml">AI</a>
-      <a href="stream.xhtml">Stream</a>
-      <a href="wallpapers.xhtml">Wallpapers</a>
-      <a href="status.xhtml">Status</a>
-    </div>
-    <span class="nav-clock" data-veil-clock="" data-seconds="" aria-label="current time"></span>
+<div class="os-root">
+
+  <!-- wallpaper: emerald animated theme (clone of the app's default) -->
+  <div class="os-wallpaper" aria-hidden="true">
+    <div class="base"></div>
+    <div class="grad"></div>
+    <div class="orb-a"></div>
+    <div class="orb-b"></div>
+    <div class="vignette"></div>
+    <div class="dim"></div>
   </div>
-</nav>
 
-<main>
-  <section class="hero">
-    <svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/></svg>
-    <h1><span class="dim">The whole web,</span><br />through the veil.</h1>
-    <p class="tagline">A full-screen web OS — proxy browsing, arcade, chat, AI &amp; stream.<br />This is the <em>live-updating static mirror</em>, served from GitHub via jsDelivr.</p>
-    <div class="hero-clock" data-veil-clock="" aria-label="current time">–:–</div>
-    <div class="hero-date" data-veil-clock="" data-date="" aria-label="current date"></div>
-    <div class="hero-badges">
-      <span class="pill ok">● CDN live</span>
-      <span class="pill warn">auto-updates on every push</span>
-      <span class="pill">chat backups every 30s</span>
+  <!-- corner controls (clone of the app's) -->
+  <button class="os-corner-btn" id="os-hide-ui" type="button" style="top:1rem" title="Hide the interface — just the wallpaper (click again to bring it back)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+    <span>hide UI</span>
+  </button>
+  <button class="os-corner-btn js-open-live" type="button" style="top:3.5rem" title="This is the read-only mirror — the layout editor lives in the real app">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    <span>layout</span>
+  </button>
+
+  <!-- start content -->
+  <div class="os-content" id="os-content">
+
+    <div class="os-clock os-rise" style="animation-delay:0s">
+      <div class="time" data-veil-clock="">—:—</div>
+      <div class="date" data-veil-clock="" data-date=""></div>
     </div>
-  </section>
 
-  <section class="panel mirror-note" aria-label="Mirror notice">
-    <div class="mirror-note-inner">
-      <span class="pulse-dot big" aria-hidden="true"></span>
-      <p class="sub" style="flex:1;min-width:240px;margin:0"><strong style="color:var(--text-0)">This is the public mirror — read-only, refreshes itself every 30 seconds.</strong> The real Veil app (sign-up, chatting, members, coins, arcade) runs in the project's sandbox preview panel — open it and click "Open in New Tab" to keep the real thing one bookmark away. <a href="chat.xhtml">See the live chat mirror →</a></p>
+    <div class="os-rise" style="animation-delay:0.06s;margin-top:1rem;display:flex;justify-content:center">
+      <div class="os-glass-pill" title="Weather lives in the real app (this is the read-only mirror)">
+        <span class="ico" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19a4.5 4.5 0 1 0 0-9h-1.8A7 7 0 1 0 4 14.9"/><path d="M17.5 19a4.5 4.5 0 1 0 0-9h-1.8A7 7 0 1 0 4 14.9"/></svg>
+        </span>
+        <span class="strong">weather</span>
+        <span class="sep" aria-hidden="true"></span>
+        <span class="muted">live in the app</span>
+        <span class="sep" aria-hidden="true"></span>
+        <svg class="ico" style="color:#71717a" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span class="strong" id="os-greeting">Hello</span>
+      </div>
     </div>
-  </section>
 
-  <section aria-label="Veil sections" class="grid grid-3" style="margin-top:26px">
-    <a class="card-link" href="chat.xhtml"><div class="card">
-      <div class="sec-ico">💬</div>
-      <h2>Veil Chat</h2>
-      <p class="sub">Discord-style chat with coins, blackjack &amp; shop. This mirror renders the live #general history straight from the auto-published backup JSON.</p>
-      <div class="pill-row"><span class="pill ok">live data</span><span class="pill">30s refresh</span></div>
-    </div></a>
-    <a class="card-link" href="arcade.xhtml"><div class="card">
-      <div class="sec-ico">🕹️</div>
-      <h2>Arcade</h2>
-      <p class="sub">837-title html5 game library across gn-math + The Stash catalogs, playable inside proxied tabs on the live site.</p>
-      <div class="pill-row"><span class="pill">837 titles</span><span class="pill ok">ad-free</span></div>
-    </div></a>
-    <a class="card-link" href="ai.xhtml"><div class="card">
-      <div class="sec-ico">✨</div>
-      <h2>Veil AI</h2>
-      <p class="sub">LLM assistant with extension-maker — builds Veil extensions from plain-English prompts on the live site.</p>
-      <div class="pill-row"><span class="pill">LLM</span><span class="pill">extension maker</span></div>
-    </div></a>
-    <a class="card-link" href="stream.xhtml"><div class="card">
-      <div class="sec-ico">📺</div>
-      <h2>Stream</h2>
-      <p class="sub">A real FreeTube program running as a service — subscriptions, playlists and watch parties without the tube.</p>
-      <div class="pill-row"><span class="pill ok">service live</span><span class="pill">freetube</span></div>
-    </div></a>
-    <a class="card-link" href="wallpapers.xhtml"><div class="card">
-      <div class="sec-ico">🖼️</div>
-      <h2>Wallpapers</h2>
-      <p class="sub">Curated motion &amp; still wallpapers that backdrop the whole OS — a slice of the collection previewed here.</p>
-      <div class="pill-row"><span class="pill">motion + still</span></div>
-    </div></a>
-    <a class="card-link" href="status.xhtml"><div class="card">
-      <div class="sec-ico">📡</div>
-      <h2>Status &amp; Backups</h2>
-      <p class="sub">Live backup health: snapshot age, message counts, and the full list of jsDelivr links that make this mirror possible.</p>
-      <div class="pill-row"><span class="pill ok">30s loop</span><span class="pill">github + cdn</span></div>
-    </div></a>
-  </section>
-
-  <section class="panel" style="margin-top:26px;padding:22px" aria-label="How the CDN mirror works">
-    <span class="kicker">How this mirror works</span>
-    <h2 style="margin-top:8px">GitHub repo → jsDelivr CDN → this page</h2>
-    <p class="sub" style="margin-top:8px">Every 30 seconds the backup daemon snapshots the chat database, commits to <span class="mono">ok5678765s/veil-os@main</span>, pushes to GitHub and purges the CDN cache — so these pages and the chat history are never more than a minute stale. If the box ever gets wiped again, everything rebuilds from these exact links.</p>
-    <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
-      <a class="btn" href="chat.xhtml">Open live chat mirror →</a>
-      <a class="btn-ghost" href="status.xhtml">All 10 CDN links</a>
+    <div class="os-rise" style="animation-delay:0.08s;margin-top:0.625rem;display:flex;justify-content:center">
+      <div class="os-glass-pill" id="os-presence" title="Community size from the live backup — live presence is in the real app">
+        <span class="os-ping" aria-hidden="true"></span>
+        <span class="strong" id="os-presence-count">…</span>
+      </div>
     </div>
-  </section>
-</main>
 
-<footer class="site-footer">
-  <div class="footer-inner">
-    <span>Veil mirror · served by jsDelivr from <a href="https://github.com/ok5678765s/veil-os" target="_blank" rel="noopener noreferrer">ok5678765s/veil-os</a></span>
-    <span>chat backup: <a href="https://cdn.jsdelivr.net/gh/ok5678765s/veil-os@main/backups/chat/latest.json">latest.json</a> · <a href="status.xhtml">status</a></span>
+    <div class="os-brand os-rise" style="animation-delay:0.12s">
+      <svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/></svg>
+      <span class="name">Veil</span>
+      <span class="mirror-tag" title="Live-updating read-only copy of the real app">mirror</span>
+    </div>
+
+    <div class="os-splash os-rise" style="animation-delay:0.14s" id="os-splash">VEIL</div>
+
+    <div class="os-searchwrap os-rise" style="animation-delay:0.18s">
+      <div class="field">
+        <span class="ico" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        </span>
+        <input id="os-search" type="text" placeholder="Type a URL, search the web, or find a title…" autocomplete="off" spellcheck="false" aria-label="URL or search query" />
+        <span class="kbd" aria-hidden="true">/</span>
+      </div>
+      <button class="os-launch js-open-live" id="os-launch" type="button">
+        Launch
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7"/><path d="M7 7h10v10"/></svg>
+      </button>
+    </div>
+
+    <div class="os-rise" style="animation-delay:0.2s;display:flex;justify-content:center;width:100%">
+      <p class="os-hints">
+        <span class="os-kbd">Enter</span> launches ·
+        <span class="os-kbd">↑↓</span> picks ·
+        <span class="os-kbd">F</span> fullscreen ·
+        <span class="os-kbd">Esc</span> returns here
+      </p>
+    </div>
+
+    <nav class="os-dock os-rise" style="animation-delay:0.22s" aria-label="Veil pages">
+      <a href="ai.xhtml">
+        <svg class="ico c-ai" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V4"/><circle cx="12" cy="2.5" r="0.5" fill="currentColor"/><circle cx="8" cy="13" r="1"/><circle cx="16" cy="13" r="1"/><path d="M9 17h6"/></svg>
+        Veil AI
+      </a>
+      <a href="arcade.xhtml">
+        <svg class="ico c-arcade" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 12h4"/><path d="M8 10v4"/><path d="M15 13h.01"/><path d="M18 11h.01"/><rect x="2" y="6" width="20" height="12" rx="3"/></svg>
+        Arcade
+      </a>
+      <a href="stream.xhtml">
+        <svg class="ico c-stream" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 8-6 4 6 4V8Z"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg>
+        Stream
+      </a>
+      <a href="chat.xhtml">
+        <svg class="ico c-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Chat
+      </a>
+      <a href="wallpapers.xhtml">
+        <svg class="ico c-wallpapers" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></svg>
+        Wallpapers
+      </a>
+      <button class="js-open-live" type="button" title="In the real app">
+        <svg class="ico c-music" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+        Music
+      </button>
+      <button class="js-open-live" type="button" title="In the real app">
+        <svg class="ico c-links" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        Links
+      </button>
+      <button class="js-open-live" type="button" title="In the real app">
+        <svg class="ico c-history" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+        History
+      </button>
+      <button class="js-open-live" type="button" title="In the real app">
+        <svg class="ico c-updates" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+        Updates
+      </button>
+      <a href="status.xhtml">
+        <svg class="ico c-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+        Settings
+      </a>
+    </nav>
+
+    <p class="os-stats os-rise" style="animation-delay:0.3s" id="os-stats">
+      read-only mirror · updates every 30s<span class="sep" aria-hidden="true">·</span><a href="status.xhtml">mirror status</a>
+    </p>
   </div>
-</footer>
 </div>
+
+<dialog id="live-dialog" class="live-dialog" aria-label="Where the real Veil lives">
+  <div class="live-dialog-body">
+    <span class="kicker">Where the real Veil lives</span>
+    <h2 style="margin-top:8px">This is the read-only mirror</h2>
+    <p class="sub" style="margin-top:10px">This public link is a <strong>live-updating, exact visual copy</strong> of Veil's start page. Static hosts (Cloudflare, Vercel, jsDelivr) only serve files — they can't run Veil's database, proxy browser or chat server, so browsing, accounts and settings live in the real app.</p>
+    <p class="sub" style="margin-top:8px">The real Veil — proxy browsing, the full arcade, chat accounts, weather, settings — is the app in the project's sandbox preview panel. If it's your project: open the preview panel next to the editor, click <strong>"Open in New Tab"</strong>, and bookmark that page. Anything posted there shows up here within about a minute.</p>
+    <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn" id="live-dialog-close" type="button">Got it</button>
+      <a class="btn-ghost" href="https://github.com/ok5678765s/veil-os" target="_blank" rel="noopener noreferrer">View the repo ↗</a>
+      <a class="btn-ghost" href="chat.xhtml">Open the chat mirror</a>
+    </div>
+  </div>
+</dialog>
+
 <button id="refresh-pill" onclick="location.reload()" title="A newer version was pushed to GitHub">✨ Veil updated — tap to refresh</button>
 <script src="assets/veil.js"></script>
+<script>
+//<![CDATA[
+
+(function () {
+  "use strict";
+  /* hide UI — works exactly like the real app: everything but the
+     wallpaper fades away; click again (or Esc) to bring it back. */
+  var content = document.getElementById("os-content");
+  var hideBtn = document.getElementById("os-hide-ui");
+  function setHidden(h) {
+    content.classList.toggle("os-hidden", h);
+    hideBtn.lastElementChild.textContent = h ? "show UI" : "hide UI";
+    hideBtn.title = h ? "Show the interface" : "Hide the interface — just the wallpaper";
+  }
+  hideBtn.addEventListener("click", function () {
+    setHidden(!content.classList.contains("os-hidden"));
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") setHidden(false);
+  });
+
+  /* greeting — same rule as the app's greetingFor() */
+  var greetEl = document.getElementById("os-greeting");
+  function tickGreeting() {
+    if (!greetEl) return;
+    var h = new Date().getHours();
+    greetEl.textContent = h < 5 ? "Up late" : h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : h < 21 ? "Good evening" : "Good night";
+  }
+  tickGreeting();
+  setInterval(tickGreeting, 30000);
+
+  /* splash line — the app's exact SPLASH_LINES, picked at random */
+  var WORDS = [
+    "Your Back",
+    "I know its the best",
+    "happy?",
+    "1+1=11",
+    "woah",
+    "better than the rest",
+    "Technoblade Never dies",
+    "battle royale",
+    "If your enemy's know your next move dont move",
+    "fire hurts- Trust me",
+    "Why did I pick the name veil IDK",
+    "WORDS",
+    "gravity hurts",
+    "verified by me",
+  ];
+  var el = document.getElementById("os-splash");
+  if (el) el.textContent = WORDS[Math.floor(Math.random() * WORDS.length)];
+
+  /* search bar: the real app proxies; the mirror explains */
+  var search = document.getElementById("os-search");
+  if (search) {
+    search.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        var d = document.getElementById("live-dialog");
+        if (d && d.showModal) d.showModal();
+      }
+    });
+  }
+
+  /* presence + stats from the live backup snapshot */
+  function refreshData() {
+    var done = function (d) {
+      if (!d) return;
+      var n = (d.accounts || []).length;
+      var pc = document.getElementById("os-presence-count");
+      if (pc) pc.textContent = n + (n === 1 ? " member" : " members");
+      var msgs = 0;
+      (d.messages || []).forEach(function (m) {
+        if (!m.channelId || m.channelId === "main" || m.channelId === "general") msgs++;
+      });
+      var st = document.getElementById("os-stats");
+      if (st) {
+        st.textContent = "";
+        st.appendChild(document.createTextNode("read-only mirror · " + msgs + (msgs === 1 ? " message" : " messages") + " synced"));
+        var sep = document.createElement("span");
+        sep.className = "sep";
+        sep.setAttribute("aria-hidden", "true");
+        st.appendChild(sep);
+        var a = document.createElement("a");
+        a.href = "status.xhtml";
+        a.textContent = "mirror status";
+        st.appendChild(a);
+      }
+    };
+    if (window.VEIL && window.VEIL.fetchJson) {
+      window.VEIL.fetchJson([
+        window.VEIL.dataLatest,
+        window.VEIL.cdnLatest,
+        window.VEIL.latestJson(),
+      ]).then(done, function () {});
+    }
+  }
+  refreshData();
+  setInterval(function () { if (!document.hidden) refreshData(); }, 30000);
+})();
+
+//]]>
+</script>
 </body>
 </html>
