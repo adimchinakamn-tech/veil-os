@@ -175,7 +175,7 @@
       html += '<div><div class="pname">' + esc(name);
       if (a.role === "admin" || a.role === "owner") html += ' <span class="pbadge">ADMIN</span>';
       html += "</div>";
-      html += '<div style="font-size:11px;color:var(--text-2)">@' + esc(a.username) + (a.legacy ? " · legacy" : "") + ")</div></div></div>";
+      html += '<div style="font-size:11px;color:var(--text-2)">@' + esc(a.username) + "</div></div></div>";
     });
     box.innerHTML = html;
 
