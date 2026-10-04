@@ -1,0 +1,20 @@
+# Cloudflare Pages headers — tuned so the mirror feels instant.
+# Pages deploy atomically, so short caches are always fresh.
+
+# Chat backup data (polled every 30s by the runtime): near-zero cache
+# with a 2-minute stale-while-revalidate grace window.
+/data/*
+  Cache-Control: public, max-age=30, stale-while-revalidate=120
+
+# Version probe (tiny; polled every 30s): keep it fresh too.
+/version.json
+  Cache-Control: public, max-age=30, stale-while-revalidate=120
+
+# Static assets: content only changes on deploys — cache harder.
+/assets/*
+  Cache-Control: public, max-age=300
+
+# Sensible defaults for everything else.
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin

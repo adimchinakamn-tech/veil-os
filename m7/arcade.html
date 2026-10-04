@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en" data-veil-build="2026-10-04T17:22:00Z">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Veil Arcade — Veil</title>
+<meta name="description" content="veil arcade — the game library. Titles, math, the stash and apps, play instantly.">
+<link rel="icon" href="../site/assets/icon.svg" type="image/svg+xml" sizes="any">
+<link rel="stylesheet" href="../site/assets/app.css">
+</head>
+<body class="__variable_246ccd __variable_c29908 antialiased bg-background text-foreground">
+
+<div data-os-section class="fixed inset-0 z-50">
+  <div class="relative flex h-full w-full flex-col overflow-hidden text-zinc-100">
+    <div aria-hidden="true" class="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+      <div class="absolute inset-0" style="background: radial-gradient(70rem 40rem at 18% -10%, rgba(63, 127, 99, 0.16), transparent 60%), radial-gradient(50rem 30rem at 96% 8%, rgba(31, 79, 60, 0.14), transparent 60%), radial-gradient(70rem 44rem at 50% 118%, rgba(95, 174, 135, 0.08), transparent 60%), rgb(7, 12, 10);"></div>
+      <div id="arcade-wp-layer" aria-hidden="true" class="absolute inset-0 overflow-hidden transition-opacity duration-700 ease-out opacity-100">
+        <div class="absolute inset-0 bg-gradient-to-br from-emerald-400/70 to-teal-600/60">
+          <div class="veil-orb-a absolute -top-40 left-[25%] h-[26rem] w-[40rem] rounded-full bg-white/10 blur-3xl"></div>
+          <div class="veil-orb-b absolute -bottom-32 right-[8%] h-80 w-80 rounded-full bg-black/10 blur-3xl"></div>
+        </div>
+        <div class="absolute inset-0 bg-black/60"></div>
+        <div class="absolute inset-0 bg-emerald-950/25"></div>
+        <div class="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/50 to-transparent"></div>
+      </div>
+    </div>
+
+    <header class="relative z-20 shrink-0">
+      <div class="relative px-4 pb-1 pt-5 sm:pt-6">
+        <button data-os-back class="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] border shadow-xs dark:bg-input/30 dark:border-input dark:hover:bg-input/50 has-[&amp;>svg]:px-2.5 absolute left-4 top-5 h-8 gap-1.5 rounded-xl border-[#253830]/80 bg-[#0d1612]/70 px-2.5 text-[#88a49a] backdrop-blur-md hover:border-[#3f7f63] hover:bg-[#12231b] hover:text-[#5fae87] sm:px-3" aria-label="Close the arcade">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left h-4 w-4" aria-hidden="true"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg>
+          <span class="hidden sm:inline">Back</span>
+        </button>
+        <div class="select-none text-center">
+          <h1 class="text-[30px] font-bold lowercase leading-none tracking-[-1px] text-[#e8f2ee] [text-shadow:0_2px_24px_rgba(0,0,0,0.6)] sm:text-[38px]">veil <em class="not-italic text-[#5fae87]">arcade</em></h1>
+          <p class="mt-2 text-[11px] lowercase tracking-[0.1em] text-[#88a49a] [text-shadow:0_1px_10px_rgba(0,0,0,0.6)]">the game library — titles, math, the stash &amp; apps, play instantly</p>
+        </div>
+        <div class="absolute right-4 top-5">
+          <button type="button" aria-label="Keyboard shortcuts" class="flex h-8 w-8 items-center justify-center rounded-xl border border-[#253830]/80 bg-[#0d1612]/70 text-[13px] font-semibold text-[#88a49a] backdrop-blur-md transition hover:border-[#3f7f63] hover:text-[#5fae87] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5fae87]/50">?</button>
+        </div>
+      </div>
+      <div class="mx-auto flex w-full max-w-[1200px] flex-col gap-2.5 px-4 pt-4 sm:flex-row sm:items-center sm:gap-2.5 sm:px-6">
+        <div role="tablist" aria-label="Arcade sections" class="flex flex-wrap items-center gap-1.5">
+          <button type="button" role="tab" id="arcade-tab-gnmath" aria-selected="true" aria-controls="arcade-panel-gnmath" data-tab="gnmath" class="arc-tab flex items-center gap-2 rounded-xl border px-4 py-2.5 text-[13px] font-semibold lowercase transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5fae87]/50 active:scale-[0.97] sm:px-[22px] sm:py-3 border-[#3f7f63] bg-[#3f7f63] text-white shadow-[0_4px_20px_rgba(63,127,99,0.35)]"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-joystick h-3.5 w-3.5" aria-hidden="true"><path d="M21 17a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2Z"></path><path d="M6 15v-2"></path><path d="M12 15V9"></path><circle cx="12" cy="6" r="3"></circle></svg>GN-Math</button>
+          <button type="button" role="tab" id="arcade-tab-math" aria-selected="false" aria-controls="arcade-panel-math" data-tab="math" class="arc-tab flex items-center gap-2 rounded-xl border px-4 py-2.5 text-[13px] font-semibold lowercase transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5fae87]/50 active:scale-[0.97] sm:px-[22px] sm:py-3 border-[#253830] bg-[#0d1612]/90 text-[#88a49a] hover:border-[#3f7f63] hover:bg-[#3f7f63]/[0.08] hover:text-[#5fae87]"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calculator h-3.5 w-3.5" aria-hidden="true"><rect width="16" height="20" x="4" y="2" rx="2"></rect><line x1="8" x2="16" y1="6" y2="6"></line><line x1="16" x2="16" y1="14" y2="18"></line><path d="M16 10h.01"></path><path d="M12 10h.01"></path><path d="M8 10h.01"></path><path d="M12 14h.01"></path><path d="M8 14h.01"></path><path d="M12 18h.01"></path><path d="M8 18h.01"></path></svg>Math</button>
+          <button type="button" role="tab" id="arcade-tab-stash" aria-selected="false" aria-controls="arcade-panel-stash" data-tab="stash" class="arc-tab flex items-center gap-2 rounded-xl border px-4 py-2.5 text-[13px] font-semibold lowercase transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5fae87]/50 active:scale-[0.97] sm:px-[22px] sm:py-3 border-[#253830] bg-[#0d1612]/90 text-[#88a49a] hover:border-[#3f7f63] hover:bg-[#3f7f63]/[0.08] hover:text-[#5fae87]"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-archive h-3.5 w-3.5" aria-hidden="true"><rect width="20" height="5" x="2" y="3" rx="1"></rect><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"></path><path d="M10 12h4"></path></svg>The Stash</button>
+          <button type="button" role="tab" id="arcade-tab-apps" aria-selected="false" aria-controls="arcade-panel-apps" data-tab="apps" class="arc-tab flex items-center gap-2 rounded-xl border px-4 py-2.5 text-[13px] font-semibold lowercase transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5fae87]/50 active:scale-[0.97] sm:px-[22px] sm:py-3 border-[#253830] bg-[#0d1612]/90 text-[#88a49a] hover:border-[#3f7f63] hover:bg-[#3f7f63]/[0.08] hover:text-[#5fae87]"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-layout-grid h-3.5 w-3.5" aria-hidden="true"><rect width="7" height="7" x="3" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="14" rx="1"></rect><rect width="7" height="7" x="3" y="14" rx="1"></rect></svg>Apps</button>
+        </div>
+        <form role="search" id="arcade-search-form" class="min-w-0 flex-1">
+          <div class="relative">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#526a60]" aria-hidden="true"><path d="m21 21-4.34-4.34"></path><circle cx="11" cy="11" r="8"></circle></svg>
+            <input id="arcade-search" class="file:text-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 flex w-full min-w-0 border px-3 py-1 transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm h-[46px] rounded-xl border-[#253830] bg-[#0d1612]/90 pl-11 pr-10 text-[14px] lowercase text-zinc-100 shadow-xl shadow-black/30 placeholder:text-[#526a60] focus-visible:border-[#3f7f63] focus-visible:ring-[3px] focus-visible:ring-[rgba(63,127,99,0.18)]" placeholder="search the arcade…" aria-label="Search titles — Enter plays the top match" spellcheck="false" autocapitalize="none" autocomplete="off" value=""/>
+          </div>
+        </form>
+      </div>
+      <div class="mx-auto w-full max-w-[1200px] px-4 pb-3.5 pt-3.5 sm:px-6">
+        <p class="text-[11px] tracking-[0.04em] text-[#526a60]"><span class="font-semibold text-[#5fae87]" id="meta-total">—</span> titles available · <span class="font-semibold text-[#5fae87]" id="meta-hot">—</span> featured</p>
+      </div>
+    </header>
+
+    <div class="relative z-10 min-h-0 flex-1">
+
+      <div role="tabpanel" id="arcade-panel-gnmath" aria-labelledby="arcade-tab-gnmath" class="veil-scroll-slim absolute inset-0 overflow-y-auto px-4 pb-20 pt-4 sm:px-6">
+        <div class="mx-auto w-full max-w-[1200px]">
+          <div class="mb-6 flex flex-wrap items-center gap-2.5">
+            <label for="arcade-sort" class="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#526a60]">sort</label>
+            <select id="arcade-sort" class="h-9 cursor-pointer rounded-xl border border-[#253830] bg-[#0d1612]/90 px-3 text-[12.5px] font-medium text-[#88a49a] shadow-sm shadow-black/30 outline-none backdrop-blur-md transition hover:border-[#3f7f63] hover:text-[#5fae87] focus-visible:border-[#3f7f63]"><option value="id">ID (Date)</option><option value="name">Name</option></select>
+            <span aria-hidden="true" class="h-4 w-px bg-[#1a2822]"></span>
+            <label for="arcade-tag" class="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#526a60]">tag</label>
+            <select id="arcade-tag" class="h-9 cursor-pointer rounded-xl border border-[#253830] bg-[#0d1612]/90 px-3 text-[12.5px] font-medium text-[#88a49a] shadow-sm shadow-black/30 outline-none backdrop-blur-md transition hover:border-[#3f7f63] hover:text-[#5fae87] focus-visible:border-[#3f7f63]"><option value="">all</option><option value="dos">Dos</option><option value="emulator">Emulator</option><option value="flash">Flash</option><option value="fnf">Fnf</option><option value="gba">Gba</option><option value="n64">N64</option><option value="nds">Nds</option><option value="nes">Nes</option><option value="port">Port</option><option value="psx">Psx</option><option value="tools">Tools</option></select>
+          </div>
+
+          <section aria-label="Featured zones" class="mb-8" id="featured-section">
+            <div class="mb-4 flex items-center gap-3">
+              <h2 class="shrink-0 text-[15px] font-bold lowercase tracking-tight text-[#e8f2ee]">featured zones <span class="font-semibold text-[#526a60]" id="hot-count">(41)</span></h2>
+              <span aria-hidden="true" class="h-px flex-1 bg-gradient-to-r from-[#1a2822] to-transparent"></span>
+            </div>
+            <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6" id="hot-grid"></div>
+          </section>
+
+          <section aria-label="All titles" id="all-section">
+            <div class="mb-4 flex items-center gap-3">
+              <h2 class="shrink-0 text-[15px] font-bold lowercase tracking-tight text-[#e8f2ee]" id="all-heading">all titles</h2>
+              <span aria-hidden="true" class="h-px flex-1 bg-gradient-to-r from-[#1a2822] to-transparent"></span>
+            </div>
+            <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6" id="all-grid"></div>
+            <div class="mt-8 flex justify-center" id="load-more-wrap">
+              <button type="button" id="load-more" class="flex h-10 items-center gap-2 rounded-xl border border-[#253830] bg-[#0d1612]/90 px-6 text-[13px] font-semibold lowercase text-[#88a49a] shadow-sm shadow-black/30 backdrop-blur-md transition hover:border-[#3f7f63] hover:text-[#5fae87] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5fae87]/50 active:scale-[0.97]">load more</button>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <div role="tabpanel" id="arcade-panel-math" aria-labelledby="arcade-tab-math" class="veil-scroll-slim absolute inset-0 overflow-y-auto hidden px-4 pb-20 pt-4 sm:px-6">
+        <div class="mx-auto w-full max-w-2xl px-4 py-6 sm:px-6">
+          <div class="mb-6 flex items-center gap-3">
+            <span class="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/15 ring-1 ring-emerald-500/30"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calculator size-5.5 text-emerald-300" aria-hidden="true"><rect width="16" height="20" x="4" y="2" rx="2"></rect><line x1="8" x2="16" y1="6" y2="6"></line><line x1="16" x2="16" y1="14" y2="18"></line><path d="M16 10h.01"></path><path d="M12 10h.01"></path><path d="M8 10h.01"></path><path d="M12 14h.01"></path><path d="M8 14h.01"></path><path d="M12 18h.01"></path><path d="M8 18h.01"></path></svg></span>
+            <div>
+              <h2 class="text-[19px] font-semibold tracking-tight text-zinc-50">Veil Math<span class="text-emerald-400">.</span></h2>
+              <p class="text-[12.5px] text-zinc-400">the number rush — three modes, one keypad, zero mercy</p>
+            </div>
+          </div>
+
+          <div id="math-modes" class="grid gap-3 sm:grid-cols-3">
+            <button type="button" data-mode="sprint" class="group flex flex-col rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-4 text-left transition hover:border-emerald-500/40 hover:bg-zinc-900">
+              <span class="flex size-9 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-500/20"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-zap size-4.5" aria-hidden="true"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"></path></svg></span>
+              <p class="mt-3 text-[15px] font-semibold text-zinc-50">Sprint</p>
+              <p class="mt-1 text-[12px] font-medium text-zinc-300">60 seconds. As many as you can.</p>
+              <p class="mt-1.5 text-[11.5px] leading-snug text-zinc-500">Speed and streaks stack the score — difficulty climbs every 5 correct.</p>
+              <p class="mt-3 text-[11.5px] font-semibold text-emerald-300/0 transition group-hover:text-emerald-300/90">start →</p>
+            </button>
+            <button type="button" data-mode="survival" class="group flex flex-col rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-4 text-left transition hover:border-emerald-500/40 hover:bg-zinc-900">
+              <span class="flex size-9 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-500/20"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-heart size-4.5" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg></span>
+              <p class="mt-3 text-[15px] font-semibold text-zinc-50">Survival</p>
+              <p class="mt-1 text-[12px] font-medium text-zinc-300">3 lives. No mercy.</p>
+              <p class="mt-1.5 text-[11.5px] leading-snug text-zinc-500">A shrinking timer per question — hesitation costs a heart.</p>
+              <p class="mt-3 text-[11.5px] font-semibold text-emerald-300/0 transition group-hover:text-emerald-300/90">start →</p>
+            </button>
+            <button type="button" data-mode="zen" class="group flex flex-col rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-4 text-left transition hover:border-emerald-500/40 hover:bg-zinc-900">
+              <span class="flex size-9 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-500/20"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-cloud size-4.5" aria-hidden="true"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path></svg></span>
+              <p class="mt-3 text-[15px] font-semibold text-zinc-50">Zen</p>
+              <p class="mt-1 text-[12px] font-medium text-zinc-300">No clock. Just flow.</p>
+              <p class="mt-1.5 text-[11.5px] leading-snug text-zinc-500">Every operation mixes in — breathe, think, answer.</p>
+              <p class="mt-3 text-[11.5px] font-semibold text-emerald-300/0 transition group-hover:text-emerald-300/90">start →</p>
+            </button>
+          </div>
+
+          <div id="math-game" class="hidden">
+            <div class="mb-4 flex items-center justify-between gap-3">
+              <button type="button" id="math-quit" class="flex h-9 items-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900/70 px-3 text-[12.5px] font-medium text-zinc-400 backdrop-blur-md transition hover:border-zinc-600 hover:text-zinc-200">← modes</button>
+              <div class="flex items-center gap-3 text-[12px] text-zinc-400"><span id="math-score" class="font-semibold text-zinc-100">0</span> pts · <span id="math-timer" class="tabular-nums">60</span>s</div>
+            </div>
+            <div class="rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-8 text-center">
+              <p id="math-question" class="text-4xl font-light tabular-nums tracking-tight text-zinc-50">2 + 2</p>
+              <div class="mt-6 flex items-center justify-center gap-2">
+                <input id="math-answer" inputmode="numeric" autocomplete="off" class="h-12 w-32 rounded-xl border border-zinc-700 bg-zinc-950/80 px-3 text-center text-xl tabular-nums text-zinc-100 outline-none focus:border-emerald-500/50" aria-label="Your answer"/>
+                <button type="button" id="math-submit" class="h-12 rounded-xl bg-emerald-500 px-5 text-[14px] font-semibold text-emerald-950 transition hover:bg-emerald-400 active:scale-[0.98]">Answer</button>
+              </div>
+              <p id="math-feedback" class="mt-3 h-5 text-[13px] font-medium"></p>
+            </div>
+            <div class="mt-4 grid grid-cols-5 gap-2">
+              <button type="button" class="math-key h-11 rounded-xl border border-zinc-800 bg-zinc-900/70 text-[15px] font-semibold text-zinc-300 transition hover:bg-zinc-800">7</button>
+              <button type="button" class="math-key h-11 rounded-xl border border-zinc-800 bg-zinc-900/70 text-[15px] font-semibold text-zinc-300 transition hover:bg-zinc-800">8</button>
+              <button type="button" class="math-key h-11 rounded-xl border border-zinc-800 bg-zinc-900/70 text-[15px] font-semibold text-zinc-300 transition hover:bg-zinc-800">9</button>
+              <button type="button" class="math-key h-11 rounded-xl border border-zinc-800 bg-zinc-900/70 text-[15px] font-semibold text-zinc-300 transition hover:bg-zinc-800">−</button>
+              <button type="button" class="math-key h-11 rounded-xl border border-zinc-800 bg-zinc-900/70 text-[15px] font-semibold text-zinc-300 transition hover:bg-zinc-800">⌫</button>
+              <button type="button" class="math-key h-11 rounded-xl border border-zinc-800 bg-zinc-900/70 text-[15px] font-semibold text-zinc-300 transition hover:bg-zinc-800">4</button>
+              <button type="button" class="math-key h-11 rounded-xl border border-zinc-800 bg-zinc-900/70 text-[15px] font-semibold text-zinc-300 transition hover:bg-zinc-800">5</button>
+              <button type="button" class="math-key h-11 rounded-xl border border-zinc-800 bg-zinc-900/70 text-[15px] font-semibold text-zinc-300 transition hover:bg-zinc-800">6</button>
+              <button type="button" class="math-key h-11 rounded-xl border border-zinc-800 bg-zinc-900/70 text-[15px] font-semibold text-zinc-300 transition hover:bg-zinc-800">÷</button>
+              <button type="button" class="math-key h-11 rounded-xl border border-zinc-800 bg-zinc-900/70 text-[15px] font-semibold text-zinc-300 transition hover:bg-zinc-800">C</button>
+              <button type="button" class="math-key h-11 rounded-xl border border-zinc-800 bg-zinc-900/70 text-[15px] font-semibold text-zinc-300 transition hover:bg-zinc-800">1</button>
+              <button type="button" class="math-key h-11 rounded-xl border border-zinc-800 bg-zinc-900/70 text-[15px] font-semibold text-zinc-300 transition hover:bg-zinc-800">2</button>
+              <button type="button" class="math-key h-11 rounded-xl border border-zinc-800 bg-zinc-900/70 text-[15px] font-semibold text-zinc-300 transition hover:bg-zinc-800">3</button>
+              <button type="button" class="math-key h-11 rounded-xl border border-zinc-800 bg-zinc-900/70 text-[15px] font-semibold text-zinc-300 transition hover:bg-zinc-800">×</button>
+              <button type="button" class="math-key h-11 rounded-xl border border-zinc-800 bg-zinc-900/70 text-[15px] font-semibold text-zinc-300 transition hover:bg-zinc-800">0</button>
+              <button type="button" class="math-key h-11 rounded-xl border border-zinc-800 bg-zinc-900/70 text-[15px] font-semibold text-zinc-300 transition hover:bg-zinc-800" style="grid-column: span 3 / span 3;">=</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div role="tabpanel" id="arcade-panel-stash" aria-labelledby="arcade-tab-stash" class="absolute inset-0 overflow-hidden hidden">
+        <div class="flex flex-col h-full w-full px-4 pb-4 pt-2 sm:px-6">
+          <div class="relative w-full min-h-0 flex-1 overflow-hidden rounded-[14px] border border-[#1a2822] bg-[#0d1612] shadow-2xl shadow-black/50">
+            <iframe id="stash-frame" src="../site/arcade/ugs.html" title="The Stash — the single-file collection" class="absolute inset-0 size-full border-0 bg-zinc-950" sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-downloads" allow="autoplay; fullscreen; encrypted-media; clipboard-write; gamepad" referrerpolicy="no-referrer"></iframe>
+          </div>
+        </div>
+      </div>
+
+      <div role="tabpanel" id="arcade-panel-apps" aria-labelledby="arcade-tab-apps" class="veil-scroll-slim absolute inset-0 overflow-y-auto hidden px-4 pb-20 pt-4 sm:px-6">
+        <div class="mx-auto w-full max-w-[1200px]">
+          <div class="mb-6 flex flex-wrap items-center gap-2.5">
+            <button type="button" class="flex h-9 items-center gap-1.5 rounded-xl border border-[#2b4a3a] bg-[#0d1612]/90 px-3 text-[12.5px] font-medium text-[#7fd0a8] shadow-sm shadow-black/30 backdrop-blur-md transition hover:border-[#3f7f63] hover:text-[#a3ecc9] focus-visible:outline-none focus-visible:border-[#3f7f63]"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus h-3.5 w-3.5" aria-hidden="true"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>create app</button>
+            <span class="flex-1" aria-hidden="true"></span>
+            <button type="button" class="flex h-9 items-center gap-1.5 rounded-xl border border-[#253830] bg-[#0d1612]/90 px-3 text-[12.5px] font-medium text-[#88a49a] shadow-sm shadow-black/30 backdrop-blur-md transition hover:border-[#3f7f63] hover:text-[#5fae87] focus-visible:outline-none focus-visible:border-[#3f7f63]"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lock h-3.5 w-3.5" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>owner mode</button>
+          </div>
+          <div class="py-16 text-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-package mx-auto block size-6 text-[#526a60] opacity-40" aria-hidden="true"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"></path><path d="M12 22V12"></path><path d="m3.3 7 7.703 4.734a2 2 0 0 0 1.994 0L20.7 7"></path><path d="m7.5 4.27 9 5.15"></path></svg>
+            <p class="mt-4 text-[14px] font-medium text-zinc-300">No apps installed yet</p>
+            <p class="mx-auto mt-1.5 max-w-sm text-[12.5px] leading-relaxed text-zinc-500">Extensions built by the site's developer land here — ask Veil AI to build one, or drop a VEIL-EXT pack on the live arcade.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- title player layer -->
+    <div id="player" role="region" aria-label="Now playing" class="absolute inset-0 z-30 hidden flex-col bg-zinc-950">
+      <div class="flex shrink-0 flex-wrap items-center gap-x-2 gap-y-1.5 border-b border-zinc-800/80 bg-zinc-950/90 px-3 py-2 backdrop-blur-xl sm:px-4">
+        <span aria-hidden="true" class="relative flex h-2.5 w-2.5 shrink-0 items-center justify-center"><span class="absolute h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60"></span><span class="relative h-2 w-2 rounded-full bg-emerald-400"></span></span>
+        <span id="player-name" class="max-w-[28vw] truncate text-[13px] font-semibold text-zinc-100 sm:max-w-[240px]">—</span>
+        <span class="inline-flex items-center justify-center rounded-full border emerald border-emerald-500/30 bg-emerald-500/15 px-2 text-[10.5px] font-medium uppercase tracking-wider text-emerald-300">Playing</span>
+        <div class="ml-auto flex flex-wrap items-center gap-1.5">
+          <button type="button" id="player-back" class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 h-8 gap-1.5 rounded-lg border-zinc-800 bg-zinc-900/70 px-2.5 text-[12px] font-medium text-zinc-300 hover:border-emerald-500/40 hover:bg-zinc-900 hover:text-emerald-200 sm:px-3"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-layout-grid h-3.5 w-3.5" aria-hidden="true"><rect width="7" height="7" x="3" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="14" rx="1"></rect><rect width="7" height="7" x="3" y="14" rx="1"></rect></svg>Back to arcade</button>
+          <button type="button" id="player-reload" class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 h-8 gap-1.5 rounded-lg border-zinc-800 bg-zinc-900/70 px-2.5 text-[12px] font-medium text-zinc-300 hover:border-emerald-500/40 hover:bg-zinc-900 hover:text-emerald-200 sm:px-3"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rotate-cw h-3.5 w-3.5" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.6-6.4"></path><path d="M21 3v6h-6"></path></svg>Reload</button>
+          <button type="button" id="player-fs" class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 h-8 gap-1.5 rounded-lg border-zinc-800 bg-zinc-900/70 px-2.5 text-[12px] font-medium text-zinc-300 hover:border-emerald-500/40 hover:bg-zinc-900 hover:text-emerald-200 sm:px-3"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-maximize h-3.5 w-3.5" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3"></path><path d="M21 8V5a2 2 0 0 0-2-2h-3"></path><path d="M3 16v3a2 2 0 0 0 2 2h3"></path><path d="M16 21h3a2 2 0 0 0 2-2v-3"></path></svg>Fullscreen</button>
+        </div>
+      </div>
+      <iframe id="player-frame" title="Game" class="veil-scroll-slim relative min-h-0 flex-1 w-full border-0 bg-zinc-950" referrerpolicy="no-referrer" allow="autoplay; fullscreen; encrypted-media; clipboard-write; gamepad; pointer-lock" sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-downloads allow-pointer-lock"></iframe>
+    </div>
+  </div>
+</div>
+
+<script>window.VEILOS_SHARED_BASE="../site/";</script>
+<script src="../site/assets/os.js"></script>
+<script>
+(function () {
+  "use strict";
+  var V = window.VEILOS;
+  var $ = V.$, $$ = V.$$;
+  var catalog = { items: [], hot: [] };
+  var shown = 60;
+  var current = [];
+
+  /* ---------- tabs ---------- */
+  $$(".arc-tab").forEach(function (t) {
+    t.addEventListener("click", function () {
+      var id = t.getAttribute("data-tab");
+      $$(".arc-tab").forEach(function (x) {
+        var on = x === t;
+        x.setAttribute("aria-selected", on);
+        x.className = x.className.replace(/border-\[#3f7f63\] bg-\[#3f7f63\] text-white shadow-\[0_4px_20px_rgba\(63,127,99,0\.35\)\]|border-\[#253830\] bg-\[#0d1612\]\/90 text-\[#88a49a\] hover:border-\[#3f7f63\] hover:bg-\[#3f7f63\]\/\[0\.08\] hover:text-\[#5fae87\]/g, "").trim() + " " +
+          (on ? "border-[#3f7f63] bg-[#3f7f63] text-white shadow-[0_4px_20px_rgba(63,127,99,0.35)]" : "border-[#253830] bg-[#0d1612]/90 text-[#88a49a] hover:border-[#3f7f63] hover:bg-[#3f7f63]/[0.08] hover:text-[#5fae87]");
+      });
+      ["gnmath", "math", "stash", "apps"].forEach(function (p) {
+        var panel = document.getElementById("arcade-panel-" + p);
+        if (panel) panel.classList.toggle("hidden", p !== id);
+      });
+    });
+  });
+
+  /* ---------- cards ---------- */
+  var HOT_IDS = null;
+  function cardHtml(g) {
+    var hot = HOT_IDS && HOT_IDS.indexOf(g.id) > -1;
+    var img = V.esc(g.image);
+    return '<button type="button" aria-label="Play ' + V.esc(g.name) + '" data-play="' + V.esc(g.play) + '" data-name="' + V.esc(g.name) + '" data-ext="' + (g.external ? "1" : "0") + '" class="group block overflow-hidden rounded-[14px] border border-[#1a2822] bg-[#121f1a] text-left shadow-sm shadow-black/40 transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-[3px] hover:border-[#3f7f63] hover:shadow-[0_10px_28px_rgba(63,127,99,0.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5fae87]/50">' +
+      '<span class="relative block aspect-video w-full overflow-hidden bg-[#0a100d]">' +
+      '<img alt="" loading="lazy" decoding="async" class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]" src="' + img + '"/>' +
+      '<span aria-hidden="true" class="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 backdrop-blur-[0px] transition-opacity duration-200 group-hover:opacity-100 group-hover:bg-black/40"><span class="flex size-11 scale-75 items-center justify-center rounded-full bg-[#3f7f63] shadow-[0_8px_24px_rgba(0,0,0,0.55)] ring-1 ring-white/25 transition-transform duration-200 group-hover:scale-100"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-play size-4 translate-x-[1px] fill-white text-white" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg></span></span>' +
+      (hot ? '<span aria-hidden="true" title="Hot right now" class="pointer-events-none absolute left-1.5 top-1.5 flex items-center gap-1 rounded-full border border-orange-400/25 bg-black/55 px-1.5 py-[3px] text-[9px] font-bold uppercase tracking-wider text-orange-300 backdrop-blur-md"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-flame size-2.5 fill-orange-400/60" aria-hidden="true"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path></svg>hot</span>' : "") +
+      '<span aria-hidden="true" class="pointer-events-none absolute inset-x-0 top-0 h-10 bg-gradient-to-b from-black/50 to-transparent"></span>' +
+      "</span>" +
+      '<span class="flex items-center gap-1.5 border-t border-[#1a2822] bg-[#121f1a] px-2.5 py-2 pt-[9px]"><span class="min-w-0 flex-1 truncate text-[11px] font-semibold lowercase text-[#e8f2ee] transition group-hover:text-[#5fae87]">' + V.esc(g.name) + "</span></span></button>";
+  }
+
+  function filtered() {
+    var q = document.getElementById("arcade-search").value.trim().toLowerCase();
+    var tag = document.getElementById("arcade-tag").value;
+    var sort = document.getElementById("arcade-sort").value;
+    var list = catalog.items.filter(function (g) {
+      if (tag && !(g.tags || []).some(function (t) { return t.toLowerCase() === tag; })) return false;
+      if (q && g.name.toLowerCase().indexOf(q) === -1 && !(g.tags || []).join(" ").toLowerCase().indexOf(q) > -1) return false;
+      return true;
+    });
+    if (sort === "name") list = list.slice().sort(function (a, b) { return a.name.localeCompare(b.name); });
+    return list;
+  }
+
+  function renderGrids() {
+    var hot = catalog.hot || [];
+    document.getElementById("hot-count").textContent = "(" + hot.length + ")";
+    document.getElementById("hot-grid").innerHTML = hot.map(cardHtml).join("");
+    current = filtered();
+    document.getElementById("all-heading").textContent = current.length === catalog.items.length
+      ? "all titles"
+      : current.length + " title" + (current.length === 1 ? "" : "s") + " for “" + document.getElementById("arcade-search").value.trim() + "”";
+    document.getElementById("all-grid").innerHTML = current.slice(0, shown).map(cardHtml).join("");
+    document.getElementById("load-more-wrap").style.display = shown >= current.length ? "none" : "";
+    bindPlay();
+  }
+
+  function bindPlay() {
+    $$("[data-play]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var url = b.getAttribute("data-play");
+        var name = b.getAttribute("data-name");
+        if (b.getAttribute("data-ext") === "1") {
+          window.open(url, "_blank", "noopener");
+          return;
+        }
+        openPlayer(name, url);
+      });
+    });
+  }
+
+  /* The library serves .html as text/plain (anti-hotlink), so the raw
+     iframe shows source. Instead: fetch the text (CORS is open), point
+     its <base> at the absolute source dir, install the same ad-block
+     the veil's proxy applies (blocked hosts load an empty data: URL —
+     the exact equivalent of the proxy's instant 204), and load it
+     through srcdoc so assets resolve against gn-math.dev. */
+  var playerState = { name: "", url: "" };
+  var AD_BLOCK_RE = "googletagmanager|googlesyndication|googletagservices|googleadservices|adservice\\.google|google-analytics|analytics\\.google|app-measurement|pagead\\.|doubleclick|adsbygoogle|adnxs|adform|adroll|criteo|casalemedia|rubiconproject|pubmatic|openx|indexww|bidswitch|sharethrough|media\\.net|servenobids|smartadserver|sonobi|yieldmo|33across|gumgum|spotx|teads|adition|serving-sys|adtechjp|betrad|taboola|outbrain|zergnet|mgid|revcontent|engageya|adblade|nativo|dstillery|liadm|addthis|sharethis|imasdk|wgplayer|aip\\.in|crazygames|rev\\.iq|r9x\\.in|profitableratecpm|accuracyinstalled|monetag|vignette\\.js|adsterra|adsterratech|vidoomy|freestar|playwire|mediavine|rtmark|goadservices|luckyadspro|popads|popcash|propellerads|propellerclick|exoclick|exosrv|juicyads|facebook\\.net|fb\\.js|connect\\.facebook";
+  function adShieldScript() {
+    return "<script>(function(){var BLOCK=/" + AD_BLOCK_RE + "/i;function clean(v){v=String(v);return BLOCK.test(v)?'data:text/javascript,':v;}" +
+      "var oc=document.createElement.bind(document);document.createElement=function(tag){var el=oc(tag);var t=String(tag).toLowerCase();" +
+      "if(t==='script'||t==='iframe'||t==='img'||t==='link'||t==='source'){try{var proto=(t==='img'?HTMLImageElement:t==='iframe'?HTMLIFrameElement:t==='link'?HTMLLinkElement:t==='source'?HTMLSourceElement:HTMLScriptElement).prototype;" +
+      "var def=Object.getOwnPropertyDescriptor(proto,'src');Object.defineProperty(el,'src',{set:function(v){def.set.call(this,clean(v));},get:def.get,configurable:true});}catch(e){}}return el;};" +
+      "var ow=document.write.bind(document);document.write=function(s){try{s=String(s).replace(/src=[\"']([^\"']*)[\"']/g,function(m,u){return BLOCK.test(u)?'src=\"data:text/javascript,\"':m;});}catch(e){}return ow(s);};" +
+      "window.open=function(){return null;};})();</scr" + "ipt>";
+  }
+  function openPlayer(name, url) {
+    var p = document.getElementById("player");
+    document.getElementById("player-name").textContent = name;
+    p.setAttribute("aria-label", "Now playing: " + name);
+    p.classList.remove("hidden");
+    p.classList.add("flex");
+    document.getElementById("arcade-wp-layer").style.opacity = "0";
+    playerState = { name: name, url: url };
+    loadGame(url);
+  }
+  function loadGame(url) {
+    var frame = document.getElementById("player-frame");
+    frame.removeAttribute("srcdoc");
+    frame.src = "about:blank";
+    fetch(url, { cache: "force-cache" })
+      .then(function (r) { return r.ok ? r.text() : Promise.reject(new Error("http " + r.status)); })
+      .then(function (html) {
+        var origin = url.replace(/^(https?:\/\/[^/]+)(\/.*)$/, "$1");
+        /* strip the portal's own top-level ad tags (static pass) */
+        html = html.replace(/<script[^>]*(?:googletagmanager|adsbygoogle|doubleclick|ima3|wgplayer|gtag|r9x\.in)[^>]*>[\s\S]*?<\/script>/gi, "");
+        /* absolutize the root-relative base the portal ships with */
+        html = html.replace(/<base\s+href="(\/[^"]*)"\s*\/?>/i, function (m, path) {
+          return '<base href="' + origin + path + '">';
+        });
+        if (!/<base\s/i.test(html)) {
+          var dir = url.replace(/[^/]*$/, "");
+          html = html.replace(/(<head[^>]*>)/i, '$1<base href="' + dir + '">');
+        }
+        /* the runtime shield goes in BEFORE any other head content */
+        html = html.replace(/(<head[^>]*>)/i, "$1" + adShieldScript());
+        frame.removeAttribute("src");
+        frame.srcdoc = html;
+      })
+      .catch(function () {
+        frame.removeAttribute("src");
+        frame.srcdoc = '<!DOCTYPE html><html><body style="margin:0;display:flex;align-items:center;justify-content:center;height:100vh;background:#09090b;color:#a1a1aa;font:14px/1.6 system-ui">The title could not be reached — try Reload.</body></html>';
+      });
+  }
+  document.getElementById("player-back").addEventListener("click", function () {
+    var p = document.getElementById("player");
+    p.classList.add("hidden");
+    p.classList.remove("flex");
+    var f = document.getElementById("player-frame");
+    f.removeAttribute("srcdoc");
+    f.src = "about:blank";
+    document.getElementById("arcade-wp-layer").style.opacity = "1";
+  });
+  document.getElementById("player-reload").addEventListener("click", function () {
+    if (playerState.url) loadGame(playerState.url);
+  });
+  document.getElementById("player-fs").addEventListener("click", function () {
+    var p = document.getElementById("player");
+    if (document.fullscreenElement) document.exitFullscreen().catch(function () {});
+    else p.requestFullscreen && p.requestFullscreen().catch(function () {});
+  });
+
+  document.getElementById("load-more").addEventListener("click", function () {
+    shown += 60;
+    renderGrids();
+  });
+  document.getElementById("arcade-search").addEventListener("input", function () { shown = 60; renderGrids(); });
+  document.getElementById("arcade-search-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var first = document.querySelector("#all-grid [data-play]");
+    if (first) first.click();
+  });
+  document.getElementById("arcade-sort").addEventListener("change", renderGrids);
+  document.getElementById("arcade-tag").addEventListener("change", function () { shown = 60; renderGrids(); });
+
+  /* ---------- Veil Math — the working number rush ---------- */
+  var M = { mode: null, score: 0, streak: 0, level: 1, t: null, left: 60, q: null, lives: 3 };
+  function qFor(level, mode) {
+    var ops = mode === "zen" ? ["+", "−", "×", "÷"] : level < 2 ? ["+"] : level < 3 ? ["+", "−"] : level < 4 ? ["+", "−", "×"] : ["+", "−", "×", "÷"];
+    var op = ops[Math.floor(Math.random() * ops.length)];
+    var r = function (n) { return 1 + Math.floor(Math.random() * n); };
+    var a = r(9 + level * 3), b = r(9 + level * 3);
+    if (op === "+") return { text: a + " + " + b, answer: a + b };
+    if (op === "−") { if (b > a) { var tmp = a; a = b; b = tmp; } return { text: a + " − " + b, answer: a - b }; }
+    if (op === "×") { a = r(6 + level * 2); b = r(6 + level * 2); return { text: a + " × " + b, answer: a * b }; }
+    b = r(8); var c = r(9); return { text: (b * c) + " ÷ " + b, answer: c };
+  }
+  function mathStart(mode) {
+    M.mode = mode; M.score = 0; M.streak = 0; M.level = 1; M.lives = 3; M.left = mode === "sprint" ? 60 : 0;
+    document.getElementById("math-modes").classList.add("hidden");
+    document.getElementById("math-game").classList.remove("hidden");
+    nextQ();
+    if (mode === "sprint") {
+      M.t = setInterval(function () {
+        M.left--;
+        document.getElementById("math-timer").textContent = M.left;
+        if (M.left <= 0) mathEnd();
+      }, 1000);
+    }
+  }
+  function nextQ() {
+    M.q = qFor(M.level, M.mode);
+    document.getElementById("math-question").textContent = M.q.text;
+    var inp = document.getElementById("math-answer");
+    inp.value = "";
+    inp.focus();
+    document.getElementById("math-feedback").textContent = "";
+  }
+  function mathCheck() {
+    var inp = document.getElementById("math-answer");
+    var val = parseInt(inp.value, 10);
+    if (isNaN(val)) return;
+    var fb = document.getElementById("math-feedback");
+    if (val === M.q.answer) {
+      M.streak++;
+      M.score += 10 + M.streak * 2 + M.level;
+      if (M.streak % 5 === 0) M.level++;
+      fb.textContent = "✓ correct" + (M.streak > 2 ? " — " + M.streak + " streak" : "");
+      fb.className = "mt-3 h-5 text-[13px] font-medium text-emerald-300";
+      document.getElementById("math-score").textContent = M.score;
+      nextQ();
+    } else {
+      M.streak = 0;
+      fb.textContent = "✗ " + M.q.text + " = " + M.q.answer;
+      fb.className = "mt-3 h-5 text-[13px] font-medium text-red-300";
+      if (M.mode === "survival") {
+        M.lives--;
+        if (M.lives <= 0) { mathEnd(); return; }
+      }
+      setTimeout(nextQ, 900);
+    }
+  }
+  function mathEnd() {
+    if (M.t) { clearInterval(M.t); M.t = null; }
+    var key = "veil:math:best:" + M.mode;
+    var prev = parseInt(V.ls(key) || "0", 10);
+    var best = M.score > prev;
+    if (best) V.lsSet(key, String(M.score));
+    document.getElementById("math-question").textContent = M.score + " pts";
+    document.getElementById("math-feedback").textContent = (best ? "new best! " : "best: " + Math.max(prev, M.score) + " · ") + "pick a mode to run it back";
+    document.getElementById("math-feedback").className = "mt-3 h-5 text-[13px] font-medium text-emerald-300";
+    document.getElementById("math-answer").value = "";
+    setTimeout(function () {
+      document.getElementById("math-game").classList.add("hidden");
+      document.getElementById("math-modes").classList.remove("hidden");
+    }, 1800);
+  }
+  $$("#math-modes [data-mode]").forEach(function (b) {
+    b.addEventListener("click", function () { mathStart(b.getAttribute("data-mode")); });
+  });
+  document.getElementById("math-quit").addEventListener("click", function () {
+    if (M.t) { clearInterval(M.t); M.t = null; }
+    document.getElementById("math-game").classList.add("hidden");
+    document.getElementById("math-modes").classList.remove("hidden");
+  });
+  document.getElementById("math-submit").addEventListener("click", mathCheck);
+  document.getElementById("math-answer").addEventListener("keydown", function (e) {
+    if (e.key === "Enter") { e.preventDefault(); mathCheck(); }
+  });
+  $$(".math-key").forEach(function (k) {
+    k.addEventListener("click", function () {
+      var inp = document.getElementById("math-answer");
+      var v = k.textContent;
+      if (v === "⌫") inp.value = inp.value.slice(0, -1);
+      else if (v === "C") inp.value = "";
+      else if (v === "=") mathCheck();
+      else inp.value += v;
+      inp.focus();
+    });
+  });
+
+  /* ---------- load ---------- */
+  V.dataOf("arcade.json").then(function (d) {
+    catalog.items = d.items || [];
+    catalog.hot = d.hot || [];
+    HOT_IDS = {};
+    catalog.hot.forEach(function (g) { HOT_IDS[g.id] = 1; });
+    HOT_IDS = Object.keys(HOT_IDS);
+    document.getElementById("meta-total").textContent = catalog.items.length;
+    document.getElementById("meta-hot").textContent = catalog.hot.length;
+    try { renderGrids(); } catch (e) { document.title = 'RG-ERR: ' + e.message; }
+  }).catch(function () {});
+})();
+</script>
+</body>
+</html>

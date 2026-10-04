@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-veil-build="2026-10-04T14:52:42Z">
+<html lang="en" data-veil-build="2026-10-04T17:22:00Z">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -66,14 +66,14 @@
             <div class="relative">
               <button class="rounded-full ring-2 ring-white/10 hover:ring-orange-400/50" title="Your profile">
                 <div class="relative shrink-0" style="width: 28px; height: 28px;">
-                  <div id="me-avatar" class="grid h-full w-full place-items-center rounded-full font-semibold text-white" style="background-color: rgb(192, 57, 43); font-size: 11.2px;">CD</div>
+                  <div id="me-avatar" class="grid h-full w-full place-items-center rounded-full font-semibold text-white" style="background-color: #2c3e50; font-size: 11.2px;">?</div>
                 </div>
               </button>
               <button class="absolute -bottom-0.5 -right-0.5 grid h-4 w-4 place-items-center rounded-full border border-black/60 bg-orange-400 text-black" title="Change profile picture">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-camera h-2.5 w-2.5" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path><circle cx="12" cy="13" r="3"></circle></svg>
               </button>
             </div>
-            <button class="rounded-md p-1.5 text-white/60 hover:bg-red-500/20 hover:text-red-300" title="Sign out">
+            <button id="signout-btn" class="rounded-md p-1.5 text-white/60 hover:bg-red-500/20 hover:text-red-300" title="Sign out">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-log-out h-4 w-4" aria-hidden="true"><path d="m16 17 5-5-5-5"></path><path d="M21 12H9"></path><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path></svg>
             </button>
           </div>
@@ -120,17 +120,73 @@
           </aside>
         </div>
       </div>
+
+      <!-- The app's auth gate — login/register, exactly like the live site's -->
+      <div id="auth-gate" class="absolute inset-0 z-50 hidden items-center justify-center overflow-y-auto bg-black/30 px-4 py-10 text-white">
+        <button id="gate-back" class="absolute left-4 top-4 z-[60] flex h-9 items-center gap-1.5 rounded-xl border border-white/15 bg-black/45 px-3 text-[13px] font-medium text-zinc-200 backdrop-blur-md transition hover:border-white/30 hover:text-white" title="Back to Veil">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left h-4 w-4" aria-hidden="true"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg>
+          <span class="hidden sm:inline">Veil</span>
+        </button>
+        <div class="relative w-full max-w-md rounded-3xl border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-xl">
+          <div class="mb-6 flex flex-col items-center text-center">
+            <div class="mb-3 grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 shadow-lg shadow-orange-500/30">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-message-circle h-7 w-7 text-white" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path></svg>
+            </div>
+            <h1 class="text-2xl font-semibold tracking-tight">Veil Chat</h1>
+            <p class="mt-1 text-sm text-white/60" id="gate-sub">Welcome back</p>
+          </div>
+
+          <div class="mb-5 flex rounded-xl bg-black/30 p-1 text-sm">
+            <button type="button" id="tab-login" class="flex-1 rounded-lg px-3 py-1.5 transition-colors bg-white/15 text-white">Login</button>
+            <button type="button" id="tab-register" class="flex-1 rounded-lg px-3 py-1.5 transition-colors text-white/60 hover:text-white">Register</button>
+          </div>
+
+          <form id="gate-form" class="space-y-3">
+            <div>
+              <label class="mb-1 block text-xs font-medium text-white/70" for="gate-username">Username</label>
+              <input id="gate-username" placeholder="3+ chars" autoCapitalize="none" autoCorrect="off" spellcheck="false" class="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm outline-none placeholder:text-white/30 focus:border-orange-400/50"/>
+            </div>
+            <div>
+              <label class="mb-1 block text-xs font-medium text-white/70" for="gate-password">Password</label>
+              <input id="gate-password" type="password" placeholder="6+ characters" class="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm outline-none placeholder:text-white/30 focus:border-orange-400/50"/>
+            </div>
+
+            <div id="gate-error" class="hidden rounded-lg border border-red-400/30 bg-red-500/10 px-3 py-2 text-xs text-red-200"></div>
+
+            <button type="submit" id="gate-submit" disabled class="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-orange-400 to-orange-600 px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50">
+              <svg id="gate-spinner" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-loader-2 hidden h-4 w-4 animate-spin" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>
+              <span id="gate-submit-label">Log In</span>
+            </button>
+          </form>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
+<div id="chat-toast" class="pointer-events-none fixed bottom-6 left-1/2 z-[70] hidden -translate-x-1/2 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2 text-xs text-red-200 shadow-lg backdrop-blur-md"></div>
+
 <script src="assets/os.js"></script>
+<script src="assets/live.js"></script>
 <script>
 (function () {
   "use strict";
   var V = window.VEILOS;
+  var L = window.VEILLIVE;
   var $ = V.$, $$ = V.$$;
-  var state = { accounts: {}, list: [], byId: {}, me: null, rendered: 0 };
+  var state = {
+    accounts: {},   /* id -> account (real, from the backup) */
+    list: [],       /* real messages */
+    byId: {},
+    me: null,       /* my live pseudo-account */
+    liveUsers: {},  /* lower-username -> live user */
+    liveMsgs: [],   /* rows from chat-live.json */
+    pending: [],    /* optimistic sends not yet confirmed
+    */
+    realAccounts: [],
+    gateMode: "login",
+    liveOk: false,
+  };
 
   /* seconds clock (the chat header shows h:mm:ss) */
   (function () {
@@ -223,20 +279,26 @@
     return '<p class="whitespace-pre-wrap break-words text-sm text-white/90">' + out + "</p>";
   }
 
-  function buildMsgHtml(msgs, prevMsg) {
+  function buildMsgHtml(msgs) {
     var html = "";
-    var prevAuthor = prevMsg ? prevMsg.accountId : null;
-    var prevDay = prevMsg ? dayKeyOf(prevMsg.createdAt) : null;
+    var prevMsg = null;
+    /* the day separators carry the day's message count, like the app */
+    var dayCounts = {};
+    msgs.forEach(function (m) {
+      var k = dayKeyOf(m.createdAt);
+      dayCounts[k] = (dayCounts[k] || 0) + 1;
+    });
     msgs.forEach(function (m) {
       var a = state.accounts[m.accountId] || { username: "unknown", displayName: "unknown", avatarColor: "#2c3e50", role: "member" };
       var day = dayKeyOf(m.createdAt);
-      var grouped = prevMsg && prevAuthor === m.accountId && prevDay === day &&
+      var prevDay = prevMsg ? dayKeyOf(prevMsg.createdAt) : null;
+      var grouped = prevMsg && prevMsg.accountId === m.accountId && prevDay === day &&
         (new Date(m.createdAt).getTime() - new Date(prevMsg.createdAt).getTime()) < 5 * 60 * 1000;
       if (day !== prevDay) {
-        html += '<div class="mt-3 mb-1 flex items-center gap-3 px-3" role="separator" aria-label="' + V.esc(dayLabelOf(m.createdAt)) + '"><div class="h-px flex-1 bg-white/10"></div><span class="flex items-center gap-1.5 text-[10.5px] font-semibold uppercase tracking-wider text-white/45">' + V.esc(dayLabelOf(m.createdAt)) + '<span class="font-normal normal-case tracking-normal text-white/25">(1)</span></span><div class="h-px flex-1 bg-white/10"></div></div>';
+        html += '<div class="mt-3 mb-1 flex items-center gap-3 px-3" role="separator" aria-label="' + V.esc(dayLabelOf(m.createdAt)) + '"><div class="h-px flex-1 bg-white/10"></div><span class="flex items-center gap-1.5 text-[10.5px] font-semibold uppercase tracking-wider text-white/45">' + V.esc(dayLabelOf(m.createdAt)) + '<span class="font-normal normal-case tracking-normal text-white/25">(' + dayCounts[day] + ')</span></span><div class="h-px flex-1 bg-white/10"></div></div>';
         grouped = false;
       }
-      html += '<div class="group relative flex gap-3 px-3 py-1 transition-colors hover:bg-white/[0.03]' + (grouped ? " py-0.5" : " mt-2") + '">';
+      html += '<div class="group relative flex gap-3 px-3 py-1 transition-colors hover:bg-white/[0.03]' + (grouped ? " py-0.5" : " mt-2") + (m.pending ? " opacity-60" : "") + '">';
       html += '<div class="w-10 shrink-0">';
       if (!grouped) {
         html += '<button type="button" class="rounded-full outline-none ring-orange-400/60 transition focus-visible:ring-2" title="' + V.esc(displayName(a)) + ' — view profile">' + avatarHtml(a, 40, false) + "</button>";
@@ -251,112 +313,296 @@
         if (rl) html += '<span class="rounded px-1 py-0.5 text-[9px] font-semibold uppercase text-white" style="background-color: ' + roleColor(a) + ';">' + rl + "</span>";
         html += '<span class="text-[10px] text-white/40">' + V.esc(formatTime(m.createdAt)) + "</span></div>";
       }
-      if (m.replyTo && state.byId[m.replyTo]) {
-        var ra = state.accounts[state.byId[m.replyTo].accountId] || { displayName: "unknown" };
-        html += '<div class="mb-1 flex items-center gap-1.5 rounded-md border-l-2 border-orange-400/50 bg-white/[0.03] px-2 py-0.5 text-[11px] text-white/50"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-3 w-3"><path d="M20 18v-2a4 4 0 0 0-4-4H4"></path><path d="m9 17-5-5 5-5"></path></svg><span class="font-medium text-white/70">@' + V.esc(displayName(ra)) + '</span><span class="truncate">' + V.esc(String(state.byId[m.replyTo].content || "").slice(0, 80) || "(message)") + "</span></div>";
-      }
       html += renderContent(m.content);
       html += "</div>";
       /* hover actions — reply + pin (+ delete for your own) */
-      var mine = state.me && m.accountId === state.me.id && m.local;
+      var mine = state.me && m.accountId === state.me.id && m.live;
       html += '<div class="absolute right-2 top-0 hidden items-center gap-0.5 rounded-md border border-white/10 bg-[#1c1c34] px-1 py-0.5 text-white/70 shadow-lg group-hover:flex">';
       html += '<button class="rounded p-1 hover:bg-white/10" title="Reply"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-reply h-3.5 w-3.5"><path d="M20 18v-2a4 4 0 0 0-4-4H4"></path><path d="m9 17-5-5 5-5"></path></svg></button>';
       html += '<button class="rounded p-1 hover:bg-white/10" title="Pin"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-pin h-3.5 w-3.5"><path d="M12 17v5"></path><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"></path></svg></button>';
       if (mine) html += '<button class="rounded p-1 hover:bg-white/10" title="Delete" data-os-del="' + V.esc(m.id) + '"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-trash-2 h-3.5 w-3.5"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg></button>';
       html += "</div></div>";
-      prevMsg = m; prevAuthor = m.accountId; prevDay = day;
+      prevMsg = m;
     });
     return html;
   }
 
-  function localMsgs() {
-    try { return JSON.parse(V.ls("veil.mirror.chat") || "[]"); } catch (e) { return []; }
+  function toast(text) {
+    var t = document.getElementById("chat-toast");
+    t.textContent = text;
+    t.classList.remove("hidden");
+    clearTimeout(toast._t);
+    toast._t = setTimeout(function () { t.classList.add("hidden"); }, 4200);
   }
-  function saveLocalMsgs(list) { V.lsSet("veil.mirror.chat", JSON.stringify(list.slice(-20))); }
+
+  function mergedMsgs() {
+    var all = state.list.concat(state.liveMsgs, state.pending);
+    var seen = {};
+    var dedup = [];
+    all.forEach(function (m) {
+      if (m.id && seen[m.id]) return;
+      seen[m.id] = true;
+      dedup.push(m);
+    });
+    return dedup.sort(function (a, b) { return new Date(a.createdAt) - new Date(b.createdAt); });
+  }
 
   function render() {
     var list = document.getElementById("chat-list");
-    var msgs = state.list
-      .filter(function (m) { return !m.channelId || m.channelId === "main" || m.channelId === "general"; })
-      .sort(function (a, b) { return new Date(a.createdAt) - new Date(b.createdAt); });
-    var mine = localMsgs().map(function (m) { m.local = true; return m; });
-    var all = msgs.concat(mine).sort(function (a, b) { return new Date(a.createdAt) - new Date(b.createdAt); });
-    list.innerHTML = buildMsgHtml(all, null);
+    var msgs = mergedMsgs();
+    list.innerHTML = buildMsgHtml(msgs);
     var sc = document.getElementById("chat-scroll");
     sc.scrollTop = sc.scrollHeight;
     $$("[data-os-del]", list).forEach(function (b) {
       b.addEventListener("click", function () {
         var id = b.getAttribute("data-os-del");
-        saveLocalMsgs(localMsgs().filter(function (m) { return m.id !== id; }));
-        render();
+        L.deleteMessage(L.identity(), id).then(function () {
+          state.liveMsgs = state.liveMsgs.filter(function (m) { return m.id !== id; });
+          state.pending = state.pending.filter(function (m) { return m.id !== id; });
+          render();
+        }).catch(function (e) { toast(L.friendlyError(e)); });
       });
     });
   }
 
-  function renderMembers(accounts) {
+  /* ---- player list: real Online/Offline buckets like the app ---- */
+  function renderMembers() {
     var box = document.getElementById("members-list");
-    var sorted = accounts.slice().sort(function (a, b) {
-      var rank = function (x) { return x.role === "admin" || x.role === "owner" || x.username === "Veil" ? 0 : x.role === "moderator" ? 1 : 2; };
-      return rank(a) - rank(b) || displayName(a).localeCompare(displayName(b));
+    var nowMs = Date.now();
+    var online = {};
+    /* live users with a fresh heartbeat */
+    for (var k in state.liveUsers) {
+      if (!Object.prototype.hasOwnProperty.call(state.liveUsers, k)) continue;
+      if (L.isOnlineLive(state.liveUsers[k], nowMs)) online["live:" + k] = true;
+    }
+    /* real accounts light up when they just talked (the backup is ~30s fresh) */
+    state.list.forEach(function (m) {
+      var t = new Date(m.createdAt).getTime();
+      if (isFinite(t) && nowMs - t < L.cfg.presenceWindowMs) online[m.accountId] = true;
     });
-    var html = '<section><h4 class="mb-1 px-1 text-[10px] font-semibold uppercase tracking-wide text-white/40">Online — ' + sorted.length + "</h4><div class=\"space-y-0.5\">";
-    sorted.forEach(function (a) {
+    if (state.me) online[state.me.id] = true;
+
+    var all = state.realAccounts.slice();
+    for (var u in state.liveUsers) {
+      if (!Object.prototype.hasOwnProperty.call(state.liveUsers, u)) continue;
+      var acc = L.pseudoAccount(state.liveUsers[u]);
+      state.accounts[acc.id] = acc;
+      all.push(acc);
+    }
+    /* I'm always on my own roster — even in the seconds before the CDN
+       has caught up with my just-created account/heartbeat */
+    if (state.me) {
+      state.accounts[state.me.id] = state.me;
+      all.push(state.me);
+    }
+    var seen = {};
+    var uniq = all.filter(function (a) {
+      var key = (a.username || "").toLowerCase();
+      if (seen[key]) return false;
+      seen[key] = true;
+      return true;
+    });
+    var rank = function (x) { return x.role === "admin" || x.role === "owner" || x.username === "Veil" ? 0 : x.role === "moderator" ? 1 : 2; };
+    var byRank = function (a, b) { return rank(a) - rank(b) || displayName(a).localeCompare(displayName(b)); };
+    var notBanned = uniq.filter(function (a) { return !a.banned; });
+    var on = notBanned.filter(function (a) { return online[a.id]; }).sort(byRank);
+    var off = notBanned.filter(function (a) { return !online[a.id]; }).sort(byRank);
+
+    var row = function (a, isOn) {
+      var isMe = state.me && a.id === state.me.id;
       var rl = roleLabel(a);
-      html += '<button type="button" title="' + V.esc(displayName(a)) + ' — view profile" class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left outline-none ring-orange-400/60 transition focus-visible:ring-2 hover:bg-white/5">' +
-        avatarHtml(a, 28, true) +
+      return '<button type="button" title="' + V.esc(displayName(a)) + ' — view profile" class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left outline-none ring-orange-400/60 transition focus-visible:ring-2 ' + (isMe ? "bg-orange-400/10" : "hover:bg-white/5") + '">' +
+        '<div class="relative"><div class="relative shrink-0" style="width: 28px; height: 28px;">' +
+        '<div class="grid h-full w-full place-items-center rounded-full font-semibold text-white" style="background-color: ' + V.esc(a.avatarColor || "#2c3e50") + '; font-size: 11.2px;">' + V.esc(initials(displayName(a))) + "</div></div>" +
+        '<span class="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-black/60 ' + (isOn ? "bg-emerald-400" : "bg-white/30") + '"></span></div>' +
         '<div class="min-w-0 flex-1"><div class="flex items-center gap-1.5"><span class="truncate text-sm font-medium" style="color: ' + roleColor(a) + ';">' + V.esc(displayName(a)) + "</span></div>" +
         '<div class="truncate text-[10px] text-white/40">@' + V.esc(a.username) + "</div></div>" +
         (rl ? '<span class="rounded px-1 py-0.5 text-[9px] font-semibold uppercase text-white" style="background-color: ' + roleColor(a) + ';">' + rl + "</span>" : "") +
         "</button>";
-    });
+    };
+
+    var html = '<section><h4 class="mb-1 px-1 text-[10px] font-semibold uppercase tracking-wide text-white/40">Online — ' + on.length + "</h4><div class=\"space-y-0.5\">";
+    if (!on.length) {
+      html += '<p class="px-1 py-2 text-[11px] text-white/30">No one online right now.</p>';
+    } else {
+      on.forEach(function (a) { html += row(a, true); });
+    }
     html += '</div></section>';
+    html += '<section><h4 class="mb-1 px-1 text-[10px] font-semibold uppercase tracking-wide text-white/40">Offline — ' + off.length + '</h4><div class="space-y-0.5">';
+    off.slice(0, 30).forEach(function (a) { html += row(a, false); });
+    html += "</div></section>";
     box.innerHTML = html;
-    document.getElementById("online-count").textContent = sorted.length + " online";
+    document.getElementById("online-count").textContent = on.length + " online";
   }
 
-  function load() {
+  /* ---- data loads ---- */
+  function loadReal() {
     V.dataOf("latest.json").then(function (d) {
       state.accounts = {};
       (d.accounts || []).forEach(function (a) { state.accounts[a.id] = a; });
       state.byId = {};
       (d.messages || []).forEach(function (m) { state.byId[m.id] = m; });
       state.list = d.messages || [];
-      state.me = (d.accounts || []).find(function (a) { return a.username === "cdnqa"; }) || (d.accounts || [])[0];
-      if (state.me) {
-        var av = document.getElementById("me-avatar");
-        var name = displayName(state.me);
-        if (state.me.avatarImage) {
-          av.outerHTML = '<img id="me-avatar" alt="you" class="h-full w-full rounded-full object-cover" src="' + V.esc(state.me.avatarImage) + '" style="background-color: ' + V.esc(state.me.avatarColor || "#c0392b") + ';" />';
-        } else {
-          av.style.backgroundColor = state.me.avatarColor || "#c0392b";
-          av.textContent = initials(name);
-        }
-        document.getElementById("coins-count").textContent = state.me.coins != null ? state.me.coins : 100;
-      }
+      state.realAccounts = d.accounts || [];
       render();
-      renderMembers(d.accounts || []);
+      renderMembers();
     }).catch(function () {});
   }
 
-  /* composer — messages you send land in the room (kept on this device) */
+  function loadLive() {
+    L.fetchCdn().then(function (s) {
+      if (!s) { state.liveOk = false; return; }
+      state.liveOk = true;
+      state.liveUsers = s.users || {};
+      state.liveMsgs = (s.messages || []).map(function (m) { return L.msgToRow(m); });
+      /* my identity must still exist in the room — otherwise sign back in */
+      var id = L.identity();
+      if (id && !L.findUser(s, id.username)) {
+        L.clearIdentity();
+        applyIdentity(null);
+      } else if (id) {
+        applyIdentity(id);
+      }
+      render();
+      renderMembers();
+    });
+  }
+
+  /* ---- identity + gate ---- */
+  function applyIdentity(idAcc) {
+    var gate = document.getElementById("auth-gate");
+    var meAvatar = document.getElementById("me-avatar");
+    if (idAcc && state.liveUsers[String(idAcc.username).toLowerCase()]) {
+      state.me = L.pseudoAccount(state.liveUsers[String(idAcc.username).toLowerCase()]);
+    } else if (idAcc) {
+      state.me = L.pseudoAccount({ username: idAcc.username, displayName: idAcc.displayName || idAcc.username, avatarColor: "#f97316" });
+    } else {
+      state.me = null;
+    }
+    if (state.me) {
+      gate.classList.add("hidden");
+      gate.classList.remove("flex");
+      var name = displayName(state.me);
+      meAvatar.style.backgroundColor = state.me.avatarColor || "#2c3e50";
+      meAvatar.textContent = initials(name);
+      document.getElementById("coins-count").textContent = state.me.coins != null ? state.me.coins : 100;
+      document.title = "Veil Chat — " + name;
+    } else {
+      gate.classList.remove("hidden");
+      gate.classList.add("flex");
+      document.title = "Veil Chat";
+    }
+    render();
+    renderMembers();
+  }
+
+  function setGateMode(mode) {
+    state.gateMode = mode;
+    var tl = document.getElementById("tab-login");
+    var tr = document.getElementById("tab-register");
+    var on = "flex-1 rounded-lg px-3 py-1.5 transition-colors bg-white/15 text-white";
+    var off = "flex-1 rounded-lg px-3 py-1.5 transition-colors text-white/60 hover:text-white";
+    tl.className = mode === "login" ? on : off;
+    tr.className = mode === "register" ? on : off;
+    document.getElementById("gate-sub").textContent = mode === "login" ? "Welcome back" : "Create a new account to join the chat.";
+    document.getElementById("gate-submit-label").textContent = mode === "login" ? "Log In" : "Create account";
+    document.getElementById("gate-error").classList.add("hidden");
+  }
+  document.getElementById("tab-login").addEventListener("click", function () { setGateMode("login"); });
+  document.getElementById("tab-register").addEventListener("click", function () { setGateMode("register"); });
+  document.getElementById("gate-back").addEventListener("click", function () {
+    window.location.href = V.page("index");
+  });
+
+  var gateUser = document.getElementById("gate-username");
+  var gatePass = document.getElementById("gate-password");
+  var gateSubmit = document.getElementById("gate-submit");
+  var gateError = document.getElementById("gate-error");
+  var gateSpin = document.getElementById("gate-spinner");
+  function gateUpdate() {
+    var u = gateUser.value.trim(), p = gatePass.value;
+    gateSubmit.disabled = !u || !p;
+  }
+  gateUser.addEventListener("input", gateUpdate);
+  gatePass.addEventListener("input", gateUpdate);
+
+  function gateFail(msg) {
+    gateError.textContent = msg;
+    gateError.classList.remove("hidden");
+    gateSpin.classList.add("hidden");
+    gateSubmit.disabled = false;
+  }
+
+  document.getElementById("gate-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var u = gateUser.value.trim();
+    var p = gatePass.value;
+    if (!u || !p) return;
+    /* real account names can't be impersonated on the CDN room */
+    if (state.gateMode === "register") {
+      var lower = u.toLowerCase();
+      var clash = state.realAccounts.some(function (a) { return (a.username || "").toLowerCase() === lower; });
+      if (clash) { gateFail("That username is already taken."); return; }
+    }
+    gateSubmit.disabled = true;
+    gateSpin.classList.remove("hidden");
+    gateError.classList.add("hidden");
+    var done = function (acc) {
+      gateSpin.classList.add("hidden");
+      gateSubmit.disabled = false;
+      gateUser.value = "";
+      gatePass.value = "";
+      gateUpdate();
+      applyIdentity(acc);
+      L.heartbeat(acc, true);
+      loadLive();
+    };
+    var fail = function (err) { gateFail(L.friendlyError(err)); };
+    if (state.gateMode === "register") L.register(u, p).then(done, fail);
+    else L.login(u, p).then(done, fail);
+  });
+
+  document.getElementById("signout-btn").addEventListener("click", function () {
+    L.clearIdentity();
+    applyIdentity(null);
+    setGateMode("login");
+  });
+
+  /* ---- composer — sends land in the shared room ---- */
   var input = document.getElementById("composer-input");
   var send = document.getElementById("composer-send");
-  function updateSend() { send.disabled = !input.value.trim(); }
+  function updateSend() { send.disabled = !input.value.trim() || !state.me; }
   input.addEventListener("input", updateSend);
   function doSend() {
     var text = input.value.trim();
     if (!text || !state.me) return;
-    var m = {
-      id: "local-" + Date.now().toString(36),
+    var idAcc = L.identity();
+    if (!idAcc) { applyIdentity(null); return; }
+    var optimistic = {
+      id: "pending-" + Date.now().toString(36),
       accountId: state.me.id,
       content: text,
       createdAt: new Date().toISOString(),
-      local: true,
+      live: true,
+      pending: true,
     };
-    var list = localMsgs(); list.push(m); saveLocalMsgs(list);
+    state.pending.push(optimistic);
     input.value = "";
     updateSend();
     render();
+    L.sendMessage(idAcc, text).then(function (row) {
+      state.pending = state.pending.filter(function (m) { return m.id !== optimistic.id; });
+      state.liveMsgs.push(row);
+      render();
+      renderMembers();
+      loadLive();
+    }).catch(function (e) {
+      state.pending = state.pending.filter(function (m) { return m.id !== optimistic.id; });
+      render();
+      toast(L.friendlyError(e));
+      input.value = text;
+      updateSend();
+    });
   }
   input.addEventListener("keydown", function (e) {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); doSend(); }
@@ -370,8 +616,23 @@
     aside.style.display = aside.style.display === "none" ? "" : "none";
   });
 
-  load();
-  setInterval(function () { if (!document.hidden) load(); }, 30000);
+  /* ---- boot ---- */
+  loadReal();
+  loadLive();
+  applyIdentity(L.identity());
+  updateSend();
+  setInterval(function () { if (!document.hidden) loadReal(); }, 30000);
+  setInterval(function () { if (!document.hidden) loadLive(); }, L.cfg.pollMs);
+  setInterval(function () {
+    if (!document.hidden && L.identity()) L.heartbeat(L.identity(), false);
+  }, 15000);
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden) {
+      loadReal();
+      loadLive();
+      if (L.identity()) L.heartbeat(L.identity(), true);
+    }
+  });
 })();
 </script>
 </body>
