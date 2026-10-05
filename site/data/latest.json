@@ -1,10 +1,10 @@
 {
   "veil": "chat-backup",
   "version": 1,
-  "exportedAt": "2026-10-05T23:03:53.706Z",
+  "exportedAt": "2026-10-05T23:09:35.622Z",
   "counts": {
-    "accounts": 10,
-    "messages": 28,
+    "accounts": 9,
+    "messages": 26,
     "dms": 0
   },
   "accounts": [
@@ -160,23 +160,6 @@
       "pfpAccessory": null,
       "legacy": false,
       "createdAt": "2026-10-05T19:03:35.625Z"
-    },
-    {
-      "id": "cmuvu47pa0000q5if9redlq1p",
-      "username": "channeltest1",
-      "displayName": "channeltest1",
-      "avatarColor": "#8e44ad",
-      "avatarImage": null,
-      "bio": "",
-      "role": "member",
-      "muted": false,
-      "banned": false,
-      "coins": 103,
-      "tag": null,
-      "tagColor": null,
-      "pfpAccessory": null,
-      "legacy": false,
-      "createdAt": "2026-10-05T22:41:56.734Z"
     }
   ],
   "messages": [
@@ -456,17 +439,6 @@
       "editedAt": "2026-10-05T23:00:35.640Z"
     },
     {
-      "id": "cmuvurshs000dq5wr2eid5ose",
-      "channelId": "sharelinks",
-      "accountId": "cmuvu47pa0000q5if9redlq1p",
-      "content": "posted from the GIT page into sharelinks 1791241216427",
-      "replyTo": null,
-      "replyToContent": null,
-      "replyToUsername": null,
-      "createdAt": "2026-10-05T23:00:16.768Z",
-      "editedAt": null
-    },
-    {
       "id": "cmuvuuoje0001q5svprq4l8gb",
       "channelId": "main",
       "accountId": "cmuu20ppm0005jkxecvmo7qpu",
@@ -475,17 +447,6 @@
       "replyToContent": null,
       "replyToUsername": null,
       "createdAt": "2026-10-05T23:02:31.611Z",
-      "editedAt": null
-    },
-    {
-      "id": "cmuvuvoch0005q5svuwbplb71",
-      "channelId": "sharelinks",
-      "accountId": "cmuvu47pa0000q5if9redlq1p",
-      "content": "silent backfill test 1791241376320",
-      "replyTo": null,
-      "replyToContent": null,
-      "replyToUsername": null,
-      "createdAt": "2026-10-05T23:03:18.016Z",
       "editedAt": null
     }
   ],
