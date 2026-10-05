@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-veil-build="2026-10-04T17:24:13Z">
+<html lang="en" data-veil-build="2026-10-05T14:47:03Z">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,6 +7,13 @@
 <meta name="description" content="Veil Music — search any song, full tracks stream from SoundCloud.">
 <link rel="icon" href="assets/icon.svg" type="image/svg+xml" sizes="any">
 <link rel="stylesheet" href="assets/app.css">
+<style>
+/* the player's equalizer glyph — the same bars the website's docked pill runs */
+#pl-eq i { width: 2.5px; height: 12px; border-radius: 999px; background: #f0abfc; transform-origin: bottom center; animation: pl-eq-bounce .9s ease-in-out infinite; }
+#pl-eq i:nth-child(2) { animation-delay: .15s; }
+#pl-eq i:nth-child(3) { animation-delay: .3s; }
+@keyframes pl-eq-bounce { 0%, 100% { transform: scaleY(.35); } 50% { transform: scaleY(1); } }
+</style>
 </head>
 <body class="__variable_246ccd __variable_c29908 antialiased bg-background text-foreground">
 
@@ -31,107 +38,568 @@
       <form role="search" id="music-search" class="mx-auto flex w-full max-w-5xl items-center gap-2">
         <div class="group relative min-w-0 flex-1">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link-2 pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-zinc-500 transition group-focus-within:text-fuchsia-400" aria-hidden="true"><path d="M9 17H7A5 5 0 0 1 7 7h2"></path><path d="M15 7h2a5 5 0 1 1 0 10h-2"></path><line x1="8" x2="16" y1="12" y2="12"></line></svg>
-          <input id="music-q" class="flex w-full min-w-0 border px-3 py-1 shadow-xs transition-[color,box-shadow] outline-none h-11 rounded-2xl border-zinc-800 bg-zinc-900/70 pl-10 pr-4 text-[14px] text-zinc-100 placeholder:text-zinc-500 focus-visible:border-fuchsia-500/60 focus-visible:ring-[3px] focus-visible:ring-fuchsia-500/25" placeholder="Search any song or artist — full tracks stream from SoundCloud, or paste a Spotify link…" aria-label="Search songs or paste a Spotify link" spellcheck="false" autocapitalize="none" autocomplete="off" value=""/>
+          <input id="music-q" class="flex w-full min-w-0 border px-3 py-1 shadow-xs transition-[color,box-shadow] outline-none h-11 rounded-2xl border-zinc-800 bg-zinc-900/70 pl-10 pr-4 text-[14px] text-zinc-100 placeholder:text-zinc-500 focus-visible:border-fuchsia-500/60 focus-visible:ring-[3px] focus-visible:ring-fuchsia-500/25" placeholder="Search any song or artist — full tracks stream from SoundCloud…" aria-label="Search songs" spellcheck="false" autocapitalize="none" autocomplete="off" value=""/>
         </div>
         <button type="submit" disabled="" id="music-go" class="flex h-11 items-center gap-1.5 rounded-2xl bg-fuchsia-500 px-4 text-[14px] font-semibold text-fuchsia-950 shadow-lg shadow-fuchsia-500/25 transition hover:bg-fuchsia-400 disabled:opacity-50">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search size-4" aria-hidden="true"><path d="m21 21-4.34-4.34"></path><circle cx="11" cy="11" r="8"></circle></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search size-4" id="ic-search" aria-hidden="true"><path d="m21 21-4.34-4.34"></path><circle cx="11" cy="11" r="8"></circle></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-loader-circle size-4 animate-spin" id="ic-loading" style="display:none" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>
           <span class="hidden sm:inline">Search</span>
         </button>
       </form>
+      <p id="search-error" role="alert" class="mx-auto mt-2 w-full max-w-5xl text-[12px] text-rose-300/90" style="display:none"></p>
     </header>
 
     <div class="veil-scroll-slim relative z-10 min-h-0 flex-1 overflow-y-auto px-4 pb-16 pt-6 sm:px-6">
       <div class="mx-auto w-full max-w-5xl space-y-8">
-        <section aria-label="Search results" id="results-section">
+
+        <section aria-label="Recently played" id="recent-section" style="display:none">
+          <div class="mb-3 flex items-center gap-2">
+            <h3 class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">Recently played</h3>
+            <span class="h-px flex-1 bg-gradient-to-r from-zinc-800 to-transparent"></span>
+          </div>
+          <div id="recent-rail" class="veil-scroll-slim -mx-1 flex snap-x gap-2.5 overflow-x-auto px-1 pb-2"></div>
+        </section>
+
+        <section aria-label="Search results" id="results-section" style="display:none">
           <div class="mb-3 flex items-center gap-2">
             <h3 class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400" id="results-title">Searching…</h3>
             <span class="h-px flex-1 bg-gradient-to-r from-zinc-800 to-transparent"></span>
+            <button type="button" id="results-clear" class="rounded-full border border-zinc-800 bg-zinc-900/70 px-2.5 py-0.5 text-[10.5px] font-medium text-zinc-400 transition hover:border-zinc-700 hover:text-zinc-200">Clear</button>
           </div>
-          <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5" id="results-grid"></div>
+          <div id="results-rail" class="veil-scroll-slim -mx-1 flex snap-x gap-2.5 overflow-x-auto px-1 pb-2"></div>
         </section>
 
-        <div class="rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-4">
-          <p class="text-[13px] leading-relaxed text-zinc-400">Search streams <span class="font-medium text-fuchsia-300">full songs</span> from SoundCloud — a few rights-limited tracks land as 30s previews. Playback connects when the music service is online.</p>
+        <div id="music-home" class="space-y-8">
+          <div class="flex flex-col items-center py-8 text-center">
+            <span aria-hidden="true" class="veil-pulse-ring flex size-20 items-center justify-center rounded-full bg-fuchsia-500/15 ring-1 ring-fuchsia-500/30">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-music size-9 text-fuchsia-300" aria-hidden="true"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+            </span>
+            <h2 class="mt-5 text-xl font-bold tracking-tight sm:text-2xl">Search anything. It plays.</h2>
+            <p class="mt-2.5 max-w-md text-[13.5px] leading-relaxed text-zinc-400">Full tracks stream from SoundCloud through your Veil site — a few rights-limited songs land as honest 30-second previews, badged right on the card. Everything you play gathers in Recently played.</p>
+          </div>
+          <div class="rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-4">
+            <p class="flex items-start gap-2 text-[13px] leading-relaxed text-zinc-400"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles mt-0.5 size-3.5 shrink-0 text-fuchsia-300/80" aria-hidden="true"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"></path></svg><span>Search streams <span class="font-medium text-emerald-300">full songs</span> from SoundCloud — a few rights-limited tracks land as 30-second previews, marked on the card. Search, covers and playback all run through your Veil site's music service.</span></p>
+          </div>
+        </div>
+
+        <div id="music-connect" class="flex flex-col items-center py-10 text-center" style="display:none">
+          <span aria-hidden="true" class="flex size-20 items-center justify-center rounded-full bg-fuchsia-500/15 ring-1 ring-fuchsia-500/30">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-disc-3 size-9 text-fuchsia-300" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="2"></circle><path d="M6 12c0-1.7.7-3.2 1.8-4.2"></path><path d="M18 12c0 1.7-.7 3.2-1.8 4.2"></path></svg>
+          </span>
+          <h2 class="mt-5 text-xl font-bold tracking-tight sm:text-2xl">Music streams through the main app.</h2>
+          <p class="mt-2.5 max-w-md text-[13.5px] leading-relaxed text-zinc-400">Connect this copy in Settings — search, cover art and full-track playback all run through your Veil site's music service.</p>
+          <div class="mt-6 flex flex-wrap items-center justify-center gap-2.5">
+            <a id="music-connect-link" href="settings.html?v=2026-10-05T14:25:51Z" class="inline-flex h-10 items-center gap-2 rounded-2xl bg-fuchsia-500 px-5 text-[14px] font-semibold text-fuchsia-950 shadow-lg shadow-fuchsia-500/25 transition hover:bg-fuchsia-400">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right size-4" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+              Open Settings
+            </a>
+            <button type="button" id="music-connect-retry" class="inline-flex h-10 items-center gap-2 rounded-2xl border border-zinc-800 bg-zinc-900/60 px-4 text-[13px] font-medium text-zinc-300 transition hover:border-fuchsia-500/40 hover:text-fuchsia-200">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rotate-cw h-3.5 w-3.5" aria-hidden="true"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path></svg>
+              Try the connection again
+            </button>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- the persistent bottom player, in its idle state -->
-    <div class="relative z-20 shrink-0 border-t border-zinc-800/80 bg-zinc-950/90 px-4 py-2.5 backdrop-blur-xl sm:px-6" id="player-bar">
-      <div class="mx-auto flex w-full max-w-5xl items-center gap-3">
-        <div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-zinc-800/80 ring-1 ring-zinc-700/60">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-music size-4.5 text-zinc-500" aria-hidden="true"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+    <!-- the page-bottom player — the website's docked panel, pinned to the page -->
+    <div class="relative z-20 shrink-0 border-t border-zinc-800/80 bg-zinc-950/90 px-4 py-2.5 backdrop-blur-xl sm:px-6" id="player-bar" role="region" aria-label="Veil music player">
+      <div class="mx-auto w-full max-w-5xl">
+        <div class="flex items-center gap-3">
+          <button type="button" id="pl-art-btn" class="relative shrink-0 cursor-pointer outline-none" aria-label="Toggle playback" title="Play or pause">
+            <img id="pl-art" alt="" aria-hidden="true" class="size-11 rounded-lg object-cover ring-1 ring-zinc-700/60" src="" style="display:none"/>
+            <span id="pl-art-ic" aria-hidden="true" class="flex size-11 items-center justify-center rounded-lg bg-fuchsia-500/15 ring-1 ring-fuchsia-500/30"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-music size-5 text-fuchsia-300" aria-hidden="true"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg></span>
+            <span id="pl-art-ov" aria-hidden="true" class="absolute inset-0 items-center justify-center rounded-lg bg-zinc-950/45" style="display:none"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-play size-4 text-white" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg></span>
+            <span id="pl-eq" aria-hidden="true" class="absolute inset-0 items-center justify-center gap-[2.5px] rounded-lg bg-zinc-950/40" style="display:none"><i></i><i></i><i></i></span>
+          </button>
+          <div class="min-w-0 flex-1">
+            <p id="pl-kicker" class="text-[10px] font-semibold uppercase tracking-wider text-fuchsia-300/80" style="display:none">Now playing · SoundCloud</p>
+            <p id="pl-title" class="truncate text-[13px] font-medium leading-tight text-zinc-300">Nothing playing</p>
+            <p id="pl-artist" class="truncate text-[11.5px] leading-tight text-zinc-500">search a song to start the queue</p>
+          </div>
+          <div class="flex shrink-0 items-center gap-1">
+            <button type="button" id="pl-prev" class="rounded-lg p-2 text-zinc-500 transition hover:bg-zinc-800/70 hover:text-zinc-200 disabled:opacity-40" disabled="" aria-label="Previous track" title="Previous track">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-skip-back size-4" aria-hidden="true"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" x2="5" y1="19" y2="5"></line></svg>
+            </button>
+            <button type="button" id="pl-play" class="flex size-10 items-center justify-center rounded-full bg-fuchsia-500 text-fuchsia-950 shadow-lg shadow-fuchsia-500/30 transition hover:bg-fuchsia-400 disabled:opacity-40" disabled="" aria-label="Play" title="Play or pause">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-play size-4.5 translate-x-[1px]" id="ic-play" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pause size-4.5" id="ic-pause" style="display:none" aria-hidden="true"><rect x="14" y="4" width="4" height="16" rx="1"></rect><rect x="6" y="4" width="4" height="16" rx="1"></rect></svg>
+            </button>
+            <button type="button" id="pl-next" class="rounded-lg p-2 text-zinc-500 transition hover:bg-zinc-800/70 hover:text-zinc-200 disabled:opacity-40" disabled="" aria-label="Next track" title="Next track">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-skip-forward size-4" aria-hidden="true"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" x2="19" y1="5" y2="19"></line></svg>
+            </button>
+            <button type="button" id="pl-stop" class="rounded-lg p-2 text-zinc-500 transition hover:bg-zinc-800/70 hover:text-rose-300 disabled:opacity-40" disabled="" aria-label="Stop the music" title="Stop">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x size-4" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+            </button>
+          </div>
         </div>
-        <div class="min-w-0 flex-1">
-          <p class="truncate text-[13px] font-medium text-zinc-300" id="np-title">Nothing playing</p>
-          <p class="truncate text-[11px] text-zinc-500" id="np-sub">search a song to start the queue</p>
-        </div>
-        <div class="flex items-center gap-1">
-          <button type="button" class="rounded-lg p-2 text-zinc-500 transition hover:bg-zinc-800/70 hover:text-zinc-200 disabled:opacity-40" disabled="" aria-label="Previous track">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-skip-back size-4" aria-hidden="true"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" x2="5" y1="19" y2="5"></line></svg>
-          </button>
-          <button type="button" class="flex size-10 items-center justify-center rounded-full bg-fuchsia-500 text-fuchsia-950 shadow-lg shadow-fuchsia-500/30 transition hover:bg-fuchsia-400 disabled:opacity-40" disabled="" aria-label="Play">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-play size-4.5 translate-x-[1px]" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg>
-          </button>
-          <button type="button" class="rounded-lg p-2 text-zinc-500 transition hover:bg-zinc-800/70 hover:text-zinc-200 disabled:opacity-40" disabled="" aria-label="Next track">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-skip-forward size-4" aria-hidden="true"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" x2="19" y1="5" y2="19"></line></svg>
-          </button>
+        <div id="pl-scrub" class="mt-2" style="display:none">
+          <div class="flex items-center gap-3">
+            <span class="w-9 shrink-0 text-right text-[11px] tabular-nums text-zinc-400" id="pl-pos">0:00</span>
+            <div id="pl-seek" role="slider" aria-label="Seek within the song" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0" class="group relative h-4 flex-1 cursor-pointer">
+              <div class="absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 overflow-hidden rounded-full bg-zinc-800">
+                <div class="h-full rounded-full bg-gradient-to-r from-fuchsia-500 to-fuchsia-400" id="pl-fill" style="width:0%"></div>
+              </div>
+              <div class="absolute top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white opacity-0 shadow ring-2 ring-fuchsia-500/60 transition group-hover:opacity-100" id="pl-thumb" style="left:0%"></div>
+            </div>
+            <span class="w-9 shrink-0 text-[11px] tabular-nums text-zinc-400" id="pl-dur">0:00</span>
+          </div>
+          <p class="mt-1.5 text-[11px] leading-snug text-zinc-500" id="pl-hint">Full song from SoundCloud</p>
         </div>
       </div>
     </div>
   </div>
 </div>
 
+<audio id="veil-audio" preload="auto"></audio>
+
 <script src="assets/os.js"></script>
 <script>
 (function () {
   "use strict";
   var V = window.VEILOS;
+  var $ = V.$;
+  var esc = V.esc;
+
+  var form = document.getElementById("music-search");
   var input = document.getElementById("music-q");
   var go = document.getElementById("music-go");
-  var grid = document.getElementById("results-grid");
-  var title = document.getElementById("results-title");
+  var icSearch = document.getElementById("ic-search");
+  var icLoading = document.getElementById("ic-loading");
+  var errLine = document.getElementById("search-error");
+  var recentSection = document.getElementById("recent-section");
+  var recentRail = document.getElementById("recent-rail");
+  var resultsSection = document.getElementById("results-section");
+  var resultsTitle = document.getElementById("results-title");
+  var resultsClear = document.getElementById("results-clear");
+  var resultsRail = document.getElementById("results-rail");
+  var home = document.getElementById("music-home");
+  var connectCard = document.getElementById("music-connect");
+  var connectLink = document.getElementById("music-connect-link");
+  var connectRetry = document.getElementById("music-connect-retry");
 
-  function card(label, sub, art) {
-    var media = art
-      ? '<img alt="" loading="lazy" class="size-full object-cover" src="' + V.esc(art) + '"/>'
-      : '<div class="flex size-full items-center justify-center bg-zinc-800/70"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-disc-3 size-8 text-zinc-600" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="2"></circle><path d="M6 12c0-1.7.7-3.2 1.8-4.2"></path><circle cx="12" cy="12" r="10"></circle><path d="M18 12c0 1.7-.7 3.2-1.8 4.2"></path></svg></div>';
-    return '<div class="group relative"><button type="button" class="relative block aspect-square w-full overflow-hidden rounded-2xl border border-zinc-800/80 bg-zinc-900 outline-none transition-all duration-200 hover:-translate-y-1 hover:border-fuchsia-500/50" disabled="">' + media +
-      '<span class="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 backdrop-blur-[2px] transition-opacity duration-200 group-hover:opacity-100"><span class="flex size-11 items-center justify-center rounded-full bg-fuchsia-500 text-zinc-950 shadow-xl shadow-fuchsia-500/40 transition-transform duration-200 scale-75 group-hover:scale-100"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-play size-5 translate-x-[1px]" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg></span></span></button>' +
-      '<p class="mt-2 line-clamp-2 text-[12.5px] font-medium leading-tight text-zinc-100" title="' + V.esc(label) + '">' + V.esc(label) + '</p>' +
-      '<p class="mt-0.5 text-[10.5px] capitalize leading-tight text-zinc-500">' + V.esc(sub) + "</p></div>";
+  var artBtn = document.getElementById("pl-art-btn");
+  var art = document.getElementById("pl-art");
+  var artIc = document.getElementById("pl-art-ic");
+  var artOv = document.getElementById("pl-art-ov");
+  var eq = document.getElementById("pl-eq");
+  var kicker = document.getElementById("pl-kicker");
+  var ptitle = document.getElementById("pl-title");
+  var partist = document.getElementById("pl-artist");
+  var bPrev = document.getElementById("pl-prev");
+  var bPlay = document.getElementById("pl-play");
+  var bNext = document.getElementById("pl-next");
+  var bStop = document.getElementById("pl-stop");
+  var icPlay = document.getElementById("ic-play");
+  var icPause = document.getElementById("ic-pause");
+  var scrub = document.getElementById("pl-scrub");
+  var tPos = document.getElementById("pl-pos");
+  var tDur = document.getElementById("pl-dur");
+  var seekEl = document.getElementById("pl-seek");
+  var fillEl = document.getElementById("pl-fill");
+  var thumbEl = document.getElementById("pl-thumb");
+  var hintEl = document.getElementById("pl-hint");
+  var audio = document.getElementById("veil-audio");
+
+  var LS_KEY = "veil.mirror.music";
+  var recent = [];
+  var results = null;      /* the current search results (or null) */
+  var list = [];           /* the rail the current track launched from */
+  var idx = -1;
+  var current = null;
+  var playing = false;
+  var errState = false;
+  var searching = false;
+  var searchSeq = 0;
+  var durFallback = 0;     /* the card's known length — progressive mp3s report Infinity */
+
+  function show(el, on) { el.style.display = on ? "" : "none"; }
+  function fmtTime(s) { if (!isFinite(s) || s < 0) return "0:00"; var m = Math.floor(s / 60); var x = Math.floor(s % 60); return m + ":" + (x < 10 ? "0" : "") + x; }
+  function fmtMs(ms) { if (!isFinite(ms) || ms <= 0) return ""; var s = Math.round(ms / 1000); var m = Math.floor(s / 60); var r = s % 60; return m + ":" + (r < 10 ? "0" : "") + r; }
+  function keyOf(s) { return s && s.source ? String(s.source) + ":" + String(s.id) : ":"; }
+  function isFull(s) { return !!s && s.source === "soundcloud" && !s.previewOnly; }
+  function streamOf(s) {
+    if (!s) return "";
+    if (s.source === "soundcloud") return V.apiUrl("/api/music/scstream?id=" + encodeURIComponent(String(s.id)));
+    return String(s.src || s.preview || "");
+  }
+  function total() {
+    var d = audio.duration;
+    return (isFinite(d) && d > 0) ? d : (durFallback || 0);
+  }
+  function loadRecent() {
+    try { var j = JSON.parse(V.ls(LS_KEY) || "null"); recent = (j && Array.isArray(j.recent)) ? j.recent : []; }
+    catch (e) { recent = []; }
+  }
+  function saveRecent() { V.lsSet(LS_KEY, JSON.stringify({ recent: recent.slice(0, 20) })); }
+
+  /* ---------- song cards — the website's SongCard, verbatim look ---------- */
+
+  var ICON_DISC = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-5" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="2"></circle><path d="M6 12c0-1.7.7-3.2 1.8-4.2"></path><path d="M18 12c0 1.7-.7 3.2-1.8 4.2"></path></svg>';
+  var ICON_WAVES = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-2.5" aria-hidden="true"><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"></path><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"></path><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"></path></svg>';
+  var ICON_PLAY_S = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-2" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg>';
+
+  function cardClass(active) {
+    return "vm-card group relative flex w-[188px] shrink-0 snap-start gap-3 rounded-2xl border p-2.5 text-left outline-none transition-all duration-200 " + (active
+      ? "border-fuchsia-500/60 bg-fuchsia-500/10 shadow-[0_16px_36px_-14px_rgba(217,70,239,0.5)]"
+      : "border-zinc-800/80 bg-zinc-900/60 hover:-translate-y-1 hover:border-fuchsia-500/50 hover:bg-zinc-900");
   }
 
-  function skeletons(n) {
+  function songCard(s, i, listName) {
+    var full = isFull(s);
+    var dur = fmtMs(s.ms);
+    var artHtml = s.art
+      ? '<img src="' + esc(V.apiImg(s.art)) + '" alt="" loading="lazy" decoding="async" data-art-img="1" class="absolute inset-0 size-full object-cover transition-transform duration-500 group-hover:scale-[1.06]"/>'
+      : "";
+    var badge = full
+      ? '<span class="inline-flex items-center gap-1 rounded-full border border-emerald-500/50 bg-emerald-500/10 px-1.5 py-0.5 text-[9.5px] font-semibold uppercase tracking-wider text-emerald-300">' + ICON_WAVES + "Full song</span>"
+      : '<span class="inline-flex items-center gap-1 rounded-full border border-zinc-700/60 bg-zinc-950/60 px-1.5 py-0.5 text-[9.5px] font-semibold uppercase tracking-wider text-zinc-400">' + ICON_PLAY_S + "30s preview</span>";
+    return '<button type="button" class="' + cardClass(false) + '" data-key="' + esc(keyOf(s)) + '" data-list="' + listName + '" data-idx="' + i + '" aria-label="Play ' + esc(s.title) + " by " + esc(s.artist) + (full ? " — full song" : " — 30 second preview") + '">'
+      + '<div class="relative size-14 shrink-0 overflow-hidden rounded-xl bg-zinc-800">'
+      + '<div class="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-fuchsia-500/20 via-zinc-800 to-zinc-900 text-zinc-500">' + ICON_DISC + "</div>" + artHtml
+      + "</div>"
+      + '<div class="min-w-0 flex-1 py-0.5">'
+      + '<p class="line-clamp-2 text-[12.5px] font-medium leading-tight text-zinc-100" title="' + esc(s.title) + '">' + esc(s.title) + "</p>"
+      + '<p class="mt-0.5 line-clamp-2 text-[10.5px] leading-tight text-zinc-500" title="' + esc(s.artist) + '">' + esc(s.artist) + "</p>"
+      + '<span class="mt-1 flex items-center gap-1.5">' + badge
+      + (dur ? '<span class="text-[10px] tabular-nums text-zinc-500" title="Track length">' + dur + "</span>" : "")
+      + "</span></div></button>";
+  }
+
+  function renderRail(rail, items, listName) {
     var html = "";
-    for (var i = 0; i < n; i++) {
-      html += '<div class="group relative"><div class="aspect-square w-full animate-pulse rounded-2xl bg-zinc-800/60"></div><div class="mt-2 h-3 w-[86%] animate-pulse rounded bg-zinc-800/60"></div><div class="mt-1.5 h-2.5 w-[52%] animate-pulse rounded bg-zinc-800/50"></div></div>';
-    }
+    for (var i = 0; i < items.length; i++) html += songCard(items[i], i, listName);
+    rail.innerHTML = html;
+  }
+
+  function skeletonCards() {
+    var html = "";
+    for (var i = 0; i < 5; i++) html += '<div class="h-[76px] w-[188px] shrink-0 animate-pulse rounded-2xl border border-zinc-800/80 bg-zinc-900/50"></div>';
     return html;
   }
 
-  input.addEventListener("input", function () { go.disabled = !input.value.trim(); });
+  /* a failed cover falls back to the disc glyph sitting under it */
+  document.addEventListener("error", function (e) {
+    var t = e.target;
+    if (t && t.tagName === "IMG" && t.getAttribute("data-art-img")) t.style.display = "none";
+  }, true);
 
-  /* the shelf's resting state — the same shimmer cards the app shows
-     while its curated shelves load */
-  title.textContent = "Shelves";
-  grid.innerHTML = skeletons(5);
+  function cardFromEvent(e) {
+    var n = e.target;
+    while (n && n.nodeType === 1) {
+      if (n.getAttribute && n.getAttribute("data-key")) return n;
+      n = n.parentNode;
+    }
+    return null;
+  }
 
-  document.getElementById("music-search").addEventListener("submit", function (e) {
+  function onRailClick(e) {
+    var card = cardFromEvent(e);
+    if (!card) return;
+    var listName = card.getAttribute("data-list");
+    var i = parseInt(card.getAttribute("data-idx"), 10);
+    var arr = listName === "recent" ? recent : results;
+    if (!arr || !(i >= 0) || i >= arr.length || !arr[i]) return;
+    playSong(arr[i], arr, i);
+  }
+  recentRail.addEventListener("click", onRailClick);
+  resultsRail.addEventListener("click", onRailClick);
+
+  /* ---------- the one audio element ---------- */
+
+  function playSong(song, arr, i) {
+    list = arr || [];
+    idx = i;
+    var same = current && keyOf(current) === keyOf(song);
+    current = song;
+    errState = false;
+    durFallback = (song.ms && isFinite(song.ms) && song.ms > 0) ? song.ms / 1000 : 0;
+    var src = streamOf(song);
+    if (!src) { errState = true; paint(); return; }
+    if (same && audio.getAttribute("data-src") === src) {
+      /* same card again: toggle, or replay from the top after it ended.
+         audio.paused is the live state — the cached flag lags by an event. */
+      if (!audio.paused) { audio.pause(); paint(); return; }
+      if (audio.ended) { try { audio.currentTime = 0; } catch (e2) {} }
+      audio.play().catch(function () { paint(); });
+      paint();
+      return;
+    }
+    audio.setAttribute("data-src", src);
+    audio.src = src;
+    audio.load();
+    audio.play().catch(function () { paint(); });
+    paint();
+  }
+
+  function playIndex(i) {
+    if (list && i >= 0 && i < list.length) playSong(list[i], list, i);
+  }
+
+  function togglePlay() {
+    if (!current) return;
+    if (!audio.paused) { audio.pause(); return; }
+    if (audio.ended) { try { audio.currentTime = 0; } catch (e) {} }
+    audio.play().catch(function () { paint(); });
+  }
+
+  function stopAll() {
+    audio.pause();
+    try { audio.removeAttribute("src"); } catch (e) {}
+    audio.setAttribute("data-src", "");
+    audio.load();
+    current = null;
+    playing = false;
+    errState = false;
+    idx = -1;
+    list = [];
+    paint();
+  }
+
+  audio.addEventListener("play", function () {
+    playing = true;
+    errState = false;
+    remember(current);
+    paint();
+  });
+  audio.addEventListener("pause", function () { playing = false; paint(); });
+  audio.addEventListener("ended", function () {
+    playing = false;
+    if (list && idx + 1 < list.length) { playIndex(idx + 1); return; }
+    try { audio.currentTime = 0; } catch (e) {}
+    paint();
+  });
+  audio.addEventListener("timeupdate", paintProgress);
+  function durChange() { if (isFinite(audio.duration) && audio.duration > 0) paintProgress(); }
+  audio.addEventListener("durationchange", durChange);
+  audio.addEventListener("loadedmetadata", durChange);
+  audio.addEventListener("error", function () {
+    if (current && audio.getAttribute("data-src")) { playing = false; errState = true; paint(); }
+  });
+
+  /* ---------- player bar painting ---------- */
+
+  function setActive() {
+    var k = (current && !errState) ? keyOf(current) : "";
+    var cards = V.$$(".vm-card");
+    for (var i = 0; i < cards.length; i++) {
+      cards[i].setAttribute("class", cardClass(cards[i].getAttribute("data-key") === k));
+    }
+  }
+
+  function paintProgress() {
+    var pos = audio.currentTime || 0;
+    var t = total();
+    var pct = t > 0 ? Math.min(1, pos / t) * 100 : 0;
+    fillEl.style.width = pct + "%";
+    thumbEl.style.left = pct + "%";
+    seekEl.setAttribute("aria-valuenow", String(Math.round(pct)));
+    tPos.textContent = fmtTime(pos);
+    tDur.textContent = fmtTime(t);
+  }
+
+  function paint() {
+    if (errState) {
+      show(kicker, true);
+      kicker.textContent = "Playback error";
+      ptitle.textContent = "Couldn't stream — try another";
+      ptitle.className = "truncate text-[13px] font-medium leading-tight text-rose-300/90";
+      show(partist, false);
+      show(art, false);
+      show(artIc, true);
+      show(artOv, false);
+      show(eq, false);
+      show(scrub, true);
+      hintEl.className = "mt-1.5 text-[11px] leading-snug text-rose-300/90";
+      hintEl.textContent = "Couldn't stream that one — try another result.";
+    } else if (current) {
+      var full = isFull(current);
+      show(kicker, true);
+      kicker.textContent = full ? "Now playing · SoundCloud" : "Now playing · 30s preview";
+      ptitle.textContent = current.title;
+      ptitle.className = "truncate text-[13px] font-medium leading-tight text-zinc-100";
+      show(partist, true);
+      partist.textContent = current.artist + (current.album ? " · " + current.album : "");
+      if (current.art) {
+        var src = V.apiImg(current.art);
+        if (art.getAttribute("src") !== src) art.setAttribute("src", src);
+        art.style.display = "";
+        show(artIc, false);
+      } else {
+        show(art, false);
+        show(artIc, true);
+      }
+      show(artOv, !playing);
+      show(eq, playing);
+      show(scrub, true);
+      hintEl.className = "mt-1.5 text-[11px] leading-snug text-zinc-500";
+      hintEl.textContent = full
+        ? "Full song from SoundCloud · streaming through your Veil site"
+        : "30-second preview · this track is rights-limited upstream";
+    } else {
+      show(kicker, false);
+      ptitle.textContent = "Nothing playing";
+      ptitle.className = "truncate text-[13px] font-medium leading-tight text-zinc-300";
+      show(partist, true);
+      partist.textContent = "search a song to start the queue";
+      show(art, false);
+      show(artIc, true);
+      show(artOv, false);
+      show(eq, false);
+      show(scrub, false);
+    }
+    icPlay.style.display = playing ? "none" : "";
+    icPause.style.display = playing ? "" : "none";
+    bPlay.disabled = !current;
+    bPlay.setAttribute("aria-label", playing ? "Pause" : "Play");
+    bPrev.disabled = !current || !list.length || idx <= 0;
+    bNext.disabled = !current || !list.length || idx >= list.length - 1;
+    bStop.disabled = !current;
+    artBtn.disabled = !current;
+    setActive();
+    paintProgress();
+  }
+
+  /* ---------- recently played ---------- */
+
+  function remember(song) {
+    if (!song) return;
+    var k = keyOf(song);
+    recent = recent.filter(function (r) { return keyOf(r) !== k; });
+    recent.unshift({ id: song.id, title: song.title, artist: song.artist, art: song.art, previewOnly: !!song.previewOnly, source: song.source, src: streamOf(song) });
+    if (recent.length > 20) recent = recent.slice(0, 20);
+    saveRecent();
+    renderRail(recentRail, recent, "recent");
+    show(recentSection, recent.length > 0 && connectCard.style.display === "none");
+    setActive();
+  }
+
+  /* ---------- search ---------- */
+
+  function goUpdate() {
+    go.disabled = searching || !input.value.trim();
+    show(icSearch, !searching);
+    show(icLoading, searching);
+  }
+  input.addEventListener("input", goUpdate);
+
+  function showError(msg) {
+    show(resultsSection, false);
+    show(home, true);
+    errLine.textContent = msg;
+    show(errLine, true);
+  }
+
+  function runSearch(q) {
+    var seq = ++searchSeq;
+    searching = true;
+    goUpdate();
+    show(errLine, false);
+    show(home, false);
+    show(resultsSection, true);
+    resultsTitle.textContent = "Searching…";
+    resultsRail.innerHTML = skeletonCards();
+    fetch(V.apiUrl("/api/music/scsearch?q=" + encodeURIComponent(q))).then(function (r) {
+      return r.json().then(function (j) { return { ok: r.ok, j: j }; }, function () { return { ok: r.ok, j: null }; });
+    }).then(function (res) {
+      if (seq !== searchSeq) return;
+      searching = false;
+      goUpdate();
+      var items = (res.j && Array.isArray(res.j.items)) ? res.j.items : [];
+      if (!res.ok || !items.length) {
+        showError((res.j && res.j.error) ? res.j.error : "No playable songs matched — try a shorter query (title or artist).");
+        return;
+      }
+      results = items;
+      resultsTitle.textContent = "Results for \u201C" + q + "\u201D";
+      renderRail(resultsRail, items, "results");
+      setActive();
+    }).catch(function () {
+      if (seq !== searchSeq) return;
+      searching = false;
+      goUpdate();
+      showError("Song search is unreachable right now — try again in a moment.");
+    });
+  }
+
+  form.addEventListener("submit", function (e) {
     e.preventDefault();
     var q = input.value.trim();
-    if (!q) return;
-    title.textContent = "Searching…";
-    grid.innerHTML = skeletons(5);
-    /* the search reaches SoundCloud through the service — on this copy the
-       shelf shows the honest pending state, then the notice below stands */
-    setTimeout(function () {
-      title.textContent = "Results for \u201C" + q + "\u201D";
-      grid.innerHTML = card(q, "awaiting the music service", "") + card(q + " — radio", "awaiting the music service", "") + card(q + " ( remix )", "awaiting the music service", "");
-      document.getElementById("np-title").textContent = q;
-      document.getElementById("np-sub").textContent = "queued — playback connects when the service is online";
-    }, 1400);
+    if (!q || searching) return;
+    show(errLine, false);
+    V.api().then(function (base) {
+      if (base === null) { showConnect(); return; }
+      hideConnect();
+      runSearch(q);
+    });
   });
+
+  resultsClear.addEventListener("click", function () {
+    results = null;
+    show(resultsSection, false);
+    show(home, true);
+    show(errLine, false);
+  });
+
+  /* ---------- connect state (no API base reachable) ---------- */
+
+  function showConnect() {
+    show(home, false);
+    show(connectCard, true);
+    show(recentSection, false);
+    show(resultsSection, false);
+    searching = false;
+    goUpdate();
+  }
+  function hideConnect() {
+    show(connectCard, false);
+    show(home, results === null);
+    show(recentSection, recent.length > 0);
+  }
+  connectRetry.addEventListener("click", function () {
+    connectRetry.disabled = true;
+    V.api(true).then(function (base) {
+      connectRetry.disabled = false;
+      if (base !== null) hideConnect();
+    });
+  });
+
+  /* ---------- transport wiring ---------- */
+
+  bPlay.addEventListener("click", togglePlay);
+  artBtn.addEventListener("click", function () { if (current) togglePlay(); });
+  bPrev.addEventListener("click", function () { if (idx > 0) playIndex(idx - 1); });
+  bNext.addEventListener("click", function () { playIndex(idx + 1); });
+  bStop.addEventListener("click", stopAll);
+
+  function seekFrac(f) {
+    var t = total();
+    if (!(t > 0)) return;
+    var time = Math.max(0, Math.min(1, f)) * t;
+    try { audio.currentTime = time; } catch (e) {}
+    paintProgress();
+  }
+  seekEl.addEventListener("click", function (e) {
+    var r = seekEl.getBoundingClientRect();
+    seekFrac((e.clientX - r.left) / r.width);
+  });
+  seekEl.addEventListener("keydown", function (e) {
+    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+    e.preventDefault();
+    var t = total() || 1;
+    var f = (audio.currentTime || 0) / t + (e.key === "ArrowRight" ? 0.05 : -0.05);
+    seekFrac(f);
+  });
+
+  /* ---------- boot ---------- */
+
+  loadRecent();
+  renderRail(recentRail, recent, "recent");
+  show(recentSection, recent.length > 0);
+  connectLink.href = V.page("settings");
+  goUpdate();
+  paint();
+  V.api().then(function (base) { if (base === null) showConnect(); });
 })();
 </script>
 </body>

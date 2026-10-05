@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" data-veil-build="2026-10-04T17:24:13Z">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" data-veil-build="2026-10-05T14:47:03Z">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -86,6 +86,7 @@
             </div>
 
             <div class="relative border-t border-white/10 bg-black/50 p-2 backdrop-blur">
+              <div id="composer-notice" class="mb-1.5 hidden items-start gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-200"></div>
               <div class="flex items-center gap-1.5 rounded-xl border border-white/10 bg-black/30 px-2 py-1.5">
                 <button class="rounded-md p-1.5 text-white/60 hover:bg-white/10 disabled:opacity-40" title="Attach a file (up to 300 MB) — images, videos and audio play inline" aria-label="Attach a file">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-paperclip h-4 w-4" aria-hidden="true"><path d="m16 6-8.414 8.586a2 2 0 0 0 2.829 2.829l8.414-8.586a4 4 0 1 0-5.657-5.657l-8.379 8.551a6 6 0 1 0 8.485 8.485l8.379-8.551"></path></svg>
@@ -158,6 +159,7 @@
               <span id="gate-submit-label">Log In</span>
             </button>
           </form>
+          <p class="mt-4 text-center text-[11.5px] leading-snug text-white/40">Your website account works here too — same username and password.</p>
         </div>
       </div>
     </div>
@@ -190,6 +192,10 @@ window.VEILOS_SHARED_BASE="../site/";
     liveMsgs: [],   /* rows from chat-live.json */
     pending: [],    /* optimistic sends not yet confirmed
     */
+    editing: null,       /* message id with the inline edit box open */
+    editDraft: "",       /* draft text kept alive across re-renders */
+    editCaret: 0,        /* caret position kept with the draft */
+    blockedNotice: null, /* muted/banned message pinned above the composer */
     realAccounts: [],
     gateMode: "login",
     liveOk: false,
@@ -263,16 +269,16 @@ window.VEILOS_SHARED_BASE="../site/";
   /* ---- message content (the app's renderer: /fx, /me, gifs, links) ---- */
   var GIF_RE = /^https?:\/\/(?:media\d*\.giphy\.com|media\.giphy\.com|i\.giphy\.com|media\.tenor\.com)\/\S+\.(?:gif|png|webp|mp4)(?:\?\S*)?$/i;
   var IMG_RE = /^https?:\/\/\S+\.(?:png|jpe?g|webp|gif)(?:\?\S*)?$/i;
-  function renderContent(text) {
+  function renderContent(text, mark) {
     var t = String(text || "").trim();
     if (/^\/fx\s+/.test(t)) {
-      return '<div class="my-1 flex justify-center"><span class="rounded-full border border-orange-400/25 bg-orange-400/10 px-3.5 py-1 text-[12.5px] font-medium tracking-wide text-orange-200">' + V.esc(t.replace(/^\/fx\s+/, "")) + "</span></div>";
+      return '<div class="my-1 flex justify-center"><span class="rounded-full border border-orange-400/25 bg-orange-400/10 px-3.5 py-1 text-[12.5px] font-medium tracking-wide text-orange-200">' + V.esc(t.replace(/^\/fx\s+/, "")) + "</span></div>" + (mark || "");
     }
     if (/^\/me\s+/.test(t)) {
-      return '<p class="text-sm italic text-white/70">' + V.esc(t.replace(/^\/me\s+/, "")) + "</p>";
+      return '<p class="text-sm italic text-white/70">' + V.esc(t.replace(/^\/me\s+/, "")) + (mark || "") + "</p>";
     }
     if (GIF_RE.test(t) || IMG_RE.test(t)) {
-      return '<img src="' + V.esc(t) + '" alt="shared gif" loading="lazy" class="mt-1 max-h-64 max-w-xs rounded-lg border border-white/10 object-cover" />';
+      return '<img src="' + V.esc(t) + '" alt="shared gif" loading="lazy" class="mt-1 max-h-64 max-w-xs rounded-lg border border-white/10 object-cover" />' + (mark || "");
     }
     var parts = t.split(/(https?:\/\/[^\s]+)/g);
     var out = "";
@@ -283,7 +289,7 @@ window.VEILOS_SHARED_BASE="../site/";
         out += "<span>" + V.esc(p) + "</span>";
       }
     });
-    return '<p class="whitespace-pre-wrap break-words text-sm text-white/90">' + out + "</p>";
+    return '<p class="whitespace-pre-wrap break-words text-sm text-white/90">' + out + (mark || "") + "</p>";
   }
 
   function buildMsgHtml(msgs) {
@@ -320,13 +326,25 @@ window.VEILOS_SHARED_BASE="../site/";
         if (rl) html += '<span class="rounded px-1 py-0.5 text-[9px] font-semibold uppercase text-white" style="background-color: ' + roleColor(a) + ';">' + rl + "</span>";
         html += '<span class="text-[10px] text-white/40">' + V.esc(formatTime(m.createdAt)) + "</span></div>";
       }
-      html += renderContent(m.content);
-      html += "</div>";
-      /* hover actions — reply + pin (+ delete for your own) */
       var mine = state.me && m.accountId === state.me.id && m.live;
+      var editing = !!mine && !m.pending && state.editing === m.id;
+      if (editing) {
+        /* inline edit box — Save/Cancel, Enter saves, Esc cancels */
+        html += '<div class="mt-1"><textarea data-os-editbox rows="3" class="w-full resize-none rounded-lg border border-white/15 bg-black/40 px-2.5 py-1.5 text-sm text-white outline-none focus:border-orange-400/50">' + V.esc(state.editDraft) + "</textarea>" +
+          '<div class="mt-1.5 flex items-center justify-end gap-1.5">' +
+          '<button type="button" data-os-editcancel class="rounded-md px-2.5 py-1 text-xs font-medium text-white/60 hover:bg-white/10 hover:text-white">Cancel</button>' +
+          '<button type="button" data-os-editsave class="rounded-md bg-orange-400 px-2.5 py-1 text-xs font-semibold text-black hover:opacity-90">Save</button>' +
+          "</div></div>";
+      } else {
+        var mark = m.editedAt ? ' <span class="text-[10px] italic text-white/40">(edited)</span>' : "";
+        html += renderContent(m.content, mark);
+      }
+      html += "</div>";
+      /* hover actions — reply + pin (+ edit/delete for your own) */
       html += '<div class="absolute right-2 top-0 hidden items-center gap-0.5 rounded-md border border-white/10 bg-[#1c1c34] px-1 py-0.5 text-white/70 shadow-lg group-hover:flex">';
       html += '<button class="rounded p-1 hover:bg-white/10" title="Reply"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-reply h-3.5 w-3.5"><path d="M20 18v-2a4 4 0 0 0-4-4H4"></path><path d="m9 17-5-5 5-5"></path></svg></button>';
       html += '<button class="rounded p-1 hover:bg-white/10" title="Pin"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-pin h-3.5 w-3.5"><path d="M12 17v5"></path><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"></path></svg></button>';
+      if (mine && !m.pending && state.editing !== m.id) html += '<button class="rounded p-1 hover:bg-white/10" title="Edit" data-os-edit="' + V.esc(m.id) + '"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-pencil h-3.5 w-3.5"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path><path d="m15 5 4 4"></path></svg></button>';
       if (mine) html += '<button class="rounded p-1 hover:bg-white/10" title="Delete" data-os-del="' + V.esc(m.id) + '"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-trash-2 h-3.5 w-3.5"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg></button>';
       html += "</div></div>";
       prevMsg = m;
@@ -354,22 +372,82 @@ window.VEILOS_SHARED_BASE="../site/";
     return dedup.sort(function (a, b) { return new Date(a.createdAt) - new Date(b.createdAt); });
   }
 
+  /* save the inline edit — L.editMessage stamps editedAt, then the
+     room is re-pulled so everyone sees the new text + (edited) */
+  function saveEdit(box) {
+    var id = state.editing;
+    var text = String(box.value || "").trim();
+    if (!id) return;
+    if (!text) { toast("Message can't be empty."); return; }
+    box.disabled = true;
+    L.editMessage(L.identity(), id, text).then(function () {
+      state.editing = null;
+      state.editDraft = "";
+      state.editCaret = 0;
+      for (var i = 0; i < state.liveMsgs.length; i++) {
+        if (state.liveMsgs[i].id === id) {
+          state.liveMsgs[i].content = text;
+          state.liveMsgs[i].editedAt = new Date().toISOString();
+        }
+      }
+      render();
+      loadLive();
+    }).catch(function (e) {
+      box.disabled = false;
+      toast(L.friendlyError(e));
+    });
+  }
+
   function render() {
     var list = document.getElementById("chat-list");
     var msgs = mergedMsgs();
     list.innerHTML = buildMsgHtml(msgs);
     var sc = document.getElementById("chat-scroll");
-    sc.scrollTop = sc.scrollHeight;
     $$("[data-os-del]", list).forEach(function (b) {
       b.addEventListener("click", function () {
         var id = b.getAttribute("data-os-del");
         L.deleteMessage(L.identity(), id).then(function () {
           state.liveMsgs = state.liveMsgs.filter(function (m) { return m.id !== id; });
           state.pending = state.pending.filter(function (m) { return m.id !== id; });
+          if (state.editing === id) { state.editing = null; state.editDraft = ""; }
           render();
         }).catch(function (e) { toast(L.friendlyError(e)); });
       });
     });
+    /* pencil on your own messages → inline textarea + Save/Cancel */
+    $$("[data-os-edit]", list).forEach(function (b) {
+      b.addEventListener("click", function () {
+        var id = b.getAttribute("data-os-edit");
+        var cur = null;
+        state.liveMsgs.forEach(function (m) { if (m.id === id) cur = m; });
+        state.pending.forEach(function (m) { if (m.id === id) cur = m; });
+        state.editing = id;
+        state.editDraft = cur ? String(cur.content || "") : "";
+        state.editCaret = state.editDraft.length;
+        render();
+      });
+    });
+    var box = $("[data-os-editbox]", list);
+    if (box) {
+      /* polls re-render under the box — keep the draft, caret, focus */
+      box.focus();
+      try { box.setSelectionRange(state.editCaret, state.editCaret); } catch (e) { /* ignore */ }
+      box.addEventListener("input", function () {
+        state.editDraft = box.value;
+        try { state.editCaret = box.selectionStart; } catch (e) { state.editCaret = box.value.length; }
+      });
+      box.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); saveEdit(box); }
+        else if (e.key === "Escape") { e.preventDefault(); state.editing = null; state.editDraft = ""; render(); }
+      });
+      var cancelBtn = $("[data-os-editcancel]", list);
+      var saveBtn = $("[data-os-editsave]", list);
+      if (cancelBtn) cancelBtn.addEventListener("click", function () { state.editing = null; state.editDraft = ""; render(); });
+      if (saveBtn) saveBtn.addEventListener("click", function () { saveEdit(box); });
+      try { box.scrollIntoView({ block: "center" }); } catch (e) { sc.scrollTop = sc.scrollHeight; }
+    } else {
+      sc.scrollTop = sc.scrollHeight;
+    }
   }
 
   /* ---- player list: real Online/Offline buckets like the app ---- */
@@ -415,6 +493,12 @@ window.VEILOS_SHARED_BASE="../site/";
     var on = notBanned.filter(function (a) { return online[a.id]; }).sort(byRank);
     var off = notBanned.filter(function (a) { return !online[a.id]; }).sort(byRank);
 
+    /* website-linked members: my own via flag, or the room's linked mark */
+    var isWebsite = function (a) {
+      if (a.via === "website") return true;
+      var u = state.liveUsers[String(a.username || "").toLowerCase()];
+      return !!(u && u.linked);
+    };
     var row = function (a, isOn) {
       var isMe = state.me && a.id === state.me.id;
       var rl = roleLabel(a);
@@ -425,6 +509,8 @@ window.VEILOS_SHARED_BASE="../site/";
         '<div class="min-w-0 flex-1"><div class="flex items-center gap-1.5"><span class="truncate text-sm font-medium" style="color: ' + roleColor(a) + ';">' + V.esc(displayName(a)) + "</span></div>" +
         '<div class="truncate text-[10px] text-white/40">@' + V.esc(a.username) + "</div></div>" +
         (rl ? '<span class="rounded px-1 py-0.5 text-[9px] font-semibold uppercase text-white" style="background-color: ' + roleColor(a) + ';">' + rl + "</span>" : "") +
+        (a.muted ? '<span class="rounded bg-white/5 px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-white/40" title="Muted by a moderator">muted</span>' : "") +
+        (isWebsite(a) ? '<span class="rounded bg-white/5 px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-white/40" title="Signed in with the website account">website</span>' : "") +
         "</button>";
     };
 
@@ -479,6 +565,7 @@ window.VEILOS_SHARED_BASE="../site/";
   function applyIdentity(idAcc) {
     var gate = document.getElementById("auth-gate");
     var meAvatar = document.getElementById("me-avatar");
+    state.blockedNotice = null; /* the fresh room state below re-decides */
     if (idAcc && state.liveUsers[String(idAcc.username).toLowerCase()]) {
       state.me = L.pseudoAccount(state.liveUsers[String(idAcc.username).toLowerCase()]);
     } else if (idAcc) {
@@ -494,6 +581,7 @@ window.VEILOS_SHARED_BASE="../site/";
       meAvatar.textContent = initials(name);
       document.getElementById("coins-count").textContent = state.me.coins != null ? state.me.coins : 100;
       document.title = "Veil Chat — " + name;
+      if (idAcc && idAcc.via) state.me.via = idAcc.via; /* website-linked sign-in */
     } else {
       gate.classList.remove("hidden");
       gate.classList.add("flex");
@@ -501,6 +589,7 @@ window.VEILOS_SHARED_BASE="../site/";
     }
     render();
     renderMembers();
+    updateBlock();
   }
 
   function setGateMode(mode) {
@@ -578,7 +667,32 @@ window.VEILOS_SHARED_BASE="../site/";
   /* ---- composer — sends land in the shared room ---- */
   var input = document.getElementById("composer-input");
   var send = document.getElementById("composer-send");
-  function updateSend() { send.disabled = !input.value.trim() || !state.me; }
+  var notice = document.getElementById("composer-notice");
+  /* muted/banned by a website moderator: a persistent notice above the
+     composer, send box locked until the room says otherwise */
+  function blockReason() {
+    if (state.blockedNotice) return state.blockedNotice;
+    if (state.me && state.me.banned) return state.me.banReason || "You are banned from this room.";
+    if (state.me && state.me.muted) return "You are muted — a moderator silenced this room for you.";
+    return null;
+  }
+  function updateBlock() {
+    var reason = blockReason();
+    if (reason) {
+      notice.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-volume-x h-3.5 w-3.5 shrink-0"><path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"></path><line x1="22" x2="16" y1="9" y2="15"></line><line x1="16" x2="22" y1="9" y2="15"></line></svg>' +
+        "<span>" + V.esc(reason) + "</span>";
+      notice.classList.remove("hidden");
+      notice.classList.add("flex");
+      input.disabled = true;
+      send.disabled = true;
+    } else {
+      notice.classList.add("hidden");
+      notice.classList.remove("flex");
+      input.disabled = false;
+      updateSend();
+    }
+  }
+  function updateSend() { send.disabled = !input.value.trim() || !state.me || !!blockReason(); }
   input.addEventListener("input", updateSend);
   function doSend() {
     var text = input.value.trim();
@@ -606,9 +720,17 @@ window.VEILOS_SHARED_BASE="../site/";
     }).catch(function (e) {
       state.pending = state.pending.filter(function (m) { return m.id !== optimistic.id; });
       render();
-      toast(L.friendlyError(e));
-      input.value = text;
-      updateSend();
+      var msg = L.friendlyError(e);
+      if (e && (e.banned || /banned|mute/i.test(String(e.message || "")))) {
+        /* muted/banned — persistent notice above the composer, box locked */
+        state.blockedNotice = msg;
+        updateBlock();
+        input.value = text;
+      } else {
+        toast(msg);
+        input.value = text;
+        updateSend();
+      }
     });
   }
   input.addEventListener("keydown", function (e) {

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-veil-build="2026-10-04T17:24:13Z">
+<html lang="en" data-veil-build="2026-10-05T14:47:03Z">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -86,6 +86,9 @@
             <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6" id="all-grid"></div>
             <div class="mt-8 flex justify-center" id="load-more-wrap">
               <button type="button" id="load-more" class="flex h-10 items-center gap-2 rounded-xl border border-[#253830] bg-[#0d1612]/90 px-6 text-[13px] font-semibold lowercase text-[#88a49a] shadow-sm shadow-black/30 backdrop-blur-md transition hover:border-[#3f7f63] hover:text-[#5fae87] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5fae87]/50 active:scale-[0.97]">load more</button>
+            </div>
+            <div id="arcade-sentinel" class="mt-8 hidden justify-center py-6" aria-hidden="true">
+              <span class="flex items-center gap-2 text-[12px] text-[#526a60]"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-loader-circle h-3.5 w-3.5 animate-spin" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg><span>loading more titles…</span></span>
             </div>
           </section>
         </div>
@@ -213,6 +216,38 @@
   var shown = 60;
   var current = [];
 
+  /* ---------- the main app's API (os.js resolves the base once) ----------
+     When it answers, every catalog image is served through the app's
+     /api/p/ proxy — the exact treatment the website gives them — and the
+     search box also queries the live /api/arcade endpoint. Offline, the
+     baked arcade.json keeps everything working exactly as before. */
+  var API_OK = false;
+  function imgSrcFor(u) {
+    return (API_OK && /^https?:\/\//i.test(u || "")) ? V.apiImg(u) : u;
+  }
+  /* proxied covers occasionally 502 when the upstream rate-limits a
+     burst — one retry against the direct URL heals the card */
+  function bindImgFallbacks(root) {
+    var imgs = (root || document).querySelectorAll("img[data-direct]");
+    for (var i = 0; i < imgs.length; i++) {
+      (function (img) {
+        if (img.dataset.bound) return;
+        img.dataset.bound = "1";
+        img.addEventListener("error", function () {
+          if (img.dataset.fell) return;
+          img.dataset.fell = "1";
+          img.src = img.dataset.direct;
+        });
+      })(imgs[i]);
+    }
+  }
+
+  /* remote search results, merged into the grid (deduped by id) */
+  var remoteResults = [], remoteSeq = 0, searchTimer = null;
+
+  /* infinite scroll state */
+  var ioActive = false, ioBusy = false;
+
   /* ---------- tabs ---------- */
   $$(".arc-tab").forEach(function (t) {
     t.addEventListener("click", function () {
@@ -234,10 +269,10 @@
   var HOT_IDS = null;
   function cardHtml(g) {
     var hot = HOT_IDS && HOT_IDS.indexOf(g.id) > -1;
-    var img = V.esc(g.image);
+    var img = V.esc(imgSrcFor(g.image));
     return '<button type="button" aria-label="Play ' + V.esc(g.name) + '" data-play="' + V.esc(g.play) + '" data-name="' + V.esc(g.name) + '" data-ext="' + (g.external ? "1" : "0") + '" class="group block overflow-hidden rounded-[14px] border border-[#1a2822] bg-[#121f1a] text-left shadow-sm shadow-black/40 transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-[3px] hover:border-[#3f7f63] hover:shadow-[0_10px_28px_rgba(63,127,99,0.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5fae87]/50">' +
       '<span class="relative block aspect-video w-full overflow-hidden bg-[#0a100d]">' +
-      '<img alt="" loading="lazy" decoding="async" class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]" src="' + img + '"/>' +
+      '<img alt="" loading="lazy" decoding="async" data-direct="' + V.esc(g.image) + '" class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]" src="' + img + '"/>' +
       '<span aria-hidden="true" class="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 backdrop-blur-[0px] transition-opacity duration-200 group-hover:opacity-100 group-hover:bg-black/40"><span class="flex size-11 scale-75 items-center justify-center rounded-full bg-[#3f7f63] shadow-[0_8px_24px_rgba(0,0,0,0.55)] ring-1 ring-white/25 transition-transform duration-200 group-hover:scale-100"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-play size-4 translate-x-[1px] fill-white text-white" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg></span></span>' +
       (hot ? '<span aria-hidden="true" title="Hot right now" class="pointer-events-none absolute left-1.5 top-1.5 flex items-center gap-1 rounded-full border border-orange-400/25 bg-black/55 px-1.5 py-[3px] text-[9px] font-bold uppercase tracking-wider text-orange-300 backdrop-blur-md"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-flame size-2.5 fill-orange-400/60" aria-hidden="true"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path></svg>hot</span>' : "") +
       '<span aria-hidden="true" class="pointer-events-none absolute inset-x-0 top-0 h-10 bg-gradient-to-b from-black/50 to-transparent"></span>' +
@@ -258,17 +293,94 @@
     return list;
   }
 
+  /* local filter + live search results merged, deduped by id — the bake
+     covers the catalog as of build time; the API adds what landed since */
+  function mergedList() {
+    var list = filtered();
+    if (remoteResults.length) {
+      var tag = document.getElementById("arcade-tag").value;
+      var seenIds = {};
+      catalog.items.forEach(function (g) { seenIds[g.id] = 1; });
+      var extra = remoteResults.filter(function (g) {
+        if (seenIds[g.id]) return false;
+        if (tag && !(g.tags || []).some(function (t) { return t.toLowerCase() === tag; })) return false;
+        return true;
+      });
+      if (extra.length) list = list.concat(extra);
+      if (document.getElementById("arcade-sort").value === "name") {
+        list = list.slice().sort(function (a, b) { return a.name.localeCompare(b.name); });
+      }
+    }
+    return list;
+  }
+
   function renderGrids() {
     var hot = catalog.hot || [];
     document.getElementById("hot-count").textContent = "(" + hot.length + ")";
     document.getElementById("hot-grid").innerHTML = hot.map(cardHtml).join("");
-    current = filtered();
+    current = mergedList();
     document.getElementById("all-heading").textContent = current.length === catalog.items.length
       ? "all titles"
       : current.length + " title" + (current.length === 1 ? "" : "s") + " for “" + document.getElementById("arcade-search").value.trim() + "”";
     document.getElementById("all-grid").innerHTML = current.slice(0, shown).map(cardHtml).join("");
-    document.getElementById("load-more-wrap").style.display = shown >= current.length ? "none" : "";
+    updateMoreChrome();
     bindPlay();
+    bindImgFallbacks(document.getElementById("all-grid"));
+    bindImgFallbacks(document.getElementById("hot-grid"));
+    scheduleInfiniteCheck();
+  }
+
+  /* the sentinel row drives the infinite scroll; the load-more button
+     stays as the fallback for browsers without IntersectionObserver */
+  function updateMoreChrome() {
+    var more = shown < current.length;
+    var btn = document.getElementById("load-more-wrap");
+    var sen = document.getElementById("arcade-sentinel");
+    if (ioActive) {
+      btn.style.display = "none";
+      if (more) { sen.classList.remove("hidden"); sen.classList.add("flex"); }
+      else { sen.classList.add("hidden"); sen.classList.remove("flex"); }
+    } else {
+      sen.classList.add("hidden");
+      sen.classList.remove("flex");
+      btn.style.display = more ? "" : "none";
+    }
+  }
+
+  function loadMore() {
+    if (ioBusy || shown >= current.length) { updateMoreChrome(); return; }
+    ioBusy = true;
+    setTimeout(function () {
+      shown += 60;
+      ioBusy = false;
+      renderGrids();
+    }, 140);
+  }
+
+  /* after every render: if the sentinel is still on screen, keep going —
+     the observer only fires on crossing, a filled viewport needs a nudge.
+     Skipped while the GN-Math panel itself is hidden (the search box in
+     the header lives on every tab, but only this tab scrolls). */
+  function scheduleInfiniteCheck() {
+    if (!ioActive) return;
+    if (document.getElementById("arcade-panel-gnmath").classList.contains("hidden")) return;
+    setTimeout(function () {
+      if (shown >= current.length) return;
+      var sen = document.getElementById("arcade-sentinel");
+      if (sen.classList.contains("hidden")) return;
+      var r = sen.getBoundingClientRect();
+      var vh = window.innerHeight || document.documentElement.clientHeight;
+      if (r.top < vh + 500) loadMore();
+    }, 60);
+  }
+
+  if ("IntersectionObserver" in window) {
+    new IntersectionObserver(function (entries) {
+      for (var i = 0; i < entries.length; i++) {
+        if (entries[i].isIntersecting) loadMore();
+      }
+    }, { rootMargin: "600px 0px" }).observe(document.getElementById("arcade-sentinel"));
+    ioActive = true;
   }
 
   function bindPlay() {
@@ -361,7 +473,31 @@
     shown += 60;
     renderGrids();
   });
-  document.getElementById("arcade-search").addEventListener("input", function () { shown = 60; renderGrids(); });
+  document.getElementById("arcade-search").addEventListener("input", function () {
+    shown = 60;
+    remoteResults = [];
+    remoteSeq++;
+    renderGrids();
+    if (searchTimer) clearTimeout(searchTimer);
+    searchTimer = setTimeout(runRemoteSearch, 300);
+  });
+
+  /* the live catalog's own search — same card shape, merged into the
+     grid deduped by id; failures keep the local filter's results */
+  function runRemoteSearch() {
+    var q = document.getElementById("arcade-search").value.trim();
+    if (!q || !API_OK) return;
+    var seq = ++remoteSeq;
+    fetch(V.apiUrl("/api/arcade?q=" + encodeURIComponent(q)), { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (seq !== remoteSeq) return;
+        remoteResults = (d && d.items) || [];
+        shown = 60;
+        renderGrids();
+      })
+      .catch(function () { /* keep the local filter's results */ });
+  }
   document.getElementById("arcade-search-form").addEventListener("submit", function (e) {
     e.preventDefault();
     var first = document.querySelector("#all-grid [data-play]");
@@ -477,6 +613,15 @@
     document.getElementById("meta-hot").textContent = catalog.hot.length;
     try { renderGrids(); } catch (e) { document.title = 'RG-ERR: ' + e.message; }
   }).catch(function () {});
+
+  /* when the app answers, re-render so every image is sourced through it
+     exactly like the website, and arm the remote search */
+  V.api().then(function (base) {
+    API_OK = base !== null;
+    if (API_OK) {
+      try { renderGrids(); } catch (e) {}
+    }
+  });
 })();
 </script>
 </body>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-veil-build="2026-10-04T17:24:13Z">
+<html lang="en" data-veil-build="2026-10-05T14:47:03Z">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -73,14 +73,25 @@
       </div>
       <div class="relative">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-zinc-500" aria-hidden="true"><path d="m21 21-4.34-4.34"></path><circle cx="11" cy="11" r="8"></circle></svg>
-        <input id="wp-search" class="flex w-full min-w-0 border px-3 py-1 shadow-xs transition-[color,box-shadow] outline-none h-11 rounded-2xl border-zinc-800 bg-zinc-900/70 pl-10 pr-4 text-sm text-zinc-100 placeholder:text-zinc-600 focus-visible:border-emerald-500/60 focus-visible:ring-[3px] focus-visible:ring-emerald-500/25" placeholder="Search your uploads…" aria-label="Search your wallpapers" inputmode="search" value=""/>
+        <input id="wp-search" class="flex w-full min-w-0 border px-3 py-1 shadow-xs transition-[color,box-shadow] outline-none h-11 rounded-2xl border-zinc-800 bg-zinc-900/70 pl-10 pr-4 text-sm text-zinc-100 placeholder:text-zinc-600 focus-visible:border-emerald-500/60 focus-visible:ring-[3px] focus-visible:ring-emerald-500/25" placeholder="Search your pack, the 4K catalog and live wallpapers…" aria-label="Search wallpapers" inputmode="search" value=""/>
       </div>
     </div>
 
     <div class="veil-scroll-slim relative z-10 min-h-0 flex-1 overflow-y-auto px-3 pb-10 sm:px-4">
+      <p id="wp-status" class="mx-auto mb-3 hidden max-w-6xl text-[12px] text-zinc-500"></p>
       <div class="mx-auto grid max-w-6xl grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4" id="wp-grid"></div>
+      <div id="wp-remote" class="mx-auto mt-8 max-w-6xl space-y-8"></div>
+      <div id="wp-catalog-note" class="mx-auto mt-6 hidden max-w-6xl">
+        <p class="rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-4 text-[13px] leading-relaxed text-zinc-400">Offline shelf — these are the baked-in picks. The full, endless catalog connects through the main Veil app.</p>
+      </div>
       <div class="mx-auto mt-8 max-w-6xl rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-4">
         <p class="text-[13px] leading-relaxed text-zinc-400">Tap a card to preview it full-bleed — <span class="text-zinc-200">Apply</span> sets it as the backdrop for the start page and every section, instantly. ♥ favorites float to the top and stay yours.</p>
+      </div>
+      <div id="wp-sentinel" class="mx-auto mt-4 hidden max-w-6xl">
+        <div class="flex items-center justify-center gap-2 py-6 text-[12px] text-zinc-500">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-loader-circle size-3.5 animate-spin" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>
+          <span id="wp-sentinel-text">Loading more…</span>
+        </div>
       </div>
     </div>
   </div>
@@ -88,7 +99,7 @@
 
 <input type="file" id="wp-file" accept="image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm" class="hidden"/>
 
-<!-- lightbox preview -->
+<!-- lightbox preview — every card type opens it -->
 <div id="wp-lightbox" class="fixed inset-0 z-[90] hidden items-center justify-center bg-black/80 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Wallpaper preview">
   <div class="relative w-full max-w-3xl overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-950/95 shadow-2xl">
     <div class="relative aspect-video w-full overflow-hidden bg-zinc-900" id="lb-media"></div>
@@ -97,7 +108,8 @@
         <p class="truncate text-[15px] font-semibold text-zinc-50" id="lb-name">—</p>
         <p class="truncate text-[12px] text-zinc-500" id="lb-desc">—</p>
       </div>
-      <button type="button" id="lb-apply" class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition h-10 rounded-xl bg-emerald-500 px-5 text-emerald-950 shadow-lg shadow-emerald-500/25 hover:bg-emerald-400">Apply</button>
+      <a id="lb-open" href="#" target="_blank" rel="noopener noreferrer" class="hidden h-10 items-center justify-center whitespace-nowrap rounded-xl border border-zinc-800 bg-zinc-900/70 px-4 text-sm font-medium text-zinc-300 transition hover:border-emerald-500/40 hover:text-zinc-100">Open original</a>
+      <button type="button" id="lb-apply" class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition h-10 rounded-xl bg-emerald-500 px-5 text-emerald-950 shadow-lg shadow-emerald-500/25 hover:bg-emerald-400 disabled:opacity-50">Apply</button>
       <button type="button" id="lb-close" aria-label="Close preview" class="inline-flex items-center justify-center size-10 rounded-xl border border-zinc-800 bg-zinc-900/70 text-zinc-400 transition hover:text-zinc-100">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-x size-4"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
       </button>
@@ -113,6 +125,33 @@
   var $ = V.$, $$ = V.$$;
   var pack = [], themes = {}, liveItems = [], fourk = [];
   var selected = null, tab = "pack", pill = "all", query = "";
+
+  /* ---------- the main app's API (os.js resolves the base once) ---------- */
+  var API_OK = false;
+
+  function absUrl(u) {
+    if (!u || /^https?:\/\//i.test(u)) return u;
+    try { return new URL(u, window.location.href.split("#")[0]).href; } catch (e) { return u; }
+  }
+  /* render src for a remote image — through the app's /api/p/ proxy when the
+     app is reachable (the exact treatment the website gives every remote
+     image), the direct URL otherwise (the baked offline path) */
+  function apiMedia(u) {
+    return (API_OK && /^https?:\/\//i.test(u || "")) ? V.apiImg(u) : u;
+  }
+  /* applied wallpaper src — always absolute, so os.js's wpAsset passes it
+     straight into the mounted <img>/<video> */
+  function apiSrc(u) {
+    return (API_OK && /^https?:\/\//i.test(u || "")) ? absUrl(V.apiImg(u)) : u;
+  }
+  /* the 1080p preview variant of a routed motionbgs video — a quarter of the
+     4K decode memory, the same preview route the website uses. Apply keeps
+     the plain URL (the server canonicalizes it back to the full 4K file) */
+  function livePreviewSrc(video) {
+    if (!API_OK) return video;
+    var r = V.apiImg(video);
+    return r + (r.indexOf("?") > -1 ? "&" : "?") + "vw=1080";
+  }
 
   function asset(p) { return V.wpAsset(p); }
   function favs() { try { return JSON.parse(V.ls("veil.wallpaper.favs") || "[]"); } catch (e) { return []; } }
@@ -143,31 +182,44 @@
 
   function themeCard(name, gradient) {
     var isApplied = applied() && applied().theme === name;
-    return '<button type="button" data-theme="' + name + '" aria-label="Apply the ' + name + ' theme" class="group relative block w-full overflow-hidden rounded-2xl border ' + (isApplied ? "border-emerald-500/70" : "border-zinc-800/80") + ' bg-zinc-900 text-left outline-none transition-all duration-200 hover:-translate-y-1 hover:border-emerald-500/60 hover:shadow-[0_18px_42px_-14px_rgba(16,185,129,0.45)] focus-visible:ring-2 focus-visible:ring-emerald-500/70">' +
+    return '<button type="button" data-theme-card="' + V.esc(name) + '" aria-label="Preview the ' + V.esc(name) + ' theme" class="group relative block w-full overflow-hidden rounded-2xl border ' + (isApplied ? "border-emerald-500/70" : "border-zinc-800/80") + ' bg-zinc-900 text-left outline-none transition-all duration-200 hover:-translate-y-1 hover:border-emerald-500/60 hover:shadow-[0_18px_42px_-14px_rgba(16,185,129,0.45)] focus-visible:ring-2 focus-visible:ring-emerald-500/70">' +
       '<div class="relative aspect-video w-full overflow-hidden"><div class="absolute inset-0 bg-gradient-to-br ' + gradient + '"><div class="absolute -top-10 left-[20%] h-24 w-44 rounded-full bg-white/10 blur-2xl"></div><div class="absolute -bottom-8 right-[10%] h-20 w-20 rounded-full bg-black/10 blur-2xl"></div></div>' +
       (isApplied ? '<span class="absolute left-2.5 top-2.5 z-10 rounded-full border border-emerald-400/30 bg-emerald-500/20 px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-wider text-emerald-300 backdrop-blur-md">applied</span>' : "") +
       "</div>" +
       '<div class="absolute inset-x-0 bottom-0 p-3"><p class="truncate text-sm font-semibold leading-tight text-zinc-50 drop-shadow-sm">' + name.charAt(0).toUpperCase() + name.slice(1) + '</p><p class="mt-0.5 truncate text-[11px] leading-tight text-zinc-400">animated theme</p></div></button>';
   }
 
-  function feedCard(c, isLive) {
-    if (isLive) {
-      return '<button type="button" aria-label="Preview ' + V.esc(c.name) + '" data-live=\'' + V.esc(JSON.stringify({ id: "mbgs-" + c.id, kind: "video", name: c.name, src: c.video, thumb: c.thumb, desc: "motionbgs · live wallpaper" })) + '\' class="group relative block w-full overflow-hidden rounded-2xl border border-zinc-800/80 bg-zinc-900 text-left outline-none transition-all duration-200 hover:-translate-y-1 hover:border-emerald-500/60 hover:shadow-[0_18px_42px_-14px_rgba(16,185,129,0.45)] focus-visible:ring-2 focus-visible:ring-emerald-500/70">' +
-        '<div class="relative aspect-video w-full overflow-hidden"><img alt="" loading="lazy" decoding="async" class="size-full object-cover transition-all duration-500 group-hover:scale-[1.04]" src="' + V.esc(c.thumb) + '"/>' +
-        '<span class="absolute left-2.5 top-2.5 z-10 flex items-center gap-1 rounded-full border border-emerald-400/25 bg-emerald-500/15 px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-wider text-emerald-300 backdrop-blur-md"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-2.5" aria-hidden="true"><path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5"></path><rect x="2" y="6" width="14" height="12" rx="2"></rect></svg>live</span></div>' +
-        '<div class="absolute inset-x-0 bottom-0 p-3"><p class="truncate text-sm font-semibold leading-tight text-zinc-50 drop-shadow-sm">' + V.esc(c.name) + '</p><p class="mt-0.5 truncate text-[11px] leading-tight text-zinc-400">motionbgs · 4K motion</p></div></button>';
-    }
-    return '<a href="' + V.esc(c.detail) + '" target="_blank" rel="noopener noreferrer" aria-label="' + V.esc(c.name) + ' — open the 4K page" class="group relative block w-full overflow-hidden rounded-2xl border border-zinc-800/80 bg-zinc-900 text-left outline-none transition-all duration-200 hover:-translate-y-1 hover:border-emerald-500/60 hover:shadow-[0_18px_42px_-14px_rgba(16,185,129,0.45)] focus-visible:ring-2 focus-visible:ring-emerald-500/70">' +
-      '<div class="relative aspect-video w-full overflow-hidden"><img alt="" loading="lazy" decoding="async" class="size-full object-cover transition-all duration-500 group-hover:scale-[1.04]" src="' + V.esc(c.thumb) + '"/>' +
-      '<span class="absolute left-2.5 top-2.5 z-10 rounded-full border border-white/10 bg-black/50 px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-wider text-zinc-200 backdrop-blur-md">' + V.esc(c.category) + "</span></div>" +
-      '<div class="absolute inset-x-0 bottom-0 p-3"><p class="truncate text-sm font-semibold leading-tight text-zinc-50 drop-shadow-sm">' + V.esc(c.name) + '</p><p class="mt-0.5 truncate text-[11px] leading-tight text-zinc-400">4K · opens the source</p></div></a>';
+  function liveCard(c) {
+    var isApplied = applied() && applied().id === "mbgs-" + c.id;
+    return '<button type="button" aria-label="Preview ' + V.esc(c.name) + '" data-live=\'' + V.esc(JSON.stringify({ id: c.id, name: c.name, slug: c.slug || "", thumb: c.thumb, video: c.video })) + '\' class="group relative block w-full overflow-hidden rounded-2xl border ' + (isApplied ? "border-emerald-500/70" : "border-zinc-800/80") + ' bg-zinc-900 text-left outline-none transition-all duration-200 hover:-translate-y-1 hover:border-emerald-500/60 hover:shadow-[0_18px_42px_-14px_rgba(16,185,129,0.45)] focus-visible:ring-2 focus-visible:ring-emerald-500/70">' +
+      '<div class="relative aspect-video w-full overflow-hidden"><img alt="" loading="lazy" decoding="async" class="size-full object-cover transition-all duration-500 group-hover:scale-[1.04]" src="' + V.esc(apiMedia(c.thumb)) + '"/>' +
+      '<span class="absolute left-2.5 top-2.5 z-10 flex items-center gap-1 rounded-full border border-emerald-400/25 bg-emerald-500/15 px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-wider text-emerald-300 backdrop-blur-md"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-2.5" aria-hidden="true"><path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5"></path><rect x="2" y="6" width="14" height="12" rx="2"></rect></svg>live</span>' +
+      (isApplied ? '<span class="absolute left-2.5 bottom-11 z-10 rounded-full border border-emerald-400/30 bg-emerald-500/20 px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-wider text-emerald-300 backdrop-blur-md">applied</span>' : "") +
+      "</div>" +
+      '<div class="absolute inset-x-0 bottom-0 p-3"><p class="truncate text-sm font-semibold leading-tight text-zinc-50 drop-shadow-sm">' + V.esc(c.name) + '</p><p class="mt-0.5 truncate text-[11px] leading-tight text-zinc-400">motionbgs · 4K motion</p></div></button>';
+  }
+
+  function fourkCard(c) {
+    var isApplied = applied() && applied().id === "4k-" + c.id;
+    return '<button type="button" aria-label="Preview ' + V.esc(c.name) + '" data-4k=\'' + V.esc(JSON.stringify({ id: c.id, name: c.name, slug: c.slug || "", category: c.category || "", thumb: c.thumb, detail: c.detail })) + '\' class="group relative block w-full overflow-hidden rounded-2xl border ' + (isApplied ? "border-emerald-500/70" : "border-zinc-800/80") + ' bg-zinc-900 text-left outline-none transition-all duration-200 hover:-translate-y-1 hover:border-emerald-500/60 hover:shadow-[0_18px_42px_-14px_rgba(16,185,129,0.45)] focus-visible:ring-2 focus-visible:ring-emerald-500/70">' +
+      '<div class="relative aspect-video w-full overflow-hidden"><img alt="" loading="lazy" decoding="async" class="size-full object-cover transition-all duration-500 group-hover:scale-[1.04]" src="' + V.esc(apiMedia(c.thumb)) + '"/>' +
+      '<span class="absolute left-2.5 top-2.5 z-10 rounded-full border border-white/10 bg-black/50 px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-wider text-zinc-200 backdrop-blur-md">' + V.esc(c.category || "4K") + "</span>" +
+      (isApplied ? '<span class="absolute left-2.5 bottom-11 z-10 rounded-full border border-emerald-400/30 bg-emerald-500/20 px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-wider text-emerald-300 backdrop-blur-md">applied</span>' : "") +
+      "</div>" +
+      '<div class="absolute inset-x-0 bottom-0 p-3"><p class="truncate text-sm font-semibold leading-tight text-zinc-50 drop-shadow-sm">' + V.esc(c.name) + '</p><p class="mt-0.5 truncate text-[11px] leading-tight text-zinc-400">4K · tap to preview</p></div></button>';
+  }
+
+  function filterLocal(list) {
+    if (!query) return list;
+    var q = query.toLowerCase();
+    return list.filter(function (c) { return (c.name || "").toLowerCase().indexOf(q) > -1; });
   }
 
   function currentList() {
     if (tab === "themes") return null;
-    if (tab === "live") return liveItems.map(function (c) { return { type: "live", c: c }; });
-    if (tab === "4k") return fourk.map(function (c) { return { type: "4k", c: c }; });
     var f = favs();
+    if (tab === "live") return filterLocal(liveItems).map(function (c) { return { type: "live", c: c }; });
+    if (tab === "4k") return filterLocal(fourk).map(function (c) { return { type: "4k", c: c }; });
     var list = pack.map(function (w) { return { type: "pack", w: w }; });
     /* filters */
     if (pill !== "all") {
@@ -187,45 +239,234 @@
     return list;
   }
 
+  /* ---------- remote catalog + search state ---------- */
+  var next4k = 1, hasMore4k = true, loading4k = false, seen4k = {};
+  var nextLive = 1, hasMoreLive = true, loadingLive = false, seenLive = {};
+  var search4k = null, searchLive = null, searchPending = false, searchSeq = 0, searchTimer = null;
+
+  function jsonItems(u) {
+    return fetch(u, { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) { return (d && d.items) ? d.items : []; })
+      .catch(function () { return []; });
+  }
+
+  function loadNext4k() {
+    if (!API_OK || loading4k || !hasMore4k || query) return;
+    loading4k = true;
+    updateCatalogChrome();
+    jsonPage(V.apiUrl("/api/wallpapers?cat=recent&page=" + next4k)).then(function (d) {
+      loading4k = false;
+      if (d) {
+        next4k = (d.page && d.page >= next4k ? d.page : next4k) + 1;
+        hasMore4k = !!d.hasMore;
+        (d.items || []).forEach(function (c) {
+          if (c && c.id != null && !seen4k[c.id]) { seen4k[c.id] = 1; fourk.push(c); }
+        });
+      } else hasMore4k = false;
+      if (tab === "4k" && !query) render();
+      else updateCatalogChrome();
+      maybeLoadMore();
+    });
+  }
+
+  function loadNextLive() {
+    if (!API_OK || loadingLive || !hasMoreLive || query) return;
+    loadingLive = true;
+    updateCatalogChrome();
+    jsonPage(V.apiUrl("/api/wallpapers/live?cat=recent&page=" + nextLive)).then(function (d) {
+      loadingLive = false;
+      if (d) {
+        nextLive = (d.page && d.page >= nextLive ? d.page : nextLive) + 1;
+        hasMoreLive = !!d.hasMore;
+        (d.items || []).forEach(function (c) {
+          if (c && c.id != null && !seenLive[c.id]) { seenLive[c.id] = 1; liveItems.push(c); }
+        });
+      } else hasMoreLive = false;
+      if (tab === "live" && !query) render();
+      else updateCatalogChrome();
+      maybeLoadMore();
+    });
+  }
+
+  function jsonPage(u) {
+    return fetch(u, { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .catch(function () { return null; });
+  }
+
+  function runSearch() {
+    if (!query || !API_OK) return;
+    var seq = ++searchSeq;
+    searchPending = true;
+    if (tab === "pack") renderRemoteSections();
+    else updateCatalogChrome();
+    Promise.all([
+      jsonItems(V.apiUrl("/api/wallpapers?q=" + encodeURIComponent(query))),
+      jsonItems(V.apiUrl("/api/wallpapers/live?q=" + encodeURIComponent(query)))
+    ]).then(function (r) {
+      if (seq !== searchSeq) return;
+      searchPending = false;
+      search4k = r[0];
+      searchLive = r[1];
+      if (tab === "4k" || tab === "live") render();
+      else renderRemoteSections();
+      updateCatalogChrome();
+    });
+  }
+
+  /* ---------- render ---------- */
   function render() {
     var grid = document.getElementById("wp-grid");
     if (tab === "themes") {
-      var html = "";
-      Object.keys(themes).forEach(function (name) { html += themeCard(name, themes[name]); });
-      grid.innerHTML = html;
-      $$("[data-theme]").forEach(function (b) {
-        b.addEventListener("click", function () {
-          apply({ id: "theme-" + b.getAttribute("data-theme"), src: "", kind: "animated", name: b.getAttribute("data-theme"), theme: b.getAttribute("data-theme") });
-          render();
-        });
-      });
+      var thtml = "";
+      Object.keys(themes).forEach(function (name) { thtml += themeCard(name, themes[name]); });
+      grid.innerHTML = thtml;
+      bindCards(grid);
+      renderRemoteSections();
+      updateCatalogChrome();
       return;
     }
-    var list = currentList();
+    var list;
+    if (tab === "4k") {
+      list = (query && API_OK && search4k) ? search4k.map(function (c) { return { type: "4k", c: c }; }) : currentList();
+    } else if (tab === "live") {
+      list = (query && API_OK && searchLive) ? searchLive.map(function (c) { return { type: "live", c: c }; }) : currentList();
+    } else {
+      list = currentList();
+    }
     var html = tab === "pack" ? ADD_CARD : "";
     list.forEach(function (x) {
-      html += x.type === "pack" ? packCard(x.w) : feedCard(x.c, x.type === "live");
+      html += x.type === "pack" ? packCard(x.w) : (x.type === "live" ? liveCard(x.c) : fourkCard(x.c));
     });
-    if (!list.length && tab === "pack") {
-      html += '<div class="col-span-full rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-8 text-center text-[13px] text-zinc-500">Nothing matches that filter.</div>';
+    if (!list.length && (tab === "pack" || query)) {
+      var msg;
+      if (tab === "pack") msg = "Nothing matches that filter.";
+      else if (!API_OK) msg = "Nothing matches — the full search connects through the main Veil app.";
+      else if (searchPending || (tab === "4k" ? !search4k : !searchLive)) msg = "Searching the catalog…";
+      else msg = "No wallpapers matched.";
+      html += '<div class="col-span-full rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-8 text-center text-[13px] text-zinc-500">' + V.esc(msg) + "</div>";
     }
     grid.innerHTML = html;
-    bindCards();
+    bindCards(grid);
+    renderRemoteSections();
+    updateCatalogChrome();
+    if (tab === "4k" || tab === "live") maybeLoadMore();
   }
 
-  function bindCards() {
-    var addCard = document.getElementById("add-card");
+  function sectionHeader(title, count) {
+    return '<div class="mb-3 flex items-center gap-3"><h2 class="shrink-0 text-[15px] font-semibold tracking-tight text-zinc-100">' + V.esc(title) + ' <span class="font-normal text-zinc-500">(' + count + ")</span></h2>" +
+      '<span aria-hidden="true" class="h-px flex-1 bg-zinc-800"></span></div>';
+  }
+
+  function renderRemoteSections() {
+    var host = document.getElementById("wp-remote");
+    if (tab !== "pack" || !query || !API_OK) { host.innerHTML = ""; return; }
+    var html = "";
+    if (searchPending) {
+      html += '<p class="text-[12px] text-zinc-500">Searching the 4K catalog and the live shelves…</p>';
+    }
+    if (search4k && search4k.length) {
+      html += '<section aria-label="From the 4K catalog">' + sectionHeader("From the 4K catalog", search4k.length) +
+        '<div class="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">' + search4k.map(fourkCard).join("") + "</div></section>";
+    }
+    if (searchLive && searchLive.length) {
+      html += '<section aria-label="Live wallpapers">' + sectionHeader("Live wallpapers", searchLive.length) +
+        '<div class="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">' + searchLive.map(liveCard).join("") + "</div></section>";
+    }
+    if (!searchPending && !(search4k && search4k.length) && !(searchLive && searchLive.length)) {
+      html += '<p class="text-[12px] text-zinc-500">No matches in the 4K catalog or the live shelves.</p>';
+    }
+    host.innerHTML = html;
+    bindCards(host);
+  }
+
+  function updateCatalogChrome() {
+    var note = document.getElementById("wp-catalog-note");
+    var sen = document.getElementById("wp-sentinel");
+    var status = document.getElementById("wp-status");
+    if (tab !== "4k" && tab !== "live") {
+      note.classList.add("hidden");
+      sen.classList.add("hidden");
+      status.classList.add("hidden");
+      return;
+    }
+    if (query && API_OK) {
+      var res = tab === "4k" ? search4k : searchLive;
+      var n = res ? res.length : 0;
+      status.classList.remove("hidden");
+      status.textContent = searchPending
+        ? "Searching \u201C" + query + "\u201D…"
+        : n + " result" + (n === 1 ? "" : "s") + " for \u201C" + query + "\u201D · " + (tab === "4k" ? "4kwallpapers.com" : "motionbgs");
+      note.classList.add("hidden");
+      sen.classList.add("hidden");
+      return;
+    }
+    if (query) {
+      status.classList.remove("hidden");
+      status.textContent = "Local matches only — the full search connects through the main Veil app.";
+    } else {
+      status.classList.add("hidden");
+    }
+    if (!API_OK) {
+      note.classList.remove("hidden");
+      sen.classList.add("hidden");
+      return;
+    }
+    note.classList.add("hidden");
+    var hasMore = tab === "4k" ? hasMore4k : hasMoreLive;
+    var loading = tab === "4k" ? loading4k : loadingLive;
+    if (hasMore || loading) {
+      sen.classList.remove("hidden");
+      document.getElementById("wp-sentinel-text").textContent = loading ? "Loading more…" : "Scroll for more…";
+    } else {
+      sen.classList.add("hidden");
+    }
+  }
+
+  /* ---------- infinite catalog (IntersectionObserver + rect fallback) ---------- */
+  function maybeLoadMore() {
+    if (tab !== "4k" && tab !== "live") return;
+    if (!API_OK || query) return;
+    var sen = document.getElementById("wp-sentinel");
+    if (sen.classList.contains("hidden")) return;
+    var r = sen.getBoundingClientRect();
+    var vh = window.innerHeight || document.documentElement.clientHeight;
+    if (r.top < vh + 400) {
+      if (tab === "4k") loadNext4k();
+      else loadNextLive();
+    }
+  }
+  if ("IntersectionObserver" in window) {
+    new IntersectionObserver(function (entries) {
+      for (var i = 0; i < entries.length; i++) {
+        if (entries[i].isIntersecting) {
+          if (tab === "4k") loadNext4k();
+          else if (tab === "live") loadNextLive();
+        }
+      }
+    }, { rootMargin: "500px 0px" }).observe(document.getElementById("wp-sentinel"));
+  }
+
+  function bindCards(root) {
+    var addCard = root.querySelector("#add-card");
     if (addCard) addCard.addEventListener("click", function () { document.getElementById("wp-file").click(); });
-    $$("[data-wp]").forEach(function (b) {
+    $$("[data-wp]", root).forEach(function (b) {
       b.addEventListener("click", function (e) {
         if (e.target.closest("[data-fav]")) return;
-        openLightbox(JSON.parse(b.getAttribute("data-wp")));
+        openPackLightbox(JSON.parse(b.getAttribute("data-wp")));
       });
     });
-    $$("[data-live]").forEach(function (b) {
-      b.addEventListener("click", function () { openLightbox(JSON.parse(b.getAttribute("data-live"))); });
+    $$("[data-live]", root).forEach(function (b) {
+      b.addEventListener("click", function () { openLiveLightbox(JSON.parse(b.getAttribute("data-live"))); });
     });
-    $$("[data-fav]").forEach(function (h) {
+    $$("[data-4k]", root).forEach(function (b) {
+      b.addEventListener("click", function () { open4kLightbox(JSON.parse(b.getAttribute("data-4k"))); });
+    });
+    $$("[data-theme-card]", root).forEach(function (b) {
+      b.addEventListener("click", function () { openThemeLightbox(b.getAttribute("data-theme-card")); });
+    });
+    $$("[data-fav]", root).forEach(function (h) {
       h.addEventListener("click", function (e) {
         e.stopPropagation();
         e.preventDefault();
@@ -238,7 +479,7 @@
       });
     });
     /* hover video previews — the app's 450ms cadence */
-    $$("[data-hover-video]").forEach(function (v) {
+    $$("[data-hover-video]", root).forEach(function (v) {
       var t = null;
       var card = v.closest(".group");
       card.addEventListener("mouseenter", function () {
@@ -251,32 +492,166 @@
     });
   }
 
-  function openLightbox(w) {
-    selected = w;
-    document.getElementById("lb-name").textContent = w.name;
-    document.getElementById("lb-desc").textContent = w.desc || (w.kind === "video" ? "motion backdrop" : "still backdrop");
-    document.getElementById("lb-media").innerHTML = w.kind === "video"
-      ? '<video src="' + V.esc(asset(w.src)) + '" autoplay loop muted playsinline class="size-full object-cover"></video>'
-      : '<img src="' + V.esc(asset(w.src)) + '" alt="' + V.esc(w.name) + '" class="size-full object-cover" />';
+  /* ---------- lightbox — one preview card for EVERY card type ---------- */
+  function openLb() {
     var lb = document.getElementById("wp-lightbox");
     lb.classList.remove("hidden");
     lb.classList.add("flex");
   }
-  document.getElementById("lb-close").addEventListener("click", function () {
+  function closeLb() {
     var lb = document.getElementById("wp-lightbox");
     lb.classList.add("hidden");
     lb.classList.remove("flex");
     document.getElementById("lb-media").innerHTML = "";
-  });
-  document.getElementById("wp-lightbox").addEventListener("click", function (e) {
-    if (e.target === this) document.getElementById("lb-close").click();
-  });
-  document.getElementById("lb-apply").addEventListener("click", function () {
-    if (selected) {
-      apply({ id: selected.id, src: selected.src, kind: selected.kind, name: selected.name, thumb: selected.thumb });
-      render();
-      document.getElementById("lb-close").click();
+    var open = document.getElementById("lb-open");
+    open.classList.add("hidden");
+    open.classList.remove("inline-flex");
+    open.removeAttribute("href");
+    var ap = document.getElementById("lb-apply");
+    ap.disabled = false;
+    ap.textContent = "Apply";
+    selected = null;
+  }
+
+  function openPackLightbox(w) {
+    selected = { type: "pack", w: w };
+    document.getElementById("lb-name").textContent = w.name;
+    document.getElementById("lb-desc").textContent = w.desc || (w.kind === "video" ? "motion backdrop" : "still backdrop");
+    document.getElementById("lb-media").innerHTML = w.kind === "video"
+      ? '<video src="' + V.esc(asset(w.src)) + '" poster="' + V.esc(asset(w.thumb)) + '" autoplay="autoplay" loop="loop" muted="muted" playsinline="playsinline" class="size-full object-cover"></video>'
+      : '<img src="' + V.esc(asset(w.src)) + '" alt="' + V.esc(w.name) + '" class="size-full object-cover" />';
+    openLb();
+  }
+
+  function openLiveLightbox(item) {
+    selected = { type: "live", item: item };
+    document.getElementById("lb-name").textContent = item.name;
+    document.getElementById("lb-desc").textContent = "motionbgs · 4K live wallpaper";
+    /* poster paints instantly (the card already cached it); the muted loop
+       fades in on top once it can play — the same pipeline the site uses */
+    document.getElementById("lb-media").innerHTML =
+      '<img src="' + V.esc(apiMedia(item.thumb)) + '" alt="' + V.esc(item.name) + '" class="size-full object-cover" />' +
+      '<video src="' + V.esc(livePreviewSrc(item.video)) + '" autoplay="autoplay" loop="loop" muted="muted" playsinline="playsinline" preload="auto" class="absolute inset-0 size-full object-cover"></video>';
+    openLb();
+  }
+
+  function openThemeLightbox(name) {
+    selected = { type: "theme", name: name };
+    document.getElementById("lb-name").textContent = name.charAt(0).toUpperCase() + name.slice(1);
+    document.getElementById("lb-desc").textContent = "animated theme · applies everywhere instantly";
+    document.getElementById("lb-media").innerHTML = '<div class="absolute inset-0 bg-gradient-to-br ' + (themes[name] || "from-emerald-400 to-teal-600") + '"><div class="absolute -top-10 left-[20%] h-24 w-44 rounded-full bg-white/10 blur-2xl"></div><div class="absolute -bottom-8 right-[10%] h-20 w-20 rounded-full bg-black/10 blur-2xl"></div></div>';
+    openLb();
+  }
+
+  /* 4K items: preview the thumb big, resolve the real downloadable
+     resolutions through /api/wallpapers/detail, apply the best one */
+  function fetchDetail(item) {
+    return fetch(V.apiUrl("/api/wallpapers/detail?url=" + encodeURIComponent(item.detail)), { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error("http " + r.status)); })
+      .then(function (d) {
+        if (!d || !((d.resolutions || []).length || d.best)) throw new Error("no resolutions");
+        return d;
+      });
+  }
+  /* largest 16:9 file up to 3840 wide, else the largest overall */
+  function pickBest(d) {
+    if (!d) return null;
+    var res = (d.resolutions || []).slice();
+    if (!res.length) return d.best || null;
+    var capped = res.filter(function (r) { return r.w <= 3840 && r.w >= r.h; });
+    if (!capped.length) capped = res;
+    var ratio = function (r) { return Math.abs(r.w / r.h - 16 / 9); };
+    capped.sort(function (a, b) { return (ratio(a) - ratio(b)) || (b.w * b.h - a.w * a.h); });
+    return capped[0] || d.best || null;
+  }
+
+  function open4kLightbox(item) {
+    selected = { type: "4k", item: item, detail: null };
+    document.getElementById("lb-name").textContent = item.name;
+    document.getElementById("lb-desc").textContent = "4K · " + (item.category || "wallpaper") + " · 4kwallpapers.com";
+    document.getElementById("lb-media").innerHTML = '<img src="' + V.esc(apiMedia(item.thumb)) + '" alt="' + V.esc(item.name) + '" class="size-full object-cover" />';
+    var open = document.getElementById("lb-open");
+    if (item.detail) open.setAttribute("href", item.detail);
+    open.classList.remove("hidden");
+    open.classList.add("inline-flex");
+    openLb();
+    prefetch4kDetail(item);
+  }
+
+  function prefetch4kDetail(item) {
+    var ap = document.getElementById("lb-apply");
+    if (!API_OK) {
+      ap.disabled = true;
+      document.getElementById("lb-desc").textContent = "preview only — applying at full size needs the main Veil app";
+      return;
     }
+    ap.disabled = true;
+    document.getElementById("lb-desc").textContent = "resolving the best resolution…";
+    fetchDetail(item).then(function (d) {
+      if (!selected || selected.type !== "4k" || selected.item !== item) return;
+      selected.detail = d;
+      var best = pickBest(d);
+      ap.disabled = false;
+      ap.textContent = best ? "Apply " + best.w + "×" + best.h : "Apply";
+      document.getElementById("lb-desc").textContent = "4K · " + (item.category || "wallpaper") + " · 4kwallpapers.com";
+    }).catch(function () {
+      if (!selected || selected.type !== "4k" || selected.item !== item) return;
+      selected.failed = true;
+      ap.disabled = true;
+      document.getElementById("lb-desc").textContent = "could not resolve the download — open the original, or close and retry";
+    });
+  }
+
+  document.getElementById("lb-close").addEventListener("click", closeLb);
+  document.getElementById("wp-lightbox").addEventListener("click", function (e) {
+    if (e.target === this) closeLb();
+  });
+
+  document.getElementById("lb-apply").addEventListener("click", function () {
+    if (!selected) return;
+    var ap = this;
+    if (selected.type === "pack") {
+      var w = selected.w;
+      apply({ id: w.id, src: w.src, kind: w.kind, name: w.name, thumb: w.thumb });
+    } else if (selected.type === "theme") {
+      apply({ id: "theme-" + selected.name, src: "", kind: "animated", name: selected.name, theme: selected.name });
+    } else if (selected.type === "live") {
+      var it = selected.item;
+      apply({ id: "mbgs-" + it.id, src: apiSrc(it.video), kind: "video", name: it.name, thumb: apiMedia(it.thumb) });
+    } else if (selected.type === "4k") {
+      var s4 = selected;
+      if (!API_OK) {
+        document.getElementById("lb-desc").textContent = "applying at full size needs the main Veil app — open the original instead";
+        return;
+      }
+      var cached = s4.detail ? pickBest(s4.detail) : null;
+      if (cached) {
+        apply({ id: "4k-" + s4.item.id, src: apiSrc(cached.url), kind: "image", name: s4.item.name, thumb: apiMedia(s4.item.thumb) });
+      } else {
+        ap.disabled = true;
+        ap.textContent = "Resolving…";
+        document.getElementById("lb-desc").textContent = "resolving the best resolution…";
+        fetchDetail(s4.item).then(function (d) {
+          if (!selected || selected !== s4) return;
+          s4.detail = d;
+          var b = pickBest(d);
+          if (!b) throw new Error("no resolutions");
+          apply({ id: "4k-" + s4.item.id, src: apiSrc(b.url), kind: "image", name: s4.item.name, thumb: apiMedia(s4.item.thumb) });
+          closeLb();
+          render();
+        }).catch(function () {
+          if (!selected || selected !== s4) return;
+          ap.disabled = true;
+          ap.textContent = "Apply";
+          document.getElementById("lb-desc").textContent = "could not resolve the download — open the original, or close and retry";
+        });
+        return;
+      }
+    } else {
+      return;
+    }
+    closeLb();
+    render();
   });
 
   /* upload — genuinely works: the file becomes a data-URI wallpaper */
@@ -310,7 +685,11 @@
           (on ? "bg-emerald-500/15 text-emerald-300 shadow-[0_0_16px_-6px_rgba(16,185,129,0.8)] ring-1 ring-emerald-500/40" : "text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200");
       });
       var controls = document.getElementById("wp-controls");
-      controls.style.display = tab === "pack" ? "" : "none";
+      controls.style.display = tab === "themes" ? "none" : "";
+      document.getElementById("tag-pills").style.display = tab === "pack" ? "" : "none";
+      document.getElementById("wp-search").placeholder = tab === "4k"
+        ? "Search the 4K catalog…"
+        : tab === "live" ? "Search live wallpapers…" : "Search your pack, the 4K catalog and live wallpapers…";
       render();
     });
   });
@@ -326,7 +705,18 @@
       render();
     });
   });
-  document.getElementById("wp-search").addEventListener("input", function () { query = this.value.trim(); render(); });
+  document.getElementById("wp-search").addEventListener("input", function () {
+    query = this.value.trim();
+    if (!query) {
+      search4k = null;
+      searchLive = null;
+      searchPending = false;
+      searchSeq++;
+    }
+    render();
+    if (searchTimer) clearTimeout(searchTimer);
+    searchTimer = setTimeout(runSearch, 400);
+  });
 
   /* load + boot */
   Promise.all([
@@ -338,11 +728,24 @@
     themes = (res[0] && res[0].themes) || {};
     fourk = (res[1] && res[1].items) || [];
     liveItems = (res[2] && res[2].items) || [];
+    fourk.forEach(function (c) { seen4k[c.id] = 1; });
+    liveItems.forEach(function (c) { seenLive[c.id] = 1; });
     var liveCount = pack.filter(function (w) { return w.kind === "video" || w.fallback; }).length;
     document.getElementById("wp-counter").textContent = pack.length + " uploads · " + liveCount + " live";
     document.getElementById("pack-count").textContent = pack.length;
     render();
   }).catch(function () {});
+
+  /* the app's API — when it answers, every remote image is sourced through
+     it exactly like the website, the search fans out to both catalogs and
+     the 4K/live shelves become endless */
+  V.api().then(function (base) {
+    API_OK = base !== null;
+    if (API_OK) {
+      render();
+      maybeLoadMore();
+    }
+  });
 })();
 </script>
 </body>

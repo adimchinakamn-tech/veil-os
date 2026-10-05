@@ -38,15 +38,20 @@ export async function OPTIONS(): Promise<Response> {
   return cors(new Response(null, { status: 204 }));
 }
 
-async function fetchBytes(url: string, range: string | null): Promise<Response> {
+async function fetchBytes(url: string, range: string | null, clientSignal?: AbortSignal): Promise<Response> {
   const headers: Record<string, string> = { "user-agent": UA, accept: "*/*" };
   if (range) headers.range = range;
+  /* TTFB-only ceiling: connect + first byte must land in 20s. The body
+   * itself streams as long as the client keeps reading — the old
+   * blanket 15-minute fetch timeout killed long songs mid-playback on
+   * slow connections. Client aborts (seeking away, closing the tab)
+   * cancel the upstream pull via a composite signal. */
+  const ttfb = AbortSignal.timeout(20_000);
+  const signal = clientSignal ? AbortSignal.any([clientSignal, ttfb]) : ttfb;
   return fetch(url, {
     headers,
     cache: "no-store",
-    // Generous: a long track streams in one connection; the signed URL
-    // itself expires long before this fires.
-    signal: AbortSignal.timeout(15 * 60_000),
+    signal,
   });
 }
 
@@ -75,12 +80,12 @@ export async function GET(req: Request): Promise<Response> {
 
   try {
     const stream = await scResolveStream(trackId);
-    let up = await fetchBytes(stream.url, range);
+    let up = await fetchBytes(stream.url, range, req.signal);
     // Signed URL went stale inside our cache window → re-resolve once.
     if (up.status === 403 || up.status === 401) {
       await up.arrayBuffer().catch(() => {}); // drain the stale body
       const fresh = await scResolveStream(trackId, true);
-      const retry = await fetchBytes(fresh.url, range);
+      const retry = await fetchBytes(fresh.url, range, req.signal);
       if (retry.ok || retry.status === 206) {
         return mediaPassThrough(retry);
       }

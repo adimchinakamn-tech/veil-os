@@ -118,10 +118,24 @@
     try { return JSON.parse(window.localStorage.getItem(ID_KEY) || "null"); } catch (e) { return null; }
   }
   function saveIdentity(acc) {
-    try { window.localStorage.setItem(ID_KEY, JSON.stringify(acc)); } catch (e) { /* ignore */ }
+    try {
+      window.localStorage.setItem(ID_KEY, JSON.stringify(acc));
+      /* os.js's shared-presence heartbeat reads this mirror so a signed-in
+         live user counts into the website's number as an account, not a
+         ghost guest */
+      window.localStorage.setItem("veil:live-identity", JSON.stringify({
+        username: acc.username,
+        displayName: acc.displayName,
+        avatarColor: acc.avatarColor || null,
+      }));
+    } catch (e) { /* ignore */ }
   }
   function clearIdentity() {
-    try { window.localStorage.removeItem(ID_KEY); } catch (e) { /* ignore */ }
+    try {
+      window.localStorage.removeItem(ID_KEY);
+      window.localStorage.removeItem("veil:live-identity");
+      window.localStorage.removeItem("veil:site-token");
+    } catch (e) { /* ignore */ }
   }
 
   /* ---------- state shape ---------- */
@@ -245,7 +259,10 @@
       avatarColor: color,
       avatarImage: null,
       bio: u.bio || "",
-      role: "member",
+      role: u.role || "member",
+      muted: !!u.muted,
+      banned: !!u.banned,
+      banReason: u.banReason || null,
       coins: u.coins != null ? u.coins : 100,
       tag: u.tag || null,
       tagColor: u.tagColor || null,
@@ -259,11 +276,63 @@
       accountId: "live:" + String(m.username || "").toLowerCase(),
       content: m.content,
       createdAt: m.createdAt,
+      editedAt: m.editedAt || null,
       live: true,
     };
   }
 
   /* ---------- auth ---------- */
+  /* THE WEBSITE FIRST: when the app's API is reachable, the SAME
+     username + password that works on the website signs you in here —
+     the live-room entry is linked to the website account (display name,
+     avatar color, role carried over; no local password). Only when the
+     API is unreachable or the name isn't a website account does the
+     room's own claim system take over. */
+  function siteLogin(username, password) {
+    if (!window.VEILOS || !window.VEILOS.api) return Promise.resolve(null);
+    return window.VEILOS.api().then(function (base) {
+      if (base === null) return null;
+      return fetch(base + "/api/chat-auth/login", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ username: username, password: password }),
+      })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .catch(function () { return null; });
+    });
+  }
+  function linkWebsiteAccount(siteAcc, password) {
+    var lower = String(siteAcc.username || "").toLowerCase();
+    return writeState(function (s) {
+      var found = findUser(s, lower);
+      if (found && found.banned) {
+        var e = new Error(found.banReason || "You are banned from this room.");
+        e.banned = true;
+        throw e;
+      }
+      s.users[lower] = {
+        username: siteAcc.username || lower,
+        displayName: siteAcc.displayName || siteAcc.username || lower,
+        avatarColor: /^#[0-9a-fA-F]{6}$/.test(siteAcc.avatarColor || "") ? siteAcc.avatarColor : (found && found.avatarColor) || "#22d3ee",
+        pw: found && found.pw ? found.pw : null,
+        linked: true,
+        role: siteAcc.role || (found && found.role) || "member",
+        createdAt: (found && found.createdAt) || new Date().toISOString(),
+        lastSeen: new Date().toISOString(),
+      };
+    }).then(function () {
+      var acc = {
+        username: siteAcc.username || lower,
+        displayName: siteAcc.displayName || siteAcc.username || lower,
+        avatarColor: /^#[0-9a-fA-F]{6}$/.test(siteAcc.avatarColor || "") ? siteAcc.avatarColor : "#22d3ee",
+        via: "website",
+      };
+      saveIdentity(acc);
+      try { window.localStorage.setItem("veil:site-token", siteAcc.token || ""); } catch (e) { /* ignore */ }
+      return acc;
+    });
+  }
+
   function register(username, password) {
     var u = String(username || "").trim();
     var p = String(password || "");
@@ -294,23 +363,35 @@
     var p = String(password || "");
     if (!u || !p) return Promise.reject(new Error("Username and password are required."));
     var lower = u.toLowerCase();
-    return writeState(function (s) {
-      var found = findUser(s, lower);
-      if (!found || found.pw !== pwHash(lower, p)) {
-        throw new Error("Invalid username or password.");
+    /* 1 — the WEBSITE account (same credentials as the real app) */
+    return siteLogin(u, p).then(function (j) {
+      if (j && j.ok && j.account) {
+        return linkWebsiteAccount(j.account, p);
       }
-      found.lastSeen = new Date().toISOString();
-    }).then(function () {
-      var found = null;
-      return fetchCdn().then(function (s) {
-        found = s && findUser(s, lower);
-        var acc = {
-          username: (found && found.username) || u,
-          displayName: (found && found.displayName) || u,
-          pw: pwHash(lower, p),
-        };
-        saveIdentity(acc);
-        return acc;
+      /* 2 — the room's own account */
+      return writeState(function (s) {
+        var found = findUser(s, lower);
+        if (found && found.banned) {
+          var e = new Error(found.banReason || "You are banned from this room.");
+          e.banned = true;
+          throw e;
+        }
+        if (!found || !found.pw || found.pw !== pwHash(lower, p)) {
+          throw new Error("Invalid username or password.");
+        }
+        found.lastSeen = new Date().toISOString();
+      }).then(function () {
+        return fetchCdn().then(function (s) {
+          var found = s && findUser(s, lower);
+          var acc = {
+            username: (found && found.username) || u,
+            displayName: (found && found.displayName) || u,
+            avatarColor: (found && found.avatarColor) || null,
+            pw: pwHash(lower, p),
+          };
+          saveIdentity(acc);
+          return acc;
+        });
       });
     });
   }
@@ -328,6 +409,12 @@
     };
     return writeState(function (s) {
       var u = s.users[lower];
+      if (u && u.banned) {
+        var e = new Error(u.banReason || "You are banned from this room.");
+        e.banned = true;
+        throw e;
+      }
+      if (u && u.muted) { throw new Error("You are muted — a moderator silenced this room for you."); }
       if (u) u.lastSeen = msg.createdAt;
       s.messages.push(msg);
     }).then(function () { return msgToRow(msg); });
@@ -344,18 +431,41 @@
       s.messages = keep;
     });
   }
+  /* edit your own message — content replaced, editedAt stamped; every
+     surface that renders the room (CDN pages + the website's merged
+     #general) shows a small "(edited)" next to it */
+  function editMessage(identityAcc, id, text) {
+    var t = String(text || "").trim().slice(0, 2000);
+    if (!t) return Promise.reject(new Error("empty"));
+    var lower = String(identityAcc.username || "").toLowerCase();
+    return writeState(function (s) {
+      var hit = null;
+      for (var i = 0; i < s.messages.length; i++) {
+        var m = s.messages[i];
+        if (m.id === id && String(m.username || "").toLowerCase() === lower) { hit = m; break; }
+      }
+      if (!hit) throw new Error("You can only edit your own messages.");
+      hit.content = t;
+      hit.editedAt = new Date().toISOString();
+    });
+  }
 
   /* ---------- presence ---------- */
   var lastBeat = 0;
   function heartbeat(identityAcc, force) {
     if (!identityAcc || !hasToken()) return Promise.resolve();
-    var now = Date.now();
-    if (!force && now - lastBeat < CFG.heartbeatMs - 15000) return Promise.resolve();
-    lastBeat = now;
-    var lower = String(identityAcc.username || "").toLowerCase();
-    return writeState(function (s) {
-      var u = s.users[lower];
-      if (u) u.lastSeen = new Date().toISOString();
+    var lower0 = String(identityAcc.username || "").toLowerCase();
+    /* banned users don't get to look present */
+    return fetchCdn().then(function (s) {
+      var u = s && findUser(s, lower0);
+      if (u && u.banned) return null;
+      var now = Date.now();
+      if (!force && now - lastBeat < CFG.heartbeatMs - 15000) return null;
+      lastBeat = now;
+      return writeState(function (st) {
+        var uu = st.users[lower0];
+        if (uu) uu.lastSeen = new Date().toISOString();
+      });
     }).catch(function () { /* presence is best-effort */ });
   }
   function isOnlineLive(u, nowMs) {
@@ -377,14 +487,18 @@
     login: login,
     sendMessage: sendMessage,
     deleteMessage: deleteMessage,
+    editMessage: editMessage,
     heartbeat: heartbeat,
     isOnlineLive: isOnlineLive,
     pseudoAccount: pseudoAccount,
     msgToRow: msgToRow,
     findUser: findUser,
     purge: purge,
+    siteLogin: siteLogin,
     friendlyError: function (e) {
       var msg = e && e.message ? String(e.message) : "";
+      if (/banned/i.test(msg)) return msg;
+      if (/muted/i.test(msg)) return msg;
       if (/no token/.test(msg)) return "The room isn't connected yet — try again in a minute.";
       if (/github 40[13]/.test(msg) || /rate limit/i.test(msg)) return "The room is busy — wait a moment and try again.";
       if (/github 409/.test(msg) || /conflict/.test(msg)) return "Someone typed at the same time — try again.";

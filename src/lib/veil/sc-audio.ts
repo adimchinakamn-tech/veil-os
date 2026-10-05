@@ -137,7 +137,16 @@ function toTrack(t: Record<string, unknown>): SCTrack | null {
   if (!Number.isFinite(id) || id <= 0) return null;
   // Full transcodings live under …/stream/…, rights-limited ones only
   // under …/preview/… — that is the whole "full vs 30s" question.
-  const previewOnly = !transcodings.some((x) => typeof x.url === "string" && x.url.includes("/stream/"));
+  // PROTOCOL matters too: the stream route only plays PROGRESSIVE mp3s,
+  // so a track whose /stream/ transcode is HLS-only can't deliver the
+  // full song — badge it honestly as preview instead of promising 4
+  // minutes and cutting at 0:30.
+  const previewOnly = !transcodings.some(
+    (x) =>
+      typeof x.url === "string" &&
+      x.url.includes("/stream/") &&
+      (x.format as { protocol?: unknown } | undefined)?.protocol === "progressive"
+  );
   const duration = Number(t.duration) || 0;
   const fullDuration = Number(t.full_duration) || 0;
   const ms = previewOnly ? fullDuration || duration : duration;
@@ -157,19 +166,43 @@ function toTrack(t: Record<string, unknown>): SCTrack | null {
 
 const searchCache = new Map<string, { at: number; items: SCTrack[] }>();
 const SEARCH_TTL = 10 * 60 * 1000;
+/* Bounded caches — entries used to live forever (a slow memory leak on
+ * a long-running server). Same eviction policy as the iTunes route. */
+const SEARCH_CACHE_CAP = 48;
+const searchInFlight = new Map<string, Promise<SCTrack[]>>();
+
+function cacheSet<K, V>(map: Map<K, { at: number }>, cap: number, key: K, value: V & { at: number }): void {
+  map.set(key, value);
+  if (map.size > cap) {
+    /* evict the OLDEST entry (Maps iterate in insertion order) */
+    const oldest = map.keys().next().value;
+    if (oldest !== undefined) map.delete(oldest);
+  }
+}
 
 export async function scSearchTracks(q: string, limit = 16): Promise<SCTrack[]> {
   const key = q.trim().toLowerCase();
   if (!key) return [];
   const hit = searchCache.get(key);
   if (hit && Date.now() - hit.at < SEARCH_TTL) return hit.items;
-  const data = await scApi(
-    `/search/tracks?q=${encodeURIComponent(key)}&limit=${Math.min(32, limit * 2)}`
-  );
-  const raw = (Array.isArray(data.collection) ? data.collection : []) as Record<string, unknown>[];
-  const items = raw.map(toTrack).filter((x): x is SCTrack => x !== null).slice(0, limit);
-  if (items.length > 0) searchCache.set(key, { at: Date.now(), items });
-  return items;
+  /* in-flight dedupe — duplicate concurrent queries hit api-v2 once */
+  const running = searchInFlight.get(key);
+  if (running) return running;
+  const job = (async () => {
+    const data = await scApi(
+      `/search/tracks?q=${encodeURIComponent(key)}&limit=${Math.min(32, limit * 2)}`
+    );
+    const raw = (Array.isArray(data.collection) ? data.collection : []) as Record<string, unknown>[];
+    const items = raw.map(toTrack).filter((x): x is SCTrack => x !== null).slice(0, limit);
+    if (items.length > 0) cacheSet(searchCache, SEARCH_CACHE_CAP, key, { at: Date.now(), items });
+    return items;
+  })();
+  searchInFlight.set(key, job);
+  try {
+    return await job;
+  } finally {
+    searchInFlight.delete(key);
+  }
 }
 
 /* ------------------------------------------------------------------ */
@@ -185,6 +218,7 @@ export interface SCStream {
 
 const streamCache = new Map<number, { at: number; stream: SCStream }>();
 const STREAM_TTL = 10 * 60 * 1000;
+const STREAM_CACHE_CAP = 64;
 const resolving = new Map<number, Promise<SCStream>>();
 
 async function resolveStreamUncached(trackId: number): Promise<SCStream> {
@@ -236,7 +270,7 @@ export async function scResolveStream(trackId: number, force = false): Promise<S
   if (running && !force) return running;
   const task = resolveStreamUncached(trackId)
     .then((stream) => {
-      streamCache.set(trackId, { at: Date.now(), stream });
+      cacheSet(streamCache, STREAM_CACHE_CAP, trackId, { at: Date.now(), stream });
       return stream;
     })
     .finally(() => resolving.delete(trackId));

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" data-veil-build="2026-10-04T17:24:13Z">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" data-veil-build="2026-10-05T14:47:03Z">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -12,6 +12,7 @@
 
 <div data-os-section="" class="fixed inset-0 z-50 bg-zinc-950/80 backdrop-blur-sm">
   <div class="flex h-full w-full flex-col text-zinc-100">
+
     <header class="shrink-0 border-b border-zinc-800/80 px-4 py-3 sm:px-6">
       <div class="mx-auto flex w-full max-w-[1500px] items-center gap-3 sm:gap-4">
         <button data-os-back="" class="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 h-9 shrink-0 gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900/60 px-3 text-zinc-300 hover:border-zinc-700 hover:bg-zinc-800 hover:text-zinc-100" aria-label="Back to the start page">
@@ -22,65 +23,247 @@
           <span class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-rose-500/15 ring-1 ring-rose-500/30"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-monitor-play size-4.5 text-rose-400" aria-hidden="true"><path d="M10 7.75a.75.75 0 0 1 1.142-.638l3.664 2.249a.75.75 0 0 1 0 1.278l-3.664 2.25a.75.75 0 0 1-1.142-.64z"></path><path d="M12 17v4"></path><path d="M8 21h8"></path><rect x="2" y="3" width="20" height="14" rx="2"></rect></svg></span>
           <h2 class="truncate text-[17px] font-semibold tracking-tight">Veil Stream<span class="text-rose-400">.</span></h2>
         </div>
-        <form role="search" id="yt-search" class="mx-auto hidden min-w-0 max-w-2xl flex-1 items-center gap-2 sm:flex">
+        <form role="search" class="st-form mx-auto hidden min-w-0 max-w-2xl flex-1 items-center gap-2 sm:flex" data-desktop="1">
           <div class="group relative min-w-0 flex-1">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-zinc-500 transition group-focus-within:text-rose-400" aria-hidden="true"><path d="m21 21-4.34-4.34"></path><circle cx="11" cy="11" r="8"></circle></svg>
-            <input id="yt-q" class="flex w-full min-w-0 border px-3 py-1 shadow-xs transition-[color,box-shadow] outline-none h-10 rounded-full border-zinc-800 bg-zinc-900/70 pl-10 pr-4 text-[14px] text-zinc-100 placeholder:text-zinc-500 focus-visible:border-rose-500/60 focus-visible:ring-[3px] focus-visible:ring-rose-500/25" placeholder="Search YouTube — results play straight through the veil…" aria-label="Search YouTube" spellcheck="false" autocapitalize="none" autocomplete="off" value=""/>
+            <input class="st-q flex w-full min-w-0 border px-3 py-1 shadow-xs transition-[color,box-shadow] outline-none h-10 rounded-full border-zinc-800 bg-zinc-900/70 pl-10 pr-4 text-[14px] text-zinc-100 placeholder:text-zinc-500 focus-visible:border-rose-500/60 focus-visible:ring-[3px] focus-visible:ring-rose-500/25" placeholder="Search YouTube — results play straight through the veil…" aria-label="Search YouTube" spellcheck="false" autocapitalize="none" autocomplete="off" value="" />
           </div>
           <button type="submit" aria-label="Search" class="flex h-10 shrink-0 items-center gap-1.5 rounded-full border border-zinc-800 bg-zinc-800/60 px-4 text-[13.5px] font-semibold text-zinc-200 transition hover:border-zinc-700 hover:bg-zinc-800 disabled:opacity-50">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search size-4" aria-hidden="true"><path d="m21 21-4.34-4.34"></path><circle cx="11" cy="11" r="8"></circle></svg>
           </button>
+          <button type="button" data-act="clear-search" class="st-clear hidden h-10 shrink-0 items-center rounded-full border border-zinc-800 bg-zinc-900/60 px-3 text-[12.5px] text-zinc-300 transition hover:border-zinc-700 hover:bg-zinc-800">Clear</button>
         </form>
-        <div class="ml-auto flex shrink-0 items-center gap-2 sm:ml-0">
-          <span class="hidden items-center gap-1.5 rounded-full border border-zinc-800 bg-zinc-900/70 px-3 py-1.5 text-[11.5px] font-medium text-zinc-400 sm:flex"><span class="relative flex size-2 shrink-0"><span class="absolute inline-flex size-full animate-ping rounded-full bg-rose-400 opacity-60"></span><span class="relative inline-flex size-2 rounded-full bg-rose-400"></span></span>0 viewers</span>
+        <div class="relative ml-auto flex shrink-0 items-center gap-2 sm:ml-0">
+          <span class="hidden items-center gap-1.5 rounded-full border border-zinc-800 bg-zinc-900/70 px-3 py-1.5 text-[11.5px] font-medium text-zinc-400 sm:flex"><span class="relative flex size-2 shrink-0"><span class="absolute inline-flex size-full animate-ping rounded-full bg-rose-400 opacity-60"></span><span class="relative inline-flex size-2 rounded-full bg-rose-400"></span></span><span data-os-presence="">connecting…</span></span>
+          <button type="button" id="gear" aria-label="Stream menu" aria-expanded="false" class="flex size-9 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/60 text-zinc-400 transition hover:border-zinc-700 hover:bg-zinc-800 hover:text-zinc-100">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings size-4" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+          </button>
+          <div id="gear-menu" class="absolute right-0 top-11 z-40 hidden w-64 rounded-2xl border border-zinc-800 bg-zinc-950/95 p-1.5 shadow-[0_32px_64px_rgba(0,0,0,0.6)] backdrop-blur-xl">
+            <button type="button" data-act="import" class="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-[12.5px] font-medium text-zinc-300 transition hover:bg-white/5 hover:text-white"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-download size-4 shrink-0 text-cyan-300" aria-hidden="true"><path d="M12 15V3"></path><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="m7 10 5 5 5-5"></path></svg>Import from YouTube…</button>
+            <a id="gear-settings" href="settings.xhtml?v=2026-10-05T14:25:51Z" data-ext="1" class="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-[12.5px] font-medium text-zinc-300 transition hover:bg-white/5 hover:text-white"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings size-4 shrink-0 text-zinc-400" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>Stream settings</a>
+            <a id="gear-yt" href="https://www.youtube.com/" target="_blank" rel="noopener" data-ext="1" class="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-[12.5px] font-medium text-zinc-300 transition hover:bg-white/5 hover:text-white"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-external-link size-4 shrink-0 text-zinc-400" aria-hidden="true"><path d="M15 3h6v6"></path><path d="M10 14 21 3"></path><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path></svg>Open youtube.com</a>
+          </div>
         </div>
       </div>
+      <form role="search" class="st-form mx-auto mt-3 flex w-full max-w-[1500px] items-center gap-2 sm:hidden">
+        <div class="group relative min-w-0 flex-1">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-zinc-500 transition group-focus-within:text-rose-400" aria-hidden="true"><path d="m21 21-4.34-4.34"></path><circle cx="11" cy="11" r="8"></circle></svg>
+          <input class="st-q flex w-full min-w-0 border px-3 py-1 shadow-xs transition-[color,box-shadow] outline-none h-10 rounded-full border-zinc-800 bg-zinc-900/70 pl-10 pr-4 text-[14px] text-zinc-100 placeholder:text-zinc-500 focus-visible:border-rose-500/60 focus-visible:ring-[3px] focus-visible:ring-rose-500/25" placeholder="Search YouTube…" aria-label="Search YouTube" spellcheck="false" autocapitalize="none" autocomplete="off" value="" />
+        </div>
+        <button type="submit" aria-label="Search" class="flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-rose-500 px-4 text-[13.5px] font-semibold text-rose-950 shadow-lg shadow-rose-500/25 transition hover:bg-rose-400 disabled:opacity-50">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search size-4" aria-hidden="true"><path d="m21 21-4.34-4.34"></path><circle cx="11" cy="11" r="8"></circle></svg>
+        </button>
+        <button type="button" data-act="clear-search" class="st-clear hidden h-10 shrink-0 items-center rounded-full border border-zinc-800 bg-zinc-900/60 px-3 text-[12.5px] text-zinc-300 transition hover:border-zinc-700 hover:bg-zinc-800">Clear</button>
+      </form>
     </header>
 
-    <div class="veil-scroll-slim min-h-0 flex-1 overflow-y-auto px-4 pb-16 pt-6 sm:px-6">
-      <div class="mx-auto w-full max-w-[1500px]">
-        <nav aria-label="Stream pages" class="sticky -top-6 z-20 -mx-4 mb-4 border-b border-zinc-800/70 bg-zinc-950/90 px-4 py-2.5 backdrop-blur-md sm:-mx-6 sm:px-6 lg:hidden">
-          <div class="veil-scroll-slim flex gap-2 overflow-x-auto">
-            <button type="button" aria-current="page" class="flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold transition active:scale-[0.97] bg-rose-500 text-rose-950 shadow-lg shadow-rose-500/25"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles size-3.5" aria-hidden="true"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"></path><path d="M20 3v4"></path><path d="M22 5h-4"></path><path d="M4 17v2"></path><path d="M5 18H3"></path></svg>For You</button>
-            <button type="button" class="flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold transition active:scale-[0.97] border border-zinc-800 bg-zinc-900/70 text-zinc-400 hover:border-zinc-700 hover:text-zinc-100"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-zap size-3.5" aria-hidden="true"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"></path></svg>Shorts</button>
-            <button type="button" class="flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold transition active:scale-[0.97] border border-zinc-800 bg-zinc-900/70 text-zinc-400 hover:border-zinc-700 hover:text-zinc-100"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-flame size-3.5" aria-hidden="true"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path></svg>Popular</button>
-            <button type="button" class="flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold transition active:scale-[0.97] border border-zinc-800 bg-zinc-900/70 text-zinc-400 hover:border-zinc-700 hover:text-zinc-100"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rss size-3.5" aria-hidden="true"><path d="M4 11a9 9 0 0 1 9 9"></path><path d="M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1"></circle></svg>Subscriptions</button>
-          </div>
+    <div id="scroller" class="veil-scroll-slim min-h-0 flex-1 overflow-y-auto px-4 pb-16 pt-6 sm:px-6">
+
+      <!-- connect gate — shown when the main app's API can't be reached -->
+      <div id="gate" class="mx-auto hidden w-full max-w-2xl flex-col items-center gap-3 py-16 text-center">
+        <span class="flex size-12 items-center justify-center rounded-2xl bg-rose-500/15 text-rose-300 ring-1 ring-rose-500/30"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-monitor-play size-6" aria-hidden="true"><path d="M10 7.75a.75.75 0 0 1 1.142-.638l3.664 2.249a.75.75 0 0 1 0 1.278l-3.664 2.25a.75.75 0 0 1-1.142-.64z"></path><path d="M12 17v4"></path><path d="M8 21h8"></path><rect x="2" y="3" width="20" height="14" rx="2"></rect></svg></span>
+        <h3 class="text-[16px] font-semibold text-zinc-100">Stream needs the main app</h3>
+        <p class="max-w-md text-[13.5px] leading-relaxed text-zinc-400">The feeds, the player and the Takeout importer all run on the real Veil app's API. Point this copy at it once in Settings — after that everything lights up here too. Search above still reaches YouTube directly in the meantime.</p>
+        <div class="mt-1 flex flex-wrap items-center justify-center gap-2">
+          <a id="gate-settings" href="settings.xhtml?v=2026-10-05T14:25:51Z" class="inline-flex h-9 items-center gap-1.5 rounded-xl bg-rose-500 px-4 text-[13px] font-semibold text-rose-950 shadow-lg shadow-rose-500/25 transition hover:bg-rose-400 active:scale-[0.97]"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings size-4" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg><span>Open Settings</span></a>
+          <button type="button" data-act="gate-retry" class="inline-flex h-9 items-center gap-1.5 rounded-xl border border-zinc-700 px-4 text-[13px] font-medium text-zinc-300 transition hover:text-zinc-100"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-refresh-cw size-4" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg><span>Retry</span></button>
+        </div>
+      </div>
+
+      <!-- ============ BROWSE VIEW ============ -->
+      <div id="view-browse" class="mx-auto w-full max-w-[1500px]">
+        <nav id="pills" aria-label="Stream pages" class="sticky -top-6 z-20 -mx-4 mb-4 border-b border-zinc-800/70 bg-zinc-950/90 px-4 py-2.5 backdrop-blur-md sm:-mx-6 sm:px-6 lg:hidden">
+          <div class="veil-scroll-slim flex gap-2 overflow-x-auto"></div>
         </nav>
 
         <div class="flex gap-6">
           <aside aria-label="Stream pages" class="sticky -top-6 hidden h-fit w-56 shrink-0 lg:block">
-            <nav class="flex flex-col gap-0.5 rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-2">
+            <nav id="sidebar" class="flex flex-col gap-0.5 rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-2">
               <p class="px-3 pb-1 pt-1.5 text-[10.5px] font-semibold uppercase tracking-wider text-zinc-600">Pages</p>
-              <button type="button" aria-current="page" class="group flex items-center gap-4 rounded-xl px-3 py-2.5 text-left outline-none transition active:scale-[0.98] bg-zinc-800/80 text-zinc-100"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles size-5 shrink-0 transition text-rose-400" aria-hidden="true"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"></path><path d="M20 3v4"></path><path d="M22 5h-4"></path><path d="M4 17v2"></path><path d="M5 18H3"></path></svg><span class="min-w-0 flex-1 truncate text-[13.5px] font-medium">For You</span></button>
-              <button type="button" class="group flex items-center gap-4 rounded-xl px-3 py-2.5 text-left outline-none transition active:scale-[0.98] text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-100"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-zap size-5 shrink-0 transition text-zinc-500 group-hover:text-zinc-300" aria-hidden="true"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"></path></svg><span class="min-w-0 flex-1 truncate text-[13.5px] font-medium">Shorts</span></button>
-              <button type="button" class="group flex items-center gap-4 rounded-xl px-3 py-2.5 text-left outline-none transition active:scale-[0.98] text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-100"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-flame size-5 shrink-0 transition text-zinc-500 group-hover:text-zinc-300" aria-hidden="true"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path></svg><span class="min-w-0 flex-1 truncate text-[13.5px] font-medium">Popular</span></button>
-              <button type="button" class="group flex items-center gap-4 rounded-xl px-3 py-2.5 text-left outline-none transition active:scale-[0.98] text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-100"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rss size-5 shrink-0 transition text-zinc-500 group-hover:text-zinc-300" aria-hidden="true"><path d="M4 11a9 9 0 0 1 9 9"></path><path d="M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1"></circle></svg><span class="min-w-0 flex-1 truncate text-[13.5px] font-medium">Subscriptions</span></button>
             </nav>
           </aside>
 
           <div class="min-w-0 flex-1">
-            <section aria-label="For you feed">
-              <div class="mb-4 flex items-center gap-3">
-                <span class="flex size-9 shrink-0 items-center justify-center rounded-xl ring-1 bg-rose-500/20 text-rose-300 ring-rose-500/30"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles size-4.5" aria-hidden="true"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"></path><path d="M20 3v4"></path><path d="M22 5h-4"></path><path d="M4 17v2"></path><path d="M5 18H3"></path></svg></span>
-                <div class="min-w-0 flex-1"><h3 class="text-[16px] font-semibold tracking-tight text-zinc-100">For you</h3></div>
-                <button type="button" id="reload-feed" class="inline-flex items-center justify-center text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 h-8 shrink-0 rounded-xl border border-zinc-700 text-zinc-400 hover:text-zinc-100 px-2.5" aria-label="Reload For you">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-loader-circle size-3.5 animate-spin" id="reload-icon" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>
-                </button>
-              </div>
 
-              <div class="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4" id="feed-grid"></div>
-
-              <div class="mt-8 rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-4">
-                <p class="text-[13px] leading-relaxed text-zinc-400">Stream shelves fill from the program when it's running — search above reaches YouTube directly in the meantime.</p>
+            <!-- search results -->
+            <section id="panel-search" aria-label="Search results" class="hidden">
+              <div class="mb-4">
+                <h3 class="text-[13px] font-semibold uppercase tracking-wider text-zinc-500" id="sr-head">Results</h3>
               </div>
+              <div class="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" id="sr-grid"></div>
             </section>
+
+            <!-- for you -->
+            <section id="panel-foryou" aria-label="For you feed">
+              <div class="mb-4 flex items-center gap-3">
+                <span class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-rose-500/20 text-rose-300 ring-1 ring-rose-500/30"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles size-4.5" aria-hidden="true"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"></path><path d="M20 3v4"></path><path d="M22 5h-4"></path><path d="M4 17v2"></path><path d="M5 18H3"></path></svg></span>
+                <div class="min-w-0 flex-1">
+                  <h3 class="text-[16px] font-semibold tracking-tight text-zinc-100">For you <span id="fy-badge" class="ml-2 align-middle text-[11px] font-medium tabular-nums text-zinc-500"></span></h3>
+                </div>
+                <button type="button" data-act="reload-fy" class="inline-flex h-8 shrink-0 items-center justify-center rounded-xl border border-zinc-700 px-2.5 text-zinc-400 transition hover:text-zinc-100" aria-label="Reload For you"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-refresh-cw size-3.5" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg></button>
+              </div>
+
+              <section id="fy-rail-wrap" aria-label="Watch again — your recent history" class="mb-5 hidden">
+                <div class="mb-2.5 flex items-center gap-2">
+                  <span class="flex size-7 shrink-0 items-center justify-center rounded-lg bg-rose-500/15 ring-1 ring-rose-500/30"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rotate-ccw size-3.5 text-rose-400" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg></span>
+                  <h3 class="shrink-0 text-[12.5px] font-semibold uppercase tracking-wider text-zinc-400">Watch again</h3>
+                  <span id="fy-rail-count" class="shrink-0 text-[10.5px] tabular-nums text-zinc-600"></span>
+                  <div aria-hidden="true" class="h-px flex-1 bg-zinc-800/70"></div>
+                </div>
+                <div id="fy-rail" class="veil-scroll-slim -mx-1 flex gap-3 overflow-x-auto px-1 pb-2"></div>
+              </section>
+
+              <div class="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" id="fy-grid"></div>
+              <div id="fy-tail"></div>
+            </section>
+
+            <!-- shorts -->
+            <section id="panel-shorts" aria-label="Shorts feed" class="hidden">
+              <div class="mb-4 flex items-center gap-3">
+                <span class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-fuchsia-500/20 text-fuchsia-300 ring-1 ring-fuchsia-500/30"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-zap size-4.5" aria-hidden="true"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"></path></svg></span>
+                <div class="min-w-0 flex-1">
+                  <h3 class="text-[16px] font-semibold tracking-tight text-zinc-100">Shorts <span id="sh-badge" class="ml-2 align-middle text-[11px] font-medium tabular-nums text-zinc-500"></span></h3>
+                </div>
+                <button type="button" data-act="reload-shorts" class="inline-flex h-8 shrink-0 items-center justify-center rounded-xl border border-zinc-700 px-2.5 text-zinc-400 transition hover:text-zinc-100" aria-label="Reload Shorts"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-refresh-cw size-3.5" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg></button>
+              </div>
+              <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6" id="sh-grid"></div>
+              <div id="sh-tail"></div>
+            </section>
+
+            <!-- popular -->
+            <section id="panel-popular" aria-label="Popular feed" class="hidden">
+              <div class="mb-4 flex items-center gap-3">
+                <span class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-amber-500/20 text-amber-300 ring-1 ring-amber-500/30"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-flame size-4.5" aria-hidden="true"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path></svg></span>
+                <div class="min-w-0 flex-1">
+                  <h3 class="text-[16px] font-semibold tracking-tight text-zinc-100">Popular <span id="pop-badge" class="ml-2 align-middle text-[11px] font-medium tabular-nums text-zinc-500"></span></h3>
+                </div>
+                <button type="button" data-act="reload-popular" class="inline-flex h-8 shrink-0 items-center justify-center rounded-xl border border-zinc-700 px-2.5 text-zinc-400 transition hover:text-zinc-100" aria-label="Reload Popular"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-refresh-cw size-3.5" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg></button>
+              </div>
+              <div class="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" id="pop-grid"></div>
+              <div id="pop-tail"></div>
+            </section>
+
+            <!-- subscriptions -->
+            <section id="panel-subs" aria-label="Subscriptions" class="hidden">
+              <div class="mb-4 flex flex-wrap items-center gap-2">
+                <span class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-cyan-500/20 text-cyan-300 ring-1 ring-cyan-500/30"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rss size-4.5" aria-hidden="true"><path d="M4 11a9 9 0 0 1 9 9"></path><path d="M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1"></circle></svg></span>
+                <div class="min-w-0 flex-1">
+                  <h3 class="text-[16px] font-semibold tracking-tight text-zinc-100">Subscriptions <span id="subs-badge" class="ml-2 align-middle text-[11px] font-medium tabular-nums text-zinc-500"></span></h3>
+                </div>
+                <button type="button" data-act="import-help" aria-label="How to get your YouTube subscriptions file" class="flex size-8 shrink-0 items-center justify-center rounded-xl text-zinc-500 transition hover:bg-zinc-800 hover:text-zinc-300"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-help size-4" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><path d="M12 17h.01"></path></svg></button>
+                <button type="button" data-act="import" class="imp-btn inline-flex h-8 shrink-0 items-center gap-1.5 rounded-xl border border-zinc-700 px-2.5 text-[12.5px] font-semibold text-zinc-300 transition hover:border-cyan-500/40 hover:bg-cyan-500/10 hover:text-cyan-100 active:scale-[0.97]" aria-label="Import your YouTube subscriptions from a Google Takeout file"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-download size-3.5" aria-hidden="true"><path d="M12 15V3"></path><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="m7 10 5 5 5-5"></path></svg><span>Import from YouTube</span></button>
+                <button type="button" data-act="reload-subs" class="inline-flex h-8 shrink-0 items-center justify-center rounded-xl border border-zinc-700 px-2.5 text-zinc-400 transition hover:text-zinc-100" aria-label="Reload Subscriptions"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-refresh-cw size-3.5" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg></button>
+              </div>
+
+              <div id="import-help" class="mb-4 hidden rounded-2xl border border-zinc-700/80 bg-zinc-900/95 p-4 text-[12px] leading-relaxed text-zinc-400 shadow-[0_32px_64px_rgba(0,0,0,0.6)] backdrop-blur-md">
+                <p class="mb-2 font-semibold text-zinc-200">Bring your real YouTube feed over</p>
+                <ol class="list-decimal space-y-1.5 pl-4">
+                  <li>open <span class="rounded bg-zinc-800 px-1.5 py-0.5 font-mono text-[11px] text-zinc-300">takeout.google.com</span> and hit Deselect all</li>
+                  <li>pick YouTube, then subscriptions (and history if you want your watched list to come too)</li>
+                  <li>export — Google hands you a <span class="font-mono text-[11px]">takeout-….tgz</span> or <span class="font-mono text-[11px]">.zip</span> within minutes</li>
+                  <li>drop that archive right here — a bare <span class="font-mono text-[11px]">subscriptions.csv</span> or <span class="font-mono text-[11px]">.json</span> works too</li>
+                </ol>
+                <p class="mt-2.5 text-[11px] text-zinc-600">Archives up to 64MB scan through the app's server. For a full multi-GB Takeout, use the importer on the website — it scans on-device with no size limit. The follow list stays on this device either way.</p>
+              </div>
+
+              <div id="subs-strip-wrap" class="veil-scroll-slim mb-4 hidden gap-2 overflow-x-auto pb-1"></div>
+              <div class="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" id="subs-grid"></div>
+              <div id="subs-tail"></div>
+            </section>
+
           </div>
         </div>
       </div>
+
+      <!-- ============ WATCH VIEW ============ -->
+      <div id="view-watch" class="mx-auto hidden w-full max-w-6xl">
+        <div class="mb-3 flex items-center gap-2">
+          <button type="button" data-act="watch-back" class="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900/60 px-2.5 text-[12.5px] font-medium text-zinc-300 transition hover:border-zinc-700 hover:bg-zinc-800 hover:text-zinc-100"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left size-3.5" aria-hidden="true"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg><span id="w-back-label">Back to Stream</span></button>
+        </div>
+
+        <div id="w-player" class="relative overflow-hidden rounded-2xl border border-zinc-800/80 bg-zinc-950 ring-1 ring-zinc-800/60"></div>
+
+        <div class="mt-3 flex flex-wrap items-center gap-2">
+          <label for="w-quality" class="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">Quality</label>
+          <select id="w-quality" class="h-8 cursor-pointer rounded-lg border border-zinc-800 bg-zinc-900/70 px-2 text-[12px] font-medium text-zinc-200 outline-none transition hover:border-zinc-600" aria-label="Video quality"></select>
+          <a id="w-ext" href="https://www.youtube.com/" target="_blank" rel="noopener" data-ext="1" class="inline-flex h-8 items-center gap-1.5 rounded-lg border border-zinc-800 bg-zinc-900/70 px-2.5 text-[12px] font-medium text-zinc-400 transition hover:border-zinc-700 hover:text-zinc-100"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-external-link size-3.5" aria-hidden="true"><path d="M15 3h6v6"></path><path d="M10 14 21 3"></path><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path></svg><span>YouTube</span></a>
+          <span id="w-note" role="note" class="hidden text-[11.5px] text-amber-300/90"></span>
+        </div>
+
+        <div class="mt-4 min-w-0">
+          <h2 id="w-title" class="text-[17px] font-semibold leading-snug tracking-tight text-zinc-50"></h2>
+          <div class="mt-2.5 flex flex-wrap items-center gap-3">
+            <div id="w-chrow" class="flex min-w-0 flex-wrap items-center gap-3"></div>
+            <div class="flex-1"></div>
+            <div id="w-sub"></div>
+            <div id="w-likes"></div>
+          </div>
+          <details id="w-desc-wrap" class="group mt-4 hidden rounded-2xl border border-zinc-800/80 bg-zinc-900/50 px-4 py-3">
+            <summary class="cursor-pointer select-none list-none text-[12.5px] font-semibold text-zinc-300 transition hover:text-zinc-100">Description <span class="ml-1.5 text-zinc-500 group-open:hidden">— tap to expand</span></summary>
+            <p id="w-desc" class="veil-scroll-slim mt-2.5 max-h-64 overflow-y-auto whitespace-pre-line text-[13px] leading-relaxed text-zinc-400"></p>
+          </details>
+        </div>
+
+        <section id="w-comments" class="mt-8" aria-label="Comments">
+          <button type="button" data-act="toggle-comments" aria-expanded="false" class="flex w-full items-center gap-2.5 rounded-2xl border border-zinc-800/80 bg-zinc-900/50 px-4 py-3 text-left transition hover:border-zinc-700">
+            <span class="flex size-8 shrink-0 items-center justify-center rounded-xl bg-rose-500/15 text-rose-300 ring-1 ring-rose-500/25"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-message-square size-4" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></span>
+            <span class="min-w-0 flex-1">
+              <span class="block text-[13.5px] font-semibold text-zinc-100">Comments</span>
+              <span class="block text-[11.5px] text-zinc-500" id="w-comments-sub">read-only, straight through the veil</span>
+            </span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down size-4 shrink-0 text-zinc-500 transition-transform" id="w-comments-chev" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+          </button>
+          <div id="w-comments-body" class="hidden">
+            <div class="mt-3 flex flex-wrap items-center gap-2.5" role="group" aria-label="Sort comments">
+              <div class="inline-flex rounded-xl border border-zinc-800/80 bg-zinc-900/60 p-0.5 backdrop-blur-md">
+                <button type="button" data-csort="new" class="inline-flex items-center gap-1.5 rounded-[10px] px-2.5 py-1 text-[12px] font-medium transition text-zinc-500 hover:text-zinc-200"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clock size-3.5" aria-hidden="true"><path d="M12 6v6l4 2"></path><circle cx="12" cy="12" r="10"></circle></svg>Newest</button>
+                <button type="button" data-csort="top" class="inline-flex items-center gap-1.5 rounded-[10px] px-2.5 py-1 text-[12px] font-medium transition text-zinc-500 hover:text-zinc-200"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-flame size-3.5" aria-hidden="true"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path></svg>Top</button>
+              </div>
+            </div>
+            <div id="w-comments-list" class="veil-scroll-slim mt-3 max-h-[32rem] space-y-5 overflow-y-auto rounded-2xl border border-zinc-800/60 bg-zinc-950/40 px-4 py-4"></div>
+            <div class="pt-2" id="w-comments-more"></div>
+          </div>
+        </section>
+
+        <section id="w-related-wrap" class="mt-8" aria-label="Related videos">
+          <h3 class="mb-3 text-[13px] font-semibold uppercase tracking-wider text-zinc-500">Up next</h3>
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" id="w-related"></div>
+        </section>
+      </div>
+
+      <!-- ============ CHANNEL VIEW ============ -->
+      <div id="view-channel" class="mx-auto hidden w-full max-w-6xl">
+        <div class="mb-3 flex items-center gap-2">
+          <button type="button" data-act="channel-back" class="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900/60 px-2.5 text-[12.5px] font-medium text-zinc-300 transition hover:border-zinc-700 hover:bg-zinc-800 hover:text-zinc-100"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left size-3.5" aria-hidden="true"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg><span id="c-back-label">Back to Stream</span></button>
+        </div>
+        <div id="c-body"></div>
+      </div>
+
     </div>
   </div>
 </div>
+
+<!-- ============ SHORTS VIEWER — vertical, one short per screen ============ -->
+<div id="shorts-viewer" class="fixed inset-0 z-40 hidden flex-col bg-zinc-950" role="region" aria-label="Shorts viewer">
+  <div class="flex shrink-0 items-center gap-2 border-b border-zinc-800/80 bg-zinc-950/90 px-3 py-2 backdrop-blur-xl sm:px-4">
+    <span class="flex size-7 shrink-0 items-center justify-center rounded-lg bg-fuchsia-500/20 text-fuchsia-300 ring-1 ring-fuchsia-500/30"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-zap size-3.5" aria-hidden="true"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"></path></svg></span>
+    <span id="sv-label" class="truncate text-[13px] font-semibold text-zinc-100">Shorts</span>
+    <span id="sv-count" class="shrink-0 text-[11px] tabular-nums text-zinc-500"></span>
+    <button type="button" data-act="sv-mute" aria-label="Unmute" class="ml-auto flex size-8 shrink-0 items-center justify-center rounded-xl text-zinc-400 transition hover:bg-zinc-800 hover:text-zinc-100"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-volume-x size-4" aria-hidden="true" id="sv-mute-ic"><path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"></path><line x1="22" x2="16" y1="9" y2="15"></line><line x1="16" x2="22" y1="9" y2="15"></line></svg></button>
+    <button type="button" data-act="sv-close" aria-label="Close the shorts viewer" class="flex size-8 shrink-0 items-center justify-center rounded-xl text-zinc-400 transition hover:bg-zinc-800 hover:text-zinc-100"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x size-4" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+  </div>
+  <div id="sv-scroll" class="veil-scroll-slim relative min-h-0 flex-1 overflow-y-auto overscroll-none" style="scroll-snap-type:y mandatory;"></div>
+  <div class="pointer-events-none absolute bottom-6 right-4 hidden flex-col gap-2 sm:flex">
+    <button type="button" data-act="sv-up" aria-label="Previous short" class="pointer-events-auto flex size-10 items-center justify-center rounded-full border border-zinc-800 bg-zinc-900/80 text-zinc-300 backdrop-blur-md transition hover:border-zinc-600 hover:text-white"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-up size-5" aria-hidden="true"><path d="m18 15-6-6-6 6"></path></svg></button>
+    <button type="button" data-act="sv-down" aria-label="Next short" class="pointer-events-auto flex size-10 items-center justify-center rounded-full border border-zinc-800 bg-zinc-900/80 text-zinc-300 backdrop-blur-md transition hover:border-zinc-600 hover:text-white"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down size-5" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></button>
+  </div>
+</div>
+
+<!-- toast -->
+<div id="toast" class="pointer-events-none fixed bottom-6 left-1/2 z-50 hidden -translate-x-1/2 items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900/95 px-4 py-2 text-[12.5px] font-medium text-zinc-100 shadow-[0_32px_64px_rgba(0,0,0,0.6)] backdrop-blur-xl"></div>
+
+<!-- the Takeout import door -->
+<input id="takeout-file" type="file" class="hidden" tabindex="-1" aria-hidden="true" accept=".tgz,.tar.gz,.tar,.zip,.csv,.json,application/gzip,application/x-tar,application/zip,text/csv,application/json" />
 
 <script>
 //<![CDATA[
@@ -94,8 +277,287 @@ window.VEILOS_SHARED_BASE="../site/";
 (function () {
   "use strict";
   var V = window.VEILOS;
+  var $ = V.$, $$ = V.$$;
+  var esc = V.esc;
 
-  /* the feed's own loading skeleton — exactly the app's shimmer cards */
+  /* ============================================================
+     icons — the same lucide glyphs the app renders
+     ============================================================ */
+  var IC = {
+    play: '<polygon points="6 3 20 12 6 21 6 3"></polygon>',
+    rotate: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path>',
+    check: '<path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"></path><path d="m9 12 2 2 4-4"></path>',
+    radio: '<path d="M16.247 7.761a6 6 0 0 1 0 8.478"></path><path d="M19.075 4.933a10 10 0 0 1 0 14.134"></path><path d="M4.925 19.067a10 10 0 0 1 0-14.134"></path><path d="M7.753 16.239a6 6 0 0 1 0-8.478"></path>',
+    sparkles: '<path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"></path><path d="M20 3v4"></path><path d="M22 5h-4"></path><path d="M4 17v2"></path><path d="M5 18H3"></path>',
+    up: '<path d="M7 10v12"></path><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"></path>',
+    down: '<path d="M17 14V2"></path><path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z"></path>',
+    bell: '<path d="M10.268 21a2 2 0 0 0 3.464 0"></path><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"></path>',
+    bellOff: '<path d="M10.268 21a2 2 0 0 0 3.464 0"></path><path d="M17 17H4a1 1 0 0 1-.74-1.673C4.59 13.956 6 12.499 6 8a6 6 0 0 1 .258-1.742"></path><path d="m2 2 20 20"></path><path d="M8.668 3.01A6 6 0 0 1 18 8c0 2.687.77 4.653 1.707 6.05"></path>',
+    loader: '<path d="M21 12a9 9 0 1 1-6.219-8.56"></path>',
+    refresh: '<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path>',
+    clap: '<path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z"></path><path d="m6.2 5.3 3.1 3.9"></path><path d="m12.4 3.4 3.1 4"></path><path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"></path>',
+    x: '<path d="M18 6 6 18"></path><path d="m6 6 12 12"></path>'
+  };
+  function ic(name, cls, fill) {
+    return '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="' + (cls || "size-4") + '">' + IC[name] + "</svg>";
+  }
+  function playIc(cls) {
+    return '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="' + (cls || "size-4") + ' fill-white text-white">' + IC.play + "</svg>";
+  }
+
+  /* ============================================================
+     storage — the same shapes the app persists
+     ============================================================ */
+  var LS_SUBS = "veil.stream.subs.v1";
+  var LS_HIST = "veil.stream.history.v1";
+  var LS_RATING = "veil.stream.ratings.v1";
+  var LS_AVA = "veil.stream.avatars.v1";
+  var HIST_CAP = 300;
+
+  function lsJ(k, d) { try { var r = window.localStorage.getItem(k); return r ? JSON.parse(r) : d; } catch (e) { return d; } }
+  function lsW(k, v) { try { window.localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* ignore */ } }
+
+  function readSubs() { return lsJ(LS_SUBS, {}) || {}; }
+  function writeSubs(s) { lsW(LS_SUBS, s); }
+  function subIds() { return Object.keys(readSubs()); }
+  function toggleSub(id, meta) {
+    var s = readSubs();
+    var on = !!s[id];
+    if (on) delete s[id]; else s[id] = { name: (meta && meta.name) || "", at: Date.now(), avatar: meta && meta.avatar ? meta.avatar : undefined };
+    writeSubs(s);
+    return !on;
+  }
+  function readHist() { return lsJ(LS_HIST, []) || []; }
+  function writeHist(h) { lsW(LS_HIST, h); }
+  function histToCard(h) {
+    return {
+      id: h.id, title: h.title || "(untitled)", author: h.author || "YouTube", authorId: h.authorId || "",
+      verified: !!h.verified, durationSec: h.durationSec || 0, views: h.views || 0, published: h.published || "",
+      live: false, short: !!h.short, thumb: h.thumb || ""
+    };
+  }
+  function pushHist(card) {
+    if (!card || !card.id) return;
+    var h = readHist().filter(function (x) { return x.id !== card.id; });
+    h.unshift({
+      id: card.id, at: Date.now(), title: card.title || "", author: card.author || "", authorId: card.authorId || "",
+      verified: !!card.verified, durationSec: card.durationSec || 0, views: card.views || 0,
+      published: card.published || "", short: !!card.short, thumb: card.thumb || ""
+    });
+    writeHist(h.slice(0, HIST_CAP));
+  }
+  function watchedSet() {
+    var s = {}, h = readHist();
+    for (var i = 0; i < h.length; i++) s[h[i].id] = 1;
+    return s;
+  }
+  function readRatings() { return lsJ(LS_RATING, {}) || {}; }
+
+  /* avatar cache — RELATIVE proxy urls so the base can change */
+  var AVA = lsJ(LS_AVA, {}) || {};
+  function persistAva() {
+    var keys = Object.keys(AVA);
+    if (keys.length > 260) {
+      var keep = {};
+      for (var i = keys.length - 260; i < keys.length; i++) keep[keys[i]] = AVA[keys[i]];
+      AVA = keep;
+    }
+    lsW(LS_AVA, AVA);
+  }
+
+  /* ============================================================
+     state
+     ============================================================ */
+  var S = {
+    base: undefined,          /* undefined = probing, null = offline gate, ""/url = live */
+    view: "browse",           /* browse | watch | channel */
+    page: "foryou",
+    prevView: "browse",       /* where the watch/channel back button returns */
+    search: null,
+    openFirst: false,
+    feeds: {
+      foryou: { cards: [], cursors: null, hasMore: true, loading: false, err: null },
+      subs: { cards: [], cursors: null, hasMore: true, loading: false, err: null, started: false },
+      shorts: { cards: [], loading: false, err: null, started: false },
+      popular: { cards: [], shown: 0, loading: false, err: null, started: false }
+    },
+    watch: null,
+    channel: null,
+    shortsView: null
+  };
+  var CARDS = {};   /* id -> card, everything we have ever rendered */
+  function registerCards(list) {
+    (list || []).forEach(function (c) { if (c && c.id) CARDS[c.id] = c; });
+  }
+
+  /* ============================================================
+     api helpers
+     ============================================================ */
+  function live() { return S.base !== null && S.base !== undefined; }
+  function apiGet(p) {
+    return fetch(V.apiUrl(p), { cache: "no-store" }).then(function (r) {
+      if (!r.ok) return Promise.reject(new Error("http " + r.status));
+      return r.json();
+    });
+  }
+  function apiPost(p, body) {
+    return fetch(V.apiUrl(p), {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+      cache: "no-store"
+    }).then(function (r) {
+      if (!r.ok) return Promise.reject(new Error("http " + r.status));
+      return r.json();
+    });
+  }
+  function apiAbs(u) {
+    if (!u) return "";
+    if (u.charAt(0) === "/") return V.apiUrl(u);
+    return u;
+  }
+  function thumbSrc(card) {
+    var t = card && card.thumb;
+    if (t && t.charAt(0) === "/") return V.apiUrl(t);
+    if (t && /^https?:\/\//i.test(t)) return t;
+    return card && card.id ? V.ytImg(card.id) : "";
+  }
+
+  /* ============================================================
+     formatting
+     ============================================================ */
+  function fmtCount(n) {
+    n = Number(n) || 0;
+    if (n >= 1e9) return (n / 1e9).toFixed(1).replace(/\.0$/, "") + "B";
+    if (n >= 1e6) return (n / 1e6).toFixed(1).replace(/\.0$/, "") + "M";
+    if (n >= 1e3) return (n / 1e3).toFixed(1).replace(/\.0$/, "") + "K";
+    return String(n);
+  }
+  function fmtTime(sec) {
+    sec = Math.max(0, Math.floor(Number(sec) || 0));
+    var h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
+    var mm = h > 0 ? String(m).padStart(2, "0") : String(m);
+    return (h > 0 ? h + ":" : "") + mm + ":" + String(s).padStart(2, "0");
+  }
+  function fmtSubs(n) {
+    n = Number(n) || 0;
+    if (n >= 1e6) return (n / 1e6).toFixed(1).replace(/\.0$/, "") + "M subscribers";
+    if (n >= 1e3) return (n / 1e3).toFixed(1).replace(/\.0$/, "") + "K subscribers";
+    return n.toLocaleString("en-US") + " subscribers";
+  }
+  function relTime(ts) {
+    var s = Math.max(1, Math.floor((Date.now() - ts) / 1000));
+    if (s < 60) return s + "s ago";
+    var m = Math.floor(s / 60);
+    if (m < 60) return m + "m ago";
+    var h = Math.floor(m / 60);
+    if (h < 24) return h + "h ago";
+    var d = Math.floor(h / 24);
+    if (d < 30) return d + "d ago";
+    return new Date(ts).toLocaleDateString();
+  }
+  function hashHue(str) {
+    var h = 0;
+    str = String(str || "?");
+    for (var i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) % 360;
+    return h;
+  }
+
+  /* ============================================================
+     html builders — the app's exact card anatomy
+     ============================================================ */
+  function avatarHtml(id, name, url, size, clickable) {
+    var hue = hashHue(id || name || "?");
+    var fs = Math.max(10, Math.round(size * 0.42));
+    var src = url ? apiAbs(url) : "";
+    var initial = ((name || "?").trim().charAt(0) || "?").toUpperCase();
+    var inner = '<span class="relative flex select-none items-center justify-center overflow-hidden rounded-full shadow-inner shadow-black/20" style="width:' + size + "px;height:" + size + "px;background-image:linear-gradient(135deg,hsl(" + hue + " 62% 44%),hsl(" + ((hue + 45) % 360) + ' 62% 28%))">' +
+      '<span class="flex h-full w-full items-center justify-center font-semibold text-white/95" style="font-size:' + fs + 'px">' + esc(initial) + "</span>" +
+      '<img data-ava="' + esc(id || "") + '"' + (src ? ' src="' + esc(src) + '"' : "") + ' alt="" loading="lazy" decoding="async" class="absolute inset-0 size-full rounded-full object-cover opacity-0 transition-opacity duration-300" />' +
+      "</span>";
+    if (clickable && id) {
+      return '<button type="button" data-ch="' + esc(id) + '" data-chname="' + esc(name || "") + '" aria-label="Open channel: ' + esc(name || "channel") + '" class="mt-0.5 shrink-0 rounded-full outline-none transition hover:opacity-90 focus-visible:ring-2 focus-visible:ring-rose-500/50 active:scale-95">' + inner + "</button>";
+    }
+    return '<span class="mt-0.5 shrink-0" aria-hidden="true">' + inner + "</span>";
+  }
+  function verifiedIc() {
+    return '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="verified channel" class="lucide lucide-badge-check size-3.5 shrink-0 text-zinc-500">' + IC.check + "</svg>";
+  }
+  function whyPill(card) {
+    if (!card || !card.why) return "";
+    return '<p class="mt-1.5 inline-flex max-w-full items-center gap-1 truncate rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10.5px] font-medium text-emerald-300/80 ring-1 ring-emerald-500/20" title="' + esc(card.why) + '">' + ic("sparkles", "size-3 shrink-0") + '<span class="truncate">' + esc(card.why) + "</span></p>";
+  }
+  function cardHtml(card, dimWatched) {
+    var watched = WATCHED[card.id] && dimWatched !== false;
+    var badge = "";
+    if (card.live) {
+      badge = '<span class="absolute bottom-2 right-2 flex items-center gap-1 rounded-md bg-rose-600/95 px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white">' + ic("radio", "size-3") + "live</span>";
+    } else if (card.short) {
+      badge = '<span class="absolute bottom-2 right-2 rounded-md bg-fuchsia-500/95 px-1.5 py-0.5 text-[10.5px] font-bold uppercase tracking-wide text-white">short</span>';
+    } else if (card.durationSec > 0) {
+      badge = '<span class="absolute bottom-2 right-2 rounded-md bg-black/85 px-1.5 py-0.5 text-[11px] font-semibold tabular-nums text-zinc-100">' + fmtTime(card.durationSec) + "</span>";
+    }
+    var watchedTag = "";
+    if (watched) {
+      watchedTag = '<span class="absolute bottom-2 left-2">' +
+        '<span class="flex items-center gap-1 rounded-md bg-black/85 px-1.5 py-0.5 text-[10.5px] font-semibold uppercase tracking-wide text-zinc-300 transition-opacity duration-200 group-hover:opacity-0">Watched</span>' +
+        '<span class="absolute inset-0 flex items-center gap-1 rounded-md bg-rose-500/95 px-1.5 py-0.5 text-[10.5px] font-semibold uppercase tracking-wide text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100">' + ic("rotate", "size-3") + "Watch again</span></span>";
+    }
+    var views = "";
+    if (card.views > 0) views += fmtCount(card.views) + " views";
+    if (card.views > 0 && card.published) views += '<span class="mx-1">·</span>';
+    if (card.published) views += esc(card.published);
+    var chBtn = card.authorId
+      ? '<button type="button" data-ch="' + esc(card.authorId) + '" data-chname="' + esc(card.author || "") + '" aria-label="Open channel: ' + esc(card.author || "channel") + '" class="mt-1 flex max-w-full items-center gap-1 rounded text-[12.5px] text-zinc-400 transition hover:text-zinc-100"><span class="truncate">' + esc(card.author) + "</span>" + (card.verified ? verifiedIc() : "") + "</button>"
+      : '<p class="mt-1 flex items-center gap-1 text-[12.5px] text-zinc-400"><span class="truncate">' + esc(card.author) + "</span>" + (card.verified ? verifiedIc() : "") + "</p>";
+    return '<div role="button" tabindex="0" data-watch="' + esc(card.id) + '" aria-label="Watch ' + esc(card.title) + ' by ' + esc(card.author) + '" class="group flex cursor-pointer flex-col rounded-xl text-left outline-none focus-visible:ring-2 focus-visible:ring-rose-500/40">' +
+      '<div class="relative">' +
+      '<div class="relative aspect-video w-full overflow-hidden rounded-xl bg-zinc-800/80 ring-1 ring-zinc-800/60 transition duration-300 group-hover:shadow-2xl group-hover:shadow-black/60 group-hover:ring-zinc-700/80">' +
+      '<img alt="" loading="lazy" decoding="async" class="h-full w-full object-cover" src="' + esc(thumbSrc(card)) + '" />' +
+      (watched ? '<div class="pointer-events-none absolute inset-0 bg-black/45 transition-colors duration-300 group-hover:bg-black/20"></div>' : "") +
+      '<div class="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all duration-200 group-hover:bg-black/30 group-hover:opacity-100"><span class="flex size-12 items-center justify-center rounded-full bg-rose-500/95 shadow-xl shadow-rose-500/30 transition-transform duration-200 group-hover:scale-105">' + playIc("size-5 translate-x-0.5") + "</span></div>" +
+      badge + watchedTag +
+      "</div></div>" +
+      '<div class="mt-3 flex gap-3">' +
+      avatarHtml(card.authorId, card.author, card.avatar || AVA[card.authorId], 36, !!card.authorId) +
+      '<div class="min-w-0 flex-1">' +
+      '<h3 class="line-clamp-2 text-[14px] font-medium leading-snug text-zinc-100">' + esc(card.title) + "</h3>" +
+      chBtn +
+      '<p class="mt-0.5 truncate text-[12px] tabular-nums text-zinc-500">' + views + "</p>" +
+      whyPill(card) +
+      "</div></div></div>";
+  }
+  function shortCardHtml(card) {
+    return '<div role="button" tabindex="0" data-short="' + esc(card.id) + '" aria-label="Watch short: ' + esc(card.title) + '" class="group flex w-full cursor-pointer flex-col gap-2.5 rounded-xl text-left outline-none transition-transform duration-200 focus-visible:ring-2 focus-visible:ring-fuchsia-500/40">' +
+      '<div class="relative">' +
+      '<div class="relative aspect-[9/16] w-full overflow-hidden rounded-xl bg-zinc-800/80 ring-1 ring-zinc-800/60 transition duration-300 group-hover:shadow-2xl group-hover:shadow-black/60 group-hover:ring-zinc-700/80">' +
+      '<img alt="" loading="lazy" decoding="async" class="h-full w-full object-cover" src="' + esc(thumbSrc(card)) + '" />' +
+      '<div class="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all duration-200 group-hover:bg-black/30 group-hover:opacity-100"><span class="flex size-11 items-center justify-center rounded-full bg-fuchsia-500/95 shadow-xl shadow-fuchsia-500/30">' + playIc("size-5 translate-x-0.5") + "</span></div>" +
+      '<span class="absolute bottom-2 right-2 rounded-md bg-fuchsia-500/95 px-1.5 py-0.5 text-[10.5px] font-bold uppercase tracking-wide text-white">short</span>' +
+      "</div></div>" +
+      '<div class="min-w-0">' +
+      '<h3 class="line-clamp-2 text-[12.5px] font-medium leading-snug text-zinc-100">' + esc(card.title) + "</h3>" +
+      '<div class="mt-1 flex items-center gap-1.5">' + avatarHtml(card.authorId, card.author, card.avatar || AVA[card.authorId], 20, false) + '<span class="min-w-0 truncate text-[11px] text-zinc-400">' + esc(card.author) + "</span></div>" +
+      '<p class="mt-0.5 truncate text-[11px] tabular-nums text-zinc-500">' + (card.views > 0 ? fmtCount(card.views) + " views" : esc(card.published || "short")) + "</p>" +
+      "</div></div>";
+  }
+  function histCardHtml(h, i) {
+    var card = histToCard(h);
+    var badge = card.short
+      ? '<span class="absolute bottom-2 right-2 rounded-md bg-fuchsia-500/95 px-1.5 py-0.5 text-[10.5px] font-bold uppercase tracking-wide text-white">short</span>'
+      : (card.durationSec > 0 ? '<span class="absolute bottom-2 right-2 rounded-md bg-black/85 px-1.5 py-0.5 text-[11px] font-semibold tabular-nums text-zinc-100">' + fmtTime(card.durationSec) + "</span>" : "");
+    return '<button type="button" data-watch="' + esc(card.id) + '" aria-label="Watch again: ' + esc(card.title) + ' — watched ' + esc(relTime(h.at)) + '" class="group flex w-full cursor-pointer flex-col text-left outline-none focus-visible:ring-2 focus-visible:ring-rose-500/40">' +
+      '<div class="relative aspect-video w-full overflow-hidden rounded-xl bg-zinc-800/80 ring-1 ring-zinc-800/60 transition duration-300 group-hover:shadow-2xl group-hover:shadow-black/60 group-hover:ring-zinc-700/80">' +
+      '<img alt="" loading="lazy" decoding="async" class="h-full w-full object-cover" src="' + esc(thumbSrc(card)) + '" />' +
+      '<div class="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all duration-200 group-hover:bg-black/30 group-hover:opacity-100"><span class="flex size-11 items-center justify-center rounded-full bg-rose-500/95 shadow-xl shadow-rose-500/30 transition-transform duration-200 group-hover:scale-105">' + ic("rotate", "size-5 text-white") + "</span></div>" +
+      badge +
+      '<span class="absolute bottom-2 left-2 flex items-center gap-1 rounded-md bg-black/85 px-1.5 py-0.5 text-[10.5px] font-semibold uppercase tracking-wide text-zinc-300">' + ic("rotate", "size-3 text-rose-400") + esc(relTime(h.at)) + "</span>" +
+      "</div>" +
+      '<div class="mt-2 px-0.5">' +
+      '<h4 class="line-clamp-2 text-[13px] font-medium leading-snug text-zinc-100 group-hover:text-white">' + esc(card.title) + "</h4>" +
+      '<p class="mt-1 truncate text-[11.5px] text-zinc-500 transition group-hover:text-zinc-400">' + esc(card.author) + "</p>" +
+      "</div></button>";
+  }
   function skeleton(n) {
     var html = "";
     for (var i = 0; i < n; i++) {
@@ -103,22 +565,1545 @@ window.VEILOS_SHARED_BASE="../site/";
     }
     return html;
   }
-  var grid = document.getElementById("feed-grid");
-  grid.innerHTML = skeleton(8);
+  function shortSkeleton(n) {
+    var html = "";
+    for (var i = 0; i < n; i++) {
+      html += '<div class="flex flex-col gap-2 rounded-2xl border border-zinc-800/60 bg-zinc-900/40 p-2"><div class="aspect-[9/16] w-full animate-pulse rounded-xl bg-zinc-800/70"></div><div class="space-y-1.5 px-1 pb-1"><div class="h-2.5 w-[90%] animate-pulse rounded bg-zinc-800/70"></div><div class="h-2.5 w-[60%] animate-pulse rounded bg-zinc-800/60"></div></div></div>';
+    }
+    return html;
+  }
+  function emptyHtml(msg, act, label) {
+    return '<div class="col-span-full flex flex-col items-center gap-3 py-16 text-center">' +
+      '<span class="flex size-12 items-center justify-center rounded-2xl bg-zinc-800/80">' + ic("clap", "size-6 text-zinc-500") + "</span>" +
+      '<p class="max-w-sm text-[13.5px] text-zinc-400">' + esc(msg) + "</p>" +
+      (act ? '<button type="button" data-act="' + act + '" class="inline-flex h-8 items-center gap-1.5 rounded-xl border border-zinc-700 px-3 text-[12.5px] font-medium text-zinc-300 transition hover:text-zinc-100">' + ic("refresh", "size-3.5") + esc(label || "Retry") + "</button>" : "") +
+      "</div>";
+  }
+  var WATCHED = {};
 
-  /* reload replays the skeleton, like the app's shelf refresh */
-  document.getElementById("reload-feed").addEventListener("click", function () {
-    grid.innerHTML = skeleton(8);
-  });
+  /* ============================================================
+     avatar backfill — the app's batched /api/yt/avatars pass
+     ============================================================ */
+  var AVA_QUEUE = {};
+  var AVA_BUSY = false;
+  function queueAvatars(root) {
+    $$("[data-ava]", root || document).forEach(function (img) {
+      var id = img.getAttribute("data-ava");
+      if (id && !img.getAttribute("src") && !AVA[id] && !AVA_QUEUE[id]) AVA_QUEUE[id] = 1;
+    });
+    pumpAvatars();
+  }
+  function pumpAvatars() {
+    if (AVA_BUSY || !live()) return;
+    var ids = Object.keys(AVA_QUEUE).slice(0, 30);
+    if (ids.length === 0) return;
+    ids.forEach(function (id) { delete AVA_QUEUE[id]; });
+    AVA_BUSY = true;
+    apiGet("/api/yt/avatars?ids=" + encodeURIComponent(ids.join(","))).then(function (j) {
+      AVA_BUSY = false;
+      var map = (j && j.avatars) || {};
+      var hit = false;
+      ids.forEach(function (id) {
+        if (map[id]) { AVA[id] = map[id]; hit = true; }
+      });
+      if (hit) {
+        persistAva();
+        $$("[data-ava]").forEach(function (img) {
+          var id = img.getAttribute("data-ava");
+          if (id && map[id] && !img.getAttribute("src")) img.setAttribute("src", apiAbs(map[id]));
+        });
+      }
+      pumpAvatars();
+    }).catch(function () { AVA_BUSY = false; });
+  }
 
-  /* search opens YouTube results — the same query the program searches */
-  document.getElementById("yt-search").addEventListener("submit", function (e) {
-    e.preventDefault();
-    var q = document.getElementById("yt-q").value.trim();
-    if (!q) return;
-    V.pushHistory("https://www.youtube.com/results?search_query=" + encodeURIComponent(q), q + " — YouTube");
-    window.open("https://www.youtube.com/results?search_query=" + encodeURIComponent(q), "_blank", "noopener");
-  });
+  /* ============================================================
+     navigation
+     ============================================================ */
+  var PAGES = [
+    { key: "foryou", label: "For You", icon: "sparkles", chip: "bg-rose-500/20 text-rose-300 ring-rose-500/30", iconCls: "text-rose-400" },
+    { key: "shorts", label: "Shorts", icon: "zap", chip: "bg-fuchsia-500/20 text-fuchsia-300 ring-fuchsia-500/30", iconCls: "text-fuchsia-400" },
+    { key: "popular", label: "Popular", icon: "flame", chip: "bg-amber-500/20 text-amber-300 ring-amber-500/30", iconCls: "text-amber-400" },
+    { key: "subs", label: "Subscriptions", icon: "rss", chip: "bg-cyan-500/20 text-cyan-300 ring-cyan-500/30", iconCls: "text-cyan-400" }
+  ];
+  IC.zap = '<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"></path>';
+  IC.flame = '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path>';
+  IC.rss = '<path d="M4 11a9 9 0 0 1 9 9"></path><path d="M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1"></circle>';
+
+  function paintNav() {
+    var pills = $("#pills > div");
+    var side = $("#sidebar");
+    if (pills) {
+      pills.innerHTML = PAGES.map(function (p) {
+        var on = p.key === S.page;
+        return '<button type="button" data-page="' + p.key + '" aria-current="' + (on ? "page" : "false") + '" class="flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold transition active:scale-[0.97] ' +
+          (on ? "bg-rose-500 text-rose-950 shadow-lg shadow-rose-500/25" : "border border-zinc-800 bg-zinc-900/70 text-zinc-400 hover:border-zinc-700 hover:text-zinc-100") + '">' + ic(p.icon, "size-3.5") + p.label + "</button>";
+      }).join("");
+    }
+    if (side) {
+      var html = '<p class="px-3 pb-1 pt-1.5 text-[10.5px] font-semibold uppercase tracking-wider text-zinc-600">Pages</p>';
+      PAGES.forEach(function (p) {
+        var on = p.key === S.page;
+        html += '<button type="button" data-page="' + p.key + '" aria-current="' + (on ? "page" : "false") + '" class="group flex w-full items-center gap-4 rounded-xl px-3 py-2.5 text-left outline-none transition active:scale-[0.98] ' +
+          (on ? "bg-zinc-800/80 text-zinc-100" : "text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-100") + '">' +
+          ic(p.icon, "size-5 shrink-0 transition " + (on ? p.iconCls : "text-zinc-500 group-hover:text-zinc-300")) +
+          '<span class="min-w-0 flex-1 truncate text-[13.5px] font-medium">' + p.label + "</span></button>";
+      });
+      side.innerHTML = html;
+    }
+  }
+  function goPage(key) {
+    if (S.page === key && S.view === "browse" && !S.search) return;
+    S.page = key;
+    S.search = null;
+    S.openFirst = false;
+    setView("browse");
+  }
+  function setView(view) {
+    S.view = view;
+    var browse = $("#view-browse"), watch = $("#view-watch"), channel = $("#view-channel");
+    browse.classList.toggle("hidden", view !== "browse");
+    watch.classList.toggle("hidden", view !== "watch");
+    channel.classList.toggle("hidden", view !== "channel");
+    $$(".st-clear").forEach(function (b) {
+      b.classList.toggle("hidden", !S.search);
+      b.classList.toggle("flex", !!S.search);
+    });
+    if (view === "browse") {
+      paintNav();
+      ["search", "foryou", "shorts", "popular", "subs"].forEach(function (p) {
+        var el = $("#panel-" + p);
+        if (el) el.classList.toggle("hidden", p !== (S.search ? "search" : S.page));
+      });
+      if (S.search) renderSearch(); else renderFeed(S.page);
+    }
+    $("#scroller").scrollTop = 0;
+  }
+  function renderFeed(kind) {
+    WATCHED = watchedSet();
+    if (kind === "foryou") renderFY();
+    else if (kind === "subs") renderSubs();
+    else if (kind === "shorts") renderShorts();
+    else if (kind === "popular") renderPopular();
+  }
+
+  /* ============================================================
+     infinite sentinel
+     ============================================================ */
+  function armSentinel(el, fn) {
+    if (!el) return;
+    if (typeof IntersectionObserver === "undefined") {
+      el.style.cursor = "pointer";
+      el.addEventListener("click", fn);
+      return;
+    }
+    var io = new IntersectionObserver(function (entries) {
+      for (var i = 0; i < entries.length; i++) {
+        if (entries[i].isIntersecting) { io.disconnect(); fn(); return; }
+      }
+    }, { rootMargin: "800px 0px" });
+    io.observe(el);
+  }
+  function tailHtml(f, loadingMsg, keepMsg, busyMsg) {
+    if (f.loading && f.cards.length > 0) {
+      return '<div class="mt-8 grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">' + skeleton(4) + '<p class="col-span-full text-center text-[11.5px] text-zinc-600">' + busyMsg + "</p></div>";
+    }
+    if (f.hasMore) {
+      return '<div class="mt-8 flex items-center justify-center py-4" data-tail="1"><button type="button" class="rounded-full border border-zinc-800 bg-zinc-900/60 px-4 py-1.5 text-[11.5px] text-zinc-500 transition hover:border-zinc-700 hover:text-zinc-300">' + keepMsg + "</button></div>";
+    }
+    if (f.cards.length > 0) {
+      return '<p class="mt-8 flex items-center justify-center gap-2 text-[12px] text-zinc-600"><span class="size-1.5 rounded-full bg-zinc-700" aria-hidden="true"></span>' + loadingMsg + '<span class="size-1.5 rounded-full bg-zinc-700" aria-hidden="true"></span></p>';
+    }
+    return "";
+  }
+
+  /* ============================================================
+     For You — the personalized river (POST + cursors)
+     ============================================================ */
+  function histChans() {
+    var out = [], seen = {};
+    readHist().some(function (h) {
+      if (h.authorId && !seen[h.authorId]) { seen[h.authorId] = 1; out.push(h.authorId); }
+      return out.length >= 8;
+    });
+    return out;
+  }
+  function histVids() {
+    return readHist().slice(0, 20).map(function (h) { return h.id; });
+  }
+  function fySeen() {
+    var out = [], seen = {};
+    readHist().forEach(function (h) { if (h.id && !seen[h.id]) { seen[h.id] = 1; out.push(h.id); } });
+    S.feeds.foryou.cards.forEach(function (c) { if (!seen[c.id]) { seen[c.id] = 1; out.push(c.id); } });
+    return out.slice(0, 400);
+  }
+  function loadFY(reset) {
+    var f = S.feeds.foryou;
+    if (!live() || f.loading) return;
+    if (reset) {
+      f.cards = []; f.cursors = null; f.hasMore = true; f.err = null;
+      renderFY();
+    }
+    f.loading = true;
+    spin("#panel-foryou [data-act='reload-fy']", true);
+    renderFY();
+    apiPost("/api/yt/feed", {
+      kind: "foryou",
+      chans: histChans(),
+      vids: histVids(),
+      boost: subIds().slice(0, 30),
+      seen: fySeen(),
+      cursors: f.cursors || {}
+    }).then(function (j) {
+      f.loading = false;
+      spin("#panel-foryou [data-act='reload-fy']", false);
+      if (!j || j.error) { f.err = (j && j.error) || "the feed didn't come back — try again in a moment"; renderFY(); return; }
+      var fresh = (j.cards || []).filter(function (c) { return c && c.id; });
+      var have = {};
+      f.cards.forEach(function (c) { have[c.id] = 1; });
+      var add = fresh.filter(function (c) { return !have[c.id]; });
+      f.cards = f.cards.concat(add);
+      registerCards(f.cards);
+      f.cursors = j.next || null;
+      if (add.length === 0 && fresh.length === 0) f.cursors = null;
+      f.hasMore = !!f.cursors;
+      f.err = null;
+      renderFY();
+    }).catch(function () {
+      f.loading = false;
+      spin("#panel-foryou [data-act='reload-fy']", false);
+      f.err = "the feed didn't come back — the app may be waking up, try again";
+      renderFY();
+    });
+  }
+  function renderFY() {
+    var f = S.feeds.foryou;
+    var grid = $("#fy-grid"), tail = $("#fy-tail");
+    $("#fy-badge").textContent = f.cards.length > 0 ? f.cards.length + " videos" + (f.hasMore ? "+" : "") : "";
+    renderHistoryRail();
+    if (f.cards.length === 0) {
+      if (f.loading) { grid.innerHTML = skeleton(8); tail.innerHTML = ""; return; }
+      grid.innerHTML = "";
+      tail.innerHTML = emptyHtml(f.err || "the For You shelf came back empty — hit reload for a fresh mix", "reload-fy", "Reload feed");
+      return;
+    }
+    WATCHED = watchedSet();
+    grid.innerHTML = f.cards.map(function (c) { return cardHtml(c); }).join("");
+    tail.innerHTML = tailHtml(f,
+      "that's the whole river for now — hit refresh for a fresh mix",
+      "keep scrolling — more from your channels and beyond",
+      "loading more for you…");
+    if (f.hasMore && !f.loading) armSentinel(tail.querySelector("[data-tail]"), function () { loadFY(false); });
+    queueAvatars(grid);
+  }
+  function renderHistoryRail() {
+    var h = readHist().slice(0, 12);
+    var wrap = $("#fy-rail-wrap");
+    if (!wrap) return;
+    if (h.length === 0) { wrap.classList.add("hidden"); wrap.classList.remove("block"); return; }
+    wrap.classList.remove("hidden");
+    wrap.classList.add("block");
+    $("#fy-rail-count").textContent = readHist().length + " watched";
+    registerCards(h.map(histToCard));
+    $("#fy-rail").innerHTML = h.map(function (e, i) {
+      return '<div class="w-44 shrink-0 sm:w-52">' + histCardHtml(e, i) + "</div>";
+    }).join("");
+  }
+
+  /* ============================================================
+     Subscriptions — the followed channels' river
+     ============================================================ */
+  function loadSubs(reset) {
+    var f = S.feeds.subs;
+    if (!live() || f.loading) return;
+    var ids = subIds();
+    if (ids.length === 0) { f.started = true; renderSubs(); return; }
+    if (reset) {
+      f.cards = []; f.cursors = null; f.hasMore = true; f.err = null; f.started = true;
+      renderSubs();
+    }
+    f.loading = true;
+    spin("#panel-subs [data-act='reload-subs']", true);
+    renderSubs();
+    apiPost("/api/yt/feed", { kind: "subs", ids: ids, cursors: f.cursors || {} }).then(function (j) {
+      f.loading = false;
+      spin("#panel-subs [data-act='reload-subs']", false);
+      if (!j || j.error) { f.err = (j && j.error) || "the subscriptions feed didn't come back — try again"; renderSubs(); return; }
+      var fresh = (j.cards || []).filter(function (c) { return c && c.id; });
+      var have = {};
+      f.cards.forEach(function (c) { have[c.id] = 1; });
+      var add = fresh.filter(function (c) { return !have[c.id]; });
+      f.cards = f.cards.concat(add);
+      registerCards(f.cards);
+      f.cursors = j.next || null;
+      if (add.length === 0 && fresh.length === 0) f.cursors = null;
+      f.hasMore = !!f.cursors;
+      renderSubs();
+    }).catch(function () {
+      f.loading = false;
+      spin("#panel-subs [data-act='reload-subs']", false);
+      f.err = "the subscriptions feed didn't come back — try again";
+      renderSubs();
+    });
+  }
+  function renderSubs() {
+    var f = S.feeds.subs;
+    var grid = $("#subs-grid"), tail = $("#subs-tail");
+    var ids = subIds();
+    $("#subs-badge").textContent = ids.length > 0 ? ids.length + " channel" + (ids.length === 1 ? "" : "s") : "";
+    renderSubsStrip();
+    if (ids.length === 0) {
+      grid.innerHTML = emptyHtml("you're not following any channels yet — open a channel and hit Subscribe, or import your real YouTube subscriptions with the button above", null, "");
+      tail.innerHTML = "";
+      return;
+    }
+    if (f.cards.length === 0 && !f.started) { renderSubs(); f.started = true; loadSubs(true); return; }
+    if (f.cards.length === 0) {
+      if (f.loading) { grid.innerHTML = skeleton(8); tail.innerHTML = ""; return; }
+      grid.innerHTML = emptyHtml(f.err || "no new uploads came back from the channels you follow — try a reload", "reload-subs", "Reload feed");
+      tail.innerHTML = "";
+      return;
+    }
+    WATCHED = watchedSet();
+    grid.innerHTML = f.cards.map(function (c) {
+      var isNew = !WATCHED[c.id];
+      return '<div class="relative">' +
+        (isNew ? '<span aria-label="new upload" title="new upload — not watched yet" class="absolute left-4 top-4 z-10 flex size-2.5 items-center justify-center rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]"></span>' : "") +
+        cardHtml(c) + "</div>";
+    }).join("");
+    tail.innerHTML = tailHtml(f,
+      "You're all caught up — every upload from your " + ids.length + " channel" + (ids.length === 1 ? " is" : "s are") + " on screen",
+      "keep scrolling — older uploads from your channels",
+      "loading deeper uploads…");
+    if (f.hasMore && !f.loading) armSentinel(tail.querySelector("[data-tail]"), function () { loadSubs(false); });
+    queueAvatars(grid);
+  }
+  function renderSubsStrip() {
+    var subs = readSubs();
+    var ids = Object.keys(subs);
+    var wrap = $("#subs-strip-wrap");
+    if (!wrap) return;
+    if (ids.length === 0) { wrap.classList.add("hidden"); wrap.classList.remove("flex"); wrap.innerHTML = ""; return; }
+    wrap.classList.remove("hidden");
+    wrap.classList.add("flex");
+    wrap.innerHTML = ids.map(function (id) {
+      var e = subs[id] || {};
+      return '<span class="flex shrink-0 items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900/60 py-1 pl-1 pr-1.5">' +
+        avatarHtml(id, e.name || id, e.avatar || AVA[id], 24, false) +
+        '<span class="max-w-28 truncate text-[11.5px] font-medium text-zinc-300">' + esc(e.name || id) + "</span>" +
+        '<button type="button" data-unsub="' + esc(id) + '" aria-label="Unsubscribe from ' + esc(e.name || id) + '" class="flex size-5 items-center justify-center rounded-full text-zinc-500 transition hover:bg-rose-500/20 hover:text-rose-300">' + ic("x", "size-3") + "</button></span>";
+    }).join("");
+    queueAvatars(wrap);
+  }
+
+  /* ============================================================
+     Shorts — the vertical deck (GET + exclude rounds)
+     ============================================================ */
+  function loadShorts(reset) {
+    var f = S.feeds.shorts;
+    if (!live() || f.loading) return;
+    if (reset) { f.cards = []; f.err = null; f.started = true; renderShorts(); }
+    f.loading = true;
+    spin("#panel-shorts [data-act='reload-shorts']", true);
+    renderShorts();
+    var exclude = f.cards.map(function (c) { return c.id; }).slice(-150);
+    var q = "?kind=shorts&shuffle=" + (reset ? "1" : "0") +
+      "&chans=" + encodeURIComponent(histChans().join(",")) +
+      "&boost=" + encodeURIComponent(subIds().slice(0, 30).join(",")) +
+      "&exclude=" + encodeURIComponent(exclude.join(","));
+    apiGet("/api/yt/feed" + q).then(function (j) {
+      f.loading = false;
+      spin("#panel-shorts [data-act='reload-shorts']", false);
+      var arr = Array.isArray(j) ? j : (j && j.cards) || [];
+      var fresh = arr.filter(function (c) { return c && c.id; });
+      var have = {};
+      f.cards.forEach(function (c) { have[c.id] = 1; });
+      var add = fresh.filter(function (c) { return !have[c.id]; });
+      f.cards = f.cards.concat(add);
+      registerCards(f.cards);
+      f.err = null;
+      renderShorts();
+    }).catch(function () {
+      f.loading = false;
+      spin("#panel-shorts [data-act='reload-shorts']", false);
+      f.err = "the shorts shelf didn't come back — try a reload";
+      renderShorts();
+    });
+  }
+  function renderShorts() {
+    var f = S.feeds.shorts;
+    var grid = $("#sh-grid"), tail = $("#sh-tail");
+    $("#sh-badge").textContent = f.cards.length > 0 ? f.cards.length + " shorts" : "";
+    if (f.cards.length === 0) {
+      if (f.loading) { grid.innerHTML = shortSkeleton(10); tail.innerHTML = ""; return; }
+      grid.innerHTML = emptyHtml(f.err || "no shorts came back — try a reload", "reload-shorts", "Reload shorts");
+      tail.innerHTML = "";
+      return;
+    }
+    grid.innerHTML = f.cards.map(shortCardHtml).join("");
+    tail.innerHTML = f.loading
+      ? '<div class="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">' + shortSkeleton(6) + '<p class="col-span-full text-center text-[11.5px] text-zinc-600">dealing more shorts…</p></div>'
+      : '<div class="mt-8 flex items-center justify-center py-4" data-tail="1"><button type="button" class="rounded-full border border-zinc-800 bg-zinc-900/60 px-4 py-1.5 text-[11.5px] text-zinc-500 transition hover:border-zinc-700 hover:text-zinc-300">keep scrolling — more shorts</button></div>';
+    if (!f.loading) armSentinel(tail.querySelector("[data-tail]"), function () { loadShorts(false); });
+    queueAvatars(grid);
+  }
+
+  /* ============================================================
+     Popular — the most-viewed wire, revealed in pages
+     ============================================================ */
+  function loadPopular() {
+    var f = S.feeds.popular;
+    if (!live() || f.loading) return;
+    f.loading = true;
+    f.err = null;
+    f.started = true;
+    spin("#panel-popular [data-act='reload-popular']", true);
+    renderPopular();
+    apiGet("/api/yt/feed?kind=popular").then(function (j) {
+      f.loading = false;
+      spin("#panel-popular [data-act='reload-popular']", false);
+      var arr = Array.isArray(j) ? j : (j && j.cards) || [];
+      f.cards = arr.filter(function (c) { return c && c.id; });
+      f.shown = Math.min(24, f.cards.length);
+      registerCards(f.cards);
+      renderPopular();
+    }).catch(function () {
+      f.loading = false;
+      spin("#panel-popular [data-act='reload-popular']", false);
+      f.err = "the popular shelf didn't come back — try a reload";
+      renderPopular();
+    });
+  }
+  function renderPopular() {
+    var f = S.feeds.popular;
+    var grid = $("#pop-grid"), tail = $("#pop-tail");
+    $("#pop-badge").textContent = f.cards.length > 0 ? f.cards.length + " videos" : "";
+    if (f.cards.length === 0) {
+      if (f.loading) { grid.innerHTML = skeleton(8); tail.innerHTML = ""; return; }
+      grid.innerHTML = emptyHtml(f.err || "the popular shelf came back empty — try a reload", "reload-popular", "Reload popular");
+      tail.innerHTML = "";
+      return;
+    }
+    WATCHED = watchedSet();
+    grid.innerHTML = f.cards.slice(0, f.shown).map(function (c) { return cardHtml(c); }).join("");
+    var more = f.shown < f.cards.length;
+    tail.innerHTML = more
+      ? '<div class="mt-8 flex items-center justify-center py-4" data-tail="1"><button type="button" class="rounded-full border border-zinc-800 bg-zinc-900/60 px-4 py-1.5 text-[11.5px] text-zinc-500 transition hover:border-zinc-700 hover:text-zinc-300">keep scrolling — more of the most-watched</button></div>'
+      : '<p class="mt-8 flex items-center justify-center gap-2 text-[12px] text-zinc-600"><span class="size-1.5 rounded-full bg-zinc-700" aria-hidden="true"></span>that\'s the whole popular wire right now — hit refresh for a fresh cut<span class="size-1.5 rounded-full bg-zinc-700" aria-hidden="true"></span></p>';
+    if (more) armSentinel(tail.querySelector("[data-tail]"), function () {
+      f.shown = Math.min(f.shown + 24, f.cards.length);
+      renderPopular();
+    });
+    queueAvatars(grid);
+  }
+
+  /* ============================================================
+     search
+     ============================================================ */
+  var SEARCH_SEQ = 0;
+  var SEARCH_TIMER = null;
+  function bindSearch() {
+    $$(".st-form").forEach(function (form) {
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        var q = ($(".st-q", form).value || "").trim();
+        if (!q) { clearSearch(); return; }
+        if (!live()) {
+          V.pushHistory("https://www.youtube.com/results?search_query=" + encodeURIComponent(q), q + " — YouTube");
+          window.open("https://www.youtube.com/results?search_query=" + encodeURIComponent(q), "_blank", "noopener");
+          return;
+        }
+        S.openFirst = true;
+        runSearch(q);
+      });
+    });
+    $$(".st-q").forEach(function (inp) {
+      inp.addEventListener("input", function () {
+        $$(".st-q").forEach(function (o) { if (o !== inp) o.value = inp.value; });
+        if (SEARCH_TIMER) clearTimeout(SEARCH_TIMER);
+        if (!live()) return;
+        var q = inp.value.trim();
+        if (q.length < 2) { if (S.search) clearSearch(); return; }
+        SEARCH_TIMER = setTimeout(function () { runSearch(q); }, 450);
+      });
+    });
+  }
+  function runSearch(q) {
+    if (!live()) return;
+    var seq = ++SEARCH_SEQ;
+    S.search = q;
+    if (S.view !== "browse") setView("browse");
+    $("#panel-search").classList.remove("hidden");
+    ["foryou", "shorts", "popular", "subs"].forEach(function (p) { $("#panel-" + p).classList.add("hidden"); });
+    $$(".st-clear").forEach(function (b) { b.classList.remove("hidden"); b.classList.add("flex"); });
+    $("#sr-head").textContent = "Results — \u201C" + q + "\u201D";
+    $("#sr-grid").innerHTML = skeleton(8);
+    apiGet("/api/yt/search?q=" + encodeURIComponent(q)).then(function (j) {
+      if (seq !== SEARCH_SEQ) return;
+      var arr = Array.isArray(j) ? j : (j && j.cards) || [];
+      var cards = arr.filter(function (c) { return c && c.id; });
+      registerCards(cards);
+      if (cards.length === 0) {
+        $("#sr-grid").innerHTML = emptyHtml("Nothing matched — try a different query.", "clear-search", "Clear search");
+      } else {
+        WATCHED = watchedSet();
+        $("#sr-grid").innerHTML = cards.map(function (c) { return cardHtml(c); }).join("");
+        queueAvatars($("#sr-grid"));
+        if (S.openFirst) { S.openFirst = false; openWatch(cards[0].id, cards[0]); }
+      }
+    }).catch(function () {
+      if (seq !== SEARCH_SEQ) return;
+      $("#sr-grid").innerHTML = emptyHtml("the search didn't come back — try again in a moment", "clear-search", "Clear search");
+    });
+  }
+  function renderSearch() {
+    if (!S.search) return;
+    $("#sr-head").textContent = "Results — \u201C" + S.search + "\u201D";
+    $$(".st-q").forEach(function (i) { i.value = S.search; });
+    $$(".st-clear").forEach(function (b) { b.classList.remove("hidden"); b.classList.add("flex"); });
+  }
+  function clearSearch() {
+    SEARCH_SEQ++;
+    S.search = null;
+    S.openFirst = false;
+    $$(".st-q").forEach(function (i) { i.value = ""; });
+    $$(".st-clear").forEach(function (b) { b.classList.add("hidden"); b.classList.remove("flex"); });
+    $("#panel-search").classList.add("hidden");
+    if (S.view === "browse") {
+      var el = $("#panel-" + S.page);
+      if (el) el.classList.remove("hidden");
+      renderFeed(S.page);
+    }
+  }
+
+  /* ============================================================
+     watch view
+     ============================================================ */
+  function openWatch(id, card) {
+    if (!id) return;
+    card = card || CARDS[id] || (S.watch && S.watch.body && S.watch.body.card) || null;
+    if (card) CARDS[id] = card;
+    if (S.view === "browse") S.prevView = "browse";
+    pushHist(card || { id: id, title: "" });
+    S.watch = { id: id, card: card, body: null, formats: [], fmt: null, gate: null, loading: true, comments: null, cOpen: false };
+    setView("watch");
+    renderWatchShell();
+    fetchWatchBody(true);
+  }
+  function watchBack() {
+    var prev = S.prevView;
+    S.prevView = "browse";
+    var vid = $("#wv");
+    if (vid) { try { vid.pause(); } catch (e) { /* ignore */ } }
+    if (prev === "channel" && S.channel) { setView("channel"); }
+    else { setView("browse"); }
+  }
+  function renderWatchShell() {
+    var w = S.watch;
+    var card = w.card || (w.body && w.body.card) || { id: w.id, title: "Loading…", author: "", authorId: "", views: 0, published: "", verified: false };
+    $("#w-back-label").textContent = S.prevView === "channel" ? "Back to channel" : "Back to Stream";
+    $("#w-title").textContent = card.title || "Loading…";
+    $("#w-ext").setAttribute("href", "https://www.youtube.com/watch?v=" + encodeURIComponent(w.id));
+    var av = (w.body && w.body.authorAvatar) || (card.avatar) || AVA[card.authorId] || "";
+    var views = "";
+    if (card.views > 0) views = fmtCount(card.views) + " views" + (card.published ? ' <span class="mx-1">·</span> ' + esc(card.published) : "");
+    else if (card.published) views = esc(card.published);
+    $("#w-chrow").innerHTML = card.authorId
+      ? '<button type="button" data-ch="' + esc(card.authorId) + '" data-chname="' + esc(card.author || "") + '" aria-label="Open channel: ' + esc(card.author || "channel") + '" class="group/ch flex min-w-0 items-center gap-2.5 rounded-xl p-1 pr-2.5 text-left transition hover:bg-zinc-900/80">' +
+        avatarHtml(card.authorId, card.author, av, 32, false) +
+        '<span class="min-w-0"><span class="flex items-center gap-1 truncate text-[13.5px] font-medium text-zinc-100 transition group-hover/ch:text-white">' + esc(card.author) + (card.verified ? ' <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="verified channel" class="lucide lucide-badge-check inline size-3 shrink-0 text-zinc-400">' + IC.check + "</svg>" : "") + "</span>" +
+        '<span class="block truncate text-[11.5px] tabular-nums text-zinc-500">' + views + "</span></span></button>"
+      : '<div class="flex min-w-0 items-center gap-2.5">' + avatarHtml(card.authorId, card.author, av, 32, false) +
+        '<div class="min-w-0"><p class="truncate text-[13.5px] font-medium text-zinc-100">' + esc(card.author) + "</p>" +
+        '<p class="truncate text-[11.5px] tabular-nums text-zinc-500">' + views + "</p></div></div>";
+    renderSubPill(card.authorId, card.author, av);
+    renderLikeBar();
+    var desc = (w.body && w.body.description) || "";
+    var dw = $("#w-desc-wrap");
+    if (desc) {
+      $("#w-desc").textContent = desc;
+      dw.classList.remove("hidden");
+    } else dw.classList.add("hidden");
+    /* comments reset */
+    S.watch.cOpen = false;
+    $("#w-comments-body").classList.add("hidden");
+    $("#w-comments-sub").textContent = "read-only, straight through the veil";
+    var chev = $("#w-comments-chev");
+    if (chev) chev.style.transform = "";
+    $("[data-act='toggle-comments']").setAttribute("aria-expanded", "false");
+    $("#w-comments-list").innerHTML = "";
+    $("#w-comments-more").innerHTML = "";
+    /* related */
+    var rel = (w.body && w.body.related) || [];
+    var rw = $("#w-related-wrap");
+    if (rel.length > 0) {
+      registerCards(rel);
+      WATCHED = watchedSet();
+      $("#w-related").innerHTML = rel.slice(0, 12).map(function (c) { return cardHtml(c); }).join("");
+      rw.classList.remove("hidden");
+      queueAvatars($("#w-related"));
+    } else {
+      $("#w-related").innerHTML = "";
+      rw.classList.add("hidden");
+    }
+    /* player shell */
+    var pw = $("#w-player");
+    if (w.loading && !w.body) {
+      pw.innerHTML = '<div class="aspect-video w-full animate-pulse bg-zinc-800/60"></div>';
+      $("#w-quality").innerHTML = "";
+      note("");
+    }
+  }
+  function note(text) {
+    var el = $("#w-note");
+    if (!el) return;
+    if (text) { el.textContent = text; el.classList.remove("hidden"); }
+    else el.classList.add("hidden");
+  }
+  function fetchWatchBody(quick) {
+    var w = S.watch;
+    if (!w) return;
+    if (quick) {
+      pwGate("");
+      pw.innerHTML = '<div class="aspect-video w-full animate-pulse bg-zinc-800/60"></div>';
+    }
+    apiGet("/api/yt/video/" + encodeURIComponent(w.id) + (quick ? "?quick=1" : "")).then(function (j) {
+      if (!w || w.id !== S.watch.id) return;
+      if (j && j.gated) {
+        w.gate = j.message || "this stream is still warming up";
+        w.loading = false;
+        renderGatePanel();
+        return;
+      }
+      w.gate = null;
+      w.body = j || null;
+      w.loading = false;
+      if (!w.body || !w.body.card) { renderGatePanel("this video didn't come back — try again in a moment"); return; }
+      CARDS[w.id] = w.body.card;
+      renderWatchShell();
+      mountPlayer();
+    }).catch(function () {
+      if (!w || w.id !== S.watch.id) return;
+      w.loading = false;
+      renderGatePanel("the video didn't come back — the app may be waking up, try again");
+    });
+  }
+  function pwGate(msg) {
+    var pw = $("#w-player");
+    pw.innerHTML =
+      '<div class="flex aspect-video w-full flex-col items-center justify-center gap-3 bg-zinc-900/50 px-6 text-center">' +
+      '<span class="flex size-12 items-center justify-center rounded-2xl bg-zinc-800/80">' + ic("clap", "size-6 text-zinc-500") + "</span>" +
+      '<p class="max-w-md text-[13.5px] text-zinc-400">' + esc(msg || "this stream is still warming up — press play again and it usually snaps right in") + "</p>" +
+      '<button type="button" data-act="retry-watch" class="inline-flex h-8 items-center gap-1.5 rounded-xl border border-zinc-700 px-3 text-[12.5px] font-medium text-zinc-300 transition hover:text-zinc-100">' + ic("refresh", "size-3.5") + "Try again</button>" +
+      "</div>";
+    $("#w-quality").innerHTML = "";
+  }
+  function renderGatePanel(msg) {
+    pwGate(msg || (S.watch && S.watch.gate) || "");
+    note("");
+  }
+  function canNativeHls() {
+    var v = document.createElement("video");
+    return !!(v.canPlayType && v.canPlayType("application/vnd.apple.mpegurl"));
+  }
+  function playableFormats(body) {
+    var list = (body && body.formats) || [];
+    var prog = list.filter(function (f) { return f.kind === "progressive" && f.url; });
+    prog.sort(function (a, b) {
+      var ha = parseInt(a.label, 10) || 0, hb = parseInt(b.label, 10) || 0;
+      return hb - ha;
+    });
+    var out = prog.slice();
+    if (out.length === 0 && canNativeHls()) {
+      var hls = list.filter(function (f) { return f.kind === "hls" && f.url; });
+      out = out.concat(hls);
+    }
+    return out;
+  }
+  function mountPlayer() {
+    var w = S.watch;
+    if (!w || !w.body) return;
+    var formats = playableFormats(w.body);
+    w.formats = formats;
+    var pw = $("#w-player");
+    var poster = V.ytImg(w.id);
+    if (formats.length === 0) {
+      pw.innerHTML =
+        '<div class="flex aspect-video w-full flex-col items-center justify-center gap-3 bg-zinc-900/50 px-6 text-center">' +
+        '<span class="flex size-12 items-center justify-center rounded-2xl bg-zinc-800/80">' + ic("clap", "size-6 text-zinc-500") + "</span>" +
+        '<p class="max-w-md text-[13.5px] text-zinc-400">no playable streams came back for this video yet — the service keeps retrying it in the background, press Try again in a moment</p>' +
+        '<button type="button" data-act="retry-watch" class="inline-flex h-8 items-center gap-1.5 rounded-xl border border-zinc-700 px-3 text-[12.5px] font-medium text-zinc-300 transition hover:text-zinc-100">' + ic("refresh", "size-3.5") + "Try again</button>" +
+        "</div>";
+      $("#w-quality").innerHTML = "";
+      note("");
+      return;
+    }
+    pw.innerHTML =
+      '<video id="wv" class="aspect-video w-full bg-black" controls playsinline preload="metadata" poster="' + esc(poster) + '"></video>' +
+      '<div id="wv-cover" class="pointer-events-none absolute inset-0 flex items-center justify-center">' +
+      '<button type="button" id="wv-play" aria-label="Play" class="pointer-events-auto flex size-16 items-center justify-center rounded-full bg-rose-500 text-white shadow-[0_16px_36px_-14px_rgba(217,70,239,0.5)] transition hover:scale-105 active:scale-95">' + playIc("size-6 translate-x-0.5") + "</button></div>";
+    var vid = $("#wv");
+    vid.addEventListener("play", function () { $("#wv-cover").style.display = "none"; });
+    vid.addEventListener("pause", function () { $("#wv-cover").style.display = ""; });
+    vid.addEventListener("error", function () {
+      note("the stream broke mid-play — try the Quality menu or reload");
+    });
+    $("#wv-play").addEventListener("click", function () {
+      vid.play().catch(function () { /* needs a gesture or the stream is cold */ });
+    });
+    /* quality menu */
+    var sel = $("#w-quality");
+    sel.innerHTML = formats.map(function (f, i) {
+      return '<option value="' + i + '">' + esc(f.label || "stream") + (f.kind === "hls" ? " (adaptive)" : "") + "</option>";
+    }).join("");
+    sel.addEventListener("change", function () {
+      var i = parseInt(sel.value, 10);
+      if (!isFinite(i) || !formats[i]) return;
+      applyFormat(formats[i], true);
+    });
+    applyFormat(formats[0], false);
+  }
+  function applyFormat(fmt, keepTime) {
+    var w = S.watch;
+    var vid = $("#wv");
+    if (!w || !vid || !fmt) return;
+    var t = keepTime ? vid.currentTime || 0 : 0;
+    var wasPlaying = keepTime && !vid.paused;
+    w.fmt = fmt;
+    try { vid.pause(); } catch (e) { /* ignore */ }
+    vid.removeAttribute("src");
+    try { vid.load(); } catch (e) { /* ignore */ }
+    vid.src = apiAbs(fmt.url);
+    var onMeta = function () {
+      vid.removeEventListener("loadedmetadata", onMeta);
+      if (t > 2 && isFinite(vid.duration)) vid.currentTime = Math.min(t, Math.max(0, vid.duration - 0.5));
+      if (wasPlaying || !keepTime) vid.play().catch(function () { /* gesture policy */ });
+    };
+    vid.addEventListener("loadedmetadata", onMeta);
+    note("");
+  }
+  function renderSubPill(chId, name, avatar) {
+    var host = $("#w-sub");
+    if (!host) return;
+    if (!chId) { host.innerHTML = ""; return; }
+    var subs = readSubs();
+    var on = !!subs[chId];
+    host.innerHTML = '<button type="button" data-sub="' + esc(chId) + '" data-subname="' + esc(name || "") + '"' + (avatar ? ' data-subava="' + esc(avatar) + '"' : "") + ' aria-pressed="' + on + '" aria-label="' + (on ? "Unsubscribe from " : "Subscribe to ") + esc(name || "this channel") + '" class="flex h-8 shrink-0 items-center gap-1.5 rounded-full px-3 text-[12px] font-semibold transition active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500/40 ' +
+      (on ? "bg-rose-500/15 text-rose-300 ring-1 ring-rose-500/40" : "bg-rose-500 text-rose-950 hover:bg-rose-400") + '">' +
+      ic(on ? "bell" : "bellOff", "size-3.5") + "<span>" + (on ? "Subscribed" : "Subscribe") + "</span></button>";
+  }
+  function renderLikeBar() {
+    var w = S.watch;
+    var host = $("#w-likes");
+    if (!host || !w) return;
+    var card = w.card || (w.body && w.body.card) || {};
+    var likes = (w.body && w.body.likes) || 0;
+    var dislikes = (w.body && w.body.dislikes) || 0;
+    var ratings = readRatings();
+    var mine = ratings[w.id] || null;
+    host.innerHTML = '<div class="flex items-stretch overflow-hidden rounded-full border border-zinc-800 bg-zinc-900/60">' +
+      '<button type="button" data-rate="like" aria-pressed="' + (mine === "like") + '" aria-label="' + (mine === "like" ? "Remove like" : "Like this video") + '" class="flex items-center gap-1.5 px-3.5 py-1.5 text-[12px] font-semibold tabular-nums transition ' + (mine === "like" ? "bg-rose-500/15 text-rose-300" : "text-zinc-400 hover:bg-white/5 hover:text-zinc-100") + '">' + ic("up", "size-3.5" + (mine === "like" ? " fill-current" : "")) + fmtCount(likes + (mine === "like" ? 1 : 0)) + "</button>" +
+      '<span aria-hidden="true" class="w-px bg-zinc-800"></span>' +
+      '<button type="button" data-rate="dislike" aria-pressed="' + (mine === "dislike") + '" aria-label="' + (mine === "dislike" ? "Remove dislike" : "Dislike this video") + '" class="flex items-center gap-1.5 px-3.5 py-1.5 text-[12px] font-semibold tabular-nums transition ' + (mine === "dislike" ? "bg-rose-500/15 text-rose-300" : "text-zinc-400 hover:bg-white/5 hover:text-zinc-100") + '">' + ic("down", "size-3.5" + (mine === "dislike" ? " fill-current" : "")) + (dislikes > 0 ? fmtCount(dislikes + (mine === "dislike" ? 1 : 0)) : "·") + "</button>" +
+      "</div>";
+  }
+
+  /* ---------- comments ---------- */
+  function toggleComments() {
+    var w = S.watch;
+    if (!w) return;
+    var body = $("#w-comments-body");
+    var open = body.classList.contains("hidden");
+    body.classList.toggle("hidden", !open);
+    var chev = $("#w-comments-chev");
+    if (chev) chev.style.transform = open ? "rotate(180deg)" : "";
+    $("[data-act='toggle-comments']").setAttribute("aria-expanded", String(open));
+    if (open && !w.comments) loadComments("");
+  }
+  function paintCommentSort() {
+    var w = S.watch;
+    if (!w || !w.comments) return;
+    $$("[data-csort]").forEach(function (b) {
+      var on = b.getAttribute("data-csort") === w.comments.sort;
+      b.className = "inline-flex items-center gap-1.5 rounded-[10px] px-2.5 py-1 text-[12px] font-medium transition " +
+        (on ? "bg-rose-500/15 text-rose-200 shadow-sm ring-1 ring-rose-500/30" : "text-zinc-500 hover:text-zinc-200");
+    });
+  }
+  function loadComments(continuation) {
+    var w = S.watch;
+    if (!w) return;
+    var sort = (w.comments && w.comments.sort) || "new";
+    var list = $("#w-comments-list");
+    if (!continuation) {
+      list.innerHTML = '<div class="space-y-4"><div class="flex gap-3"><div class="size-8 shrink-0 animate-pulse rounded-full bg-zinc-800/70"></div><div class="flex-1 space-y-1.5"><div class="h-3 w-24 animate-pulse rounded bg-zinc-800/70"></div><div class="h-3 w-full animate-pulse rounded bg-zinc-800/50"></div><div class="h-3 w-2/3 animate-pulse rounded bg-zinc-800/40"></div></div></div><div class="flex gap-3"><div class="size-8 shrink-0 animate-pulse rounded-full bg-zinc-800/70"></div><div class="flex-1 space-y-1.5"><div class="h-3 w-24 animate-pulse rounded bg-zinc-800/70"></div><div class="h-3 w-full animate-pulse rounded bg-zinc-800/50"></div><div class="h-3 w-2/3 animate-pulse rounded bg-zinc-800/40"></div></div></div><div class="flex gap-3"><div class="size-8 shrink-0 animate-pulse rounded-full bg-zinc-800/70"></div><div class="flex-1 space-y-1.5"><div class="h-3 w-24 animate-pulse rounded bg-zinc-800/70"></div><div class="h-3 w-full animate-pulse rounded bg-zinc-800/50"></div><div class="h-3 w-2/3 animate-pulse rounded bg-zinc-800/40"></div></div></div></div>';
+      $("#w-comments-sub").textContent = "sorting " + (sort === "new" ? "newest" : "top") + " first…";
+    }
+    var url = "/api/yt/comments/" + encodeURIComponent(w.id) +
+      (continuation ? "?continuation=" + encodeURIComponent(continuation) : (sort === "new" ? "?sort=new" : ""));
+    apiGet(url).then(function (j) {
+      if (!w || w.id !== S.watch.id) return;
+      if (j && j.gated) {
+        if (!continuation) {
+          list.innerHTML = '<p class="py-4 text-center text-[12.5px] text-zinc-500">' + esc(j.message || "the comments didn't load") + "</p>";
+          $("#w-comments-sub").textContent = "read-only, straight through the veil";
+        }
+        return;
+      }
+      var comments = (j && j.comments) || [];
+      var count = (j && j.count) || 0;
+      var next = (j && j.next) || null;
+      if (!w.comments || !continuation) w.comments = { list: [], count: 0, next: null, sort: sort };
+      var have = {};
+      w.comments.list.forEach(function (c) { have[c.author + "|" + String(c.content).slice(0, 40)] = 1; });
+      comments.forEach(function (c) {
+        var k = c.author + "|" + String(c.content).slice(0, 40);
+        if (!have[k]) { have[k] = 1; w.comments.list.push(c); }
+      });
+      w.comments.count = count || w.comments.list.length;
+      w.comments.next = next;
+      paintComments();
+      paintCommentSort();
+    }).catch(function () {
+      if (!w || w.id !== S.watch.id) return;
+      if (!continuation) {
+        list.innerHTML = '<p class="py-4 text-center text-[12.5px] text-zinc-500">the comments didn\'t load — try reopening the panel</p>';
+        $("#w-comments-sub").textContent = "read-only, straight through the veil";
+      }
+    });
+  }
+  function commentHtml(c) {
+    var av = c.avatar ? apiAbs(c.avatar) : "";
+    return '<div class="flex gap-3">' +
+      avatarHtml(c.authorId || c.author, c.author, av || (c.authorId ? AVA[c.authorId] : ""), 32, false) +
+      '<div class="min-w-0 flex-1">' +
+      '<p class="flex flex-wrap items-center gap-x-1.5 text-[12px] font-medium text-zinc-200">' +
+      '<span class="max-w-[220px] truncate">' + esc(c.author) + "</span>" +
+      (c.verified ? '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="verified" class="lucide lucide-badge-check size-3 shrink-0 text-zinc-500">' + IC.check + "</svg>" : "") +
+      '<span class="text-[11px] font-normal text-zinc-500">' + esc(c.published || "") + "</span></p>" +
+      '<p class="mt-1 whitespace-pre-line text-[12.5px] leading-relaxed text-zinc-300">' + esc(c.content) + "</p>" +
+      (c.likes > 0 ? '<p class="mt-1.5 flex items-center gap-1 text-[11px] tabular-nums text-zinc-500">' + ic("up", "size-3") + fmtCount(c.likes) + "</p>" : "") +
+      "</div></div>";
+  }
+  function paintComments() {
+    var w = S.watch;
+    if (!w || !w.comments) return;
+    var list = $("#w-comments-list");
+    var cs = w.comments;
+    $("#w-comments-sub").textContent = cs.count > 0 ? fmtCount(cs.count) + " on YouTube — read only" : "read-only, straight through the veil";
+    if (cs.list.length === 0) {
+      list.innerHTML = '<p class="py-4 text-center text-[12.5px] text-zinc-500">no comments came back for this video</p>';
+    } else {
+      list.innerHTML = cs.list.map(commentHtml).join("");
+      queueAvatars(list);
+    }
+    var more = $("#w-comments-more");
+    if (cs.next) {
+      more.innerHTML = '<button type="button" data-act="more-comments" class="inline-flex h-8 items-center gap-1.5 rounded-xl border border-zinc-700 px-3 text-[12.5px] font-medium text-zinc-300 transition hover:border-rose-500/40 hover:text-rose-300">' + ic("loader", "size-3.5") + "More comments</button>";
+    } else more.innerHTML = "";
+  }
+
+  /* ============================================================
+     channel view
+     ============================================================ */
+  function openChannel(id, name) {
+    if (!id) return;
+    if (S.view !== "channel") S.prevView = S.view === "watch" ? S.prevView : S.view;
+    S.channel = { id: id, name: name || "", data: null, gate: null, loading: true, vMore: false, sMore: false, vNext: null, sNext: null, videos: [], shorts: [] };
+    setView("channel");
+    renderChannel();
+    apiGet("/api/yt/channel/" + encodeURIComponent(id)).then(function (j) {
+      var c = S.channel;
+      if (!c || c.id !== id) return;
+      c.loading = false;
+      if (j && j.gated) { c.gate = j.message || "this channel didn't come back — try again in a moment"; renderChannel(); return; }
+      if (!j || (!j.videos && !j.latestVideos)) { c.gate = "this channel didn't come back — try again in a moment"; renderChannel(); return; }
+      c.data = j;
+      c.videos = j.videos || j.latestVideos || [];
+      c.shorts = j.shorts || [];
+      c.vNext = j.videosNext || j.continuation || null;
+      c.sNext = j.shortsNext || null;
+      if (j.avatar) { AVA[id] = j.avatar; persistAva(); }
+      registerCards(c.videos);
+      registerCards(c.shorts);
+      renderChannel();
+    }).catch(function () {
+      var c = S.channel;
+      if (!c || c.id !== id) return;
+      c.loading = false;
+      c.gate = "this channel didn't come back — try again in a moment";
+      renderChannel();
+    });
+  }
+  function channelBack() {
+    S.prevView = "browse";
+    var vid = $("#wv");
+    if (vid) { try { vid.pause(); } catch (e) { /* ignore */ } }
+    setView("browse");
+  }
+  function renderChannel() {
+    var c = S.channel;
+    var body = $("#c-body");
+    $("#c-back-label").textContent = "Back to Stream";
+    if (!c) return;
+    if (c.loading && !c.data) {
+      body.innerHTML =
+        '<div class="flex flex-col gap-4 rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-5 sm:flex-row sm:items-center sm:p-6">' +
+        '<div class="size-20 shrink-0 animate-pulse rounded-full bg-zinc-800/70 sm:size-24"></div>' +
+        '<div class="flex-1 space-y-2.5"><div class="h-5 w-1/3 animate-pulse rounded bg-zinc-800/70"></div><div class="h-3.5 w-1/4 animate-pulse rounded bg-zinc-800/50"></div><div class="h-3 w-2/3 animate-pulse rounded bg-zinc-800/40"></div></div></div>' +
+        '<div class="mt-4 grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">' + skeleton(8) + "</div>";
+      return;
+    }
+    if (!c.data) {
+      body.innerHTML = emptyHtml(c.gate || "this channel didn't come back — try again in a moment", "retry-channel", "Retry");
+      return;
+    }
+    var d = c.data;
+    var name = d.name || c.name || d.id;
+    var avatar = d.avatar || AVA[c.id] || "";
+    var subs = d.subs || d.subCount || 0;
+    var desc = d.description || "";
+    WATCHED = watchedSet();
+    body.innerHTML =
+      '<div class="relative overflow-hidden rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-5 sm:p-6">' +
+      '<div aria-hidden="true" class="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-rose-500/[0.08] via-rose-500/[0.03] to-transparent"></div>' +
+      '<div class="relative flex flex-col gap-4 sm:flex-row sm:items-center">' +
+      (avatar
+        ? '<img src="' + esc(apiAbs(avatar)) + '" alt="' + esc(name) + ' channel avatar" class="size-20 shrink-0 rounded-full object-cover ring-2 ring-zinc-700/60 sm:size-24" />'
+        : avatarHtml(c.id, name, "", 96, false).replace('class="mt-0.5 shrink-0"', 'class="shrink-0"')) +
+      '<div class="min-w-0 flex-1">' +
+      '<h2 class="flex flex-wrap items-center gap-2 text-[19px] font-semibold tracking-tight text-zinc-50"><span class="break-words">' + esc(name) + "</span>" + (d.verified ? ' <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="verified channel" class="lucide lucide-badge-check size-4.5 shrink-0 text-zinc-400">' + IC.check + "</svg>" : "") + "</h2>" +
+      (subs > 0 ? '<p class="mt-1 flex items-center gap-1.5 text-[12.5px] tabular-nums text-zinc-400"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-users size-3.5 text-rose-400/80"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><path d="M16 3.128a4 4 0 0 1 0 7.744"></path><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><circle cx="9" cy="7" r="4"></circle></svg>' + esc(fmtSubs(subs)) + '<span class="mx-1 text-zinc-600">·</span>' + (c.videos.length + c.shorts.length) + " items on this page</p>" : "") +
+      (desc ? '<details class="group mt-3"><summary class="cursor-pointer select-none text-[12px] font-medium text-zinc-500 transition hover:text-zinc-300">About the channel<span class="ml-1.5 text-zinc-600 group-open:hidden">— tap to expand</span></summary><p class="veil-scroll-slim mt-2 max-h-32 max-w-3xl overflow-y-auto whitespace-pre-line text-[12.5px] leading-relaxed text-zinc-400">' + esc(desc) + "</p></details>" : "") +
+      "</div>" +
+      '<button type="button" data-sub="' + esc(c.id) + '" data-subname="' + esc(name) + '"' + (avatar ? ' data-subava="' + esc(avatar) + '"' : "") + ' aria-pressed="' + (!!readSubs()[c.id]) + '" aria-label="' + (readSubs()[c.id] ? "Unsubscribe from " : "Subscribe to ") + esc(name) + '" class="flex h-8 shrink-0 items-center gap-1.5 rounded-full px-3 text-[12px] font-semibold transition active:scale-[0.97] ' +
+      (readSubs()[c.id] ? "bg-zinc-100/10 text-zinc-200 ring-1 ring-zinc-600" : "bg-zinc-100 text-zinc-900 hover:bg-white") + '">' +
+      ic(readSubs()[c.id] ? "bell" : "bellOff", "size-3.5") + "<span>" + (readSubs()[c.id] ? "Subscribed" : "Subscribe") + "</span></button>" +
+      "</div></div>" +
+      '<section aria-label="Latest videos" class="mt-5">' +
+      '<div class="mb-3 flex items-center gap-2"><h3 class="text-[13px] font-semibold uppercase tracking-wider text-zinc-500">Videos</h3><span class="text-[11px] tabular-nums text-zinc-600">' + c.videos.length + "</span></div>" +
+      (c.videos.length > 0
+        ? '<div class="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">' + c.videos.map(function (v) { return cardHtml(v); }).join("") + "</div>"
+        : emptyHtml("no videos on this channel yet", null, "")) +
+      (c.vNext ? '<div class="mt-5 flex justify-center"><button type="button" data-act="ch-more-videos" class="inline-flex h-9 items-center gap-1.5 rounded-xl border border-zinc-700 px-4 text-[12.5px] font-medium text-zinc-300 transition hover:text-zinc-100">' + ic("loader", "size-3.5") + "Load more videos</button></div>" : "") +
+      "</section>" +
+      (c.shorts.length > 0
+        ? '<section aria-label="Shorts" class="mt-8">' +
+          '<div class="mb-3 flex items-center gap-2"><h3 class="text-[13px] font-semibold uppercase tracking-wider text-zinc-500">Shorts</h3><span class="text-[11px] tabular-nums text-zinc-600">' + c.shorts.length + "</span></div>" +
+          '<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">' + c.shorts.map(shortCardHtml).join("") + "</div>" +
+          (c.sNext ? '<div class="mt-5 flex justify-center"><button type="button" data-act="ch-more-shorts" class="inline-flex h-9 items-center gap-1.5 rounded-xl border border-zinc-700 px-4 text-[12.5px] font-medium text-zinc-300 transition hover:text-zinc-100">' + ic("loader", "size-3.5") + "Load more shorts</button></div>" : "") +
+          "</section>"
+        : "");
+    queueAvatars(body);
+  }
+  function channelMore(which) {
+    var c = S.channel;
+    if (!c || !c.data) return;
+    var token = which === "videos" ? c.vNext : c.sNext;
+    if (!token) return;
+    if (which === "videos" ? c.vMore : c.sMore) return;
+    if (which === "videos") c.vMore = true; else c.sMore = true;
+    renderChannel();
+    apiGet("/api/yt/channel/" + encodeURIComponent(c.id) + "?more=" + which + "&continuation=" + encodeURIComponent(token)).then(function (j) {
+      if (!c || !c.data || S.channel !== c) return;
+      var cards = (j && j.cards) || [];
+      var have = {};
+      (which === "videos" ? c.videos : c.shorts).forEach(function (x) { have[x.id] = 1; });
+      var add = cards.filter(function (x) { return x && x.id && !have[x.id]; });
+      if (which === "videos") { c.videos = c.videos.concat(add); c.vNext = (j && j.next) || (add.length === 0 && cards.length > 0 ? null : (j && j.next) || null); c.vMore = false; }
+      else { c.shorts = c.shorts.concat(add); c.sNext = (j && j.next) || (add.length === 0 && cards.length > 0 ? null : (j && j.next) || null); c.sMore = false; }
+      registerCards(add);
+      renderChannel();
+    }).catch(function () {
+      if (which === "videos") c.vMore = false; else c.sMore = false;
+      renderChannel();
+    });
+  }
+
+  /* ============================================================
+     shorts viewer — vertical snap deck
+     ============================================================ */
+  var SV_FMT = {};    /* videoId -> promise of formats */
+  var SV_ACTIVE = null;
+  var SV_MORE_LOADING = false;
+  function openShortsViewer(list, startId, label) {
+    list = (list || []).filter(function (c) { return c && c.id; });
+    if (list.length === 0) return;
+    registerCards(list);
+    S.shortsView = { list: list, label: label || "Shorts", more: list === S.feeds.shorts.cards };
+    var sv = $("#shorts-viewer");
+    sv.classList.remove("hidden");
+    sv.classList.add("flex");
+    $("#sv-label").textContent = S.shortsView.label;
+    $("#sv-count").textContent = list.length + " shorts";
+    var sc = $("#sv-scroll");
+    sc.innerHTML = "";
+    SV_ACTIVE = null;
+    var startIdx = 0;
+    for (var i = 0; i < list.length; i++) if (list[i].id === startId) { startIdx = i; break; }
+    list.forEach(function (c, idx) { sc.appendChild(buildSlide(c, idx)); });
+    sc.scrollTop = startIdx * sc.clientHeight;
+    armSlideObserver();
+    setTimeout(function () { activateNear(sc.scrollTop / Math.max(1, sc.clientHeight)); }, 60);
+  }
+  function buildSlide(card, idx) {
+    var slide = document.createElement("div");
+    slide.className = "relative flex h-full w-full shrink-0 snap-start items-center justify-center py-2";
+    slide.style.scrollSnapAlign = "start";
+    slide.setAttribute("data-sid", card.id);
+    slide.setAttribute("data-sidx", String(idx));
+    slide.innerHTML =
+      '<div class="relative h-full overflow-hidden rounded-2xl bg-black ring-1 ring-zinc-800" style="aspect-ratio:9/16;max-width:min(100%,32rem);">' +
+      '<video data-svideo="' + esc(card.id) + '" class="size-full bg-black object-cover" playsinline loop muted preload="none" poster="' + esc(V.ytImg(card.id)) + '"></video>' +
+      '<div data-scover class="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/30">' +
+      '<button type="button" data-splay="' + esc(card.id) + '" aria-label="Play short" class="pointer-events-auto flex size-14 items-center justify-center rounded-full bg-white/10 text-white ring-1 ring-white/20 backdrop-blur-sm transition hover:scale-105 active:scale-95">' + playIc("size-5 translate-x-0.5") + "</button></div>" +
+      '<button type="button" data-sopen="' + esc(card.id) + '" aria-label="Open the sound" class="absolute right-2 top-2 hidden"></button>' +
+      '<div class="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-3 pt-10">' +
+      '<div class="flex items-center gap-2">' +
+      avatarHtml(card.authorId, card.author, card.avatar || AVA[card.authorId], 28, false) +
+      '<button type="button" data-ch="' + esc(card.authorId || "") + '" data-chname="' + esc(card.author || "") + '" class="pointer-events-auto flex min-w-0 items-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-[11.5px] font-semibold text-white ring-1 ring-white/15 backdrop-blur-sm transition hover:bg-white/20">' +
+      '<span class="truncate">' + esc(card.author) + "</span>" + (card.verified ? '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="verified channel" class="lucide lucide-badge-check size-3 shrink-0 text-zinc-300">' + IC.check + "</svg>" : "") + "</button></div>" +
+      '<p class="mt-1.5 line-clamp-2 text-[13px] font-medium text-white">' + esc(card.title) + "</p>" +
+      '<p class="mt-0.5 text-[11px] text-zinc-300">' + (card.views > 0 ? fmtCount(card.views) + " views" : esc(card.published || "short")) + "</p>" +
+      "</div></div>";
+    return slide;
+  }
+  function armSlideObserver() {
+    var sc = $("#sv-scroll");
+    if (!sc || typeof IntersectionObserver === "undefined") return;
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        var idx = Math.round(sc.scrollTop / Math.max(1, sc.clientHeight));
+        activateNear(idx);
+      });
+    }, { root: sc, threshold: 0.6 });
+    $$(".sv-slide, [data-sid]", sc).forEach(function (el) { io.observe(el); });
+  }
+  function activateNear(idx) {
+    var svv = S.shortsView;
+    if (!svv) return;
+    idx = Math.max(0, Math.min(idx, svv.list.length - 1));
+    var card = svv.list[idx];
+    if (!card) return;
+    SV_ACTIVE = card.id;
+    $$("#sv-scroll [data-svideo]").forEach(function (v) {
+      if (v.getAttribute("data-svideo") !== SV_ACTIVE) {
+        try { v.pause(); } catch (e) { /* ignore */ }
+      }
+    });
+    ensureShortFormats(card.id);
+    if (svv.more && idx >= svv.list.length - 4) shortsViewerMore();
+  }
+  function ensureShortFormats(id) {
+    if (SV_FMT[id]) return SV_FMT[id];
+    var p = apiGet("/api/yt/video/" + encodeURIComponent(id) + "?quick=1").then(function (j) {
+      if (j && !j.gated && j.formats) return j;
+      return apiGet("/api/yt/video/" + encodeURIComponent(id));
+    }).then(function (j) {
+      if (!j || j.gated) return null;
+      return playableFormats(j);
+    }).catch(function () { return null; });
+    SV_FMT[id] = p;
+    return p;
+  }
+  function playShort(id) {
+    var card = CARDS[id];
+    var vid = $('#sv-scroll [data-svideo="' + id + '"]');
+    if (!vid) return;
+    if (card) pushHist(card);
+    ensureShortFormats(id).then(function (formats) {
+      var v = $('#sv-scroll [data-svideo="' + id + '"]');
+      if (!v || !formats || formats.length === 0) return;
+      if (!v.getAttribute("src")) v.setAttribute("src", apiAbs(formats[0].url));
+      v.play().catch(function () { /* autoplay policy — the poster + play button stay */ });
+      var cover = v.parentElement && v.parentElement.querySelector("[data-scover]");
+      if (cover) cover.style.display = "none";
+    });
+  }
+  function shortsViewerMore() {
+    var svv = S.shortsView;
+    if (!svv || !svv.more || SV_MORE_LOADING) return;
+    SV_MORE_LOADING = true;
+    loadShorts(false);
+    setTimeout(function () {
+      SV_MORE_LOADING = false;
+      var sv = S.shortsView;
+      if (!sv) return;
+      var fresh = S.feeds.shorts.cards.filter(function (c) {
+        return !sv.list.some(function (x) { return x.id === c.id; });
+      });
+      if (fresh.length === 0) return;
+      var sc = $("#sv-scroll");
+      var at = sv.list.length;
+      fresh.forEach(function (c) {
+        sv.list.push(c);
+        sc.appendChild(buildSlide(c, sv.list.length - 1));
+      });
+      $("#sv-count").textContent = sv.list.length + " shorts";
+      armSlideObserver();
+      if (typeof at === "number" && false) return;
+    }, 900);
+  }
+  function closeShortsViewer() {
+    var sv = $("#shorts-viewer");
+    sv.classList.add("hidden");
+    sv.classList.remove("flex");
+    $$("#sv-scroll video").forEach(function (v) {
+      try { v.pause(); v.removeAttribute("src"); v.load(); } catch (e) { /* ignore */ }
+    });
+    $("#sv-scroll").innerHTML = "";
+    S.shortsView = null;
+    SV_ACTIVE = null;
+  }
+  function svToggleMute() {
+    var vid = SV_ACTIVE ? $('#sv-scroll [data-svideo="' + SV_ACTIVE + '"]') : null;
+    if (!vid) return;
+    vid.muted = !vid.muted;
+    var btn = $("[data-act='sv-mute']");
+    if (btn) {
+      btn.setAttribute("aria-label", vid.muted ? "Unmute" : "Mute");
+      var icEl = $("#sv-mute-ic");
+      if (icEl) icEl.setAttribute("class", "lucide " + (vid.muted ? "lucide-volume-x" : "lucide-volume-2") + " size-4");
+    }
+  }
+  function svStep(dir) {
+    var sc = $("#sv-scroll");
+    if (!sc) return;
+    var idx = Math.round(sc.scrollTop / Math.max(1, sc.clientHeight)) + dir;
+    idx = Math.max(0, idx);
+    sc.scrollTo({ top: idx * sc.clientHeight, behavior: "smooth" });
+    activateNear(idx);
+  }
+
+  /* ============================================================
+     YouTube Takeout import
+     ============================================================ */
+  var IMPORT_BUSY = false;
+  function parseSubsText(text) {
+    var out = [], seen = {}, skipped = 0;
+    function push(id, name) {
+      if (!/^(UC|HC)[\w-]{6,}$/.test(id)) { skipped++; return; }
+      if (seen[id]) return;
+      seen[id] = 1;
+      out.push({ id: id, name: String(name || "").slice(0, 80) });
+    }
+    var trimmed = String(text || "").trim();
+    if (trimmed.charAt(0) === "[" || trimmed.charAt(0) === "{") {
+      try {
+        var j = JSON.parse(trimmed);
+        var arr = Object.prototype.toString.call(j) === "[object Array]" ? j : [j];
+        for (var i = 0; i < arr.length; i++) {
+          var o = arr[i];
+          if (!o || typeof o !== "object") continue;
+          var id = (o.contentDetails && o.contentDetails.resourceId && o.contentDetails.resourceId.channelId) ||
+            (o.resourceId && o.resourceId.channelId) ||
+            (o.snippet && o.snippet.resourceId && o.snippet.resourceId.channelId) ||
+            o.channelId || "";
+          var nm = (o.snippet && o.snippet.title) || o.title || "";
+          if (typeof id === "string" && id) push(id, typeof nm === "string" ? nm : "");
+        }
+        if (out.length > 0 || skipped > 0) return { channels: out, skipped: skipped };
+      } catch (e) { /* fall through to CSV */ }
+    }
+    /* CSV — quote-aware minimal parser (titles contain commas) */
+    var rows = [], cell = "", row = [], inQ = false;
+    for (var k = 0; k < trimmed.length; k++) {
+      var ch = trimmed.charAt(k);
+      if (inQ) {
+        if (ch === '"') {
+          if (trimmed.charAt(k + 1) === '"') { cell += '"'; k++; }
+          else inQ = false;
+        } else cell += ch;
+      } else if (ch === '"') inQ = true;
+      else if (ch === ",") { row.push(cell); cell = ""; }
+      else if (ch === "\n" || ch === "\r") {
+        if (ch === "\r" && trimmed.charAt(k + 1) === "\n") k++;
+        row.push(cell); cell = "";
+        if (row.some(function (c) { return c.trim() !== ""; })) rows.push(row);
+        row = [];
+      } else cell += ch;
+    }
+    row.push(cell);
+    if (row.some(function (c) { return c.trim() !== ""; })) rows.push(row);
+    rows.forEach(function (r) {
+      if (r.length < 2) { skipped++; return; }
+      if (/^channel\s*id$/i.test(r[0].trim())) return;
+      var idCol = r[0].trim();
+      var urlCol = r[1].trim();
+      var nameCol = (r[2] || "").trim();
+      var m = /channel\/(UC[\w-]{6,})/.exec(urlCol);
+      var id = /^(UC|HC)[\w-]{6,}$/.test(idCol) ? idCol : (m ? m[1] : "");
+      if (!id) { skipped++; return; }
+      push(id, nameCol);
+    });
+    return { channels: out, skipped: skipped };
+  }
+  function mergeSubs(channels) {
+    var subs = readSubs(), added = 0;
+    (channels || []).forEach(function (ch) {
+      if (!subs[ch.id]) { subs[ch.id] = { name: ch.name || "", at: Date.now() }; added++; }
+      else if (!subs[ch.id].name && ch.name) subs[ch.id].name = ch.name;
+    });
+    writeSubs(subs);
+    return { added: added, total: Object.keys(subs).length };
+  }
+  function mergeHistoryRows(rows) {
+    var h = readHist();
+    var have = {};
+    h.forEach(function (x) { have[x.id] = 1; });
+    var added = 0;
+    (rows || []).forEach(function (r) {
+      if (!r || !r.id || have[r.id]) return;
+      have[r.id] = 1;
+      h.push({
+        id: r.id, at: (typeof r.at === "number" && r.at > 0) ? r.at : 0,
+        title: r.t || "(untitled)", author: r.c || "YouTube", authorId: r.cid || "",
+        verified: false, durationSec: 0, views: 0, published: "", short: false, thumb: ""
+      });
+      added++;
+    });
+    h.sort(function (a, b) { return (b.at || 0) - (a.at || 0); });
+    writeHist(h.slice(0, HIST_CAP));
+    return added;
+  }
+  function importSpin(on, label) {
+    $$(".imp-btn").forEach(function (b) {
+      b.innerHTML = on
+        ? ic("loader", "size-3.5 animate-spin") + "<span>" + esc(label || "Scanning…") + "</span>"
+        : '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-download size-3.5" aria-hidden="true"><path d="M12 15V3"></path><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="m7 10 5 5 5-5"></path></svg><span>Import from YouTube</span>';
+    });
+  }
+  function handleTakeoutFile(file) {
+    if (!file || IMPORT_BUSY) return;
+    var name = (file.name || "").toLowerCase();
+    var isPlain = /\.csv$/.test(name) || /\.json$/.test(name) || file.type === "text/csv" || file.type === "application/json";
+    IMPORT_BUSY = true;
+    importSpin(true, "Scanning…");
+    var finish = function (channels, skipped, histAdded, errMsg) {
+      IMPORT_BUSY = false;
+      importSpin(false);
+      if (errMsg) { toast(errMsg); return; }
+      if (!channels || channels.length === 0) {
+        toast("no YouTube subscriptions found in that file" + (skipped ? " — " + skipped + " row" + (skipped === 1 ? "" : "s") + " skipped (not channel links)" : ""));
+        return;
+      }
+      var r = mergeSubs(channels);
+      var msg = "Imported " + channels.length + " channel" + (channels.length === 1 ? "" : "s") + " — " + r.added + " new here, " + (channels.length - r.added) + " already followed";
+      if (histAdded > 0) msg += " · " + histAdded + " watch-history entries";
+      toast(msg);
+      renderSubsStrip();
+      if (S.page === "subs" && S.view === "browse" && !S.search) loadSubs(true);
+      renderHistoryRail();
+    };
+    if (isPlain && file.size <= 8 * 1024 * 1024) {
+      var fr = new FileReader();
+      fr.onload = function () {
+        var parsed = parseSubsText(String(fr.result || ""));
+        finish(parsed.channels, parsed.skipped, 0, null);
+      };
+      fr.onerror = function () { finish(null, 0, 0, "couldn't read that file — try again"); };
+      fr.readAsText(file);
+      return;
+    }
+    if (!live()) {
+      finish(null, 0, 0, "Connect the main app in Settings first — the archive reader lives on its server");
+      return;
+    }
+    if (file.size > 64 * 1024 * 1024) {
+      finish(null, 0, 0, "that archive is over 64MB — export YouTube subscriptions only, or use the website's importer (any size, on-device)");
+      return;
+    }
+    fetch(V.apiUrl("/api/yt/takeout?name=" + encodeURIComponent(file.name || "takeout")), {
+      method: "POST",
+      headers: { "content-type": "application/octet-stream" },
+      body: file,
+      cache: "no-store"
+    }).then(function (r) {
+      return r.json().catch(function () { return null; });
+    }).then(function (j) {
+      if (!j || j.error) {
+        finish(null, 0, 0, (j && j.error) || "the archive didn't come back — try again");
+        return;
+      }
+      var channels = [], skipped = 0;
+      (j.files || []).forEach(function (f) {
+        var parsed = parseSubsText(f && f.text);
+        channels = channels.concat(parsed.channels);
+        skipped += parsed.skipped;
+      });
+      var histAdded = 0;
+      if (j.history && j.history.length) histAdded = mergeHistoryRows(j.history);
+      if (channels.length === 0 && histAdded === 0 && (!j.files || j.files.length === 0)) {
+        finish(null, skipped, 0, "no subscriptions or watch-history found inside that archive — re-export with YouTube selected");
+        return;
+      }
+      finish(channels, skipped, histAdded, null);
+    }).catch(function () {
+      finish(null, 0, 0, "the archive scan failed — check the connection to the main app and try again");
+    });
+  }
+
+  /* ============================================================
+     misc — toast, spinner, gear
+     ============================================================ */
+  var TOAST_TIMER = null;
+  function toast(text) {
+    var t = $("#toast");
+    t.innerHTML = '<span class="size-1.5 shrink-0 rounded-full bg-rose-400" aria-hidden="true"></span><span>' + esc(text) + "</span>";
+    t.classList.remove("hidden");
+    t.classList.add("flex");
+    if (TOAST_TIMER) clearTimeout(TOAST_TIMER);
+    TOAST_TIMER = setTimeout(function () {
+      t.classList.add("hidden");
+      t.classList.remove("flex");
+    }, 4200);
+  }
+  function spin(sel, on) {
+    $$(sel).forEach(function (b) {
+      if (on) b.innerHTML = ic("loader", "size-3.5 animate-spin");
+      else b.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-refresh-cw size-3.5" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>';
+    });
+  }
+  function toggleGear(force) {
+    var menu = $("#gear-menu");
+    var btn = $("#gear");
+    var open = typeof force === "boolean" ? force : menu.classList.contains("hidden");
+    menu.classList.toggle("hidden", !open);
+    btn.setAttribute("aria-expanded", String(open));
+    if (open) {
+      setTimeout(function () {
+        document.addEventListener("click", function closer(e) {
+          if (menu.contains(e.target) || btn.contains(e.target)) return;
+          menu.classList.add("hidden");
+          btn.setAttribute("aria-expanded", "false");
+          document.removeEventListener("click", closer);
+        });
+      }, 50);
+    }
+  }
+
+  /* ============================================================
+     delegated events
+     ============================================================ */
+  function onClick(e) {
+    var ext = e.target.closest ? e.target.closest("[data-ext]") : null;
+    if (ext) {
+      try { V.pushHistory(ext.getAttribute("href"), ext.textContent && ext.textContent.trim()); } catch (err) { /* ignore */ }
+      return; /* let the anchor navigate */
+    }
+    var t = e.target.closest ? e.target.closest("[data-watch],[data-short],[data-ch],[data-page],[data-act],[data-unsub],[data-sub],[data-rate],[data-csort],[data-splay]") : null;
+    if (!t) return;
+    if (t.hasAttribute("data-splay")) {
+      e.preventDefault();
+      playShort(t.getAttribute("data-splay"));
+      return;
+    }
+    if (t.hasAttribute("data-watch")) {
+      e.preventDefault();
+      openWatch(t.getAttribute("data-watch"), CARDS[t.getAttribute("data-watch")] || null);
+      return;
+    }
+    if (t.hasAttribute("data-short")) {
+      e.preventDefault();
+      var list = S.feeds.shorts.cards;
+      if (S.view === "channel" && S.channel && S.channel.shorts.length) list = S.channel.shorts;
+      openShortsViewer(list, t.getAttribute("data-short"), S.view === "channel" && S.channel ? S.channel.name : "Shorts");
+      return;
+    }
+    if (t.hasAttribute("data-ch")) {
+      e.preventDefault();
+      e.stopPropagation();
+      openChannel(t.getAttribute("data-ch"), t.getAttribute("data-chname") || "");
+      return;
+    }
+    if (t.hasAttribute("data-page")) {
+      e.preventDefault();
+      goPage(t.getAttribute("data-page"));
+      return;
+    }
+    if (t.hasAttribute("data-unsub")) {
+      e.preventDefault();
+      var uid = t.getAttribute("data-unsub");
+      var subs = readSubs();
+      var nm = (subs[uid] && subs[uid].name) || uid;
+      delete subs[uid];
+      writeSubs(subs);
+      toast("Unsubscribed from " + nm);
+      renderSubsStrip();
+      if (S.page === "subs" && S.view === "browse" && !S.search) loadSubs(true);
+      return;
+    }
+    if (t.hasAttribute("data-sub")) {
+      e.preventDefault();
+      var sid = t.getAttribute("data-sub");
+      var sname = t.getAttribute("data-subname") || "";
+      var sava = t.getAttribute("data-subava") || "";
+      var on = toggleSub(sid, { name: sname, avatar: sava });
+      toast(on ? "Subscribed to " + (sname || "the channel") : "Unsubscribed from " + (sname || "the channel"));
+      if (S.view === "watch") {
+        var wc = S.watch && (S.watch.card || (S.watch.body && S.watch.body.card));
+        if (wc) renderSubPill(wc.authorId, wc.author, (S.watch.body && S.watch.body.authorAvatar) || wc.avatar || "");
+      }
+      if (S.view === "channel" && S.channel) renderChannel();
+      if (S.page === "subs" && S.view === "browse" && !S.search) renderSubs();
+      return;
+    }
+    if (t.hasAttribute("data-rate")) {
+      e.preventDefault();
+      var w = S.watch;
+      if (!w) return;
+      var r = readRatings();
+      var which = t.getAttribute("data-rate");
+      r[w.id] = r[w.id] === which ? undefined : which;
+      if (!r[w.id]) delete r[w.id];
+      lsW(LS_RATING, r);
+      renderLikeBar();
+      return;
+    }
+    if (t.hasAttribute("data-csort")) {
+      e.preventDefault();
+      var wc2 = S.watch;
+      if (!wc2) return;
+      var s = t.getAttribute("data-csort");
+      if (wc2.comments && wc2.comments.sort === s) return;
+      wc2.comments = { list: [], count: 0, next: null, sort: s };
+      $("#w-comments-list").innerHTML = "";
+      loadComments("");
+      return;
+    }
+    if (t.hasAttribute("data-act")) {
+      var act = t.getAttribute("data-act");
+      e.preventDefault();
+      if (act === "reload-fy") loadFY(true);
+      else if (act === "reload-subs") loadSubs(true);
+      else if (act === "reload-shorts") loadShorts(true);
+      else if (act === "reload-popular") loadPopular();
+      else if (act === "clear-search") clearSearch();
+      else if (act === "watch-back") watchBack();
+      else if (act === "channel-back") channelBack();
+      else if (act === "retry-watch") fetchWatchBody(false);
+      else if (act === "retry-channel") { var cid = S.channel && S.channel.id; if (cid) openChannel(cid, S.channel.name); }
+      else if (act === "toggle-comments") toggleComments();
+      else if (act === "more-comments") loadComments(S.watch && S.watch.comments && S.watch.comments.next);
+      else if (act === "ch-more-videos") channelMore("videos");
+      else if (act === "ch-more-shorts") channelMore("shorts");
+      else if (act === "sv-close") closeShortsViewer();
+      else if (act === "sv-mute") svToggleMute();
+      else if (act === "sv-up") svStep(-1);
+      else if (act === "sv-down") svStep(1);
+      else if (act === "import") {
+        if (!live()) { toast("Connect the main app in Settings first — the archive reader lives on its server"); return; }
+        toggleGear(false);
+        $("#takeout-file").value = "";
+        $("#takeout-file").click();
+      }
+      else if (act === "import-help") {
+        var h = $("#import-help");
+        h.classList.toggle("hidden");
+      }
+      else if (act === "gate-retry") {
+        var g = $("#gate");
+        g.classList.add("hidden");
+        g.classList.remove("flex");
+        V.api(true).then(function (base) {
+          S.base = base;
+          if (base === null) {
+            var gg = $("#gate");
+            gg.classList.remove("hidden");
+            gg.classList.add("flex");
+          } else {
+            $("#view-browse").classList.remove("hidden");
+            loadFY(true);
+          }
+        });
+      }
+      return;
+    }
+  }
+  function onKeydown(e) {
+    if (S.shortsView) {
+      if (e.key === "Escape") { e.preventDefault(); closeShortsViewer(); return; }
+      if (e.key === "ArrowDown") { e.preventDefault(); svStep(1); return; }
+      if (e.key === "ArrowUp") { e.preventDefault(); svStep(-1); return; }
+    }
+    if (e.key === "Escape" && S.view !== "browse") {
+      e.preventDefault();
+      if (S.view === "watch") watchBack();
+      else if (S.view === "channel") channelBack();
+      return;
+    }
+    if (e.key === "Enter" || e.key === " ") {
+      var t = e.target;
+      if (t && t.closest && t.getAttribute("role") === "button") {
+        var hit = t.closest("[data-watch],[data-short]");
+        if (hit && hit === t) { e.preventDefault(); hit.click(); }
+      }
+    }
+  }
+  /* avatar fade-in + failure fallback (capture phase — load doesn't bubble) */
+  document.addEventListener("load", function (e) {
+    var el = e.target;
+    if (el && el.tagName === "IMG" && el.getAttribute("data-ava") !== null && el.naturalWidth > 0) el.style.opacity = "1";
+  }, true);
+  document.addEventListener("error", function (e) {
+    var el = e.target;
+    if (el && el.tagName === "IMG") el.style.display = "none";
+  }, true);
+
+  /* ============================================================
+     boot
+     ============================================================ */
+  function showGate() {
+    var g = $("#gate");
+    g.classList.remove("hidden");
+    g.classList.add("flex");
+    $("#view-browse").classList.add("hidden");
+  }
+  function hideGate() {
+    var g = $("#gate");
+    g.classList.add("hidden");
+    g.classList.remove("flex");
+    $("#view-browse").classList.remove("hidden");
+  }
+  function boot() {
+    document.addEventListener("click", onClick);
+    document.addEventListener("keydown", onKeydown);
+    $("#gear").addEventListener("click", function (e) { e.stopPropagation(); toggleGear(); });
+    $("#takeout-file").addEventListener("change", function (e) {
+      var f = e.target.files && e.target.files[0];
+      if (f) handleTakeoutFile(f);
+    });
+    /* drag-and-drop the takeout archive anywhere on the page */
+    document.addEventListener("dragover", function (e) { e.preventDefault(); });
+    document.addEventListener("drop", function (e) {
+      e.preventDefault();
+      var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+      if (f) handleTakeoutFile(f);
+    });
+    bindSearch();
+    var svScroll = $("#sv-scroll");
+    svScroll.addEventListener("scroll", function () {
+      if (!S.shortsView) return;
+      var idx = Math.round(svScroll.scrollTop / Math.max(1, svScroll.clientHeight));
+      activateNear(idx);
+    }, { passive: true });
+    WATCHED = watchedSet();
+    paintNav();
+    renderHistoryRail();
+    renderSubsStrip();
+    V.api().then(function (base) {
+      S.base = base;
+      var gs = $("#gate-settings");
+      if (gs) gs.setAttribute("href", V.page("settings"));
+      var gset = $("#gear-settings");
+      if (gset) gset.setAttribute("href", V.page("settings"));
+      if (base === null) { showGate(); return; }
+      hideGate();
+      loadFY(true);
+    });
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
+  else boot();
 })();
 
 //]]>

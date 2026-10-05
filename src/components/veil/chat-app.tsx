@@ -141,6 +141,9 @@ type ChatMessage = {
   replyToContent: string | null
   replyToUsername: string | null
   createdAt: string
+  /** set when the author edited the message (the live room carries it;
+   * rendered as a small "(edited)" next to the content) */
+  editedAt?: string | null
   account: ChatMessageAccount
 }
 
@@ -3244,7 +3247,17 @@ const MessageRow = memo(function MessageRow({
             </span>
           </div>
         )}
-        <MessageContent content={msg.content} />
+        <div className="flex min-w-0 flex-wrap items-baseline gap-x-1.5">
+          <MessageContent content={msg.content} />
+          {msg.editedAt && (
+            <span
+              className="select-none align-baseline text-[9.5px] italic text-white/30"
+              title={`edited ${formatTime(msg.editedAt)}`}
+            >
+              (edited)
+            </span>
+          )}
+        </div>
       </div>
       <div className="absolute right-2 top-0 hidden items-center gap-0.5 rounded-md border border-white/10 bg-[#1c1c34] px-1 py-0.5 text-white/70 shadow-lg group-hover:flex">
         <button
@@ -3296,6 +3309,97 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
   >({})
   const [pinned, setPinned] = useState<ChatMessage[]>([])
   const [notifications, setNotifications] = useState<ChatNotification[]>([])
+
+  /* ---- live-room bridge: the git version's shared chat (written by the
+   * CDN copies through the GitHub API) merges into #general so both
+   * worlds are ONE room. Bridged users render like any other member —
+   * no special tag, same avatars; their ids are "live:<name>" so mod
+   * actions on them route through /api/chat-mod's live branch. */
+  const [liveMessages, setLiveMessages] = useState<ChatMessage[]>([])
+  const [liveMembers, setLiveMembers] = useState<
+    (PresenceUser & { online: boolean })[]
+  >([])
+  useEffect(() => {
+    if (!account) return
+    let stopped = false
+    let timer: ReturnType<typeof setTimeout> | null = null
+    const tick = async () => {
+      try {
+        const res = await fetch("/api/chat-live", { cache: "no-store" })
+        if (res.ok) {
+          const data = (await res.json()) as {
+            ok: boolean
+            messages?: ChatMessage[]
+            users?: (PresenceUser & { online: boolean })[]
+          }
+          if (!stopped && data.ok) {
+            setLiveMessages(Array.isArray(data.messages) ? data.messages : [])
+            setLiveMembers(Array.isArray(data.users) ? data.users : [])
+          }
+        }
+      } catch {
+        /* next tick retries — the room is best-effort */
+      }
+      if (!stopped) timer = setTimeout(tick, 10_000)
+    }
+    void tick()
+    return () => {
+      stopped = true
+      if (timer) clearTimeout(timer)
+    }
+  }, [account?.id])
+
+  /* The #general render list: DB messages + live-room messages, deduped
+   * by id (live rows carry "lv-" ids), interleaved by time. */
+  const mergedMessages = useMemo(() => {
+    if (channelId !== "main" || liveMessages.length === 0) return messages
+    const seen = new Set(messages.map((m) => m.id))
+    const extra = liveMessages.filter((m) => m.id && m.content && !seen.has(m.id))
+    if (extra.length === 0) return messages
+    const all = [...messages, ...extra]
+    all.sort(
+      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+    )
+    return all
+  }, [messages, liveMessages, channelId])
+
+  /* Live-room users as PlayerList members (merged below the DB members,
+   * same rank bucket as everyone else) + their online presence. */
+  const liveAccounts = useMemo(
+    () =>
+      liveMembers.map((u) => ({
+        id: u.accountId,
+        username: u.username,
+        displayName: u.displayName,
+        avatarColor: u.avatarColor,
+        avatarImage: u.avatarImage ?? null,
+        bio: "",
+        role: "member" as const,
+        muted: false,
+        banned: false,
+        banReason: null,
+        ipBanned: false,
+        coins: 0,
+        tag: null,
+        tagColor: null,
+        pfpAccessory: null,
+        createdAt: new Date(0).toISOString(),
+      })),
+    [liveMembers],
+  )
+  const playersMembers = useMemo(() => {
+    if (liveAccounts.length === 0) return members
+    const known = new Set(members.map((m) => m.id))
+    return [...members, ...liveAccounts.filter((a) => !known.has(a.id))]
+  }, [members, liveAccounts])
+  const playersPresence = useMemo(() => {
+    if (liveMembers.length === 0) return presence
+    const known = new Set(presence.map((p) => p.accountId))
+    const extra = liveMembers
+      .filter((u) => u.online && !known.has(u.accountId))
+      .map(({ online: _online, ...p }) => p)
+    return extra.length > 0 ? [...presence, ...extra] : presence
+  }, [presence, liveMembers])
 
   /* Channel continuity across dev-server restarts: the watchdog restart
    * triggers a page reload (HMR reconnect) which reopens the chat via
@@ -4755,15 +4859,15 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
               style={{ scrollbarWidth: "thin" }}
             >
               <div className="py-2">
-                {messages.length === 0 ? (
+                {mergedMessages.length === 0 ? (
                   <div className="grid place-items-center py-20 text-center text-white/40">
                     <Hash className="mb-2 h-8 w-8 opacity-50" />
                     <p className="text-sm">No messages here yet.</p>
                     <p className="mt-1 text-xs">Be the first to say something!</p>
                   </div>
                 ) : (
-                  messages.map((m, i) => {
-                    const prev = messages[i - 1]
+                  mergedMessages.map((m, i) => {
+                    const prev = mergedMessages[i - 1]
                     const newDay =
                       i === 0 || dayKeyOf(m.createdAt) !== dayKeyOf(prev.createdAt)
                     return (
@@ -5005,8 +5109,8 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
             {showMembers && (
               <PlayerList
                 account={account}
-                members={members}
-                presence={presence}
+                members={playersMembers}
+                presence={playersPresence}
                 onOpenProfile={openProfile}
                 onClose={() => setShowMembers(false)}
               />

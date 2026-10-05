@@ -63,6 +63,80 @@
   }
   window.VEILOS.dataOf = dataOf;
 
+  /* ============================================================
+     THE REAL APP'S API — the static copy calls the live app's
+     endpoints (all CORS-open) for everything the baked JSONs can't
+     do: real AI answers, the YouTube feed, music search + streaming,
+     wallpaper search, chat sign-in, and the SHARED presence count.
+
+     The base is resolved once, in priority order:
+       1. window.VEILOS_API_BASE (page/build-time override)
+       2. localStorage "veil:api-base" (user-set in Settings)
+       3. "" — same origin (when this copy is served behind the same
+          gateway as the app)
+     When nothing answers, V.api() resolves to null and every page
+     falls back to its baked static data — the copy never looks broken.
+     ============================================================ */
+  var API_BASE; /* undefined = unresolved, null = unreachable, string = live */
+  var API_PROMISE = null;
+
+  function apiBaseResolve(force) {
+    if (!force && API_PROMISE) return API_PROMISE;
+    var candidates = [];
+    if (typeof window.VEILOS_API_BASE === "string" && /^https?:\/\//i.test(window.VEILOS_API_BASE)) {
+      candidates.push(window.VEILOS_API_BASE.replace(/\/+$/, ""));
+    }
+    var saved = lsGet("veil:api-base");
+    if (saved && /^https?:\/\//i.test(saved)) candidates.push(saved.replace(/\/+$/, ""));
+    candidates.push(""); /* same-origin probe — works when served behind
+                             the app's own gateway */
+    API_PROMISE = new Promise(function (resolve) {
+      var i = 0;
+      function tryNext() {
+        if (i >= candidates.length) {
+          API_BASE = null;
+          resolve(null);
+          return;
+        }
+        var base = candidates[i++];
+        var opts = { cache: "no-store" };
+        if (typeof AbortSignal !== "undefined" && AbortSignal.timeout) {
+          opts.signal = AbortSignal.timeout(6000);
+        }
+        fetch(base + "/api/presence", opts)
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (j) {
+            if (j && typeof j.total === "number") {
+              API_BASE = base;
+              resolve(base);
+            } else tryNext();
+          })
+          .catch(function () { tryNext(); });
+      }
+      tryNext();
+    });
+    return API_PROMISE;
+  }
+
+  window.VEILOS.api = apiBaseResolve;
+  /* only meaningful after V.api() resolved to a base ("" = same origin) */
+  window.VEILOS.apiUrl = function (p) { return (API_BASE || "") + p; };
+  window.VEILOS.apiBase = function () { return API_BASE !== undefined ? API_BASE : null; };
+  /* route any absolute image through the app's proxy (same treatment
+     the website gives every remote image) */
+  window.VEILOS.apiImg = function (u) {
+    if (!/^https?:\/\//i.test(u)) return u;
+    var m = /^(https?):\/\/(.+)$/.exec(u);
+    return window.VEILOS.apiUrl("/api/p/" + m[1] + "/" + m[2]);
+  };
+  /* a YouTube thumbnail, proxied exactly like the website does it */
+  window.VEILOS.ytImg = function (videoId, quality) {
+    var q = quality || "hqdefault";
+    return window.VEILOS.apiUrl(
+      "/api/yt/s?u=" + encodeURIComponent("https://i.ytimg.com/vi/" + videoId + "/" + q + ".jpg")
+    );
+  };
+
   /* ---------- tiny helpers ---------- */
   function $(sel, root) { return (root || document).querySelector(sel); }
   function $$(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
@@ -148,8 +222,13 @@
   }
 
   /* ============================================================
-     PRESENCE — "N online" pill. Real presence: CDN room heartbeats
-     (chat-live.json) + accounts that just talked in the live chat.
+     PRESENCE — "N online" pill, ONE SHARED NUMBER with the website.
+     When the app's API is reachable, this copy heartbeats into the
+     same room (/api/presence, CORS-open) and renders the authoritative
+     total the website's pill renders — CDN visitors and website
+     visitors count into the SAME number. Offline, it falls back to
+     the chat-room estimate (latest.json + chat-live.json activity,
+     floored at 1).
      ============================================================ */
   function mountPresence() {
     var el = $$("[data-os-presence]");
@@ -159,10 +238,56 @@
       var label = n > 0 ? n + " online" : "connecting…";
       for (var i = 0; i < el.length; i++) el[i].textContent = label;
     };
-    var load = function () {
+
+    /* durable visitor id — cross-origin callers can't carry the app's
+       httpOnly cookie, so the body carries this instead */
+    var vid = lsGet("veil:visitor-id");
+    if (!vid || !/^[a-zA-Z0-9-]{8,64}$/.test(vid)) {
+      vid = "cdn-" + (Date.now().toString(36) + Math.random().toString(36).slice(2, 10)).slice(0, 24);
+      lsSet("veil:visitor-id", vid);
+    }
+    /* signed-in live-room users ride the beat as an account so the two
+       presence systems can dedupe by accountId */
+    var liveAccount = null;
+    try {
+      var ident = JSON.parse(lsGet("veil:live-identity") || "null");
+      if (ident && ident.username) {
+        liveAccount = {
+          accountId: "live:" + String(ident.username).toLowerCase(),
+          username: String(ident.username).toLowerCase(),
+          displayName: ident.displayName || ident.username,
+          avatarColor: ident.avatarColor || "#22d3ee",
+          avatarImage: null,
+        };
+      }
+    } catch (e) { liveAccount = null; }
+
+    var apiOk = false;
+    function beat() {
+      var body = { vid: vid };
+      if (liveAccount) body.account = liveAccount;
+      return fetch(window.VEILOS.apiUrl("/api/presence"), {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(body),
+        cache: "no-store",
+      })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (j) {
+          if (j && typeof j.total === "number") {
+            apiOk = true;
+            render(j.total);
+            return true;
+          }
+          return false;
+        })
+        .catch(function () { return false; });
+    }
+
+    var estimate = function () {
       var count = 0;
       var seen = {};
-      var finish = dataOf("latest.json").then(function (d) {
+      dataOf("latest.json").then(function (d) {
         var now = Date.now();
         (d.messages || []).forEach(function (m) {
           var t = new Date(m.createdAt).getTime();
@@ -177,6 +302,7 @@
           var online = {};
           for (var k in (s.users || {})) {
             var u = s.users[k];
+            if (u && u.banned) continue;
             var t = u && u.lastSeen ? new Date(u.lastSeen).getTime() : 0;
             if (isFinite(t) && now - t < WINDOW_MS) online[k.toLowerCase()] = true;
           }
@@ -189,13 +315,21 @@
           count = count + extra;
         }).catch(function () {});
       }).then(function () {
-        /* the real app's page-level heartbeat always counts you — the
-           CDN copy can only see chat-room heartbeats, so floor at 1 */
-        render(Math.max(count, 1));
+        /* offline estimate: you're here, so at least 1 */
+        if (!apiOk) render(Math.max(count, 1));
       });
     };
-    load();
-    setInterval(function () { if (!document.hidden) load(); }, 30000);
+
+    apiBaseResolve().then(function (base) {
+      if (base === null) { estimate(); return; }
+      beat().then(function (ok) {
+        if (!ok) estimate();
+      });
+      setInterval(function () { if (!document.hidden) beat(); }, 15000);
+    });
+    setInterval(function () {
+      if (!document.hidden && !apiOk) estimate();
+    }, 30000);
   }
 
   /* ============================================================

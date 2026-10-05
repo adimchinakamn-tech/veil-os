@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-veil-build="2026-10-04T17:24:13Z">
+<html lang="en" data-veil-build="2026-10-05T14:47:03Z">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -36,6 +36,22 @@
       <div class="mx-auto w-full max-w-4xl px-4 py-6 sm:px-6">
 
         <div class="grid gap-3">
+          <div class="rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-4 sm:p-5">
+            <div class="flex items-center gap-2.5">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-link-2 size-4 text-emerald-300"><path d="M9 17H7A5 5 0 0 1 7 7h2"></path><path d="M15 7h2a5 5 0 1 1 0 10h-2"></path><line x1="8" x2="16" y1="12" y2="12"></line></svg>
+              <h2 class="text-[15px] font-semibold tracking-tight text-zinc-50">Connect to the main app</h2>
+            </div>
+            <p class="mt-3 text-[12.5px] leading-relaxed text-zinc-400">The arcade previews, wallpapers, AI, music, Stream and chat sign-in all come from your Veil website. Point this copy at it:</p>
+            <form id="connect-form" novalidate class="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center">
+              <input id="connect-url" type="url" inputmode="url" placeholder="https://your-veil-site.example.com" spellcheck="false" autoCapitalize="none" autoCorrect="off" class="h-9 min-w-0 flex-1 rounded-lg border border-zinc-800 bg-zinc-900 px-3 text-[12.5px] text-zinc-100 outline-none transition placeholder:text-zinc-600 focus:border-emerald-500/50"/>
+              <div class="flex items-center gap-1.5">
+                <button type="submit" id="connect-btn" class="h-9 shrink-0 rounded-lg bg-emerald-500 px-4 text-[12.5px] font-semibold text-emerald-950 transition hover:bg-emerald-400">Connect</button>
+                <button type="button" id="disconnect-btn" class="hidden h-9 shrink-0 rounded-lg border border-zinc-800 bg-zinc-900/60 px-3 text-[12.5px] font-medium text-zinc-400 transition hover:border-zinc-600 hover:text-zinc-200">Disconnect</button>
+              </div>
+            </form>
+            <p id="connect-status" class="mt-2.5 text-[11.5px] text-zinc-500">Looking for the app…</p>
+          </div>
+
           <div class="rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-4 sm:p-5">
             <div class="flex items-center gap-2.5">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-sun size-4 text-amber-300"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path></svg>
@@ -152,6 +168,105 @@
         document.getElementById("about-version").textContent = "build " + v.built + (v.commit ? " · " + v.commit : "");
       }
     }).catch(function () {});
+})();
+
+/* ---- connect to the main app (the Veil website) ----
+   Saves the base to localStorage "veil:api-base" (os.js's V.api()
+   reads it after window.VEILOS_API_BASE), re-resolves, and reports
+   reachability straight from the /api/presence probe. */
+(function () {
+  "use strict";
+  var V = window.VEILOS;
+  var KEY = "veil:api-base";
+  var form = document.getElementById("connect-form");
+  var urlInput = document.getElementById("connect-url");
+  var statusEl = document.getElementById("connect-status");
+  var connectBtn = document.getElementById("connect-btn");
+  var disconnectBtn = document.getElementById("disconnect-btn");
+
+  function setStatus(text, tone) {
+    statusEl.textContent = text;
+    statusEl.className = "mt-2.5 text-[11.5px] " +
+      (tone === "ok" ? "text-emerald-300" : tone === "bad" ? "text-rose-400" : "text-zinc-500");
+  }
+
+  /* normalize: trim, drop trailing slashes, default to https:// */
+  function normalizeUrl(raw) {
+    var u = String(raw || "").trim();
+    if (!u) return "";
+    u = u.replace(/\/+$/, "");
+    if (!/^https?:\/\//i.test(u)) u = "https://" + u;
+    if (!/^https?:\/\/([a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+|localhost)(:\d+)?([\/?#].*)?$/i.test(u)) return "";
+    return u;
+  }
+
+  /* the same probe os.js resolves with — /api/presence answers
+     { total: N } when a real Veil app lives at the base */
+  function probe(base, cb) {
+    var opts = { cache: "no-store" };
+    if (typeof AbortSignal !== "undefined" && AbortSignal.timeout) {
+      opts.signal = AbortSignal.timeout(6000);
+    }
+    fetch(base + "/api/presence", opts)
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) { cb(j && typeof j.total === "number" ? j.total : null); })
+      .catch(function () { cb(null); });
+  }
+
+  function connected(base, total) {
+    urlInput.value = base;
+    disconnectBtn.classList.remove("hidden");
+    setStatus(typeof total === "number" ? "Connected — " + total + " online" : "Connected", "ok");
+  }
+
+  /* resolve once on load — reuses the probe os.js already started */
+  V.api().then(function (base) {
+    if (base === null) {
+      setStatus("No app found yet — enter your Veil website's address to connect it.", "");
+    } else if (base === "") {
+      setStatus("Using this copy's own address (same origin) — already talking to the app.", "");
+    } else {
+      setStatus("Reaching " + base + " …", "");
+      probe(base, function (total) { connected(base, total); });
+    }
+  });
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var base = normalizeUrl(urlInput.value);
+    if (!base) { setStatus("That doesn't look like a web address.", "bad"); return; }
+    connectBtn.disabled = true;
+    setStatus("Reaching " + base + " …", "");
+    V.lsSet(KEY, base);
+    /* force=true re-resolves: saved base first, same origin as fallback */
+    V.api(true).then(function (resolved) {
+      connectBtn.disabled = false;
+      if (resolved === base) {
+        probe(base, function (total) { connected(base, total); });
+      } else {
+        setStatus("Couldn't reach that address", "bad");
+      }
+    });
+  });
+
+  disconnectBtn.addEventListener("click", function () {
+    try { window.localStorage.removeItem(KEY); } catch (e) { /* ignore */ }
+    urlInput.value = "";
+    disconnectBtn.classList.add("hidden");
+    setStatus("Disconnecting…", "");
+    V.api(true).then(function (base) {
+      if (base === "") {
+        setStatus("Using this copy's own address (same origin).", "");
+      } else if (base) {
+        /* a build-time override (window.VEILOS_API_BASE) still wins */
+        urlInput.value = base;
+        disconnectBtn.classList.remove("hidden");
+        setStatus("Connected — this address is set by the build.", "ok");
+      } else {
+        setStatus("Not connected — pages fall back to their static data.", "");
+      }
+    });
+  });
 })();
 </script>
 </body>

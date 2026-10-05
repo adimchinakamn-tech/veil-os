@@ -576,6 +576,10 @@ export default function Home() {
 
   // ----- section renderer -----
   const renderSection = (id: SectionId) => {
+    /* sections stay mounted once opened (hidden when closed) — pass the
+     * live open state down so sections like Music can dock/undock their
+     * persistent chrome on close/reopen instead of only on first mount */
+    const sectionOpen = section === id && mode === "home";
     switch (id) {
       case "ai":
         return <AiSection onBack={closeSection} onOpenUrl={openUrl} />;
@@ -588,7 +592,7 @@ export default function Home() {
       case "wallpapers":
         return <WallpapersSection onBack={closeSection} />;
       case "music":
-        return <MusicSection onBack={closeSection} />;
+        return <MusicSection onBack={closeSection} open={sectionOpen} />;
       case "links":
         return (
           <LinksSection onBack={closeSection} onNavigate={openUrl} />

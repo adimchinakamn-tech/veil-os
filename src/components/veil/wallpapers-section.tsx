@@ -39,6 +39,7 @@ import {
   Package,
   Play,
   Search,
+  SearchX,
   Sparkles,
   TriangleAlert,
   Trash2,
@@ -1528,6 +1529,19 @@ export function WallpapersSection({ onBack }: { onBack: () => void }) {
   const [livePick, setLivePick] = React.useState<LiveItemDTO | null>(null);
   const [shuffling, setShuffling] = React.useState(false);
 
+  /* ---- universal search — My pack's box fans out to the big catalogs ----
+   * The default tab's box used to filter ONLY the ~17 local items, so any
+   * real-world query ("batman", "goku"…) came back empty and search read
+   * as broken. Now the same box ALSO queries the 4K catalog and the live
+   * catalog in parallel and renders their cards below the local matches —
+   * one box, the whole wallpaper universe. */
+  const [packDebouncedQ, setPackDebouncedQ] = React.useState("");
+  const [packRemote, setPackRemote] = React.useState<{
+    loading: boolean;
+    fourK: CatalogItemDTO[];
+    live: LiveItemDTO[];
+  }>({ loading: false, fourK: [], live: [] });
+
   // Applying a wallpaper closes the lightbox AND the gallery so the user
   // lands straight back on the main page with the new background live —
   // no dead-end menu after "Set as background" / "Apply to Veil".
@@ -1974,6 +1988,43 @@ export function WallpapersSection({ onBack }: { onBack: () => void }) {
     });
   }, [pack, filter, q, favIds]);
 
+  /* Debounce the universal box, then fan out to both catalogs (aborted
+   * when the query changes again — no stale results, no wasted fetches). */
+  React.useEffect(() => {
+    const t = setTimeout(() => setPackDebouncedQ(q.trim()), 450);
+    return () => clearTimeout(t);
+  }, [q]);
+  React.useEffect(() => {
+    if (source !== "pack") return;
+    const query = packDebouncedQ;
+    if (!query) {
+      setPackRemote({ loading: false, fourK: [], live: [] });
+      return;
+    }
+    const ac = new AbortController();
+    setPackRemote((prev) => ({ ...prev, loading: true }));
+    const params4k = new URLSearchParams({ cat: "recent", page: "1", q: query });
+    const paramsLive = new URLSearchParams({ cat: "recent", page: "1", q: query });
+    Promise.all([
+      fetchJsonSafe<CatalogResponse>(`/api/wallpapers?${params4k}`, {
+        cache: "no-store",
+        signal: ac.signal,
+      }).catch(() => null),
+      fetchJsonSafe<LiveResponse>(`/api/wallpapers/live?${paramsLive}`, {
+        cache: "no-store",
+        signal: ac.signal,
+      }).catch(() => null),
+    ]).then(([fourK, live]) => {
+      if (ac.signal.aborted) return;
+      setPackRemote({
+        loading: false,
+        fourK: (fourK?.items ?? []).slice(0, 24),
+        live: (live?.items ?? []).slice(0, 12),
+      });
+    });
+    return () => ac.abort();
+  }, [source, packDebouncedQ]);
+
   const liveCount = pack.filter((w) => w.kind === "video" || w.kind === "animated").length;
 
   return (
@@ -2157,8 +2208,8 @@ export function WallpapersSection({ onBack }: { onBack: () => void }) {
               <Input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder="Search your uploads…"
-                aria-label="Search your wallpapers"
+                placeholder="Search wallpapers — your pack, the 4K catalog, live walls…"
+                aria-label="Search wallpapers"
                 inputMode="search"
                 className="h-11 rounded-2xl border-zinc-800 bg-zinc-900/70 pl-10 pr-4 text-sm text-zinc-100 placeholder:text-zinc-600 focus-visible:border-emerald-500/60 focus-visible:ring-emerald-500/25"
               />
@@ -2295,16 +2346,75 @@ export function WallpapersSection({ onBack }: { onBack: () => void }) {
                 <div className="aspect-video animate-pulse rounded-2xl border border-zinc-800/70 bg-gradient-to-br from-zinc-800/70 to-zinc-900/50" />
               </div>
             )}
-            {shown.length === 0 && !upload && (
+            {shown.length === 0 && !upload && !q.trim() && (
               <div className="flex h-48 flex-col items-center justify-center gap-2 text-zinc-500">
                 <Package className="size-8" aria-hidden />
                 <p className="text-sm">
                   {filter === "favorites"
                     ? "Nothing favorited yet — tap the ♥ on a card."
-                    : q.trim()
-                      ? "Nothing in your uploads matches."
-                      : "No uploads match this filter."}
+                    : "No uploads match this filter."}
                 </p>
+              </div>
+            )}
+            {q.trim() && (
+              <div className="mt-2 space-y-8">
+                {packRemote.loading && (
+                  <div className="flex items-center justify-center gap-2.5 py-8 text-zinc-500">
+                    <Loader2 className="size-4 animate-spin" aria-hidden />
+                    <p className="text-[13px]">searching the 4K + live catalogs…</p>
+                  </div>
+                )}
+                {!packRemote.loading &&
+                  shown.length === 0 &&
+                  packRemote.fourK.length === 0 &&
+                  packRemote.live.length === 0 && (
+                    <div className="flex h-48 flex-col items-center justify-center gap-2 text-zinc-500">
+                      <SearchX className="size-8" aria-hidden />
+                      <p className="text-sm">Nothing matched anywhere — try a shorter query.</p>
+                    </div>
+                  )}
+                {packRemote.fourK.length > 0 && (
+                  <section aria-label="4K catalog results">
+                    <div className="mb-3 flex items-center gap-2.5">
+                      <h3 className="text-[13px] font-semibold uppercase tracking-[0.12em] text-zinc-400">
+                        From the 4K catalog
+                      </h3>
+                      <span className="rounded-full border border-zinc-800 bg-zinc-900/60 px-2 py-0.5 text-[11px] font-medium text-zinc-500">
+                        {packRemote.fourK.length}
+                      </span>
+                      <span aria-hidden className="h-px flex-1 bg-zinc-800/70" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
+                      {packRemote.fourK.map((it, i) => (
+                        <CatalogCard key={it.id} item={it} index={i} onOpen={setCatalogPick} />
+                      ))}
+                    </div>
+                  </section>
+                )}
+                {packRemote.live.length > 0 && (
+                  <section aria-label="Live wallpaper results">
+                    <div className="mb-3 flex items-center gap-2.5">
+                      <h3 className="text-[13px] font-semibold uppercase tracking-[0.12em] text-zinc-400">
+                        Live wallpapers
+                      </h3>
+                      <span className="rounded-full border border-zinc-800 bg-zinc-900/60 px-2 py-0.5 text-[11px] font-medium text-zinc-500">
+                        {packRemote.live.length}
+                      </span>
+                      <span aria-hidden className="h-px flex-1 bg-zinc-800/70" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
+                      {packRemote.live.map((it, i) => (
+                        <LiveCard
+                          key={it.id}
+                          item={it}
+                          index={i}
+                          applied={appliedId === `mbg-${it.id}`}
+                          onOpen={setLivePick}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                )}
               </div>
             )}
           </div>

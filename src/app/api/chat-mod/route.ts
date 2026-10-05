@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { getAccountFromToken, toPublicAccount } from "@/lib/chat-auth"
+import {
+  liveDeleteMessage,
+  liveFindUser,
+  liveSetUserFlag,
+  readLiveRoom,
+} from "@/lib/veil/live-room"
 
 export const runtime = "nodejs"
 
@@ -137,14 +143,30 @@ export async function POST(req: NextRequest) {
         )
       }
       const ownId = (body.messageId || "").trim()
-      const own = ownId
-        ? await db.chatMessage.findUnique({ where: { id: ownId } })
-        : null
-      if (!own || own.accountId !== account.id) {
-        return NextResponse.json(
-          { ok: false, error: "You can only delete your own messages." },
-          { status: 403 },
-        )
+      if (ownId.startsWith("lv-")) {
+        // A LIVE-room (git version) message — ownership is the shared
+        // file's username, not a DB row.
+        const room = await readLiveRoom()
+        const liveMsg = room.messages.find((m) => m.id === ownId)
+        if (
+          !liveMsg ||
+          (liveMsg.username || "").toLowerCase() !== account.username.toLowerCase()
+        ) {
+          return NextResponse.json(
+            { ok: false, error: "You can only delete your own messages." },
+            { status: 403 },
+          )
+        }
+      } else {
+        const own = ownId
+          ? await db.chatMessage.findUnique({ where: { id: ownId } })
+          : null
+        if (!own || own.accountId !== account.id) {
+          return NextResponse.json(
+            { ok: false, error: "You can only delete your own messages." },
+            { status: 403 },
+          )
+        }
       }
     }
 
@@ -274,7 +296,24 @@ export async function POST(req: NextRequest) {
             { status: 400 },
           )
         }
-        const target = await resolveTarget(body.targetUsername)
+        let target = await resolveTarget(body.targetUsername)
+        let liveUser = null
+        if (!target) {
+          // Not a website account — maybe a LIVE-room (git version) user.
+          liveUser = await liveFindUser(body.targetUsername)
+          if (liveUser) {
+            const updated = await liveSetUserFlag(liveUser.username, "muted", true)
+            return NextResponse.json({
+              ok: true,
+              account: {
+                id: `live:${liveUser.username.toLowerCase()}`,
+                username: liveUser.username.toLowerCase(),
+                displayName: updated?.displayName || liveUser.username,
+                muted: true,
+              },
+            })
+          }
+        }
         if (!target) {
           return NextResponse.json(
             { ok: false, error: "Target user not found." },
@@ -305,7 +344,22 @@ export async function POST(req: NextRequest) {
             { status: 400 },
           )
         }
-        const target = await resolveTarget(body.targetUsername)
+        let target = await resolveTarget(body.targetUsername)
+        if (!target) {
+          const liveUser = await liveFindUser(body.targetUsername)
+          if (liveUser) {
+            const updated = await liveSetUserFlag(liveUser.username, "muted", false)
+            return NextResponse.json({
+              ok: true,
+              account: {
+                id: `live:${liveUser.username.toLowerCase()}`,
+                username: liveUser.username.toLowerCase(),
+                displayName: updated?.displayName || liveUser.username,
+                muted: false,
+              },
+            })
+          }
+        }
         if (!target) {
           return NextResponse.json(
             { ok: false, error: "Target user not found." },
@@ -330,7 +384,26 @@ export async function POST(req: NextRequest) {
             { status: 400 },
           )
         }
-        const target = await resolveTarget(body.targetUsername)
+        let target = await resolveTarget(body.targetUsername)
+        if (!target) {
+          // A LIVE-room (git version) user: ban travels in the shared
+          // file, live.js enforces it, and the ban purges their messages
+          // exactly like a website ban does.
+          const liveUser = await liveFindUser(body.targetUsername)
+          if (liveUser) {
+            await liveSetUserFlag(liveUser.username, "banned", true, reason || undefined, true)
+            return NextResponse.json({
+              ok: true,
+              account: {
+                id: `live:${liveUser.username.toLowerCase()}`,
+                username: liveUser.username.toLowerCase(),
+                displayName: liveUser.displayName || liveUser.username,
+                banned: true,
+                banReason: reason || "banned by a moderator",
+              },
+            })
+          }
+        }
         if (!target) {
           return NextResponse.json(
             { ok: false, error: "Target user not found." },
@@ -372,7 +445,22 @@ export async function POST(req: NextRequest) {
             { status: 400 },
           )
         }
-        const target = await resolveTarget(body.targetUsername)
+        let target = await resolveTarget(body.targetUsername)
+        if (!target) {
+          const liveUser = await liveFindUser(body.targetUsername)
+          if (liveUser) {
+            const updated = await liveSetUserFlag(liveUser.username, "banned", false)
+            return NextResponse.json({
+              ok: true,
+              account: {
+                id: `live:${liveUser.username.toLowerCase()}`,
+                username: liveUser.username.toLowerCase(),
+                displayName: updated?.displayName || liveUser.username,
+                banned: false,
+              },
+            })
+          }
+        }
         if (!target) {
           return NextResponse.json(
             { ok: false, error: "Target user not found." },
@@ -437,6 +525,19 @@ export async function POST(req: NextRequest) {
             { ok: false, error: "messageId is required." },
             { status: 400 },
           )
+        }
+        if (messageId.startsWith("lv-")) {
+          // A LIVE-room (git version) message — removed from the shared
+          // file; every CDN copy drops it on its next poll and the
+          // website chat drops it on its next /api/chat-live merge.
+          const removed = await liveDeleteMessage(messageId).catch(() => false)
+          if (!removed) {
+            return NextResponse.json(
+              { ok: false, error: "Message not found (it may already be gone)." },
+              { status: 404 },
+            )
+          }
+          return NextResponse.json({ ok: true, deletedId: messageId, live: true })
         }
         const message = await db.chatMessage.findUnique({
           where: { id: messageId },
