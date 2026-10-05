@@ -1,10 +1,10 @@
 {
   "veil": "chat-backup",
   "version": 1,
-  "exportedAt": "2026-10-05T23:15:02.432Z",
+  "exportedAt": "2026-10-05T23:16:39.004Z",
   "counts": {
-    "accounts": 10,
-    "messages": 27,
+    "accounts": 9,
+    "messages": 26,
     "dms": 0
   },
   "accounts": [
@@ -160,23 +160,6 @@
       "pfpAccessory": null,
       "legacy": false,
       "createdAt": "2026-10-05T19:03:35.625Z"
-    },
-    {
-      "id": "cmuvvad300000q59hfdb37qei",
-      "username": "finalsmoke1",
-      "displayName": "finalsmoke1",
-      "avatarColor": "#f39c12",
-      "avatarImage": null,
-      "bio": "",
-      "role": "member",
-      "muted": false,
-      "banned": false,
-      "coins": 101,
-      "tag": null,
-      "tagColor": null,
-      "pfpAccessory": null,
-      "legacy": false,
-      "createdAt": "2026-10-05T23:14:43.260Z"
     }
   ],
   "messages": [
@@ -464,17 +447,6 @@
       "replyToContent": null,
       "replyToUsername": null,
       "createdAt": "2026-10-05T23:02:31.611Z",
-      "editedAt": null
-    },
-    {
-      "id": "cmuvvakvk0002q59hc01a9nsy",
-      "channelId": "main",
-      "accountId": "cmuvvad300000q59hfdb37qei",
-      "content": "final website smoke test",
-      "replyTo": null,
-      "replyToContent": null,
-      "replyToUsername": null,
-      "createdAt": "2026-10-05T23:14:53.361Z",
       "editedAt": null
     }
   ],
