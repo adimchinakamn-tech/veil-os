@@ -661,7 +661,7 @@ function AppCard({
       viewport={{ once: true, margin: "0px 0px -48px 0px" }}
       transition={{ duration: 0.35, delay: (index % 6) * 0.04 }}
       className={cn(
-        "group relative overflow-hidden rounded-[14px] border border-[#1a2822] bg-[#121f1a] text-left shadow-sm shadow-black/40 transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-[3px] hover:border-[#3f7f63] hover:shadow-[0_10px_28px_rgba(63,127,99,0.2)]"
+        "veil-cv group relative overflow-hidden rounded-[14px] border border-[#1a2822] bg-[#121f1a] text-left shadow-sm shadow-black/40 transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-[3px] hover:border-[#3f7f63] hover:shadow-[0_10px_28px_rgba(63,127,99,0.2)]"
       )}
     >
       <button

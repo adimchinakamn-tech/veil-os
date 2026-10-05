@@ -180,6 +180,9 @@ export function musicOpenUrl(kind: MusicKind, id: string): string {
 /* ------------------------------------------------------------------ */
 
 const metaCache = new Map<string, MusicMeta | null>();
+/* Bounded (was unbounded — one key per opened Spotify URL, forever).
+ * Entries are tiny but the map lived for the server's lifetime. */
+const META_CACHE_CAP = 256;
 
 /** Resolve a Spotify item's title + cover art via the public oEmbed
  *  endpoint, routed through /api/p. Cached per open URL; null on failure
@@ -203,6 +206,10 @@ export async function fetchMusicMeta(
         ? { title: data.title, art: routeUrl(data.thumbnail_url) }
         : null;
     metaCache.set(open, meta);
+    if (metaCache.size > META_CACHE_CAP) {
+      const oldest = metaCache.keys().next().value;
+      if (oldest !== undefined) metaCache.delete(oldest);
+    }
     return meta;
   } catch {
     // Don't cache failures hard — a transient proxy hiccup shouldn't pin

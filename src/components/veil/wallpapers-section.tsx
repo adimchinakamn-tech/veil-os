@@ -325,6 +325,7 @@ function PackCard({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-30px" }}
       transition={{ duration: 0.3, delay: Math.min((index % 24) * 0.02, 0.2) }}
+      className="veil-cv"
     >
       <button
         type="button"
@@ -801,6 +802,7 @@ function LiveCard({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-30px" }}
       transition={{ duration: 0.3, delay: Math.min((index % 24) * 0.02, 0.2) }}
+      className="veil-cv"
     >
       <button
         type="button"
@@ -1151,6 +1153,7 @@ function CatalogCard({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-30px" }}
       transition={{ duration: 0.3, delay: Math.min((index % 24) * 0.02, 0.2) }}
+      className="veil-cv"
     >
       <button
         type="button"

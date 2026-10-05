@@ -304,8 +304,11 @@ interface JsCacheEntry {
 
 const jsCache = new Map<string, JsCacheEntry>();
 const JS_CACHE_MAX_ENTRIES = 48;
+/* 64MB (was 160MB — on the 4GB dev box the rewritten-JS cache was the
+ * single biggest controllable heap resident; 48 entries rarely needs
+ * more than ~60MB and the miss cost is one upstream re-fetch + rewrite). */
 const JS_CACHE_MAX_BYTES =
-  Math.max(16, Number(process.env.QUASAR_JS_CACHE_MB) || 160) * 1024 * 1024;
+  Math.max(16, Number(process.env.QUASAR_JS_CACHE_MB) || 64) * 1024 * 1024;
 let jsCacheBytes = 0;
 
 function jsCacheGet(key: string): JsCacheEntry | undefined {

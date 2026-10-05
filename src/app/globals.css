@@ -144,8 +144,8 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-.veil-orb-a { animation: veil-float 14s ease-in-out infinite; }
-.veil-orb-b { animation: veil-float-slow 18s ease-in-out infinite; }
+.veil-orb-a { animation: veil-float 14s ease-in-out infinite; will-change: transform; }
+.veil-orb-b { animation: veil-float-slow 18s ease-in-out infinite; will-change: transform; }
 .veil-pulse-ring { animation: veil-pulse-ring 2.4s ease-out infinite; }
 
 .veil-shimmer-text {
@@ -253,4 +253,19 @@
   .veil-wx-fresh {
     animation: none;
   }
+}
+
+/* ── Scroll-render diet ────────────────────────────────────────────────
+   Long grids (arcade 800+, wallpapers catalog, stream feeds) pay full
+   layout+paint for every card even far off-screen. content-visibility
+   lets the browser skip rendering off-screen cards entirely while
+   keeping the scrollbar honest via contain-intrinsic-size (the `auto`
+   prefix means the browser remembers the real size once rendered). */
+.veil-cv {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 260px;
+}
+.veil-cv-wide {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 180px;
 }

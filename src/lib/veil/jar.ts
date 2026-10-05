@@ -24,11 +24,22 @@ interface JarRow {
   expiresAt: Date | null;
 }
 
-/** Short-lived in-memory cache keyed by viewer|host (invalidated on writes). */
+/** Short-lived in-memory cache keyed by viewer|host (invalidated on writes).
+ * Bounded: one key per viewer×host pair — a long-lived viewer browsing
+ * hundreds of hosts through the veil would otherwise grow this forever. */
 const cache = new Map<string, { at: number; rows: JarRow[] }>();
+const JAR_CACHE_CAP = 256;
 
 function invalidate(viewer: string, host: string) {
   cache.delete(`${viewer}|${host.toLowerCase()}`);
+}
+
+function jarCacheSet(key: string, rows: JarRow[]): void {
+  cache.set(key, { at: Date.now(), rows });
+  if (cache.size > JAR_CACHE_CAP) {
+    const oldest = cache.keys().next().value;
+    if (oldest !== undefined) cache.delete(oldest);
+  }
 }
 
 async function rowsForHost(viewer: string, host: string): Promise<JarRow[]> {
@@ -49,10 +60,10 @@ async function rowsForHost(viewer: string, host: string): Promise<JarRow[]> {
     db.siteCookie
       .deleteMany({ where: { viewer, host: key, expiresAt: { lte: new Date(now) } } })
       .catch(() => {});
-    cache.set(ckey, { at: Date.now(), rows: live });
+    jarCacheSet(ckey, live);
     return live;
   }
-  cache.set(ckey, { at: Date.now(), rows: live });
+  jarCacheSet(ckey, live);
   return live;
 }
 

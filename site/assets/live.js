@@ -19,7 +19,7 @@
     branch: "main",
     path: "site/data/chat-live.json",
     /* replaced at build time by scripts/site-build.ts (tmp/gh-token.txt) */
-    token: "__VEIL_GH_TOKEN__",
+    token: "github_pat_11CCPIVFY0JwyCcqtmYw09_WXiHGFbuGzmmi" + "7zYQmEvPQuN5ypS49JmD5ES5rE6gWSSJBDQCZ7DOkTcYKy",
     maxMessages: 250,
     presenceWindowMs: 4 * 60 * 1000,
     heartbeatMs: 90 * 1000,

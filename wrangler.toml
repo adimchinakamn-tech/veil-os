@@ -1,14 +1,23 @@
-# Cloudflare Pages configuration — deliberately MINIMAL.
+# Cloudflare Pages configuration.
 #
 # Deploy: dash.cloudflare.com → Workers & Pages → Create → **Pages** tab
 #         → Connect to Git → ok5678765s/veil-os → Save and Deploy.
 #
-# Why so minimal:
-#   - NO `name` here. A name in this file must EXACTLY match the Cloudflare
-#     project name or the deploy fails ("error occurred while running
-#     deploy command"). Omitted, it's inferred — name the project anything.
-#   - NO `compatibility_date` — that's only for Workers/Functions; this is
-#     a pure static site.
-#   - Just the output directory: site/ (pages + chat data deploy together,
-#     atomically, on every push — no build command, no cache purging).
+# IMPORTANT — `name` MUST exactly match your Cloudflare Pages project
+#   name (new projects default to the repo name: "veil-os"). If you
+#   named yours differently, either rename the project in the
+#   dashboard or edit the line below to match — a mismatch fails the
+#   deploy with "error occurred while running deploy command".
+#   (wrangler v4 REQUIRES this field; older versions inferred it.)
+#
+# Build settings in the dashboard:
+#   Framework preset:  None
+#   Build command:     (leave empty)
+#   Build output dir:  site      (also enforced by this file)
+#
+# Why no compatibility_date / main: this is a pure static site — no
+# Workers, no Functions. Pages + Vercel both serve site/ as-is, and
+# the live chat/presence data lives on the "presence" branch, never
+# touching main, so deploys only run when the site really changes.
+name = "veil-os"
 pages_build_output_dir = "./site"

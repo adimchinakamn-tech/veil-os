@@ -405,6 +405,59 @@ function presenceLabel(total: number): string {
   return `${total} online`;
 }
 
+/** Owns the 1-second tick so StartPage's whole tree does NOT re-render
+ * every second (the old top-level setNow re-rendered the entire home
+ * screen — every widget, every card — 60×/minute: a silent CPU tax that
+ * made the site feel laggy on modest hardware). Renders the big clock +
+ * the date line; geometry-stable placeholders paint until the first
+ * client tick (no hydration mismatch, no layout shift). */
+function StartClock({ clock24 }: { clock24: boolean }) {
+  const [now, setNow] = React.useState<Date | null>(null);
+  React.useEffect(() => {
+    setNow(new Date());
+    const t = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  const timeLabel = !now
+    ? clock24
+      ? "--:--"
+      : "--:-- --"
+    : clock24
+      ? `${now.getHours().toString().padStart(2, "0")}:${now
+          .getMinutes()
+          .toString()
+          .padStart(2, "0")}`
+      : `${(now.getHours() % 12) || 12}:${now
+          .getMinutes()
+          .toString()
+          .padStart(2, "0")} ${now.getHours() < 12 ? "AM" : "PM"}`;
+  return (
+    <div aria-hidden className="select-none text-center">
+      <p className="veil-rise text-5xl font-light tabular-nums tracking-tight text-zinc-50 [text-shadow:0_2px_18px_rgba(0,0,0,0.55)] sm:text-6xl">
+        {timeLabel}
+      </p>
+      <p className="veil-rise mt-1.5 text-[11px] font-semibold uppercase tracking-[0.3em] text-zinc-300 [text-shadow:0_1px_12px_rgba(0,0,0,0.6)]">
+        {now
+          ? now.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })
+          : "\u00A0"}
+      </p>
+    </div>
+  );
+}
+
+/** Greeting only changes on the hour — a 60s tick is plenty, and it
+ * lives here instead of StartPage so the home screen never re-renders
+ * for the clock's sake. */
+function GreetingLabel({ name }: { name: string }) {
+  const [hour, setHour] = React.useState<number | null>(null);
+  React.useEffect(() => {
+    setHour(new Date().getHours());
+    const t = setInterval(() => setHour(new Date().getHours()), 60_000);
+    return () => clearInterval(t);
+  }, []);
+  return <span className="shrink-0 truncate text-zinc-400">{hour === null ? "Hello" : greetingFor(hour, name)}</span>;
+}
+
 export function StartPage({
   onNavigate,
   history,
@@ -555,31 +608,9 @@ export function StartPage({
   };
 
   // ----- clock -----
-  // The time/date/greeting text is client-only: the server's wall clock,
-  // timezone and locale all differ from the browser's, so an SSR'd time
-  // label guarantees a hydration mismatch (the Turbopack "server rendered
-  // text didn't match the client" error). Until the first client tick
-  // lands, geometry-stable placeholders paint ("--:--" in tabular-nums
-  // occupies the same width as real digits, so nothing shifts).
-  const [now, setNow] = React.useState<Date | null>(null);
-  React.useEffect(() => {
-    setNow(new Date());
-    const t = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(t);
-  }, []);
-  const timeLabel = !now
-    ? clock24
-      ? "--:--"
-      : "--:-- --"
-    : clock24
-      ? `${now.getHours().toString().padStart(2, "0")}:${now
-          .getMinutes()
-          .toString()
-          .padStart(2, "0")}`
-      : `${(now.getHours() % 12) || 12}:${now
-          .getMinutes()
-          .toString()
-          .padStart(2, "0")} ${now.getHours() < 12 ? "AM" : "PM"}`;
+  // The ticking clock + greeting live in isolated components (StartClock /
+  // GreetingLabel) so the secondly tick re-renders only those tiny trees,
+  // never the whole StartPage.
 
   // ----- weather -----
   const [wx, setWx] = React.useState<WeatherState | null>(null);
@@ -949,22 +980,7 @@ export function StartPage({
    * grid's gap can do the spacing. */
   const widgetNodes: Record<WidgetId, React.ReactNode> = {
     clock: (
-      <div aria-hidden className="select-none text-center">
-        <p
-          {...rise()}
-          className="veil-rise text-5xl font-light tabular-nums tracking-tight text-zinc-50 [text-shadow:0_2px_18px_rgba(0,0,0,0.55)] sm:text-6xl"
-        >
-          {timeLabel}
-        </p>
-        <p
-          {...rise(0.05)}
-          className="veil-rise mt-1.5 text-[11px] font-semibold uppercase tracking-[0.3em] text-zinc-300 [text-shadow:0_1px_12px_rgba(0,0,0,0.6)]"
-        >
-          {now
-            ? now.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })
-            : "\u00A0"}
-        </p>
-      </div>
+      <StartClock clock24={clock24} />
     ),
     weather: (
       <div {...rise(0.06)} className="veil-rise flex justify-center">
@@ -1002,9 +1018,7 @@ export function StartPage({
           ) : (
             <ClockIcon aria-hidden className="size-3.5 shrink-0 text-zinc-500" />
           )}
-          <span className="shrink-0 truncate text-zinc-400">
-            {now ? greetingFor(now.getHours(), greetName) : "Hello"}
-          </span>
+          <GreetingLabel name={greetName} />
 
           {/* pin — set the weather's city by hand (fixes a wrong
               IP-geolocated location) */}

@@ -2350,7 +2350,7 @@ function VideoCard({
       onClick={() => onWatch(card.id, card)}
       onKeyDown={onKeyDown}
       aria-label={`Watch ${card.title} by ${card.author}`}
-      className="group flex cursor-pointer flex-col rounded-xl text-left outline-none focus-visible:ring-2 focus-visible:ring-rose-500/40"
+      className="veil-cv group flex cursor-pointer flex-col rounded-xl text-left outline-none focus-visible:ring-2 focus-visible:ring-rose-500/40"
     >
       {/* thumb + feedback ⋮ wrapper — the menu (absolute, expands DOWN
        * past the thumb) must NOT live inside the overflow-hidden thumb
