@@ -88,7 +88,7 @@ async function handleGet(req: NextRequest): Promise<Response> {
     const messages = await db.chatMessage.findMany({
       where: { channelId },
       orderBy: { createdAt: "desc" },
-      take: 50,
+      take: 100,
       include: {
         account: {
           select: {
