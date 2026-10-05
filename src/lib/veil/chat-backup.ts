@@ -96,12 +96,42 @@ export const JSDELIVR_PURGE_URLS: string[] = SITE_FILES.map(
   (f) => `https://purge.jsdelivr.net/gh/${BACKUP_REPO}@main/${f}`,
 )
 
+/* jsDelivr THROTTLES purges per path once they get frequent (a chat
+ * write every minute or two is enough). Purging all 56 surfaces on
+ * every changed message earned a repo-wide throttle and the CDN edge
+ * then serves STALE chat data for up to an hour — the exact "messages
+ * don't show up without a restart" bug. The loop now purges ONLY the
+ * files that actually change with chat content; the pages ride their
+ * natural TTL and get purged explicitly on real site updates. */
+const JSDELIVR_DATA_PURGE_URLS: string[] = [
+  "site/data/latest.json",
+  "site/data/chat-live.json",
+  "backups/chat/latest.json",
+  "backups/chat/manifest.json",
+].map((f) => `https://purge.jsdelivr.net/gh/${BACKUP_REPO}@main/${f}`)
+
 /** Purge every mirror surface on the jsDelivr edge. Never throws —
  * cache purging is an optimization; the branch cache expires by itself. */
 export async function purgeJSDelivrAll(): Promise<string[]> {
   const purged: string[] = []
   await Promise.all(
     JSDELIVR_PURGE_URLS.map(async (url) => {
+      try {
+        const r = await fetch(url, { signal: AbortSignal.timeout(8000) })
+        if (r.ok) purged.push(url)
+      } catch {
+        /* ignore individual purge failures */
+      }
+    }),
+  )
+  return purged
+}
+
+/** The loop's slim purge — just the chat-data files (see note above). */
+export async function purgeJSDelivrData(): Promise<string[]> {
+  const purged: string[] = []
+  await Promise.all(
+    JSDELIVR_DATA_PURGE_URLS.map(async (url) => {
       try {
         const r = await fetch(url, { signal: AbortSignal.timeout(8000) })
         if (r.ok) purged.push(url)

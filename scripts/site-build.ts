@@ -65,6 +65,17 @@ function linkStamp(html: string, stampIso: string): string {
   return html
 }
 
+/* Cache-bust the mutable runtime assets — jsDelivr caches assets for
+ * days and its purge endpoint throttles under our push cadence, so a
+ * fresh build's os.js/live.js/app.css ship under a NEW url instead of
+ * waiting for a purge that may be throttled for up to an hour. */
+function assetStamp(html: string, stampIso: string): string {
+  return html.replace(
+    /((?:href|src)="(?:\.\.\/site\/)?assets\/(?:app\.css|os\.js|live\.js))(?:\?v=[^"]*)?"/g,
+    `$1?v=${stampIso}"`,
+  )
+}
+
 function writeVersion(stampIso: string): void {
   let sha = ""
   try {
@@ -337,9 +348,12 @@ function mirrorize(html: string): string {
   out = out.split('href="assets/').join('href="../site/assets/')
   out = out.split('src="assets/').join('src="../site/assets/')
   out = out.split('src="arcade/').join('src="../site/arcade/')
+  /* the shared-base bootstrap goes right before os.js (which may carry
+   * a ?v= stamp from assetStamp) */
   out = out.replace(
-    '<script src="../site/assets/os.js"></script>',
-    '<script>window.VEILOS_SHARED_BASE="../site/";</script>\n<script src="../site/assets/os.js"></script>',
+    /<script src="\.\.\/site\/assets\/os\.js(\?v=[^"]*)?"><\/script>/,
+    (_m, v: string) =>
+      `<script>window.VEILOS_SHARED_BASE="../site/";</script>\n<script src="../site/assets/os.js${v || ""}"></script>`,
   )
   return out
 }
@@ -388,8 +402,10 @@ exportData().then((dataOk) => {
   for (const p of PAGES) {
     const f = `${SITE}/${p}.html`
     if (!existsSync(f)) continue
-    // stamp links AFTER the data export so every page carries ?v=
-    const stamped = linkStamp(readFileSync(f, "utf-8"), stampIso)
+    // stamp links + mutable assets AFTER the data export so every page
+    // carries ?v= (asset urls changing per build also sidesteps the
+    // jsDelivr purge throttle)
+    const stamped = assetStamp(linkStamp(readFileSync(f, "utf-8"), stampIso), stampIso)
     writeFileSync(f, stamped)
     writeFileSync(`${SITE}/${p}.xhtml`, toXhtml(stamped))
   }

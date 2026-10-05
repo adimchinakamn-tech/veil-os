@@ -65,7 +65,10 @@ const EMPTY_ROOM: LiveRoom = { users: {}, messages: [] }
 /* ------------------------------------------------------------------ */
 
 let readCache: { at: number; room: LiveRoom } | null = null
-const READ_TTL = 15_000
+/* short TTL — the website's chat polls this every 6s so git messages
+ * surface without a reload; jsDelivr's edge serves the purged file, so
+ * the read pair is cheap */
+const READ_TTL = 6_000
 
 function parseRoom(text: string): LiveRoom {
   try {
@@ -98,6 +101,38 @@ async function readCdnLane(url: string): Promise<LiveRoom | null> {
     })
     if (!res.ok) return null
     return parseRoom(await res.text())
+  } catch {
+    return null
+  }
+}
+
+/* The presence lane read from the GitHub Contents API — the source of
+ * truth. Conditional GETs (If-None-Match) return 304 without touching
+ * the primary rate limit, and this lane never goes stale the way the
+ * CDN edge does when jsDelivr throttles our purges (the chat writes
+ * often enough that purge throttling is the NORM, not the exception). */
+let apiLaneCache: { etag: string | null; room: LiveRoom } | null = null
+async function readApiLane(): Promise<LiveRoom | null> {
+  const token = ghToken()
+  if (!token) return null
+  try {
+    const headers: Record<string, string> = {
+      authorization: `Bearer ${token}`,
+      accept: "application/vnd.github+json",
+      "user-agent": "veil-os-live-bridge",
+    }
+    if (apiLaneCache?.etag) headers["if-none-match"] = apiLaneCache.etag
+    const res = await fetch(`${API_FILE}?ref=${REPO.branch}&t=${Date.now()}`, {
+      headers,
+      cache: "no-store",
+      signal: AbortSignal.timeout(5000),
+    })
+    if (res.status === 304 && apiLaneCache) return apiLaneCache.room
+    if (!res.ok) return null
+    const meta = (await res.json()) as { content?: string }
+    const room = parseRoom(Buffer.from(meta.content ?? "", "base64").toString("utf-8"))
+    apiLaneCache = { etag: res.headers.get("etag"), room }
+    return room
   } catch {
     return null
   }
@@ -149,16 +184,23 @@ function mergeRooms(primary: LiveRoom, legacy: LiveRoom | null | undefined): Liv
  * beats and chat polls don't hammer anything. */
 export async function readLiveRoom(force = false): Promise<LiveRoom> {
   if (!force && readCache && Date.now() - readCache.at < READ_TTL) return readCache.room
-  /* both CDN lanes in parallel, merged — presence is the live source,
-   * main is the legacy lane old builds still write to */
-  const [p, l] = await Promise.all([readCdnLane(CDN_FILE), readCdnLane(CDN_FILE_LEGACY)])
-  let room: LiveRoom | null = p || l ? mergeRooms(p ?? EMPTY_ROOM, l) : null
+  /* presence lane: the GitHub API is authoritative (purge-throttle-
+   * immune); the CDN pair is the fallback. Legacy main lane merges in
+   * either way — old builds still write there. */
+  const [api, legacyCdn] = await Promise.all([readApiLane(), readCdnLane(CDN_FILE_LEGACY)])
+  let room: LiveRoom | null = null
+  if (api) {
+    room = mergeRooms(api, legacyCdn)
+  } else {
+    const p = await readCdnLane(CDN_FILE)
+    if (p || legacyCdn) room = mergeRooms(p ?? EMPTY_ROOM, legacyCdn)
+  }
   if (!room || Object.keys(room.users).length === 0) {
     /* CDN dark (offline box / jsDelivr hiccup) — the working-tree copy
      * of main's file is a last-resort legacy lane */
     const local = readLocalFile()
     if (local && Object.keys(local.users).length > 0) {
-      room = mergeRooms(p ?? EMPTY_ROOM, local)
+      room = mergeRooms(api ?? EMPTY_ROOM, local)
     }
   }
   room = room ?? EMPTY_ROOM
@@ -277,6 +319,7 @@ export async function writeLiveRoom(mutator: (room: LiveRoom) => void): Promise<
       }
       if (!put.ok) throw new Error(`contents put ${put.status}`)
       readCache = null /* force the next read to see the new state */
+      apiLaneCache = null /* our own write changed the file — refetch etag */
       void purgeCdn()
       return room
     } catch (e) {

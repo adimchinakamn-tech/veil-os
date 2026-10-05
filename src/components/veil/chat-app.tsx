@@ -3445,9 +3445,75 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
       } catch {
         /* next tick retries — the room is best-effort */
       }
-      if (!stopped) timer = setTimeout(tick, 10_000)
+      /* next tick — git users' messages land on the shared file within
+       * seconds of their send (the writer purges the CDN), so a tight
+       * poll keeps the website's #general as live as the git copies'
+       * without any reload */
+      if (!stopped) timer = setTimeout(tick, 6_000)
     }
     void tick()
+    return () => {
+      stopped = true
+      if (timer) clearTimeout(timer)
+    }
+  }, [account?.id])
+
+  /* Silent channel backfill — git users can POST into every public
+   * channel through the app's API (no socket on their side), so a quiet
+   * id-union refetch of the ACTIVE channel every 15s surfaces those
+   * without a reload. Edits/deletes are reconciled too (row content is
+   * replaced when the refetched copy differs). */
+  useEffect(() => {
+    if (!account) return
+    let stopped = false
+    let timer: ReturnType<typeof setTimeout> | null = null
+    const tick = async () => {
+      try {
+        const cid = channelIdRef.current
+        const data = await apiFetch<{ messages: ChatMessage[] }>(
+          `/api/chat-data?channel=${encodeURIComponent(cid)}${
+            !CHANNELS.some((c) => c.id === cid)
+              ? `&token=${encodeURIComponent(token)}`
+              : ""
+          }`,
+        )
+        if (!stopped && data.messages) {
+          const fresh = data.messages
+          setMessages((prev) => {
+            const byId = new Map(prev.map((m) => [m.id, m]))
+            let changed = false
+            for (const m of fresh) {
+              const cur = byId.get(m.id)
+              if (!cur) {
+                byId.set(m.id, m)
+                changed = true
+              } else if (
+                cur.content !== m.content ||
+                cur.editedAt !== m.editedAt
+              ) {
+                byId.set(m.id, m)
+                changed = true
+              }
+            }
+            /* rows that vanished (deleted elsewhere) drop out too */
+            const keep = new Set(fresh.map((m) => m.id))
+            const merged = [...byId.values()].filter(
+              (m) => keep.has(m.id) || m.id.startsWith("lv-"),
+            )
+            if (!changed && merged.length === prev.length) return prev
+            merged.sort(
+              (a, b) =>
+                new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+            )
+            return merged
+          })
+        }
+      } catch {
+        /* silent — the socket + manual refetches still cover us */
+      }
+      if (!stopped) timer = setTimeout(tick, 15_000)
+    }
+    timer = setTimeout(tick, 15_000)
     return () => {
       stopped = true
       if (timer) clearTimeout(timer)

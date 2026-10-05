@@ -5,7 +5,7 @@ import {
   backupSignature,
   readBackupState,
   writeBackupState,
-  purgeJSDelivrAll,
+  purgeJSDelivrData,
 } from "../src/lib/veil/chat-backup"
 
 /**
@@ -92,12 +92,13 @@ async function main(): Promise<void> {
   const pushOk = push.code === 0
   const pushError = pushOk ? null : push.err
 
-  // Purge the jsDelivr edge cache after a successful publish so every CDN
-  // link (chat backup + all 7 site pages + assets) reflects the new state
-  // right away (branch refs otherwise cache ~12h).
+  // Purge the jsDelivr edge cache after a successful publish. SLIM list:
+  // only the chat-data files — purging all 56 surfaces per changed
+  // message earned a repo-wide purge THROTTLE (stale CDN for up to an
+  // hour). Pages get purged explicitly on real site updates instead.
   let purged: string[] = []
   if (pushOk) {
-    purged = await purgeJSDelivrAll()
+    purged = await purgeJSDelivrData()
   }
 
   writeBackupState({
