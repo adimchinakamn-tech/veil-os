@@ -3,6 +3,7 @@ import { db } from "@/lib/db"
 import { getAccountFromToken, toPublicAccount } from "@/lib/chat-auth"
 import { awardCoins } from "@/lib/coins"
 import { cors, corsOptions } from "@/lib/veil/cors"
+import { liveEditMessage } from "@/lib/veil/live-room"
 
 export const runtime = "nodejs"
 
@@ -21,6 +22,11 @@ const PUBLIC_CHANNELS = [
   "links",
   "announcements",
 ] as const
+
+/** #general keeps a rolling window of the latest 100 messages — when
+ * someone sends the 101st, the 1st is deleted (user-requested cap; the
+ * git room does the same). */
+const MAIN_CHANNEL_MAX = 100
 
 /** Channels where only moderators and the owner may post. */
 const MOD_ONLY_CHANNELS = ["links", "announcements"] as const
@@ -115,6 +121,7 @@ async function handleGet(req: NextRequest): Promise<Response> {
         replyToContent: m.replyToContent,
         replyToUsername: m.replyToUsername,
         createdAt: m.createdAt,
+        editedAt: m.editedAt ?? null,
         account: m.account,
       })),
     })
@@ -242,6 +249,28 @@ async function handlePost(req: NextRequest): Promise<Response> {
       console.error("[chat-data POST] coin reward failed", coinErr)
     }
 
+    // #general rolling cap — the 101st message deletes the 1st.
+    if (channelId === "main") {
+      try {
+        const total = await db.chatMessage.count({ where: { channelId: "main" } })
+        if (total > MAIN_CHANNEL_MAX) {
+          const oldest = await db.chatMessage.findMany({
+            where: { channelId: "main" },
+            orderBy: { createdAt: "asc" },
+            take: total - MAIN_CHANNEL_MAX,
+            select: { id: true },
+          })
+          if (oldest.length > 0) {
+            await db.chatMessage.deleteMany({
+              where: { id: { in: oldest.map((m) => m.id) } },
+            })
+          }
+        }
+      } catch (capErr) {
+        console.error("[chat-data POST] rolling cap failed", capErr)
+      }
+    }
+
     // Re-fetch account to get updated coin balance for the response payload.
     const updated = await db.chatAccount.findUnique({ where: { id: account.id } })
 
@@ -255,6 +284,7 @@ async function handlePost(req: NextRequest): Promise<Response> {
         replyToContent: message.replyToContent,
         replyToUsername: message.replyToUsername,
         createdAt: message.createdAt,
+        editedAt: message.editedAt ?? null,
         account: message.account,
       },
       account: updated ? toPublicAccount(updated) : null,
@@ -263,6 +293,121 @@ async function handlePost(req: NextRequest): Promise<Response> {
     console.error("[chat-data POST] error", err)
     return NextResponse.json(
       { ok: false, error: "Server error sending message." },
+      { status: 500 },
+    )
+  }
+}
+
+/* PATCH — edit your own message. Body: { token, messageId, content }.
+ * Works for DB messages AND live-room (git version, "lv-*") messages
+ * when the live message belongs to your username — the edit stamps
+ * editedAt so every surface renders the "(edited)" marker. */
+export async function PATCH(req: NextRequest): Promise<Response> {
+  return cors(await handlePatch(req))
+}
+
+async function handlePatch(req: NextRequest) {
+  try {
+    const body = (await req.json()) as {
+      token?: string
+      messageId?: string
+      content?: string
+    }
+    const messageId = (body.messageId || "").trim()
+    const content = (body.content || "").trim()
+
+    const account = await getAccountFromToken(body.token)
+    if (!account) {
+      return NextResponse.json(
+        { ok: false, error: "You must be signed in to edit messages." },
+        { status: 401 },
+      )
+    }
+    if (!messageId) {
+      return NextResponse.json(
+        { ok: false, error: "messageId is required." },
+        { status: 400 },
+      )
+    }
+    if (!content) {
+      return NextResponse.json(
+        { ok: false, error: "Message content cannot be empty." },
+        { status: 400 },
+      )
+    }
+    if (content.length > 2000) {
+      return NextResponse.json(
+        { ok: false, error: "Message is too long (2000 char max)." },
+        { status: 400 },
+      )
+    }
+
+    /* A live-room (git version) message — ownership is the shared
+     * file's username, not a DB row. */
+    if (messageId.startsWith("lv-")) {
+      const edited = await liveEditMessage(
+        messageId,
+        account.username,
+        content,
+      ).catch(() => null)
+      if (!edited) {
+        return NextResponse.json(
+          { ok: false, error: "You can only edit your own messages." },
+          { status: 403 },
+        )
+      }
+      return NextResponse.json({
+        ok: true,
+        message: {
+          id: edited.id,
+          channelId: "main",
+          content: edited.content,
+          replyTo: null,
+          replyToContent: null,
+          replyToUsername: null,
+          createdAt: edited.createdAt,
+          editedAt: edited.editedAt ?? null,
+        },
+        live: true,
+      })
+    }
+
+    const message = await db.chatMessage.findUnique({
+      where: { id: messageId },
+    })
+    if (!message) {
+      return NextResponse.json(
+        { ok: false, error: "Message not found." },
+        { status: 404 },
+      )
+    }
+    if (message.accountId !== account.id) {
+      return NextResponse.json(
+        { ok: false, error: "You can only edit your own messages." },
+        { status: 403 },
+      )
+    }
+    const updated = await db.chatMessage.update({
+      where: { id: messageId },
+      data: { content, editedAt: new Date() },
+    })
+    return NextResponse.json({
+      ok: true,
+      message: {
+        id: updated.id,
+        channelId: updated.channelId,
+        content: updated.content,
+        replyTo: updated.replyTo,
+        replyToContent: updated.replyToContent,
+        replyToUsername: updated.replyToUsername,
+        createdAt: updated.createdAt,
+        editedAt: updated.editedAt ?? null,
+      },
+    })
+  } catch (err) {
+    console.error("[chat-data PATCH] error", err)
+    return NextResponse.json(
+      { ok: false, error: "Server error editing message." },
       { status: 500 },
     )
   }

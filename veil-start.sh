@@ -62,6 +62,18 @@ fi
 # LAST known-good state, so keep that state as fresh as possible.
 bash scripts/backup.sh auto 2>/dev/null | head -1 || true
 
+# ---- chat backup daemon (website chat → git version bridge) ----
+# Publishes the chat DB snapshot to site/data/latest.json + GitHub every
+# 30s when anything changed — without it the git version goes blind to
+# website messages (the "auto-backup loop not running" bug: it used to be
+# started ad-hoc and died with its session).
+if pgrep -f "chat-backup-loop.sh" > /dev/null; then
+  echo "chat-backup-loop already running (pid $(pgrep -f chat-backup-loop.sh | head -1))"
+else
+  ( setsid bash scripts/chat-backup-loop.sh > /dev/null 2>&1 < /dev/null & )
+  echo "chat-backup-loop started (chat snapshot every 30s)"
+fi
+
 # ---- Next.js dev server (port 3000) ----
 if curl -s -m 4 -o /dev/null http://localhost:3000/ 2>/dev/null; then
   echo "dev server already up (:3000)"

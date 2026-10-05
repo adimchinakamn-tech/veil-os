@@ -119,14 +119,15 @@ model ChatAccount {
 }
 
 model ChatMessage {
-  id              String   @id @default(cuid())
+  id              String    @id @default(cuid())
   channelId       String // "main" for the main channel, or DM id
   accountId       String
   content         String
   replyTo         String? // ID of the message being replied to
   replyToContent  String? // Snippet of the original message (denormalized for display)
   replyToUsername String? // Username of the original sender (denormalized for display)
-  createdAt       DateTime @default(now())
+  createdAt       DateTime  @default(now())
+  editedAt        DateTime? // set when the author edited the message ("(edited)")
 
   account ChatAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
 

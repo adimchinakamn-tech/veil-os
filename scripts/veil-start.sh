@@ -65,6 +65,18 @@ fi
 # LAST known-good state, so keep that state as fresh as possible.
 bash scripts/backup.sh auto 2>/dev/null | head -1 || true
 
+# ---- chat backup daemon (website chat → git version bridge) ----
+# Publishes the chat DB snapshot to site/data/latest.json + GitHub every
+# 30s when anything changed — without it the git version goes blind to
+# website messages (the "auto-backup loop not running" bug: it used to be
+# started ad-hoc and died with its session).
+if pgrep -f "chat-backup-loop.sh" > /dev/null; then
+  echo "chat-backup-loop already running (pid $(pgrep -f chat-backup-loop.sh | head -1))"
+else
+  ( setsid bash scripts/chat-backup-loop.sh > /dev/null 2>&1 < /dev/null & )
+  echo "chat-backup-loop started (chat snapshot every 30s)"
+fi
+
 # ---- dev-watchdog v2 (OOM firewall — MUST run at all times) ----
 # Memory guards + revive for the dev server. Runs every 15s; planned-
 # restarts next-server before its RSS drift pushes the 3.9GB no-swap box

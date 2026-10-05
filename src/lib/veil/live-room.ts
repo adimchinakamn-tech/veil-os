@@ -106,7 +106,10 @@ async function readCdnLane(url: string): Promise<LiveRoom | null> {
 /* Union of both lanes — users by freshest lastSeen (passwords and
  * createdAt carried over when the legacy copy is newer), messages by
  * id, ordered by createdAt. Mirrors live.js mergeRooms exactly so
- * both sides always agree on the merged state. */
+ * both sides always agree on the merged state. The room keeps a
+ * rolling window of the latest 100 messages (the 101st message deletes
+ * the 1st — user-requested cap). */
+const ROOM_MAX_MESSAGES = 100
 function mergeRooms(primary: LiveRoom, legacy: LiveRoom | null | undefined): LiveRoom {
   const out: LiveRoom = {
     users: { ...(primary.users ?? {}) },
@@ -138,7 +141,7 @@ function mergeRooms(primary: LiveRoom, legacy: LiveRoom | null | undefined): Liv
     }
   }
   msgs.sort((a, b) => (Date.parse(a.createdAt ?? "") || 0) - (Date.parse(b.createdAt ?? "") || 0))
-  out.messages = msgs.slice(-250)
+  out.messages = msgs.slice(-ROOM_MAX_MESSAGES)
   return out
 }
 
@@ -294,6 +297,30 @@ export async function liveDeleteMessage(messageId: string): Promise<boolean> {
     room.updatedAt = new Date().toISOString()
   })
   return removed
+}
+
+/** Edit a live-room message (the author only — username must match).
+ * Content is replaced and editedAt stamped so every surface renders the
+ * "(edited)" marker. Returns the patched message when it worked. */
+export async function liveEditMessage(
+  messageId: string,
+  username: string,
+  content: string,
+): Promise<LiveMessage | null> {
+  const key = (username || "").toLowerCase()
+  let hit: LiveMessage | null = null
+  await writeLiveRoom((room) => {
+    const m = room.messages.find(
+      (x) => x.id === messageId && (x.username || "").toLowerCase() === key,
+    )
+    if (!m) return
+    m.content = content
+    m.editedAt = new Date().toISOString()
+    hit = m
+    room.updatedAt = new Date().toISOString()
+    room.messages = room.messages.slice(-ROOM_MAX_MESSAGES)
+  })
+  return hit
 }
 
 /** Ban (or mute, or lift) a live-room user by username — flags travel in

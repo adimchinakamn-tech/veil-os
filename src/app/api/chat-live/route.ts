@@ -49,7 +49,7 @@ export async function GET(): Promise<Response> {
     const now = Date.now()
     const messages = room.messages
       .filter((m: LiveMessage) => m && typeof m.id === "string" && typeof m.content === "string")
-      .slice(-200)
+      .slice(-100)
       .map((m: LiveMessage) => ({
         id: m.id,
         channelId: "general",
@@ -61,8 +61,11 @@ export async function GET(): Promise<Response> {
         editedAt: m.editedAt ?? null,
         account: msgAccount(room.users[(m.username ?? "").toLowerCase()]),
       }))
+    /* NOTE: banned users are INCLUDED (with their flags) — the mod
+     * panel needs to see them to lift a ban. Rosters filter them out
+     * client-side. */
     const users = Object.values(room.users)
-      .filter((u) => u?.username && !u.banned)
+      .filter((u) => u?.username)
       .map((u) => {
         const seen = u.lastSeen ? Date.parse(u.lastSeen) : 0
         return {
@@ -72,7 +75,10 @@ export async function GET(): Promise<Response> {
           avatarColor: /^#[0-9a-f]{3,8}$/i.test(u.avatarColor ?? "") ? (u.avatarColor as string) : "#22d3ee",
           avatarImage: null,
           lastSeen: seen || 0,
-          online: seen > 0 && now - seen < 4 * 60_000,
+          online: seen > 0 && now - seen < 4 * 60_000 && !u.banned,
+          muted: !!u.muted,
+          banned: !!u.banned,
+          banReason: u.banReason ?? null,
         }
       })
     return NextResponse.json(

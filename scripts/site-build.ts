@@ -161,11 +161,31 @@ async function fetchJson(url: string, timeoutMs = 15000): Promise<any | null> {
 async function exportData(): Promise<Record<string, boolean>> {
   const out: Record<string, boolean> = {}
 
-  // chat snapshot (same-origin deploy data)
+  // chat snapshot (same-origin deploy data) — the PUBLIC mirror view.
+  // The full backup (with password hashes, DMs, friends) stays in
+  // backups/chat/; what ships to the CDN is filtered: public channels
+  // only, no password hashes, no DM containers/members/friends.
   try {
-    const snap = readFileSync(ROOT + "/backups/chat/latest.json", "utf-8")
+    const snap = JSON.parse(readFileSync(ROOT + "/backups/chat/latest.json", "utf-8"))
+    const PUBLIC_CHANNELS = new Set(["main", "sharelinks", "links", "announcements"])
+    const view = {
+      veil: snap.veil,
+      version: snap.version,
+      exportedAt: snap.exportedAt,
+      counts: snap.counts,
+      accounts: (snap.accounts || []).map((a: Record<string, unknown>) => {
+        const { passwordHash, ...pub } = a
+        return pub
+      }),
+      messages: (snap.messages || []).filter(
+        (m: { channelId?: string }) => PUBLIC_CHANNELS.has(String(m.channelId || "main")),
+      ),
+      dms: [],
+      dmMembers: [],
+      friends: [],
+    }
     mkdirSync(SITE + "/data", { recursive: true })
-    writeFileSync(SITE + "/data/latest.json", snap)
+    writeFileSync(SITE + "/data/latest.json", JSON.stringify(view, null, 2) + "\n")
     out.chat = true
   } catch {
     out.chat = false

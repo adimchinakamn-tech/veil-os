@@ -83,6 +83,7 @@ import {
   ExternalLink,
   RotateCcw,
   CloudOff,
+  Pencil,
 } from "lucide-react"
 
 import { BackdropVideo } from "@/components/veil/backdrop-video"
@@ -2582,9 +2583,16 @@ export function ModPanel({
         onMessageDeleted(data.deletedId)
         toast("Message deleted.", "ok")
       } else if (data.account) {
-        onMembers(
-          members.map((m) => (m.id === data.account!.id ? data.account! : m)),
-        )
+        /* Live-room (git version) targets return a PARTIAL account —
+         * never splice that over the full roster entry; the live poll
+         * refreshes its flags within seconds. DB targets carry the full
+         * row and update in place. */
+        const isLive = data.account.id?.startsWith("live:")
+        if (!isLive) {
+          onMembers(
+            members.map((m) => (m.id === data.account!.id ? data.account! : m)),
+          )
+        }
         const purged =
           (action === "ban" || action === "ip_ban") && data.purgedMessages
             ? ` · ${data.purgedMessages} message${data.purgedMessages === 1 ? "" : "s"} removed`
@@ -3160,19 +3168,36 @@ const MessageRow = memo(function MessageRow({
   msg,
   prev,
   isMe,
+  canEdit,
+  editing,
+  editDraft,
+  editBusy,
   onReply,
   onPin,
   onDelete,
+  onEditStart,
+  onEditDraft,
+  onEditSave,
+  onEditCancel,
   onOpenProfile,
 }: {
   msg: ChatMessage
   prev?: ChatMessage
   isMe: boolean
+  canEdit: boolean
+  editing: boolean
+  editDraft: string
+  editBusy: boolean
   onReply: (msg: ChatMessage) => void
   onPin: (msg: ChatMessage) => void
   onDelete: (msg: ChatMessage) => void
+  onEditStart: (msg: ChatMessage) => void
+  onEditDraft: (text: string) => void
+  onEditSave: () => void
+  onEditCancel: () => void
   onOpenProfile: (accountId: string) => void
 }) {
+  const editRef = useRef<HTMLTextAreaElement | null>(null)
   // Group with previous message if same author within 5 minutes (and the
   // same day — the divider always starts a fresh group).
   const grouped =
@@ -3248,14 +3273,75 @@ const MessageRow = memo(function MessageRow({
           </div>
         )}
         <div className="flex min-w-0 flex-wrap items-baseline gap-x-1.5">
-          <MessageContent content={msg.content} />
-          {msg.editedAt && (
-            <span
-              className="select-none align-baseline text-[9.5px] italic text-white/30"
-              title={`edited ${formatTime(msg.editedAt)}`}
-            >
-              (edited)
-            </span>
+          {editing ? (
+            <div className="mt-1 w-full">
+              <textarea
+                ref={(el) => {
+                  editRef.current = el
+                  if (el && document.activeElement !== el) {
+                    el.focus()
+                    const pos = Math.min(editDraft.length, el.value.length)
+                    try {
+                      el.setSelectionRange(pos, pos)
+                    } catch {
+                      /* detached */
+                    }
+                  }
+                }}
+                value={editDraft}
+                disabled={editBusy}
+                onChange={(e) => onEditDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault()
+                    onEditSave()
+                  } else if (e.key === "Escape") {
+                    e.preventDefault()
+                    onEditCancel()
+                  }
+                }}
+                rows={3}
+                className="w-full resize-none rounded-lg border border-white/15 bg-black/40 px-2.5 py-1.5 text-sm text-white outline-none focus:border-orange-400/50 disabled:opacity-60"
+              />
+              <div className="mt-1.5 flex items-center justify-end gap-1.5">
+                <span className="mr-auto text-[10px] text-white/35">
+                  Enter to save · Esc to cancel
+                </span>
+                <button
+                  type="button"
+                  onClick={onEditCancel}
+                  disabled={editBusy}
+                  className="rounded-md px-2.5 py-1 text-xs font-medium text-white/60 hover:bg-white/10 hover:text-white disabled:opacity-40"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={onEditSave}
+                  disabled={editBusy || !editDraft.trim()}
+                  className="flex items-center gap-1 rounded-md bg-orange-400 px-2.5 py-1 text-xs font-semibold text-black hover:opacity-90 disabled:opacity-40"
+                >
+                  {editBusy ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <Check className="h-3 w-3" />
+                  )}
+                  Save
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <MessageContent content={msg.content} />
+              {msg.editedAt && (
+                <span
+                  className="select-none align-baseline text-[9.5px] italic text-white/30"
+                  title={`edited ${formatTime(msg.editedAt)}`}
+                >
+                  (edited)
+                </span>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -3274,6 +3360,15 @@ const MessageRow = memo(function MessageRow({
         >
           <Pin className="h-3.5 w-3.5" />
         </button>
+        {canEdit && !editing && (
+          <button
+            onClick={() => onEditStart(msg)}
+            className="rounded p-1 hover:bg-white/10"
+            title="Edit"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+          </button>
+        )}
         {isMe && (
           <button
             onClick={() => onDelete(msg)}
@@ -3317,7 +3412,12 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
    * actions on them route through /api/chat-mod's live branch. */
   const [liveMessages, setLiveMessages] = useState<ChatMessage[]>([])
   const [liveMembers, setLiveMembers] = useState<
-    (PresenceUser & { online: boolean })[]
+    (PresenceUser & {
+      online: boolean
+      muted?: boolean
+      banned?: boolean
+      banReason?: string | null
+    })[]
   >([])
   useEffect(() => {
     if (!account) return
@@ -3330,7 +3430,12 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
           const data = (await res.json()) as {
             ok: boolean
             messages?: ChatMessage[]
-            users?: (PresenceUser & { online: boolean })[]
+            users?: (PresenceUser & {
+              online: boolean
+              muted?: boolean
+              banned?: boolean
+              banReason?: string | null
+            })[]
           }
           if (!stopped && data.ok) {
             setLiveMessages(Array.isArray(data.messages) ? data.messages : [])
@@ -3364,7 +3469,9 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
   }, [messages, liveMessages, channelId])
 
   /* Live-room users as PlayerList members (merged below the DB members,
-   * same rank bucket as everyone else) + their online presence. */
+   * same rank bucket as everyone else) + their online presence. Muted /
+   * banned flags ride along so the MOD PANEL can act on git users (and
+   * lift bans — banned live users are included in the list on purpose). */
   const liveAccounts = useMemo(
     () =>
       liveMembers.map((u) => ({
@@ -3375,9 +3482,9 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
         avatarImage: u.avatarImage ?? null,
         bio: "",
         role: "member" as const,
-        muted: false,
-        banned: false,
-        banReason: null,
+        muted: !!u.muted,
+        banned: !!u.banned,
+        banReason: u.banReason ?? null,
         ipBanned: false,
         coins: 0,
         tag: null,
@@ -3827,6 +3934,30 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
       if (data.channelId !== channelIdRef.current) return
       setMessages((prev) => prev.filter((m) => m.id !== data.messageId))
       setPinned((prev) => prev.filter((m) => m.id !== data.messageId))
+    })
+
+    socket.on("message_edited", (data: {
+      channelId: string
+      messageId: string
+      content: string
+      editedAt?: string
+    }) => {
+      if (data.channelId !== channelIdRef.current) return
+      const stamp = data.editedAt ?? new Date().toISOString()
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === data.messageId
+            ? { ...m, content: data.content, editedAt: stamp }
+            : m,
+        ),
+      )
+      setPinned((prev) =>
+        prev.map((m) =>
+          m.id === data.messageId
+            ? { ...m, content: data.content, editedAt: stamp }
+            : m,
+        ),
+      )
     })
 
     socket.on("presence", (data: { channelId: string; users: PresenceUser[] }) => {
@@ -4400,6 +4531,80 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
     }
   }, [account, token, channelId])
 
+  /* ---- inline message editing (the pencil next to Reply on your own
+   * messages). The draft lives here, in ChatApp, so live-room polls and
+   * socket updates re-rendering the list never destroy an in-progress
+   * edit — exactly like the git version's chat. */ 
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editDraft, setEditDraft] = useState("")
+  const [editBusy, setEditBusy] = useState(false)
+  const startEdit = useCallback((msg: ChatMessage) => {
+    setEditingId(msg.id)
+    setEditDraft(msg.content)
+  }, [])
+  const saveEdit = useCallback(async () => {
+    const id = editingId
+    const text = editDraft.trim()
+    if (!id || !text || editBusy) return
+    setEditBusy(true)
+    try {
+      const data = await apiFetch<{
+        message: { id: string; content: string; editedAt: string | null }
+      }>("/api/chat-data", {
+        method: "PATCH",
+        body: JSON.stringify({ token, messageId: id, content: text }),
+      })
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === id
+            ? { ...m, content: data.message.content, editedAt: data.message.editedAt }
+            : m,
+        ),
+      )
+      setPinned((prev) =>
+        prev.map((m) =>
+          m.id === id
+            ? { ...m, content: data.message.content, editedAt: data.message.editedAt }
+            : m,
+        ),
+      )
+      socketRef.current?.emit("message_edited", {
+        channelId,
+        messageId: id,
+        content: data.message.content,
+        editedAt: data.message.editedAt ?? new Date().toISOString(),
+      })
+      setEditingId(null)
+      setEditDraft("")
+      toast("Message edited.", "ok")
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "Edit failed.", "err")
+    } finally {
+      setEditBusy(false)
+    }
+  }, [editingId, editDraft, editBusy, token, channelId, toast])
+  const cancelEdit = useCallback(() => {
+    setEditingId(null)
+    setEditDraft("")
+  }, [])
+
+  /* Own-message edit rights: a DB message you authored, OR a live-room
+   * (git version) message sent under your username — the PATCH routes
+   * both by ownership. */
+  const canEditMessage = useCallback(
+    (msg: ChatMessage) => {
+      if (!account) return false
+      if (msg.account.id === account.id) return true
+      if (msg.id.startsWith("lv-")) {
+        return (
+          (msg.account.username || "").toLowerCase() === account.username.toLowerCase()
+        )
+      }
+      return false
+    },
+    [account],
+  )
+
   // Create a DM.
   const createDm = async () => {
     const target = dmTarget.trim()
@@ -4882,9 +5087,17 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                           msg={m}
                           prev={prev}
                           isMe={m.account.id === account.id || isMod(account)}
+                          canEdit={canEditMessage(m)}
+                          editing={editingId === m.id}
+                          editDraft={editingId === m.id ? editDraft : ""}
+                          editBusy={editBusy}
                           onReply={handleReply}
                           onPin={togglePin}
                           onDelete={deleteMessage}
+                          onEditStart={startEdit}
+                          onEditDraft={setEditDraft}
+                          onEditSave={() => void saveEdit()}
+                          onEditCancel={cancelEdit}
                           onOpenProfile={openProfile}
                         />
                       </div>
@@ -5182,7 +5395,7 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
           <ModPanel
             account={account}
             token={token}
-            members={members}
+            members={playersMembers}
             onMembers={updateMembers}
             onMessageDeleted={(id) => {
               setMessages((prev) => prev.filter((m) => m.id !== id))
