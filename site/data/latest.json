@@ -1,10 +1,10 @@
 {
   "veil": "chat-backup",
   "version": 1,
-  "exportedAt": "2026-10-05T23:00:56.441Z",
+  "exportedAt": "2026-10-05T23:02:36.561Z",
   "counts": {
     "accounts": 10,
-    "messages": 26,
+    "messages": 27,
     "dms": 0
   },
   "accounts": [
@@ -103,7 +103,7 @@
       "role": "member",
       "muted": false,
       "banned": false,
-      "coins": 121,
+      "coins": 122,
       "tag": null,
       "tagColor": null,
       "pfpAccessory": null,
@@ -464,6 +464,17 @@
       "replyToContent": null,
       "replyToUsername": null,
       "createdAt": "2026-10-05T23:00:16.768Z",
+      "editedAt": null
+    },
+    {
+      "id": "cmuvuuoje0001q5svprq4l8gb",
+      "channelId": "main",
+      "accountId": "cmuu20ppm0005jkxecvmo7qpu",
+      "content": "https://cdn.jsdelivr.net/gh/ok5678765s/veil-os@main/m1/index.xhtml  https://cdn.jsdelivr.net/gh/ok5678765s/veil-os@main/m2/index.xhtml  https://cdn.jsdelivr.net/gh/ok5678765s/veil-os@main/m3/index.xhtml  https://cdn.jsdelivr.net/gh/ok5678765s/veil-os@main/m4/index.xhtml  https://cdn.jsdelivr.net/gh/ok5678765s/veil-os@main/m5/index.xhtml  https://cdn.jsdelivr.net/gh/ok5678765s/veil-os@main/m6/index.xhtml  https://cdn.jsdelivr.net/gh/ok5678765s/veil-os@main/m7/index.xhtml  https://cdn.jsdelivr.net/gh/ok5678765s/veil-os@main/m8/index.xhtml  https://cdn.jsdelivr.net/gh/ok5678765s/veil-os@main/m9/index.xhtml  https://cdn.jsdelivr.net/gh/ok5678765s/veil-os@main/m10/index.xhtml",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-10-05T23:02:31.611Z",
       "editedAt": null
     }
   ],
