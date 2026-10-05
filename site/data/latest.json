@@ -1,10 +1,10 @@
 {
   "veil": "chat-backup",
   "version": 1,
-  "exportedAt": "2026-10-05T22:15:36.237Z",
+  "exportedAt": "2026-10-05T22:17:02.124Z",
   "counts": {
     "accounts": 10,
-    "messages": 24,
+    "messages": 25,
     "dms": 0
   },
   "accounts": [
@@ -171,7 +171,7 @@
       "role": "member",
       "muted": false,
       "banned": false,
-      "coins": 100,
+      "coins": 101,
       "tag": null,
       "tagColor": null,
       "pfpAccessory": null,
@@ -442,6 +442,17 @@
       "replyToContent": null,
       "replyToUsername": null,
       "createdAt": "2026-10-05T21:10:01.314Z",
+      "editedAt": null
+    },
+    {
+      "id": "cmuvt6nq30001q5fjxbakbxxu",
+      "channelId": "main",
+      "accountId": "cmuvt5oss0000q5u82mjqjzu4",
+      "content": "edit flow test message",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-10-05T22:15:51.195Z",
       "editedAt": null
     }
   ],
