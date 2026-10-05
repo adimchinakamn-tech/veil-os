@@ -1,10 +1,10 @@
 {
   "veil": "chat-backup",
   "version": 1,
-  "exportedAt": "2026-10-04T17:22:00.456Z",
+  "exportedAt": "2026-10-05T22:09:40.009Z",
   "counts": {
-    "accounts": 6,
-    "messages": 16,
+    "accounts": 9,
+    "messages": 24,
     "dms": 0
   },
   "accounts": [
@@ -90,7 +90,7 @@
       "tag": null,
       "tagColor": null,
       "pfpAccessory": null,
-      "legacy": false,
+      "legacy": true,
       "createdAt": "2026-10-04T15:26:36.237Z"
     },
     {
@@ -103,12 +103,63 @@
       "role": "member",
       "muted": false,
       "banned": false,
-      "coins": 103,
+      "coins": 118,
       "tag": null,
       "tagColor": null,
       "pfpAccessory": null,
       "legacy": false,
       "createdAt": "2026-10-04T16:47:38.027Z"
+    },
+    {
+      "id": "cmuvduat20001q57tefhivwmt",
+      "username": "dendennyeydyeyd",
+      "displayName": "dendennyeydyeyd",
+      "avatarColor": "#c0392b",
+      "avatarImage": null,
+      "bio": "",
+      "role": "member",
+      "muted": false,
+      "banned": false,
+      "coins": 101,
+      "tag": null,
+      "tagColor": null,
+      "pfpAccessory": null,
+      "legacy": false,
+      "createdAt": "2026-10-05T15:06:20.342Z"
+    },
+    {
+      "id": "cmuvluff50007q57te0n0mvlu",
+      "username": "123qweads",
+      "displayName": "123qweads",
+      "avatarColor": "#27ae60",
+      "avatarImage": null,
+      "bio": "",
+      "role": "member",
+      "muted": false,
+      "banned": false,
+      "coins": 101,
+      "tag": null,
+      "tagColor": null,
+      "pfpAccessory": null,
+      "legacy": false,
+      "createdAt": "2026-10-05T18:50:23.250Z"
+    },
+    {
+      "id": "cmuvmbetk000gq57t3uhjth1w",
+      "username": "i njwrnjgf bhjgf bj",
+      "displayName": "i njwrnjgf bhjgf bj",
+      "avatarColor": "#e67e22",
+      "avatarImage": null,
+      "bio": "",
+      "role": "member",
+      "muted": false,
+      "banned": false,
+      "coins": 102,
+      "tag": null,
+      "tagColor": null,
+      "pfpAccessory": null,
+      "legacy": false,
+      "createdAt": "2026-10-05T19:03:35.625Z"
     }
   ],
   "messages": [
@@ -120,7 +171,8 @@
       "replyTo": null,
       "replyToContent": null,
       "replyToUsername": null,
-      "createdAt": "2026-09-15T16:22:00.000Z"
+      "createdAt": "2026-09-15T16:22:00.000Z",
+      "editedAt": null
     },
     {
       "id": "gen-restore-002",
@@ -130,7 +182,8 @@
       "replyTo": null,
       "replyToContent": null,
       "replyToUsername": null,
-      "createdAt": "2026-09-16T22:13:00.000Z"
+      "createdAt": "2026-09-16T22:13:00.000Z",
+      "editedAt": null
     },
     {
       "id": "gen-restore-005",
@@ -140,7 +193,8 @@
       "replyTo": null,
       "replyToContent": null,
       "replyToUsername": null,
-      "createdAt": "2026-09-17T22:24:00.000Z"
+      "createdAt": "2026-09-17T22:24:00.000Z",
+      "editedAt": null
     },
     {
       "id": "gen-restore-006",
@@ -150,7 +204,8 @@
       "replyTo": null,
       "replyToContent": null,
       "replyToUsername": null,
-      "createdAt": "2026-09-17T22:29:00.000Z"
+      "createdAt": "2026-09-17T22:29:00.000Z",
+      "editedAt": null
     },
     {
       "id": "gen-restore-007",
@@ -160,7 +215,8 @@
       "replyTo": null,
       "replyToContent": null,
       "replyToUsername": null,
-      "createdAt": "2026-09-17T22:56:00.000Z"
+      "createdAt": "2026-09-17T22:56:00.000Z",
+      "editedAt": null
     },
     {
       "id": "gen-restore-008",
@@ -170,7 +226,8 @@
       "replyTo": null,
       "replyToContent": null,
       "replyToUsername": null,
-      "createdAt": "2026-09-17T22:57:00.000Z"
+      "createdAt": "2026-09-17T22:57:00.000Z",
+      "editedAt": null
     },
     {
       "id": "gen-restore-009",
@@ -180,7 +237,8 @@
       "replyTo": null,
       "replyToContent": null,
       "replyToUsername": null,
-      "createdAt": "2026-09-17T23:09:00.000Z"
+      "createdAt": "2026-09-17T23:09:00.000Z",
+      "editedAt": null
     },
     {
       "id": "gen-restore-010",
@@ -190,7 +248,8 @@
       "replyTo": null,
       "replyToContent": null,
       "replyToUsername": null,
-      "createdAt": "2026-09-17T23:09:20.000Z"
+      "createdAt": "2026-09-17T23:09:20.000Z",
+      "editedAt": null
     },
     {
       "id": "gen-restore-011",
@@ -200,7 +259,8 @@
       "replyTo": null,
       "replyToContent": null,
       "replyToUsername": null,
-      "createdAt": "2026-09-18T00:34:00.000Z"
+      "createdAt": "2026-09-18T00:34:00.000Z",
+      "editedAt": null
     },
     {
       "id": "cmusxdh3i0009ojyz6ey45iy9",
@@ -210,7 +270,8 @@
       "replyTo": null,
       "replyToContent": null,
       "replyToUsername": null,
-      "createdAt": "2026-10-03T21:49:49.134Z"
+      "createdAt": "2026-10-03T21:49:49.134Z",
+      "editedAt": null
     },
     {
       "id": "cmut4prva0005ll9zo0f01h7y",
@@ -220,7 +281,8 @@
       "replyTo": null,
       "replyToContent": null,
       "replyToUsername": null,
-      "createdAt": "2026-10-04T01:15:20.278Z"
+      "createdAt": "2026-10-04T01:15:20.278Z",
+      "editedAt": null
     },
     {
       "id": "cmut6fvy00008llgb1b8bm1pm",
@@ -230,7 +292,8 @@
       "replyTo": null,
       "replyToContent": null,
       "replyToUsername": null,
-      "createdAt": "2026-10-04T02:03:38.233Z"
+      "createdAt": "2026-10-04T02:03:38.233Z",
+      "editedAt": null
     },
     {
       "id": "cmut6zp6w0001ll41sfohp5o2",
@@ -240,7 +303,8 @@
       "replyTo": null,
       "replyToContent": null,
       "replyToUsername": null,
-      "createdAt": "2026-10-04T02:19:02.599Z"
+      "createdAt": "2026-10-04T02:19:02.599Z",
+      "editedAt": null
     },
     {
       "id": "cmutz4o760002jkxe591rq77l",
@@ -250,17 +314,8 @@
       "replyTo": null,
       "replyToContent": null,
       "replyToUsername": null,
-      "createdAt": "2026-10-04T15:26:43.843Z"
-    },
-    {
-      "id": "cmuu22jcu000bjkxe99svjiw5",
-      "channelId": "links",
-      "accountId": "cmuu20ppm0005jkxecvmo7qpu",
-      "content": "https://veil-fur034ika-aquidrizzler-1761s-projects.vercel.app/",
-      "replyTo": null,
-      "replyToContent": null,
-      "replyToUsername": null,
-      "createdAt": "2026-10-04T16:49:03.103Z"
+      "createdAt": "2026-10-04T15:26:43.843Z",
+      "editedAt": null
     },
     {
       "id": "cmuu22m2r000fjkxe9xle1mtx",
@@ -270,7 +325,107 @@
       "replyTo": null,
       "replyToContent": null,
       "replyToUsername": null,
-      "createdAt": "2026-10-04T16:49:06.627Z"
+      "createdAt": "2026-10-04T16:49:06.627Z",
+      "editedAt": null
+    },
+    {
+      "id": "cmuvduxs10003q57tfxhtqpu5",
+      "channelId": "sharelinks",
+      "accountId": "cmuvduat20001q57tefhivwmt",
+      "content": "linkssss",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-10-05T15:06:50.113Z",
+      "editedAt": null
+    },
+    {
+      "id": "cmuvlvcmn0009q57tuaj6184o",
+      "channelId": "sharelinks",
+      "accountId": "cmuvluff50007q57te0n0mvlu",
+      "content": "help",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-10-05T18:51:06.288Z",
+      "editedAt": null
+    },
+    {
+      "id": "cmuvmccfo000iq57t92vfyegf",
+      "channelId": "main",
+      "accountId": "cmuvmbetk000gq57t3uhjth1w",
+      "content": "/api/gif-file/ji6zzUZwNIuLS",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-10-05T19:04:19.188Z",
+      "editedAt": null
+    },
+    {
+      "id": "cmuvmcyq4000mq57t4x7m9pp1",
+      "channelId": "main",
+      "accountId": "cmuvmbetk000gq57t3uhjth1w",
+      "content": "/api/gif-file/okfvUCpgArv3y",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-10-05T19:04:48.076Z",
+      "editedAt": null
+    },
+    {
+      "id": "cmuvqdapn0001q5du7e8lmww0",
+      "channelId": "main",
+      "accountId": "cmuu20ppm0005jkxecvmo7qpu",
+      "content": "THERE IS A #SHAERLINKS CHANNEL",
+      "replyTo": "lv-muva1ed4-sq42su",
+      "replyToContent": "Cinera  cinera.explosionlearning.org cinera.actadigital.com.ar  Aurora  aurora.tokeslaszlo.ro aurora.explosionlearning.org aurora.actadigital.com.ar  Utopia  utopia.tokeslaszlo.ro utopia.explosionlear",
+      "replyToUsername": "nerve",
+      "createdAt": "2026-10-05T20:57:02.075Z",
+      "editedAt": null
+    },
+    {
+      "id": "cmuvqdnkr0005q5du75akt5ur",
+      "channelId": "main",
+      "accountId": "cmuu20ppm0005jkxecvmo7qpu",
+      "content": "stupid caps lock and sure i can make you mod",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-10-05T20:57:18.747Z",
+      "editedAt": null
+    },
+    {
+      "id": "cmuvqjctr0001q5svibegh3oo",
+      "channelId": "main",
+      "accountId": "cmuu20ppm0005jkxecvmo7qpu",
+      "content": "i made this so not alot of people use this yk and yh but i did make some links in @links",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-10-05T21:01:44.752Z",
+      "editedAt": null
+    },
+    {
+      "id": "cmuvqjqbc0005q5svlsyj0nd7",
+      "channelId": "main",
+      "accountId": "cmuu20ppm0005jkxecvmo7qpu",
+      "content": "3links also why is there so many accounts",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-10-05T21:02:02.233Z",
+      "editedAt": null
+    },
+    {
+      "id": "cmuvqtzz50009q5svrm7otuuz",
+      "channelId": "sharelinks",
+      "accountId": "cmuu20ppm0005jkxecvmo7qpu",
+      "content": "ok",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-10-05T21:10:01.314Z",
+      "editedAt": null
     }
   ],
   "dms": [],

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" data-veil-build="2026-10-05T20:50:17Z">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" data-veil-build="2026-10-05T22:10:11Z">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -185,7 +185,8 @@ window.VEILOS_SHARED_BASE="../site/";
   var $ = V.$, $$ = V.$$;
   var state = {
     accounts: {},   /* id -> account (real, from the backup) */
-    list: [],       /* real messages */
+    list: [],       /* real messages (#general mirror only) */
+    realRecent: [], /* every public-channel message (roster lighting) */
     byId: {},
     me: null,       /* my live pseudo-account */
     liveUsers: {},  /* lower-username -> live user */
@@ -461,7 +462,7 @@ window.VEILOS_SHARED_BASE="../site/";
       if (L.isOnlineLive(state.liveUsers[k], nowMs)) online["live:" + k] = true;
     }
     /* real accounts light up when they just talked (the backup is ~30s fresh) */
-    state.list.forEach(function (m) {
+    (state.realRecent || state.list).forEach(function (m) {
       var t = new Date(m.createdAt).getTime();
       if (isFinite(t) && nowMs - t < L.cfg.presenceWindowMs) online[m.accountId] = true;
     });
@@ -535,7 +536,14 @@ window.VEILOS_SHARED_BASE="../site/";
       (d.accounts || []).forEach(function (a) { state.accounts[a.id] = a; });
       state.byId = {};
       (d.messages || []).forEach(function (m) { state.byId[m.id] = m; });
-      state.list = d.messages || [];
+      /* the timeline mirrors the website's #general — only "main"
+       * channel messages (the other website channels stay website-only,
+       * DMs never even ship in this file). Roster online-lighting still
+       * sees every public message. */
+      state.list = (d.messages || []).filter(function (m) {
+        return !m.channelId || m.channelId === "main";
+      });
+      state.realRecent = d.messages || [];
       state.realAccounts = d.accounts || [];
       render();
       renderMembers();

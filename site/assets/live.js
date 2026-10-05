@@ -25,7 +25,9 @@
     path: "site/data/chat-live.json",
     /* replaced at build time by scripts/site-build.ts (tmp/gh-token.txt) */
     token: "github_pat_11CCPIVFY0JwyCcqtmYw09_WXiHGFbuGzmmi" + "7zYQmEvPQuN5ypS49JmD5ES5rE6gWSSJBDQCZ7DOkTcYKy",
-    maxMessages: 250,
+    /* rolling window — the 101st message deletes the 1st (user-set cap;
+     * the website's #general and the bridge use the same number) */
+    maxMessages: 100,
     presenceWindowMs: 4 * 60 * 1000,
     heartbeatMs: 90 * 1000,
     pollMs: 5000,

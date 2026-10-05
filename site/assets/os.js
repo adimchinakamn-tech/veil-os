@@ -81,7 +81,7 @@
         out.messages.sort(function (a, b) {
           return new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
         });
-        out.messages = out.messages.slice(-250);
+        out.messages = out.messages.slice(-100);
         [l, p].forEach(function (src) { /* presence wins ties (second) */
           for (var k in (src.users || {})) {
             var u = src.users[k];
