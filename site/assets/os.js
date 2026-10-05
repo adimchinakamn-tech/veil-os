@@ -60,6 +60,24 @@
   }
   function dataOf(file) {
     var urls = [SHARED + "data/" + file, window.VEILOS.cdnData(file), window.VEILOS.repoData(file)];
+    if (file === "latest.json") {
+      /* the chat backup is purged on the CDN after every push, but a
+         static host's same-origin copy can lag minutes behind (or sit
+         frozen on the build that shipped) — and the old order tried
+         same-origin FIRST, so a stale 200 shadowed the fresh CDN copy
+         forever. Race both, keep whichever exportedAt is newer. */
+      var so = fetchJson([SHARED + "data/" + file]).catch(function () { return null; });
+      var cd = fetchJson([window.VEILOS.cdnData(file)]).catch(function () { return null; });
+      return Promise.all([so, cd]).then(function (both) {
+        var a = both[0], b = both[1];
+        if (!a && !b) return fetchJson([window.VEILOS.repoData(file)]);
+        if (!a) return b;
+        if (!b) return a;
+        var at = new Date(a.exportedAt || 0).getTime() || 0;
+        var bt = new Date(b.exportedAt || 0).getTime() || 0;
+        return bt > at ? b : a;
+      });
+    }
     if (file !== "chat-live.json") return fetchJson(urls);
     /* chat-live.json's live lane is the `presence` branch (main's copy is
        the frozen legacy lane — old builds still write there). Read BOTH,

@@ -1,9 +1,9 @@
 {
   "veil": "chat-backup",
   "version": 1,
-  "exportedAt": "2026-10-05T22:21:53.020Z",
+  "exportedAt": "2026-10-05T22:42:21.813Z",
   "counts": {
-    "accounts": 9,
+    "accounts": 10,
     "messages": 24,
     "dms": 0
   },
@@ -160,6 +160,23 @@
       "pfpAccessory": null,
       "legacy": false,
       "createdAt": "2026-10-05T19:03:35.625Z"
+    },
+    {
+      "id": "cmuvu47pa0000q5if9redlq1p",
+      "username": "channeltest1",
+      "displayName": "channeltest1",
+      "avatarColor": "#8e44ad",
+      "avatarImage": null,
+      "bio": "",
+      "role": "member",
+      "muted": false,
+      "banned": false,
+      "coins": 100,
+      "tag": null,
+      "tagColor": null,
+      "pfpAccessory": null,
+      "legacy": false,
+      "createdAt": "2026-10-05T22:41:56.734Z"
     }
   ],
   "messages": [

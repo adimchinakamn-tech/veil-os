@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-veil-build="2026-10-05T22:21:53Z">
+<html lang="en" data-veil-build="2026-10-05T22:42:21Z">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -30,13 +30,14 @@
             <span class="hidden text-xs font-medium sm:inline">Veil</span>
           </button>
           <div class="relative">
-            <button class="flex items-center gap-1.5 rounded-md px-2 py-1 hover:bg-white/10" title="#general">
+            <button id="channel-btn" class="flex items-center gap-1.5 rounded-md px-2 py-1 hover:bg-white/10" title="#general" aria-haspopup="menu" aria-expanded="false">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-hash h-4 w-4 text-orange-400" aria-hidden="true"><line x1="4" x2="20" y1="9" y2="9"></line><line x1="4" x2="20" y1="15" y2="15"></line><line x1="10" x2="8" y1="3" y2="21"></line><line x1="16" x2="14" y1="3" y2="21"></line></svg>
-              <span class="text-sm font-semibold">#general</span>
+              <span class="text-sm font-semibold" id="channel-label">#general</span>
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down h-3.5 w-3.5 text-white/50" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
             </button>
+            <div id="channel-menu" class="absolute left-0 top-9 z-30 hidden max-h-[70vh] w-64 overflow-y-auto rounded-xl border border-white/10 bg-zinc-950/90 p-1 shadow-2xl backdrop-blur-xl" role="menu" style="scrollbar-width: thin;"></div>
           </div>
-          <span class="hidden text-xs text-white/40 sm:inline">General chat — say hi!</span>
+          <span class="hidden text-xs text-white/40 sm:inline" id="channel-desc">General chat — say hi!</span>
           <div class="ml-auto flex items-center gap-1">
             <span class="hidden items-center gap-1 rounded-md bg-white/5 px-2 py-1 text-xs text-white/70 sm:flex">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clock h-3 w-3" aria-hidden="true"><path d="M12 6v6l4 2"></path><circle cx="12" cy="12" r="10"></circle></svg>
@@ -178,7 +179,10 @@
   var $ = V.$, $$ = V.$$;
   var state = {
     accounts: {},   /* id -> account (real, from the backup) */
-    list: [],       /* real messages (#general mirror only) */
+    allMsgs: [],    /* every public-channel message (backup lane) */
+    channelMsgs: null, /* active channel's rows straight from the app's API (fresher lane) */
+    channelId: "main", /* the channel being viewed — restored at boot */
+    apiBase: undefined, /* the app's API base: undefined=unresolved, null=unreachable, ""/url=live */
     realRecent: [], /* every public-channel message (roster lighting) */
     byId: {},
     me: null,       /* my live pseudo-account */
@@ -194,6 +198,20 @@
     gateMode: "login",
     liveOk: false,
   };
+
+  /* the website's channel list, mirrored 1:1 — the timeline reads them
+     from the backup (latest.json) or, when the app's API answers, live
+     from the DB itself. The shared live room is #general-only. */
+  var CHANNELS = [
+    { id: "main", name: "general", label: "#general", desc: "General chat — say hi!", modOnly: false },
+    { id: "sharelinks", name: "sharelinks", label: "#sharelinks", desc: "Drop links, sites, finds", modOnly: false },
+    { id: "links", name: "links", label: "#links", desc: "Curated links — mods & owner", modOnly: true },
+    { id: "announcements", name: "announcements", label: "#announcements", desc: "Official news — mods & owner", modOnly: true },
+  ];
+  function channelById(id) {
+    for (var i = 0; i < CHANNELS.length; i++) if (CHANNELS[i].id === id) return CHANNELS[i];
+    return CHANNELS[0];
+  }
 
   /* seconds clock (the chat header shows h:mm:ss) */
   (function () {
@@ -355,7 +373,14 @@
   }
 
   function mergedMsgs() {
-    var all = state.list.concat(state.liveMsgs, state.pending);
+    /* DB rows for THIS channel — the API lane is fresher when present,
+     * the backup lane (all public channels) otherwise */
+    var real = (state.channelMsgs || state.allMsgs || []).filter(function (m) {
+      return (m.channelId || "main") === state.channelId;
+    });
+    /* the shared live room (git sends) is #general-only */
+    var live = state.channelId === "main" ? state.liveMsgs : [];
+    var all = real.concat(live, state.pending);
     var seen = {};
     var dedup = [];
     all.forEach(function (m) {
@@ -395,7 +420,9 @@
   function render() {
     var list = document.getElementById("chat-list");
     var msgs = mergedMsgs();
-    list.innerHTML = buildMsgHtml(msgs);
+    /* empty channel — the app's exact empty state */
+    list.innerHTML = msgs.length ? buildMsgHtml(msgs) :
+      '<div class="grid place-items-center py-20 text-center text-white/40"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-hash mb-2 h-8 w-8 opacity-50"><line x1="4" x2="20" y1="9" y2="9"></line><line x1="4" x2="20" y1="15" y2="15"></line><line x1="10" x2="8" y1="3" y2="21"></line><line x1="16" x2="14" y1="3" y2="21"></line></svg><p class="text-sm">No messages here yet.</p><p class="mt-1 text-xs">Be the first to say something!</p></div>';
     var sc = document.getElementById("chat-scroll");
     $$("[data-os-del]", list).forEach(function (b) {
       b.addEventListener("click", function () {
@@ -455,7 +482,8 @@
       if (L.isOnlineLive(state.liveUsers[k], nowMs)) online["live:" + k] = true;
     }
     /* real accounts light up when they just talked (the backup is ~30s fresh) */
-    (state.realRecent || state.list).forEach(function (m) {
+    var recent = (state.realRecent || []).concat(state.channelMsgs || []);
+    recent.forEach(function (m) {
       var t = new Date(m.createdAt).getTime();
       if (isFinite(t) && nowMs - t < L.cfg.presenceWindowMs) online[m.accountId] = true;
     });
@@ -529,18 +557,46 @@
       (d.accounts || []).forEach(function (a) { state.accounts[a.id] = a; });
       state.byId = {};
       (d.messages || []).forEach(function (m) { state.byId[m.id] = m; });
-      /* the timeline mirrors the website's #general — only "main"
-       * channel messages (the other website channels stay website-only,
-       * DMs never even ship in this file). Roster online-lighting still
-       * sees every public message. */
-      state.list = (d.messages || []).filter(function (m) {
-        return !m.channelId || m.channelId === "main";
-      });
+      /* the backup lane carries every public channel — the timeline
+       * filters per viewed channel; roster lighting sees them all */
+      state.allMsgs = d.messages || [];
       state.realRecent = d.messages || [];
       state.realAccounts = d.accounts || [];
       render();
       renderMembers();
     }).catch(function () {});
+  }
+
+  /* ---- the app's API lane: live channel data, no CDN lag at all.
+     When the website answers, the timeline reads the DB directly every
+     few seconds — messages from the website show up on their own, no
+     restart, no 30s backup wait. Falls back to the backup silently. */
+  function apiMsgToRow(m) {
+    if (m && m.account) {
+      var prev = state.accounts[m.account.id];
+      if (prev && prev.bio && !m.account.bio) m.account.bio = prev.bio;
+      state.accounts[m.account.id] = m.account;
+    }
+    return {
+      id: m.id,
+      accountId: m.account ? m.account.id : m.accountId,
+      content: m.content,
+      createdAt: m.createdAt,
+      editedAt: m.editedAt || null,
+      channelId: m.channelId || "main",
+    };
+  }
+  function loadChannel() {
+    if (state.apiBase === null || state.apiBase === undefined) return;
+    fetch(state.apiBase + "/api/chat-data?channel=" + encodeURIComponent(state.channelId) + "&t=" + Date.now(), { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        if (!j || !j.ok || !Array.isArray(j.messages)) return;
+        state.channelMsgs = j.messages.map(apiMsgToRow);
+        render();
+        renderMembers();
+      })
+      .catch(function () { /* next tick retries — the backup still feeds us */ });
   }
 
   function loadLive() {
@@ -689,12 +745,47 @@
     } else {
       notice.classList.add("hidden");
       notice.classList.remove("flex");
-      input.disabled = false;
-      updateSend();
+      updateComposerAccess();
     }
   }
   function updateSend() { send.disabled = !input.value.trim() || !state.me || !!blockReason(); }
   input.addEventListener("input", updateSend);
+
+  /* channels beyond #general live on the website's DB — posting there
+     needs a website-linked sign-in (the app's API + its session token).
+     #general posts through the shared live room, anyone signed in. */
+  function siteToken() {
+    try { return window.localStorage.getItem("veil:site-token") || ""; } catch (e) { return ""; }
+  }
+  function isModGit() {
+    var me = state.me;
+    return !!(me && (me.role === "admin" || me.role === "owner" || me.role === "moderator" ||
+      String(me.username || "").toLowerCase() === "veil"));
+  }
+  function canPostHere() {
+    if (state.channelId === "main") return true;
+    var c = channelById(state.channelId);
+    if (c.modOnly && !isModGit()) return false;
+    return !!(siteToken() && state.apiBase !== null && state.apiBase !== undefined);
+  }
+  function updateComposerAccess() {
+    var c = channelById(state.channelId);
+    if (state.channelId === "main") {
+      input.disabled = false;
+      input.placeholder = "Message " + c.label + " — try /help";
+      updateSend();
+      return;
+    }
+    var ok = canPostHere();
+    input.disabled = !ok;
+    input.placeholder = ok
+      ? "Message " + c.label + " — try /help"
+      : (c.modOnly && !isModGit())
+        ? c.label + " — read-only (mods & owner post here)"
+        : "Posting here needs your website account — sign in with it";
+    if (!ok) send.disabled = true;
+    else updateSend();
+  }
   function doSend() {
     var text = input.value.trim();
     if (!text || !state.me) return;
@@ -705,13 +796,41 @@
       accountId: state.me.id,
       content: text,
       createdAt: new Date().toISOString(),
-      live: true,
+      channelId: state.channelId,
+      live: state.channelId === "main",
       pending: true,
     };
     state.pending.push(optimistic);
     input.value = "";
     updateSend();
     render();
+    if (state.channelId !== "main") {
+      /* the website's DB — the app's API carries it (website-linked) */
+      fetch(state.apiBase + "/api/chat-data", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ token: siteToken(), channelId: state.channelId, content: text }),
+      }).then(function (r) {
+        return r.json().then(function (j) { return { ok: r.ok, j: j }; });
+      }).then(function (res) {
+        state.pending = state.pending.filter(function (m) { return m.id !== optimistic.id; });
+        if (res.ok && res.j && res.j.ok && res.j.message) {
+          if (Array.isArray(state.channelMsgs)) state.channelMsgs.push(apiMsgToRow(res.j.message));
+          else state.channelMsgs = [apiMsgToRow(res.j.message)];
+          render();
+          renderMembers();
+        } else {
+          throw new Error((res.j && res.j.error) || "The website didn't accept the message.");
+        }
+      }).catch(function (e) {
+        state.pending = state.pending.filter(function (m) { return m.id !== optimistic.id; });
+        render();
+        toast(String((e && e.message) || e));
+        input.value = text;
+        updateSend();
+      });
+      return;
+    }
     L.sendMessage(idAcc, text).then(function (row) {
       state.pending = state.pending.filter(function (m) { return m.id !== optimistic.id; });
       state.liveMsgs.push(row);
@@ -739,6 +858,68 @@
   });
   send.addEventListener("click", doSend);
 
+  /* ---- channel switcher — the app's dropdown, mirrored 1:1 ---- */
+  var chBtn = document.getElementById("channel-btn");
+  var chMenu = document.getElementById("channel-menu");
+  var chLabel = document.getElementById("channel-label");
+  var chDesc = document.getElementById("channel-desc");
+  function hashSvg(cls) {
+    return '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucide lucide-hash ' + cls + '"><line x1="4" x2="20" y1="9" y2="9"></line><line x1="4" x2="20" y1="15" y2="15"></line><line x1="10" x2="8" y1="3" y2="21"></line><line x1="16" x2="14" y1="3" y2="21"></line></svg>';
+  }
+  function buildChannelMenu() {
+    var html = '<div class="px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-white/40">Channels</div><div class="space-y-0.5">';
+    CHANNELS.forEach(function (c) {
+      html += '<button type="button" role="menuitem" data-os-channel="' + c.id + '" class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm ' + (state.channelId === c.id ? "bg-white/10" : "hover:bg-white/5") + '" title="' + V.esc(c.desc) + '">' +
+        hashSvg("h-3.5 w-3.5 text-white/40") +
+        '<span class="flex-1 text-left">' + V.esc(c.name) + "</span>" +
+        '<span class="text-[10px] text-white/30">' + V.esc(c.desc) + "</span></button>";
+    });
+    html += "</div>";
+    chMenu.innerHTML = html;
+    $$("[data-os-channel]", chMenu).forEach(function (b) {
+      b.addEventListener("click", function () {
+        setChannel(b.getAttribute("data-os-channel"));
+        closeChannelMenu();
+      });
+    });
+  }
+  var chMenuOpen = false;
+  function closeChannelMenu() {
+    chMenuOpen = false;
+    chMenu.classList.add("hidden");
+    chBtn.setAttribute("aria-expanded", "false");
+  }
+  chBtn.addEventListener("click", function (e) {
+    e.stopPropagation();
+    chMenuOpen = !chMenuOpen;
+    chMenu.classList.toggle("hidden", !chMenuOpen);
+    chBtn.setAttribute("aria-expanded", String(chMenuOpen));
+  });
+  document.addEventListener("click", function (e) {
+    if (chMenuOpen && !chMenu.contains(e.target) && e.target !== chBtn) closeChannelMenu();
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && chMenuOpen) closeChannelMenu();
+  });
+  function updateChannelUi() {
+    var c = channelById(state.channelId);
+    chLabel.textContent = c.label;
+    chBtn.title = c.label;
+    chDesc.textContent = c.desc;
+    updateComposerAccess();
+  }
+  function setChannel(id) {
+    if (!channelById(id) || id === state.channelId) return;
+    state.channelId = id;
+    state.channelMsgs = null; /* refetch the new channel's API lane */
+    state.pending = [];      /* pending sends belong to the old channel */
+    try { window.localStorage.setItem("veil:chat-channel", id); } catch (e) { /* ignore */ }
+    updateChannelUi();
+    buildChannelMenu();
+    render();
+    loadChannel();
+  }
+
   /* members toggle — same behavior as the app's */
   var aside = document.getElementById("members-aside");
   document.getElementById("members-close").addEventListener("click", function () { aside.style.display = "none"; });
@@ -747,12 +928,25 @@
   });
 
   /* ---- boot ---- */
+  try {
+    var savedCh = window.localStorage.getItem("veil:chat-channel");
+    if (savedCh && channelById(savedCh) && savedCh !== "main") state.channelId = savedCh;
+  } catch (e) { /* private mode */ }
+  buildChannelMenu();
+  updateChannelUi();
   loadReal();
   loadLive();
   applyIdentity(L.identity());
   updateSend();
-  setInterval(function () { if (!document.hidden) loadReal(); }, 30000);
+  /* the app's API lane — resolves once, then the channel poll uses it */
+  V.api().then(function (base) {
+    state.apiBase = base;
+    loadChannel();
+    updateComposerAccess();
+  });
+  setInterval(function () { if (!document.hidden) loadReal(); }, 15000);
   setInterval(function () { if (!document.hidden) loadLive(); }, L.cfg.pollMs);
+  setInterval(function () { if (!document.hidden) loadChannel(); }, 5000);
   setInterval(function () {
     if (!document.hidden && L.identity()) L.heartbeat(L.identity(), false);
   }, 15000);
@@ -760,6 +954,7 @@
     if (!document.hidden) {
       loadReal();
       loadLive();
+      loadChannel();
       if (L.identity()) L.heartbeat(L.identity(), true);
     }
   });
