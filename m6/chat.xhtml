@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" data-veil-build="2026-10-05T22:46:43Z">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" data-veil-build="2026-10-05T22:59:14Z">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -607,7 +607,9 @@ window.VEILOS_SHARED_BASE="../site/";
   }
 
   function loadLive() {
-    L.fetchCdn().then(function (s) {
+    /* L.fetchRoom: the GitHub API first (fresh even when the CDN edge is
+       throttled), the CDN merge as fallback */
+    L.fetchRoom().then(function (s) {
       if (!s) { state.liveOk = false; return; }
       state.liveOk = true;
       state.liveUsers = s.users || {};

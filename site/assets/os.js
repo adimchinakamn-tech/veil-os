@@ -58,32 +58,44 @@
     }
     return tryNext();
   }
+  /* raw.githubusercontent serves straight from origin (~5 min edge
+     cache, CORS-open) — it stays fresh WITHOUT any purge, which matters
+     because jsDelivr throttles purges once we push often. */
+  var RAW_BASE = "https://raw.githubusercontent.com/ok5678765s/veil-os/";
+
   function dataOf(file) {
     var urls = [SHARED + "data/" + file, window.VEILOS.cdnData(file), window.VEILOS.repoData(file)];
     if (file === "latest.json") {
       /* the chat backup is purged on the CDN after every push, but a
          static host's same-origin copy can lag minutes behind (or sit
          frozen on the build that shipped) — and the old order tried
-         same-origin FIRST, so a stale 200 shadowed the fresh CDN copy
-         forever. Race both, keep whichever exportedAt is newer. */
-      var so = fetchJson([SHARED + "data/" + file]).catch(function () { return null; });
-      var cd = fetchJson([window.VEILOS.cdnData(file)]).catch(function () { return null; });
-      return Promise.all([so, cd]).then(function (both) {
-        var a = both[0], b = both[1];
-        if (!a && !b) return fetchJson([window.VEILOS.repoData(file)]);
-        if (!a) return b;
-        if (!b) return a;
-        var at = new Date(a.exportedAt || 0).getTime() || 0;
-        var bt = new Date(b.exportedAt || 0).getTime() || 0;
-        return bt > at ? b : a;
+         same-origin FIRST, so a stale 200 shadowed the fresh copies
+         forever. Race all three, keep whichever exportedAt is newest. */
+      var lanes = [
+        fetchJson([SHARED + "data/" + file]).catch(function () { return null; }),
+        fetchJson([window.VEILOS.cdnData(file)]).catch(function () { return null; }),
+        fetchJson([RAW_BASE + "main/site/data/" + file]).catch(function () { return null; }),
+      ];
+      return Promise.all(lanes).then(function (all) {
+        var best = null;
+        var bestAt = -1;
+        all.forEach(function (d) {
+          if (!d) return;
+          var t = new Date(d.exportedAt || 0).getTime() || 0;
+          if (t > bestAt) { bestAt = t; best = d; }
+        });
+        if (best) return best;
+        return fetchJson([window.VEILOS.repoData(file)]);
       });
     }
     if (file !== "chat-live.json") return fetchJson(urls);
     /* chat-live.json's live lane is the `presence` branch (main's copy is
-       the frozen legacy lane — old builds still write there). Read BOTH,
-       merge users by freshest lastSeen + messages by id, so the presence
-       estimate counts everyone no matter which lane they landed on. */
-    var live = "https://cdn.jsdelivr.net/gh/ok5678765s/veil-os@presence/site/data/chat-live.json";
+       the frozen legacy lane — old builds still write there). The primary
+       lane reads raw.githubusercontent (origin-fresh, purge-independent);
+       the legacy lane rides the usual url list. Read BOTH, merge users by
+       freshest lastSeen + messages by id, so the presence estimate counts
+       everyone no matter which lane they landed on. */
+    var live = RAW_BASE + "presence/site/data/chat-live.json";
     return fetchJson([live]).catch(function () { return null; }).then(function (p) {
       return fetchJson(urls).catch(function () { return null; }).then(function (l) {
         if (!p && !l) throw new Error("all sources failed");

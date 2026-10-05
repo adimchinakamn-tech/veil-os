@@ -216,6 +216,20 @@
       return mergeRooms(both[0] || emptyState(), both[1] || null);
     });
   }
+  /* THE room read: the GitHub API first (the source of truth — its
+     ETag-cached reads stay fresh no matter what the CDN edge is doing,
+     including when jsDelivr throttles our purges), the CDN merge as the
+     fallback for no-token builds. Every poller should use THIS. */
+  var apiDeadUntil = 0;
+  function fetchRoom() {
+    if (!hasToken() || Date.now() < apiDeadUntil) return fetchCdn();
+    return fetchApi().then(function (r) { return r.json; }).catch(function (e) {
+      /* token rejected (unbuilt copy / rotated token) — stop hammering
+         the API for an hour and read the CDN merge instead */
+      if (/github 40[13]/.test(String(e && e.message))) apiDeadUntil = Date.now() + 3600000;
+      return fetchCdn();
+    });
+  }
   /* conditional-GET cache — 304 responses are free on GitHub's rate
      limit, so the room can poll the source of truth every few seconds
      without ever hitting the cap */
@@ -300,31 +314,38 @@
 
   var writeLock = Promise.resolve();
   /* serialize writes from THIS tab; retries re-fetch to resolve conflicts
-     with other people writing at the same time */
+     with other people writing at the same time. A FAILED write must never
+     poison the chain — the rejection is handed to the caller, while the
+     stored lock settles fulfilled so the next write still runs (a stale
+     "Invalid username or password" used to brick every later send in the
+     tab until reload). */
   function writeState(mutator) {
     if (!hasToken()) return Promise.reject(new Error("no token"));
-    writeLock = writeLock.then(function () {
-      function attempt(n) {
-        return fetchApi().then(function (cur) {
-          var next = cleanState(JSON.parse(JSON.stringify(cur.json)));
-          var keep = mutator(next);
-          if (keep === false) return cur.json;
-          next.messages = (next.messages || []).slice(-CFG.maxMessages);
-          return apiPut(next, cur.sha).then(function () {
-            purge();
-            return next;
+    var run = writeLock
+      .catch(function () { /* previous failure — chain stays usable */ })
+      .then(function () {
+        function attempt(n) {
+          return fetchApi().then(function (cur) {
+            var next = cleanState(JSON.parse(JSON.stringify(cur.json)));
+            var keep = mutator(next);
+            if (keep === false) return cur.json;
+            next.messages = (next.messages || []).slice(-CFG.maxMessages);
+            return apiPut(next, cur.sha).then(function () {
+              purge();
+              return next;
+            });
+          }).catch(function (e) {
+            if (e && e.conflict && n < 4) {
+              return new Promise(function (res) { setTimeout(res, 500 + Math.random() * 700 * n); })
+                .then(function () { return attempt(n + 1); });
+            }
+            throw e;
           });
-        }).catch(function (e) {
-          if (e && e.conflict && n < 4) {
-            return new Promise(function (res) { setTimeout(res, 500 + Math.random() * 700 * n); })
-              .then(function () { return attempt(n + 1); });
-          }
-          throw e;
-        });
-      }
-      return attempt(0);
-    });
-    return writeLock;
+        }
+        return attempt(0);
+      });
+    writeLock = run.catch(function () { /* swallowed for the chain only */ });
+    return run;
   }
 
   function purge() {
@@ -471,7 +492,7 @@
         }
         found.lastSeen = new Date().toISOString();
       }).then(function () {
-        return fetchCdn().then(function (s) {
+        return fetchRoom().then(function (s) {
           var found = s && findUser(s, lower);
           var acc = {
             username: (found && found.username) || u,
@@ -546,7 +567,7 @@
     if (!identityAcc || !hasToken()) return Promise.resolve();
     var lower0 = String(identityAcc.username || "").toLowerCase();
     /* banned users don't get to look present */
-    return fetchCdn().then(function (s) {
+    return fetchRoom().then(function (s) {
       var u = s && findUser(s, lower0);
       if (u && u.banned) return null;
       var now = Date.now();
@@ -573,6 +594,7 @@
     saveIdentity: saveIdentity,
     clearIdentity: clearIdentity,
     fetchCdn: fetchCdn,
+    fetchRoom: fetchRoom,
     register: register,
     login: login,
     sendMessage: sendMessage,
