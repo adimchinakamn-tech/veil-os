@@ -1,10 +1,10 @@
 {
   "veil": "chat-backup",
   "version": 1,
-  "exportedAt": "2026-10-05T23:00:05.860Z",
+  "exportedAt": "2026-10-05T23:00:56.441Z",
   "counts": {
     "accounts": 10,
-    "messages": 24,
+    "messages": 26,
     "dms": 0
   },
   "accounts": [
@@ -103,7 +103,7 @@
       "role": "member",
       "muted": false,
       "banned": false,
-      "coins": 120,
+      "coins": 121,
       "tag": null,
       "tagColor": null,
       "pfpAccessory": null,
@@ -171,7 +171,7 @@
       "role": "member",
       "muted": false,
       "banned": false,
-      "coins": 101,
+      "coins": 102,
       "tag": null,
       "tagColor": null,
       "pfpAccessory": null,
@@ -442,6 +442,28 @@
       "replyToContent": null,
       "replyToUsername": null,
       "createdAt": "2026-10-05T22:59:54.081Z",
+      "editedAt": null
+    },
+    {
+      "id": "cmuvursfk0009q5wr2cljujdt",
+      "channelId": "sharelinks",
+      "accountId": "cmuu20ppm0005jkxecvmo7qpu",
+      "content": "https://drake.lonsdale-educational.co.uk/",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-10-05T23:00:16.689Z",
+      "editedAt": "2026-10-05T23:00:35.640Z"
+    },
+    {
+      "id": "cmuvurshs000dq5wr2eid5ose",
+      "channelId": "sharelinks",
+      "accountId": "cmuvu47pa0000q5if9redlq1p",
+      "content": "posted from the GIT page into sharelinks 1791241216427",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-10-05T23:00:16.768Z",
       "editedAt": null
     }
   ],
