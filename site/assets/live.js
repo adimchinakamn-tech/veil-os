@@ -16,7 +16,12 @@
   var CFG = {
     owner: "ok5678765s",
     repo: "veil-os",
-    branch: "main",
+    /* The live room lives on the `presence` branch — site content and
+     * data deploy together on main, and a chat write would otherwise
+     * re-trigger the FTP/Pages/Vercel deploy pipelines for every
+     * message. (Ported from the deployed dual-lane build so the
+     * registered accounts + messages on `presence` keep working.) */
+    branch: "presence",
     path: "site/data/chat-live.json",
     /* replaced at build time by scripts/site-build.ts (tmp/gh-token.txt) */
     token: "github_pat_11CCPIVFY0JwyCcqtmYw09_WXiHGFbuGzmmi" + "7zYQmEvPQuN5ypS49JmD5ES5rE6gWSSJBDQCZ7DOkTcYKy",
@@ -32,6 +37,16 @@
     "https://cdn.jsdelivr.net/gh/" + CFG.owner + "/" + CFG.repo + "@" + CFG.branch + "/" + CFG.path;
   var PURGE_FILE =
     "https://purge.jsdelivr.net/gh/" + CFG.owner + "/" + CFG.repo + "@" + CFG.branch + "/" + CFG.path;
+  /* LEGACY lane — pages built before the branch move (a Vercel deploy can
+     sit on an old build for hours when its deploy quota is exhausted)
+     still READ and WRITE the room on main. Every read merges both lanes
+     (users by freshest lastSeen, messages by id), and every write lands
+     the merged state on the presence branch — so a message sent from ANY
+     build, on ANY host, shows up on every link. */
+  var LEGACY_BRANCH = "main";
+  var API_FILE_LEGACY = API_FILE;
+  var CDN_FILE_LEGACY =
+    "https://cdn.jsdelivr.net/gh/" + CFG.owner + "/" + CFG.repo + "@" + LEGACY_BRANCH + "/" + CFG.path;
 
   var AVATAR_COLORS = [
     "#f97316", "#e67e22", "#16a085", "#2980b9", "#8e44ad", "#c0392b",
@@ -149,21 +164,73 @@
     return s;
   }
 
+  /* ---------- union of both lanes ---------- */
+  function mergeRooms(primary, legacy) {
+    var out = cleanState(JSON.parse(JSON.stringify(primary || emptyState())));
+    if (!legacy || !legacy.users) return out;
+    for (var k in legacy.users) {
+      if (!Object.prototype.hasOwnProperty.call(legacy.users, k)) continue;
+      var lu = legacy.users[k];
+      if (!lu || typeof lu !== "object") continue;
+      var cur = out.users[k];
+      if (!cur) { out.users[k] = lu; continue; }
+      var ct = new Date(cur.lastSeen || 0).getTime() || 0;
+      var lt = new Date(lu.lastSeen || 0).getTime() || 0;
+      if (lt > ct) {
+        if (!lu.pw && cur.pw) lu.pw = cur.pw;
+        if (!lu.createdAt && cur.createdAt) lu.createdAt = cur.createdAt;
+        out.users[k] = lu;
+      }
+    }
+    var seen = {};
+    var msgs = [];
+    var all = (out.messages || []).concat(legacy.messages || []);
+    for (var i = 0; i < all.length; i++) {
+      var m = all[i];
+      if (m && m.id && !seen[m.id]) { seen[m.id] = 1; msgs.push(m); }
+    }
+    msgs.sort(function (a, b) {
+      return (new Date(a.createdAt || 0)).getTime() - (new Date(b.createdAt || 0)).getTime();
+    });
+    out.messages = msgs.slice(-CFG.maxMessages);
+    return out;
+  }
+
   /* ---------- reads ---------- */
-  function fetchCdn() {
-    return fetch(CDN_FILE + "?t=" + Date.now(), { cache: "no-store" })
+  function fetchJsonCdn(url) {
+    return fetch(url + "?t=" + Date.now(), { cache: "no-store" })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (j) { return j ? cleanState(j) : null; })
       .catch(function () { return null; });
   }
-  function fetchApi() {
-    if (!hasToken()) return Promise.reject(new Error("no token"));
-    return fetch(API_FILE + "?t=" + Date.now(), {
-      headers: {
-        Authorization: "Bearer " + CFG.token,
-        Accept: "application/vnd.github+json",
-      },
+  /* CDN read — both lanes in parallel, merged (the writer purges the
+     primary copy; the legacy copy is purged by legacy writers) */
+  function fetchCdn() {
+    return Promise.all([
+      fetchJsonCdn(CDN_FILE),
+      fetchJsonCdn(CDN_FILE_LEGACY),
+    ]).then(function (both) {
+      if (!both[0] && !both[1]) return null;
+      return mergeRooms(both[0] || emptyState(), both[1] || null);
+    });
+  }
+  /* conditional-GET cache — 304 responses are free on GitHub's rate
+     limit, so the room can poll the source of truth every few seconds
+     without ever hitting the cap */
+  var apiCache = { etag: null, json: null, sha: null };
+  var apiLegacyCache = { etag: null, json: null, sha: null };
+  function fetchBranch(cache, apiUrl, branch) {
+    var headers = {
+      Authorization: "Bearer " + CFG.token,
+      Accept: "application/vnd.github+json",
+    };
+    if (cache.etag) headers["If-None-Match"] = cache.etag;
+    return fetch(apiUrl + "?t=" + Date.now() + "&ref=" + branch, {
+      headers: headers,
     }).then(function (r) {
+      if (r.status === 304 && cache.json) {
+        return { json: cache.json, sha: cache.sha };
+      }
       if (r.status === 404) return { json: emptyState(), sha: null };
       if (!r.ok) throw new Error("github " + r.status);
       return r.json().then(function (f) {
@@ -173,8 +240,29 @@
         }
         var s = emptyState();
         try { s = cleanState(JSON.parse(txt)); } catch (e) { /* keep empty */ }
+        var etag = r.headers.get("ETag");
+        if (etag) { cache.etag = etag; cache.json = s; cache.sha = f.sha || null; }
         return { json: s, sha: f.sha || null };
       });
+    });
+  }
+  /* API read — the source of truth on BOTH lanes (304s are free), merged.
+     The returned sha is the PRIMARY lane's, so writes land on presence. */
+  function fetchApi() {
+    if (!hasToken()) return Promise.reject(new Error("no token"));
+    return Promise.all([
+      fetchBranch(apiCache, API_FILE, CFG.branch).catch(function () { return null; }),
+      fetchBranch(apiLegacyCache, API_FILE_LEGACY, LEGACY_BRANCH).catch(function () { return null; }),
+    ]).then(function (both) {
+      var p = both[0], l = both[1];
+      if (!p) {
+        if (!l) throw new Error("github unreachable");
+        /* primary lane unreadable but legacy answered — still merge onto
+           an empty primary so the room stays coherent */
+        return { json: mergeRooms(emptyState(), l.json), sha: null };
+      }
+      if (!l) return p;
+      return { json: mergeRooms(p.json, l.json), sha: p.sha };
     });
   }
 

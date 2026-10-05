@@ -59,7 +59,43 @@
     return tryNext();
   }
   function dataOf(file) {
-    return fetchJson([SHARED + "data/" + file, window.VEILOS.cdnData(file), window.VEILOS.repoData(file)]);
+    var urls = [SHARED + "data/" + file, window.VEILOS.cdnData(file), window.VEILOS.repoData(file)];
+    if (file !== "chat-live.json") return fetchJson(urls);
+    /* chat-live.json's live lane is the `presence` branch (main's copy is
+       the frozen legacy lane — old builds still write there). Read BOTH,
+       merge users by freshest lastSeen + messages by id, so the presence
+       estimate counts everyone no matter which lane they landed on. */
+    var live = "https://cdn.jsdelivr.net/gh/ok5678765s/veil-os@presence/site/data/chat-live.json";
+    return fetchJson([live]).catch(function () { return null; }).then(function (p) {
+      return fetchJson(urls).catch(function () { return null; }).then(function (l) {
+        if (!p && !l) throw new Error("all sources failed");
+        if (!p) return l;
+        if (!l) return p;
+        var out = { users: {}, messages: [] };
+        var names = {};
+        [p, l].forEach(function (src) {
+          (src.messages || []).forEach(function (m) {
+            if (m && m.id && !names[m.id]) { names[m.id] = 1; out.messages.push(m); }
+          });
+        });
+        out.messages.sort(function (a, b) {
+          return new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
+        });
+        out.messages = out.messages.slice(-250);
+        [l, p].forEach(function (src) { /* presence wins ties (second) */
+          for (var k in (src.users || {})) {
+            var u = src.users[k];
+            if (!u) continue;
+            var cur = out.users[k];
+            if (!cur) { out.users[k] = u; continue; }
+            var ct = cur.lastSeen ? new Date(cur.lastSeen).getTime() : 0;
+            var nt = u.lastSeen ? new Date(u.lastSeen).getTime() : 0;
+            if (nt > ct) out.users[k] = u;
+          }
+        });
+        return out;
+      });
+    });
   }
   window.VEILOS.dataOf = dataOf;
 

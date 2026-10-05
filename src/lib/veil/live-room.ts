@@ -46,9 +46,16 @@ export interface LiveRoom {
   updatedAt?: string
 }
 
-const REPO = { owner: "ok5678765s", repo: "veil-os", branch: "main", file: "site/data/chat-live.json" }
+/* The live room lives on the `presence` branch (chat writes never touch
+ * main, so the FTP/Pages/Vercel deploy pipelines don't re-run per
+ * message). The legacy lane on `main` is merged on every read — pages
+ * built before the branch move and stale Vercel builds still read/write
+ * main, and their users + messages must survive the union. */
+const REPO = { owner: "ok5678765s", repo: "veil-os", branch: "presence", file: "site/data/chat-live.json" }
+const LEGACY_BRANCH = "main"
 const API_FILE = `https://api.github.com/repos/${REPO.owner}/${REPO.repo}/contents/${REPO.file}`
 const CDN_FILE = `https://cdn.jsdelivr.net/gh/${REPO.owner}/${REPO.repo}@${REPO.branch}/${REPO.file}`
+const CDN_FILE_LEGACY = `https://cdn.jsdelivr.net/gh/${REPO.owner}/${REPO.repo}@${LEGACY_BRANCH}/${REPO.file}`
 const PURGE_FILE = `https://purge.jsdelivr.net/gh/${REPO.owner}/${REPO.repo}@${REPO.branch}/${REPO.file}`
 
 const EMPTY_ROOM: LiveRoom = { users: {}, messages: [] }
@@ -83,9 +90,9 @@ function readLocalFile(): LiveRoom | null {
   }
 }
 
-async function readCdn(): Promise<LiveRoom | null> {
+async function readCdnLane(url: string): Promise<LiveRoom | null> {
   try {
-    const res = await fetch(`${CDN_FILE}?t=${Date.now()}`, {
+    const res = await fetch(`${url}?t=${Date.now()}`, {
       cache: "no-store",
       signal: AbortSignal.timeout(4000),
     })
@@ -96,12 +103,61 @@ async function readCdn(): Promise<LiveRoom | null> {
   }
 }
 
+/* Union of both lanes — users by freshest lastSeen (passwords and
+ * createdAt carried over when the legacy copy is newer), messages by
+ * id, ordered by createdAt. Mirrors live.js mergeRooms exactly so
+ * both sides always agree on the merged state. */
+function mergeRooms(primary: LiveRoom, legacy: LiveRoom | null | undefined): LiveRoom {
+  const out: LiveRoom = {
+    users: { ...(primary.users ?? {}) },
+    messages: [...(primary.messages ?? [])],
+    updatedAt: primary.updatedAt,
+  }
+  if (!legacy?.users) return out
+  for (const [k, lu] of Object.entries(legacy.users)) {
+    if (!lu || typeof lu !== "object") continue
+    const cur = out.users[k]
+    if (!cur) {
+      out.users[k] = lu
+      continue
+    }
+    const ct = Date.parse(cur.lastSeen ?? "") || 0
+    const lt = Date.parse(lu.lastSeen ?? "") || 0
+    if (lt > ct) {
+      if (!lu.pw && cur.pw) lu.pw = cur.pw
+      if (!lu.createdAt && cur.createdAt) lu.createdAt = cur.createdAt
+      out.users[k] = lu
+    }
+  }
+  const seen = new Set<string>()
+  const msgs: LiveMessage[] = []
+  for (const m of [...out.messages, ...(legacy.messages ?? [])]) {
+    if (m?.id && !seen.has(m.id)) {
+      seen.add(m.id)
+      msgs.push(m)
+    }
+  }
+  msgs.sort((a, b) => (Date.parse(a.createdAt ?? "") || 0) - (Date.parse(b.createdAt ?? "") || 0))
+  out.messages = msgs.slice(-250)
+  return out
+}
+
 /** The shared room, freshest copy available. Cached briefly so presence
  * beats and chat polls don't hammer anything. */
 export async function readLiveRoom(force = false): Promise<LiveRoom> {
   if (!force && readCache && Date.now() - readCache.at < READ_TTL) return readCache.room
-  let room = readLocalFile()
-  if (!room || Object.keys(room.users).length === 0) room = await readCdn()
+  /* both CDN lanes in parallel, merged — presence is the live source,
+   * main is the legacy lane old builds still write to */
+  const [p, l] = await Promise.all([readCdnLane(CDN_FILE), readCdnLane(CDN_FILE_LEGACY)])
+  let room: LiveRoom | null = p || l ? mergeRooms(p ?? EMPTY_ROOM, l) : null
+  if (!room || Object.keys(room.users).length === 0) {
+    /* CDN dark (offline box / jsDelivr hiccup) — the working-tree copy
+     * of main's file is a last-resort legacy lane */
+    const local = readLocalFile()
+    if (local && Object.keys(local.users).length > 0) {
+      room = mergeRooms(p ?? EMPTY_ROOM, local)
+    }
+  }
   room = room ?? EMPTY_ROOM
   readCache = { at: Date.now(), room }
   return room
@@ -165,15 +221,21 @@ export async function writeLiveRoom(mutator: (room: LiveRoom) => void): Promise<
   let lastErr: unknown = null
   for (let attempt = 0; attempt < 4; attempt++) {
     try {
-      const head = await fetch(API_FILE, {
-        headers: {
-          authorization: `Bearer ${token}`,
-          accept: "application/vnd.github+json",
-          "user-agent": "veil-os-live-bridge",
-        },
-        cache: "no-store",
-        signal: AbortSignal.timeout(8000),
-      })
+      /* head + legacy lane in parallel: the sha MUST be the presence
+       * branch's (writes land there), and the legacy lane is merged in
+       * so a ban/delete also covers users that only exist on main */
+      const [head, legacy] = await Promise.all([
+        fetch(`${API_FILE}?ref=${REPO.branch}&t=${Date.now()}`, {
+          headers: {
+            authorization: `Bearer ${token}`,
+            accept: "application/vnd.github+json",
+            "user-agent": "veil-os-live-bridge",
+          },
+          cache: "no-store",
+          signal: AbortSignal.timeout(8000),
+        }),
+        readCdnLane(CDN_FILE_LEGACY),
+      ])
       if (!head.ok) throw new Error(`contents fetch ${head.status}`)
       const meta = (await head.json()) as { sha?: string; content?: string }
       if (!meta.sha) throw new Error("contents fetch carried no sha")
@@ -185,6 +247,7 @@ export async function writeLiveRoom(mutator: (room: LiveRoom) => void): Promise<
       } catch {
         room = EMPTY_ROOM
       }
+      room = mergeRooms(room, legacy)
 
       mutator(room)
 
