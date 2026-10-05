@@ -412,7 +412,7 @@
         .catch(function () { return null; });
     });
   }
-  function linkWebsiteAccount(siteAcc, password) {
+  function linkWebsiteAccount(siteAcc, password, siteTok) {
     var lower = String(siteAcc.username || "").toLowerCase();
     return writeState(function (s) {
       var found = findUser(s, lower);
@@ -439,7 +439,10 @@
         via: "website",
       };
       saveIdentity(acc);
-      try { window.localStorage.setItem("veil:site-token", siteAcc.token || ""); } catch (e) { /* ignore */ }
+      /* the session token rides NEXT to the account in the login
+         response (j.token) — it powers posting in the website's other
+         channels from this page */
+      try { window.localStorage.setItem("veil:site-token", siteTok || ""); } catch (e) { /* ignore */ }
       return acc;
     });
   }
@@ -477,7 +480,7 @@
     /* 1 — the WEBSITE account (same credentials as the real app) */
     return siteLogin(u, p).then(function (j) {
       if (j && j.ok && j.account) {
-        return linkWebsiteAccount(j.account, p);
+        return linkWebsiteAccount(j.account, p, j.token);
       }
       /* 2 — the room's own account */
       return writeState(function (s) {

@@ -1,7 +1,7 @@
 {
   "veil": "chat-backup",
   "version": 1,
-  "exportedAt": "2026-10-05T22:59:14.841Z",
+  "exportedAt": "2026-10-05T23:00:05.860Z",
   "counts": {
     "accounts": 10,
     "messages": 24,
@@ -103,7 +103,7 @@
       "role": "member",
       "muted": false,
       "banned": false,
-      "coins": 118,
+      "coins": 120,
       "tag": null,
       "tagColor": null,
       "pfpAccessory": null,
@@ -153,7 +153,7 @@
       "bio": "",
       "role": "member",
       "muted": false,
-      "banned": false,
+      "banned": true,
       "coins": 102,
       "tag": null,
       "tagColor": null,
@@ -368,28 +368,6 @@
       "editedAt": null
     },
     {
-      "id": "cmuvmccfo000iq57t92vfyegf",
-      "channelId": "main",
-      "accountId": "cmuvmbetk000gq57t3uhjth1w",
-      "content": "/api/gif-file/ji6zzUZwNIuLS",
-      "replyTo": null,
-      "replyToContent": null,
-      "replyToUsername": null,
-      "createdAt": "2026-10-05T19:04:19.188Z",
-      "editedAt": null
-    },
-    {
-      "id": "cmuvmcyq4000mq57t4x7m9pp1",
-      "channelId": "main",
-      "accountId": "cmuvmbetk000gq57t3uhjth1w",
-      "content": "/api/gif-file/okfvUCpgArv3y",
-      "replyTo": null,
-      "replyToContent": null,
-      "replyToUsername": null,
-      "createdAt": "2026-10-05T19:04:48.076Z",
-      "editedAt": null
-    },
-    {
       "id": "cmuvqdapn0001q5du7e8lmww0",
       "channelId": "main",
       "accountId": "cmuu20ppm0005jkxecvmo7qpu",
@@ -442,6 +420,28 @@
       "replyToContent": null,
       "replyToUsername": null,
       "createdAt": "2026-10-05T21:10:01.314Z",
+      "editedAt": null
+    },
+    {
+      "id": "cmuvur18o0001q5wrzr9lq3w2",
+      "channelId": "sharelinks",
+      "accountId": "cmuu20ppm0005jkxecvmo7qpu",
+      "content": "Cherri: s3.amazonaws.com/cqqp/index.html s3.us-east-1.amazonaws.com/cqqp/index.html cqqp.s3.amazonaws.com/index.html cqqp.s3.us-east-1.amazonaws.com/index.html s3.dualstack.us-east-1.amazonaws.com/cqqp/index.html cqqp.s3.dualstack.us-east-1.amazonaws.com/index.html s3.amazonaws.com/37de/index.html s3.us-east-1.amazonaws.com/37de/index.html 37de.s3.amazonaws.com/index.html 37de.s3.us-east-1.amazonaws.com/index.html s3.dualstack.us-east-1.amazonaws.com/37de/index.html 37de.s3.dualstack.us-east-1.amazonaws.com/index.html s3.amazonaws.com/8t14/index.html s3.us-east-1.amazonaws.com/8t14/index.html 8t14.s3.amazonaws.com/index.html 8t14.s3.us-east-1.amazonaws.com/index.html s3.dualstack.us-east-1.amazonaws.com/8t14/index.html 8t14.s3.dualstack.us-east-1.amazonaws.com/index.html Lucide: s3.amazonaws.com/bull33goat/index.html s3.amazonaws.com/bull33goat/study.html s3.amazonaws.com/englishtutoring/index.html s3.amazonaws.com/englishtutoring/study.html s3.amazonaws.com/nizika/study.html s3.amazonaws.com/vopaso/study.html s3.amazonaws.com/lotoso/study.html s3.amazonaws.com/ridoti/study.html s3.amazonaws.com/tabido/study.html s3.amazonaws.com/dimisa/study.html Aether: aetherk12.s3-fips.us-east-1.amazonaws.com/study.html aetherk12.s3-fips.dualstack.us-east-1.amazonaws.com/study.html advancedalg2.s3-fips.us-east-1.amazonaws.com/study.html advancedalg2.s3-fips.dualstack.us-east-1.amazonaws.com/study.html schoolcdn.s3-fips.us-east-1.amazonaws.com/study.html schoolcdn.s3-fips.dualstack.us-east-1.amazonaws.com/study.html satguide.s3-fips.us-east-1.amazonaws.com/study.html satguide.s3-fips.dualstack.us-east-1.amazonaws.com/study.html s3.dualstack.us-east-1.amazonaws.com/aetherk12/study.html s3.dualstack.us-east-1.amazonaws.com/satguide/study.html",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-10-05T22:59:41.448Z",
+      "editedAt": null
+    },
+    {
+      "id": "cmuvurazl0005q5wrrfyqmwzn",
+      "channelId": "sharelinks",
+      "accountId": "cmuu20ppm0005jkxecvmo7qpu",
+      "content": "https://s3.amazonaws.com/glimstudy/index.html https://s3.us-east-1.amazonaws.com/glimstudy/index.html https://s3.dualstack.us-east-1.amazonaws.com/glimstudy/index.html",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-10-05T22:59:54.081Z",
       "editedAt": null
     }
   ],
