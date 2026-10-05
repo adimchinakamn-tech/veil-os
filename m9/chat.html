@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-veil-build="2026-10-05T22:42:21Z">
+<html lang="en" data-veil-build="2026-10-05T22:46:43Z">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -606,11 +606,18 @@
       state.liveOk = true;
       state.liveUsers = s.users || {};
       state.liveMsgs = (s.messages || []).map(function (m) { return L.msgToRow(m); });
-      /* my identity must still exist in the room — otherwise sign back in */
+      /* my identity must still exist in the room — otherwise sign back in.
+         A JUST-created identity may not be on the CDN yet (the purge
+         lands a beat after the write), so fresh sign-ins get a grace
+         window instead of an insta-logout. */
       var id = L.identity();
       if (id && !L.findUser(s, id.username)) {
-        L.clearIdentity();
-        applyIdentity(null);
+        if (Date.now() - lastAuthAt < 120000) {
+          applyIdentity(id);
+        } else {
+          L.clearIdentity();
+          applyIdentity(null);
+        }
       } else if (id) {
         applyIdentity(id);
       }
@@ -620,6 +627,7 @@
   }
 
   /* ---- identity + gate ---- */
+  var lastAuthAt = 0; /* a fresh sign-in survives CDN lag (see loadLive) */
   function applyIdentity(idAcc) {
     var gate = document.getElementById("auth-gate");
     var meAvatar = document.getElementById("me-avatar");
@@ -702,6 +710,7 @@
     gateSpin.classList.remove("hidden");
     gateError.classList.add("hidden");
     var done = function (acc) {
+      lastAuthAt = Date.now();
       gateSpin.classList.add("hidden");
       gateSubmit.disabled = false;
       gateUser.value = "";
