@@ -1,9 +1,9 @@
 {
   "veil": "chat-backup",
   "version": 1,
-  "exportedAt": "2026-10-05T22:09:40.009Z",
+  "exportedAt": "2026-10-05T22:15:36.237Z",
   "counts": {
-    "accounts": 9,
+    "accounts": 10,
     "messages": 24,
     "dms": 0
   },
@@ -160,6 +160,23 @@
       "pfpAccessory": null,
       "legacy": false,
       "createdAt": "2026-10-05T19:03:35.625Z"
+    },
+    {
+      "id": "cmuvt5oss0000q5u82mjqjzu4",
+      "username": "editverify1",
+      "displayName": "editverify1",
+      "avatarColor": "#2980b9",
+      "avatarImage": null,
+      "bio": "",
+      "role": "member",
+      "muted": false,
+      "banned": false,
+      "coins": 100,
+      "tag": null,
+      "tagColor": null,
+      "pfpAccessory": null,
+      "legacy": false,
+      "createdAt": "2026-10-05T22:15:05.930Z"
     }
   ],
   "messages": [
