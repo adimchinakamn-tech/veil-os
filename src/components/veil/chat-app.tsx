@@ -84,6 +84,8 @@ import {
   RotateCcw,
   CloudOff,
   Pencil,
+  SmilePlus,
+  Heart,
 } from "lucide-react"
 
 import { BackdropVideo } from "@/components/veil/backdrop-video"
@@ -145,7 +147,15 @@ type ChatMessage = {
   /** set when the author edited the message (the live room carries it;
    * rendered as a small "(edited)" next to the content) */
   editedAt?: string | null
+  /** emoji reaction chips — { emoji, usernames } aggregated server-side */
+  reactions?: ReactionSummary[]
   account: ChatMessageAccount
+}
+
+type ReactionSummary = {
+  emoji: string
+  /** account ids of everyone who used this emoji — drives counts + "mine" */
+  usernames: string[]
 }
 
 type PresenceUser = {
@@ -162,6 +172,14 @@ type DM = {
   isGroup: boolean
   createdAt: string
   members: ChatAccount[]
+}
+
+/* A pending friend request — incoming (they asked us) or outgoing (we
+ * asked them). Friendships only form when the recipient accepts. */
+type FriendRequestRow = {
+  id: string
+  user: ChatAccount
+  createdAt: string
 }
 
 type ShopItem =
@@ -235,6 +253,11 @@ const EMOJI_SET = [
   "♣️", "👑", "💎", "⚡",
 ]
 
+/* The quick-reaction bar — the SAME set the server accepts (chat-reactions
+ * route whitelists these, so a tampered client can't store arbitrary
+ * strings). Keep both lists in sync. */
+const QUICK_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🔥", "🎉", "👎"]
+
 const SPOTIFY_ARTIST_ID = "2e53aHBQdCMKWqHDuyJsjC"
 
 // ---------------------------------------------------------------------------
@@ -267,6 +290,49 @@ function roleColor(account: { role: ChatRole; username: string }): string {
 
 function displayName(account: { displayName: string; username: string }): string {
   return account.displayName?.trim() || account.username
+}
+
+/** RegExp.escape for the mention matcher. */
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
+
+/** Does this message text @-mention the given username (or @everyone)? */
+function mentionsUser(content: string, username: string): boolean {
+  if (!content) return false
+  if (/(^|[^\w@])@everyone([^\w]|$)/i.test(content)) return true
+  try {
+    return new RegExp(
+      `(^|[^\\w@])@${escapeRegExp(username)}([^\\w]|$)`,
+      "i",
+    ).test(content)
+  } catch {
+    return false
+  }
+}
+
+/** Pure reaction-delta applier — shared by the optimistic toggle and the
+ * live socket handler so both compute identical state shapes. */
+function applyReactionDelta(
+  msg: ChatMessage,
+  emoji: string,
+  add: boolean,
+  accountId: string,
+): ChatMessage {
+  const list: ReactionSummary[] = (msg.reactions || []).map((r) => ({
+    emoji: r.emoji,
+    usernames: [...r.usernames],
+  }))
+  const idx = list.findIndex((r) => r.emoji === emoji)
+  if (add) {
+    if (idx === -1) list.push({ emoji, usernames: [accountId] })
+    else if (!list[idx].usernames.includes(accountId))
+      list[idx].usernames.push(accountId)
+  } else if (idx !== -1) {
+    list[idx].usernames = list[idx].usernames.filter((u) => u !== accountId)
+    if (list[idx].usernames.length === 0) list.splice(idx, 1)
+  }
+  return { ...msg, reactions: list }
 }
 
 function formatTime(iso: string | number | Date): string {
@@ -2057,6 +2123,185 @@ function TransferModal({
 }
 
 // ---------------------------------------------------------------------------
+// Invite people to a group chat — pick friends by checkbox and/or type
+// @usernames. Current members are shown as chips so it's obvious who's
+// already in (and that inviting a 3rd person into a plain DM turns it
+// into a group automatically).
+// ---------------------------------------------------------------------------
+
+function InviteModal({
+  dm,
+  friends,
+  me,
+  onInvite,
+  onClose,
+}: {
+  dm: DM
+  friends: ChatAccount[]
+  me: ChatAccount
+  onInvite: (dm: DM, targets: string[], done: () => void) => Promise<void>
+  onClose: () => void
+}) {
+  const [picked, setPicked] = useState<Record<string, boolean>>({})
+  const [userInput, setUserInput] = useState("")
+  const [busy, setBusy] = useState(false)
+
+  const memberNames = new Set(
+    dm.members.map((m) => m.username.toLowerCase()),
+  )
+  const candidates = friends.filter(
+    (f) => !memberNames.has(f.username.toLowerCase()),
+  )
+  const typed = userInput
+    .split(/[\s,]+/)
+    .map((s) => s.trim().replace(/^@/, ""))
+    .filter(Boolean)
+    .filter((s) => !memberNames.has(s.toLowerCase()))
+  const pickedNames = Object.keys(picked).filter((u) => picked[u])
+  const targets = [...new Set([...pickedNames, ...typed])]
+  const label =
+    dm.name ||
+    dm.members
+      .filter((m) => m.id !== me.id)
+      .map(displayName)
+      .join(", ") ||
+    "this conversation"
+
+  const invite = async () => {
+    if (targets.length === 0 || busy) return
+    setBusy(true)
+    await onInvite(dm, targets, () => {
+      setPicked({})
+      setUserInput("")
+    })
+    setBusy(false)
+  }
+
+  return (
+    <ModalShell
+      title={dm.isGroup ? `Invite to ${label}` : "Invite — make it a group"}
+      onClose={onClose}
+    >
+      <div className="space-y-3">
+        {/* Current members */}
+        <div>
+          <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-white/40">
+            In here now — {dm.members.length}
+          </p>
+          <div className="flex flex-wrap gap-1">
+            {dm.members.map((m) => (
+              <span
+                key={m.id}
+                className={`flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[11px] ${
+                  m.id === me.id
+                    ? "border-orange-400/40 bg-orange-400/10 text-orange-200"
+                    : "border-white/10 bg-white/[0.04] text-white/70"
+                }`}
+              >
+                <span
+                  className="grid h-4 w-4 place-items-center rounded-full text-[8px] font-bold text-white"
+                  style={{ backgroundColor: m.avatarColor }}
+                >
+                  {m.username[0]?.toUpperCase()}
+                </span>
+                {m.id === me.id ? "you" : displayName(m)}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Friends picker */}
+        {candidates.length > 0 && (
+          <div>
+            <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-white/40">
+              Your friends
+            </p>
+            <div className="veil-scroll-slim max-h-40 space-y-0.5 overflow-y-auto rounded-lg border border-white/10">
+              {candidates.map((f) => (
+                <label
+                  key={f.id}
+                  className="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-xs hover:bg-white/5"
+                >
+                  <input
+                    type="checkbox"
+                    checked={!!picked[f.username]}
+                    onChange={(e) =>
+                      setPicked((prev) => ({
+                        ...prev,
+                        [f.username]: e.target.checked,
+                      }))
+                    }
+                    className="accent-orange-400"
+                  />
+                  <span
+                    className="grid h-5 w-5 shrink-0 place-items-center rounded-full text-[9px] font-bold text-white"
+                    style={{ backgroundColor: f.avatarColor }}
+                  >
+                    {f.username[0]?.toUpperCase()}
+                  </span>
+                  <span className="flex-1 truncate text-white/80">
+                    {displayName(f)}
+                  </span>
+                  <span className="text-[10px] text-white/30">@{f.username}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* @username entry */}
+        <div>
+          <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-white/40">
+            Or add by username
+          </p>
+          <input
+            value={userInput}
+            onChange={(e) => setUserInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault()
+                void invite()
+              }
+            }}
+            placeholder="@username, @username…"
+            autoCapitalize="none"
+            className="w-full rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-sm outline-none focus:border-orange-400/50"
+          />
+        </div>
+
+        {targets.length > 0 && (
+          <p className="text-[11px] text-emerald-300/80">
+            {targets.length} person{targets.length === 1 ? "" : "s"} selected
+            {dm.isGroup ? "" : " — this DM becomes a group automatically"}.
+          </p>
+        )}
+
+        <div className="flex justify-end gap-2">
+          <button
+            onClick={onClose}
+            className="rounded-lg px-3 py-1.5 text-sm text-white/60 hover:bg-white/10"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => void invite()}
+            disabled={busy || targets.length === 0}
+            className="flex items-center gap-1.5 rounded-lg bg-orange-400 px-3 py-1.5 text-sm font-semibold text-black disabled:opacity-40"
+          >
+            {busy ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <UserPlus className="h-3.5 w-3.5" />
+            )}
+            Invite {targets.length > 0 ? `(${targets.length})` : ""}
+          </button>
+        </div>
+      </div>
+    </ModalShell>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Pinned messages + Notifications panels (right side)
 // ---------------------------------------------------------------------------
 
@@ -2117,21 +2362,28 @@ function PinnedPanel({
 
 type ChatNotification = {
   id: string
-  kind: "message" | "mention" | "coin" | "system"
+  kind: "message" | "mention" | "coin" | "system" | "friend_request" | "friend_accepted"
   title: string
   body: string
   ts: number
   read?: boolean
+  /** friend_request notifications carry the request id so the panel can
+   *  render live Accept/Decline buttons right inside the bell dropdown. */
+  requestId?: string
 }
 
 function NotificationsPanel({
   notifications,
   onClear,
   onClose,
+  onFriendAccept,
+  onFriendDecline,
 }: {
   notifications: ChatNotification[]
   onClear: () => void
   onClose: () => void
+  onFriendAccept?: (requestId: string) => void
+  onFriendDecline?: (requestId: string) => void
 }) {
   return (
     <motion.div
@@ -2166,14 +2418,40 @@ function NotificationsPanel({
               className={`rounded-lg border p-2 text-xs ${
                 n.read
                   ? "border-white/5 bg-black/20"
-                  : "border-orange-400/20 bg-orange-400/5"
+                  : n.kind === "friend_request"
+                    ? "border-emerald-400/25 bg-emerald-400/5"
+                    : "border-orange-400/20 bg-orange-400/5"
               }`}
             >
               <div className="flex items-center justify-between">
-                <span className="font-medium text-white">{n.title}</span>
+                <span className="flex items-center gap-1 font-medium text-white">
+                  {n.kind === "friend_request" && (
+                    <UserPlus className="h-3 w-3 text-emerald-300" />
+                  )}
+                  {n.kind === "friend_accepted" && (
+                    <Check className="h-3 w-3 text-emerald-300" />
+                  )}
+                  {n.title}
+                </span>
                 <span className="text-white/40">{formatTime(n.ts)}</span>
               </div>
               <p className="mt-0.5 text-white/70">{n.body}</p>
+              {n.kind === "friend_request" && n.requestId && !n.read && (
+                <div className="mt-1.5 flex gap-1.5">
+                  <button
+                    onClick={() => onFriendAccept?.(n.requestId!)}
+                    className="flex flex-1 items-center justify-center gap-1 rounded-md bg-emerald-500/90 px-2 py-1 text-[11px] font-semibold text-black hover:bg-emerald-400"
+                  >
+                    <Check className="h-3 w-3" /> Accept
+                  </button>
+                  <button
+                    onClick={() => onFriendDecline?.(n.requestId!)}
+                    className="flex-1 rounded-md border border-white/10 px-2 py-1 text-[11px] font-medium text-white/60 hover:bg-white/10 hover:text-white"
+                  >
+                    Decline
+                  </button>
+                </div>
+              )}
             </div>
           ))
         )}
@@ -3185,6 +3463,7 @@ const MessageRow = memo(function MessageRow({
   editing,
   editDraft,
   editBusy,
+  myId,
   onReply,
   onPin,
   onDelete,
@@ -3193,6 +3472,7 @@ const MessageRow = memo(function MessageRow({
   onEditSave,
   onEditCancel,
   onOpenProfile,
+  onReact,
 }: {
   msg: ChatMessage
   prev?: ChatMessage
@@ -3201,6 +3481,7 @@ const MessageRow = memo(function MessageRow({
   editing: boolean
   editDraft: string
   editBusy: boolean
+  myId: string
   onReply: (msg: ChatMessage) => void
   onPin: (msg: ChatMessage) => void
   onDelete: (msg: ChatMessage) => void
@@ -3209,8 +3490,10 @@ const MessageRow = memo(function MessageRow({
   onEditSave: () => void
   onEditCancel: () => void
   onOpenProfile: (accountId: string) => void
+  onReact: (msg: ChatMessage, emoji: string) => void
 }) {
   const editRef = useRef<HTMLTextAreaElement | null>(null)
+  const [showReactBar, setShowReactBar] = useState(false)
   // Group with previous message if same author within 5 minutes (and the
   // same day — the divider always starts a fresh group).
   const grouped =
@@ -3357,8 +3640,66 @@ const MessageRow = memo(function MessageRow({
             </>
           )}
         </div>
+        {/* Reaction chips — click to toggle, orange ring when it's yours. */}
+        {(msg.reactions?.length ?? 0) > 0 && !editing && (
+          <div className="mt-1 flex flex-wrap gap-1">
+            {msg.reactions!.map((r) => {
+              const mine = r.usernames.includes(myId)
+              return (
+                <button
+                  key={r.emoji}
+                  type="button"
+                  onClick={() => onReact(msg, r.emoji)}
+                  title={
+                    mine
+                      ? `You reacted ${r.emoji} — click to remove`
+                      : `React ${r.emoji}`
+                  }
+                  aria-label={`${r.emoji} ${r.usernames.length} reaction${r.usernames.length === 1 ? "" : "s"}${mine ? ", including you" : ""}`}
+                  className={`flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[11px] leading-none transition-colors ${
+                    mine
+                      ? "border-orange-400/60 bg-orange-400/15 text-orange-200"
+                      : "border-white/10 bg-white/[0.05] text-white/60 hover:border-white/20 hover:bg-white/10"
+                  }`}
+                >
+                  <span className="text-[12px] leading-none">{r.emoji}</span>
+                  <span className="font-semibold tabular-nums">{r.usernames.length}</span>
+                </button>
+              )
+            })}
+          </div>
+        )}
       </div>
       <div className="absolute right-2 top-0 hidden items-center gap-0.5 rounded-md border border-white/10 bg-[#1c1c34] px-1 py-0.5 text-white/70 shadow-lg group-hover:flex">
+        <div className="relative">
+          <button
+            onClick={() => setShowReactBar((s) => !s)}
+            className="rounded p-1 hover:bg-white/10"
+            title="Add reaction"
+            aria-label="Add reaction"
+          >
+            <SmilePlus className="h-3.5 w-3.5" />
+          </button>
+          {showReactBar && (
+            <div className="absolute right-0 top-8 z-30 flex gap-0.5 rounded-lg border border-white/10 bg-[#1c1c34] p-1 shadow-xl">
+              {QUICK_REACTIONS.map((e) => (
+                <button
+                  key={e}
+                  type="button"
+                  onClick={() => {
+                    onReact(msg, e)
+                    setShowReactBar(false)
+                  }}
+                  className="grid h-7 w-7 place-items-center rounded-md text-base leading-none transition-transform hover:scale-125 hover:bg-white/10"
+                  title={`React ${e}`}
+                  aria-label={`React ${e}`}
+                >
+                  {e}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         <button
           onClick={() => onReply(msg)}
           className="rounded p-1 hover:bg-white/10"
@@ -3530,10 +3871,20 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                 changed = true
               }
             }
-            /* rows that vanished (deleted elsewhere) drop out too */
+            /* rows that vanished (deleted elsewhere) drop out too — EXCEPT
+             * rows older than the fetch window (a "load older" prepend):
+             * they're simply beyond the latest-100 page the refetch saw,
+             * not deleted. */
             const keep = new Set(fresh.map((m) => m.id))
+            const freshOldest =
+              fresh.length > 0
+                ? new Date(fresh[0].createdAt).getTime()
+                : Number.POSITIVE_INFINITY
             const merged = [...byId.values()].filter(
-              (m) => keep.has(m.id) || m.id.startsWith("lv-"),
+              (m) =>
+                keep.has(m.id) ||
+                m.id.startsWith("lv-") ||
+                new Date(m.createdAt).getTime() < freshOldest,
             )
             if (!changed && merged.length === prev.length) return prev
             merged.sort(
@@ -3668,10 +4019,35 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
   const [friends, setFriends] = useState<ChatAccount[]>([])
   const [showFriendMenu, setShowFriendMenu] = useState(false)
   const [friendTarget, setFriendTarget] = useState("")
+  /* Friend requests: incoming (waiting on US) + outgoing (waiting on
+   * THEM) + a busy flag so double-clicks can't double-send. */
+  const [friendRequestsIn, setFriendRequestsIn] = useState<FriendRequestRow[]>([])
+  const [friendRequestsOut, setFriendRequestsOut] = useState<FriendRequestRow[]>([])
+  const [friendBusy, setFriendBusy] = useState(false)
   const [dmTarget, setDmTarget] = useState("")
   /* True while a channel switch's first fetch is in flight — drives the
    * slim loading bar instead of wiping the message list to empty. */
   const [channelLoading, setChannelLoading] = useState(false)
+
+  /* ---- Group chats: creation form (channel switcher), invite modal,
+   * rename modal + leave confirm (header). ---- */
+  const [showGroupMenu, setShowGroupMenu] = useState(false)
+  const [groupName, setGroupName] = useState("")
+  const [groupPicked, setGroupPicked] = useState<Record<string, boolean>>({})
+  const [groupUserInput, setGroupUserInput] = useState("")
+  const [creatingGroup, setCreatingGroup] = useState(false)
+  const [showInvite, setShowInvite] = useState(false)
+  const [showRename, setShowRename] = useState(false)
+  const [renameDraft, setRenameDraft] = useState("")
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false)
+
+  /* ---- Unread badges per channel/DM + mention pings. Keys are channel
+   * ids; cleared when the channel is opened. ---- */
+  const [unread, setUnread] = useState<Record<string, number>>({})
+
+  /* ---- "Load older" pagination state. ---- */
+  const [hasMoreOlder, setHasMoreOlder] = useState(false)
+  const [loadingOlder, setLoadingOlder] = useState(false)
 
   // Extensions
   const [extensions, setExtensions] = useState<ExtensionState>(DEFAULT_EXTENSIONS)
@@ -3685,6 +4061,19 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
   accountRef.current = account
   const messagesRef = useRef<ChatMessage[]>(messages)
   messagesRef.current = messages
+  /* Live DM list mirror — the socket handlers (unread badges, mention
+   * labels, dm_removed) need the CURRENT dms without re-subscribing. */
+  const dmsRef = useRef<DM[]>(dms)
+  dmsRef.current = dms
+  /* Rooms silently watched (unread badges) — replayed after a socket
+   * reconnect so cross-channel updates resume without a reload. */
+  const watchedRoomsRef = useRef<Set<string>>(new Set())
+  /* Late-bound refreshDms (defined below the socket effect) — dm_added /
+   * dm_updated handlers call it through this ref. */
+  const refreshDmsRef = useRef<() => void>(() => {})
+  /* Late-bound refreshFriends — the friend_request / friend_accepted
+   * socket handlers (defined above refreshFriends) call it via this ref. */
+  const refreshFriendsRef = useRef<() => void>(() => {})
 
   // Live mirror of the members list — socket messages resolve the author's
   // real role/tag from here (the relay payload carries no role).
@@ -3892,6 +4281,11 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
       // IGNORES the client-claimed fields (anti-impersonation).
       socket.emit("identify", { token })
       socket.emit("subscribe", { channelId: channelIdRef.current })
+      // Replay the silent watches (every channel + DM) — a reconnect drops
+      // room membership, and unread badges + live DM rows depend on them.
+      for (const room of watchedRoomsRef.current) {
+        socket.emit("watch", { channelId: room })
+      }
       // Backfill after a RE-connect: anything sent while the socket was
       // down arrives via a silent refetch + id-union merge, so the live
       // feed never shows gaps (previously needed a page reload).
@@ -3938,10 +4332,55 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
       } | null
       ts: number
     }) => {
-      if (!data.id || data.channelId !== channelIdRef.current) return
+      if (!data.id || !data.account) return
+      /* Not the active channel → unread badge (+ mention ping if the text
+       * @-mentions us). The row itself isn't loaded here — it appears when
+       * the channel is opened (the fetch runs then). */
+      if (data.channelId !== channelIdRef.current) {
+        if (data.account.accountId === accountRef.current?.id) return
+        setUnread((prev) => ({
+          ...prev,
+          [data.channelId!]: (prev[data.channelId!] || 0) + 1,
+        }))
+        const me = accountRef.current
+        if (me && mentionsUser(data.content || "", me.username)) {
+          const dm = dmsRef.current.find((d) => d.id === data.channelId)
+          const where =
+            dm?.name ||
+            dm?.members
+              .filter((m) => m.id !== me.id)
+              .map(displayName)
+              .join(", ") ||
+            `#${data.channelId}`
+          setNotifications((prev) =>
+            [
+              {
+                id: Math.random().toString(36).slice(2),
+                kind: "mention",
+                title: `${displayName(data.account!)} mentioned you`,
+                body: `in ${where}: ${(data.content || "").slice(0, 80)}`,
+                ts: Date.now(),
+                read: false,
+              } as ChatNotification,
+              ...prev,
+            ].slice(0, 30),
+          )
+          toast(`${displayName(data.account!)} mentioned you in ${where}`, "ok")
+          if (extensions.notification_sound) {
+            try {
+              const audio = new Audio(
+                "data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=",
+              )
+              void audio.play().catch(() => {})
+            } catch {
+              /* ignore */
+            }
+          }
+        }
+        return
+      }
       // Skip if already present (we add optimistically on send).
       if (messagesRef.current.some((m) => m.id === data.id)) return
-      if (!data.account) return
       // Resolve the author's live role/tag from the members list — the relay
       // payload carries none, so otherwise every live message would render as
       // a plain member and mods/owner would lose their badge until reload.
@@ -3998,8 +4437,10 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
       channelId: string
       account: { accountId: string; username: string; displayName: string } | null
     }) => {
-      if (!data.account || data.channelId !== channelIdRef.current) return
+      if (!data.account) return
       if (data.account.accountId === accountRef.current?.id) return
+      /* Store per-channel (not just the active one) — the DM/channel rows
+       * in the switcher show a live "typing…" hint too. */
       const acc = data.account
       setTypingUsers((prev) => {
         const list = prev[data.channelId] || []
@@ -4024,7 +4465,7 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
       channelId: string
       account: { username: string } | null
     }) => {
-      if (!data.account || data.channelId !== channelIdRef.current) return
+      if (!data.account) return
       setTypingUsers((prev) => {
         const list = prev[data.channelId] || []
         return {
@@ -4068,6 +4509,168 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
       if (data.channelId !== channelIdRef.current) return
       setPresence(data.users || [])
     })
+
+    /* Emoji reactions from other viewers — patch the loaded copy (active
+     * channel rows + pinned copies) with the same pure delta the local
+     * toggle uses, so chips land live without a refetch. */
+    socket.on("reaction", (data: {
+      channelId: string
+      messageId: string
+      emoji: string
+      added: boolean
+      account: { accountId: string; username: string; displayName: string }
+    }) => {
+      if (!data.messageId || !data.emoji || !data.account) return
+      if (data.account.accountId === accountRef.current?.id) return // own echo
+      const patch = (m: ChatMessage) =>
+        m.id === data.messageId
+          ? applyReactionDelta(m, data.emoji, data.added, data.account!.accountId)
+          : m
+      setMessages((prev) =>
+        prev.some((m) => m.id === data.messageId)
+          ? prev.map(patch)
+          : prev,
+      )
+      setPinned((prev) =>
+        prev.some((m) => m.id === data.messageId) ? prev.map(patch) : prev,
+      )
+    })
+
+    /* Group lifecycle — driven by the API layer through the relay's
+     * per-user rooms / group rooms. */
+    socket.on("dm_added", (data: {
+      dmId: string
+      name: string | null
+      invitedBy: string
+      members: number
+    }) => {
+      refreshDmsRef.current()
+      const label = data.name || `a group chat (${data.members} members)`
+      setNotifications((prev) =>
+        [
+          {
+            id: Math.random().toString(36).slice(2),
+            kind: "system" as const,
+            title: "Added to a group",
+            body: `@${data.invitedBy} added you to ${label}.`,
+            ts: Date.now(),
+            read: false,
+          },
+          ...prev,
+        ].slice(0, 30),
+      )
+      toast(`@${data.invitedBy} added you to ${label}!`, "ok")
+    })
+
+    socket.on("dm_updated", (data: {
+      dmId: string
+      reason: "invite" | "leave" | "rename"
+      invited?: string[]
+      invitedBy?: string
+      left?: string
+      name?: string
+      by?: string
+    }) => {
+      refreshDmsRef.current()
+      if (data.reason === "invite" && data.invited?.length) {
+        toast(`@${data.invited.join(", @")} joined the group.`, "ok")
+      } else if (data.reason === "leave" && data.left) {
+        toast(`@${data.left} left the group.`, "ok")
+      } else if (data.reason === "rename" && data.name) {
+        toast(`Group renamed to "${data.name}".`, "ok")
+      }
+    })
+
+    socket.on("dm_removed", (data: { dmId: string; reason: string }) => {
+      setDms((prev) => prev.filter((d) => d.id !== data.dmId))
+      if (channelIdRef.current === data.dmId) {
+        setChannelId("main")
+        toast("That conversation is gone — back to #general.", "ok")
+      }
+    })
+
+    /* Friend requests — someone wants to be our friend. Refresh the
+     * pending list, ring the bell (with live Accept/Decline buttons in
+     * the notification itself) and play the notification sound. */
+    socket.on(
+      "friend_request",
+      (data: {
+        requestId: string
+        from: {
+          id: string
+          username: string
+          displayName: string
+          avatarColor: string
+          avatarImage: string | null
+        }
+      }) => {
+        refreshFriendsRef.current()
+        const who = data.from?.displayName || data.from?.username || "Someone"
+        setNotifications((prev) =>
+          [
+            {
+              id: Math.random().toString(36).slice(2),
+              kind: "friend_request" as const,
+              title: "Friend request",
+              body: `@${data.from?.username || who} wants to be your friend.`,
+              ts: Date.now(),
+              read: false,
+              requestId: data.requestId,
+            } as ChatNotification,
+            ...prev,
+          ].slice(0, 30),
+        )
+        toast(`@${data.from?.username || who} sent you a friend request!`, "ok")
+        if (extensions.notification_sound) {
+          try {
+            const audio = new Audio(
+              "data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=",
+            )
+            void audio.play().catch(() => {})
+          } catch {
+            /* ignore */
+          }
+        }
+      },
+    )
+
+    /* Our request was accepted (or the mutual handshake fired) — we're
+     * friends now. Refresh the list so they appear instantly. */
+    socket.on(
+      "friend_accepted",
+      (data: {
+        by: string
+        friend: { id: string; username: string; displayName: string }
+        mutual?: boolean
+      }) => {
+        refreshFriendsRef.current()
+        const who = data.by || data.friend?.username || "someone"
+        setNotifications((prev) =>
+          [
+            {
+              id: Math.random().toString(36).slice(2),
+              kind: "friend_accepted" as const,
+              title: "You're friends now",
+              body: `@${who} accepted — you're friends.`,
+              ts: Date.now(),
+              read: false,
+            } as ChatNotification,
+            ...prev,
+          ].slice(0, 30),
+        )
+        toast(`You're now friends with @${who}!`, "ok")
+        if (extensions.notification_sound) {
+          try {
+            const audio = new Audio(
+              "data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=",
+            )
+            void audio.play().catch(() => {})
+          } catch {
+            /* ignore */
+          }
+        }
+      },
+    )
 
     // The relay rejected our session token — NEVER a blind logout. A
     // reconnecting socket, a restarted relay, or a proxy that reordered
@@ -4201,6 +4804,10 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
     if (!socketRef.current || !account) return
     const socket = socketRef.current
     socket.emit("subscribe", { channelId })
+    /* Opening a channel clears its unread badge. */
+    setUnread((prev) =>
+      prev[channelId] ? { ...prev, [channelId]: 0 } : prev,
+    )
     setPresence([])
     setTypingUsers({})
     /* Restore this channel's pins from the session map. */
@@ -4212,6 +4819,7 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
      * channel's fetch lands (generation-guarded, with retries) and swaps
      * them in one atomic replace. */
     setChannelLoading(true)
+    setHasMoreOlder(false)
     const gen = ++channelLoadGenRef.current
     // Fetch recent messages for this channel. Transient failures (dev
     // recompile, gateway blip, mobile network switch) RETRY a few times
@@ -4219,13 +4827,14 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
     // to "No messages here yet" until the next poll recovered it.
     const load = async (attempt: number): Promise<void> => {
       try {
-        const data = await apiFetch<{ messages: ChatMessage[] }>(
+        const data = await apiFetch<{ messages: ChatMessage[]; hasMore?: boolean }>(
           `/api/chat-data?channel=${encodeURIComponent(channelId)}${
             !CHANNELS.some((c) => c.id === channelId) ? `&token=${encodeURIComponent(token)}` : ""
           }`,
         )
         if (gen !== channelLoadGenRef.current) return // stale — a newer switch won
         setMessages(data.messages || [])
+        setHasMoreOlder(!!data.hasMore)
         setChannelLoading(false)
       } catch (e) {
         if (gen !== channelLoadGenRef.current) return // stale — ignore
@@ -4240,7 +4849,11 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
     }
     void load(0)
     return () => {
+      /* Presence off, watching stays: unsubscribe drops the socket from
+       * the room (and the presence map), then `watch` silently rejoins so
+       * unread badges + live DM rows keep working for this channel. */
       socket.emit("unsubscribe", { channelId })
+      socket.emit("watch", { channelId })
     }
      
   }, [channelId, account?.id, token])
@@ -4353,14 +4966,50 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
        * tick; surfacing it just opens the dev overlay and blocks clicks. */
     }
   }, [token])
+  /* Late binding for the socket effect's dm_added / dm_updated handlers
+   * (defined above, run later — the ref always holds the fresh callback). */
+  refreshDmsRef.current = refreshDms
 
   const refreshFriends = useCallback(async () => {
     if (!token) return
     try {
-      const data = await apiFetch<{ friends: ChatAccount[] }>("/api/chat-friends?token=" + encodeURIComponent(token))
+      const data = await apiFetch<{
+        friends: ChatAccount[]
+        incoming: FriendRequestRow[]
+        outgoing: FriendRequestRow[]
+      }>("/api/chat-friends?token=" + encodeURIComponent(token))
+      const rows = data.incoming || []
       setFriends(data.friends || [])
-    } catch { /* ignore */ }
+      setFriendRequestsIn(rows)
+      setFriendRequestsOut(data.outgoing || [])
+      /* Mirror any incoming request the bell doesn't know about yet into a
+       * notification — so the Accept/Decline buttons stay reachable after
+       * a reload (notifications are in-memory; requests are server-side).
+       * Deduped by requestId, so this is idempotent per refresh. */
+      for (const r of rows) {
+        setNotifications((prev) =>
+          prev.some((n) => n.requestId === r.id)
+            ? prev
+            : [
+                {
+                  id: "freq-" + r.id,
+                  kind: "friend_request" as const,
+                  title: "Friend request",
+                  body: `@${r.user.username} wants to be your friend.`,
+                  ts: new Date(r.createdAt).getTime() || Date.now(),
+                  read: false,
+                  requestId: r.id,
+                } as ChatNotification,
+                ...prev,
+              ].slice(0, 30),
+        )
+      }
+    } catch {
+      /* Silent — same policy as refreshMembers/refreshDms: self-heals on
+       * the next tick; surfacing it just opens the dev overlay. */
+    }
   }, [token])
+  refreshFriendsRef.current = () => void refreshFriends()
 
   useEffect(() => {
     if (!account || !token) return
@@ -4369,14 +5018,34 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
     void refreshFriends()
   }, [account, token, refreshMembers, refreshDms, refreshFriends])
 
-  // Re-fetch members every 30s.
+  /* Silently watch EVERY public channel + every DM/group — the socket
+   * relay keeps us in those rooms without presence, so unread badges,
+   * mention pings and live DM rows work even for channels we're not
+   * looking at. Re-runs when the DM list changes (new groups/invites);
+   * `watch` is idempotent server-side (a Set). */
+  useEffect(() => {
+    if (!account || !token) return
+    const socket = socketRef.current
+    const rooms = [...CHANNELS.map((c) => c.id), ...dms.map((d) => d.id)]
+    for (const r of rooms) watchedRoomsRef.current.add(r)
+    if (socket && socket.connected) {
+      for (const r of rooms) socket.emit("watch", { channelId: r })
+    }
+  }, [account?.id, token, dms])
+
+  // Re-fetch members + DMs + friend requests every 30s (DMs: catches
+  // anything a dropped socket event missed — new DMs, group membership
+  // changes; friends: pending requests / accepted friendships that a
+  // socketless host or a dropped event would otherwise miss).
   useEffect(() => {
     if (!account) return
     const t = setInterval(() => {
       void refreshMembers()
+      void refreshDms()
+      void refreshFriends()
     }, 30000)
     return () => clearInterval(t)
-  }, [account, refreshMembers])
+  }, [account, refreshMembers, refreshDms, refreshFriends])
 
   // Auto-scroll to bottom on new messages — only if user is already near the bottom.
   const scrollContainerRef = useRef<HTMLDivElement | null>(null)
@@ -4775,25 +5444,316 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
     }
   }
 
-  // Add a friend
-  const addFriend = async () => {
-    const target = friendTarget.trim()
-    if (!target) return
+  // -------------------------------------------------------------------------
+  // Group chats — create / invite / rename / leave.
+  // -------------------------------------------------------------------------
+  const createGroup = async () => {
+    if (creatingGroup) return
+    const name = groupName.trim()
+    const picked = Object.keys(groupPicked).filter((u) => groupPicked[u])
+    const typed = groupUserInput
+      .split(/[\s,]+/)
+      .map((s) => s.trim().replace(/^@/, ""))
+      .filter(Boolean)
+    const targets = [...new Set([...picked, ...typed])]
+    if (targets.length === 0) {
+      toast("Pick at least one person — friends or @usernames.", "err")
+      return
+    }
+    setCreatingGroup(true)
     try {
-      const data = await apiFetch<{ friend: ChatAccount }>("/api/chat-friends", {
+      const data = await apiFetch<{ dm: DM }>("/api/chat-dm", {
         method: "POST",
-        body: JSON.stringify({ token, action: "add", targetUsername: target }),
+        body: JSON.stringify({
+          token,
+          targetUsernames: targets,
+          name: name || undefined,
+        }),
       })
-      setFriends((prev) => [data.friend, ...prev])
-      setFriendTarget("")
-      setShowFriendMenu(false)
-      toast(`Added @${data.friend.username} as a friend!`, "ok")
+      setDms((prev) => {
+        if (prev.some((d) => d.id === data.dm.id))
+          return prev.map((d) => (d.id === data.dm.id ? data.dm : d))
+        return [data.dm, ...prev]
+      })
+      setChannelId(data.dm.id)
+      setChannelSwitcher(false)
+      setGroupName("")
+      setGroupPicked({})
+      setGroupUserInput("")
+      setShowGroupMenu(false)
+      toast(
+        `Group ${name ? `"${name}"` : ""} created — you + ${targets.length} member${targets.length === 1 ? "" : "s"}.`,
+        "ok",
+      )
     } catch (e) {
-      toast(e instanceof Error ? e.message : "Failed to add friend.", "err")
+      toast(e instanceof Error ? e.message : "Failed to create the group.", "err")
+    } finally {
+      setCreatingGroup(false)
     }
   }
 
-  // Remove a friend
+  const inviteToGroup = async (
+    dm: DM,
+    targets: string[],
+    done: () => void,
+  ) => {
+    if (targets.length === 0) {
+      toast("Pick at least one person to invite.", "err")
+      return
+    }
+    try {
+      const data = await apiFetch<{
+        dm: DM
+        invited: string[]
+        becameGroup: boolean
+      }>("/api/chat-dm/invite", {
+        method: "POST",
+        body: JSON.stringify({ token, dmId: dm.id, targetUsernames: targets }),
+      })
+      setDms((prev) =>
+        prev.map((d) => (d.id === data.dm.id ? data.dm : d)),
+      )
+      done()
+      setShowInvite(false)
+      toast(
+        `Invited @${data.invited.join(", @")} — ${data.dm.members.length} members now.`,
+        "ok",
+      )
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "Failed to invite.", "err")
+    }
+  }
+
+  const renameGroup = async () => {
+    const dm = dms.find((d) => d.id === channelId)
+    if (!dm || !dm.isGroup) return
+    const name = renameDraft.trim()
+    if (!name) {
+      toast("A group needs a name.", "err")
+      return
+    }
+    try {
+      await apiFetch("/api/chat-dm", {
+        method: "PATCH",
+        body: JSON.stringify({ token, dmId: dm.id, name }),
+      })
+      setDms((prev) =>
+        prev.map((d) => (d.id === dm.id ? { ...d, name } : d)),
+      )
+      setShowRename(false)
+      toast(`Group renamed to "${name}".`, "ok")
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "Rename failed.", "err")
+    }
+  }
+
+  const leaveGroup = async () => {
+    const dm = dms.find((d) => d.id === channelId)
+    if (!dm) return
+    try {
+      await apiFetch("/api/chat-dm/leave", {
+        method: "POST",
+        body: JSON.stringify({ token, dmId: dm.id }),
+      })
+      // Drop the local watch too, so badges stop for this room.
+      watchedRoomsRef.current.delete(dm.id)
+      socketRef.current?.emit("unwatch", { channelId: dm.id })
+      setDms((prev) => prev.filter((d) => d.id !== dm.id))
+      setChannelId("main")
+      setShowLeaveConfirm(false)
+      toast(
+        dm.isGroup ? "You left the group." : "DM closed.",
+        "ok",
+      )
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "Failed to leave.", "err")
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Reactions — optimistic toggle, server truth, relay broadcast.
+  // -------------------------------------------------------------------------
+  const toggleReaction = useCallback(
+    async (msg: ChatMessage, emoji: string) => {
+      const me = accountRef.current
+      if (!me || !token) return
+      if (msg.id.startsWith("lv-")) {
+        toast(
+          "Reactions work on the website's messages — live-room (git version) messages can't have them yet.",
+          "err",
+        )
+        return
+      }
+      const has = (msg.reactions || []).some(
+        (r) => r.emoji === emoji && r.usernames.includes(me.id),
+      )
+      const patch = (m: ChatMessage) =>
+        m.id === msg.id ? applyReactionDelta(m, emoji, !has, me.id) : m
+      // Optimistic.
+      setMessages((prev) => prev.map(patch))
+      setPinned((prev) => prev.map(patch))
+      try {
+        const data = await apiFetch<{
+          removed: boolean
+          reactions: ReactionSummary[]
+        }>("/api/chat-reactions", {
+          method: "POST",
+          body: JSON.stringify({ token, messageId: msg.id, emoji }),
+        })
+        // Server truth wins.
+        setMessages((prev) =>
+          prev.map((m) => (m.id === msg.id ? { ...m, reactions: data.reactions } : m)),
+        )
+        socketRef.current?.emit("reaction", {
+          channelId: msg.channelId,
+          messageId: msg.id,
+          emoji,
+          added: !data.removed,
+        })
+      } catch (e) {
+        // Revert the optimistic chip.
+        const revert = (m: ChatMessage) =>
+          m.id === msg.id ? applyReactionDelta(m, emoji, has, me.id) : m
+        setMessages((prev) => prev.map(revert))
+        setPinned((prev) => prev.map(revert))
+        toast(e instanceof Error ? e.message : "Reaction failed.", "err")
+      }
+    },
+    [token, toast],
+  )
+
+  // -------------------------------------------------------------------------
+  // "Load older" — cursor pagination prepends the previous 100-message page.
+  // -------------------------------------------------------------------------
+  const loadOlder = useCallback(async () => {
+    if (loadingOlder) return
+    const oldest = messagesRef.current.find(() => true)
+    if (!oldest) return
+    setLoadingOlder(true)
+    try {
+      const cid = channelIdRef.current
+      const data = await apiFetch<{ messages: ChatMessage[]; hasMore?: boolean }>(
+        `/api/chat-data?channel=${encodeURIComponent(cid)}&before=${encodeURIComponent(
+          new Date(oldest.createdAt).toISOString(),
+        )}${
+          !CHANNELS.some((c) => c.id === cid) ? `&token=${encodeURIComponent(token)}` : ""
+        }`,
+      )
+      const fresh = data.messages || []
+      if (fresh.length > 0) {
+        setMessages((prev) => {
+          const seen = new Set(prev.map((m) => m.id))
+          const merged = [...fresh.filter((m) => !seen.has(m.id)), ...prev]
+          merged.sort(
+            (a, b) =>
+              new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+          )
+          return merged
+        })
+      }
+      setHasMoreOlder(!!data.hasMore && fresh.length > 0)
+    } catch {
+      /* keep the button — next click retries */
+    } finally {
+      setLoadingOlder(false)
+    }
+  }, [token, loadingOlder])
+
+  // Send a friend REQUEST — they get a notification, and only when THEY
+  // accept does the friendship form. Every outcome gets a friendly toast,
+  // never a raw error dump.
+  const addFriend = async () => {
+    const target = friendTarget.trim().replace(/^@/, "")
+    if (!target) {
+      toast("Type someone's @username first.", "err")
+      return
+    }
+    if (friendBusy) return
+    setFriendBusy(true)
+    try {
+      const data = await apiFetch<{
+        sent?: boolean
+        accepted?: boolean
+        already?: "friends" | "pending"
+        friend?: { username: string }
+      }>("/api/chat-friends", {
+        method: "POST",
+        body: JSON.stringify({ token, action: "request", targetUsername: target }),
+      })
+      const name = data.friend?.username || target
+      if (data.accepted) {
+        toast(`You're now friends with @${name}!`, "ok")
+      } else if (data.already === "friends") {
+        toast(`You and @${name} are already friends.`, "ok")
+      } else if (data.already === "pending") {
+        toast(`Request already sent — just waiting for @${name} to accept.`, "ok")
+      } else {
+        toast(`Request sent to @${name} — they'll appear in Friends once they accept.`, "ok")
+      }
+      setFriendTarget("")
+      setShowFriendMenu(false)
+      void refreshFriends()
+    } catch (e) {
+      toast(
+        e instanceof Error ? e.message : "Couldn't send that — try again in a moment.",
+        "err",
+      )
+    } finally {
+      setFriendBusy(false)
+    }
+  }
+
+  // Accept / decline an INCOMING request (from the sidebar or the bell).
+  const respondFriend = async (requestId: string, action: "accept" | "decline") => {
+    try {
+      const data = await apiFetch<{ friend?: ChatAccount }>("/api/chat-friends", {
+        method: "POST",
+        body: JSON.stringify({ token, action, requestId }),
+      })
+      setFriendRequestsIn((prev) => prev.filter((r) => r.id !== requestId))
+      // Mark the matching bell notification handled (hides its buttons).
+      setNotifications((prev) =>
+        prev.map((n) => (n.requestId === requestId ? { ...n, read: true } : n)),
+      )
+      if (action === "accept") {
+        if (data.friend) {
+          const newFriend = data.friend
+          setFriends((prev) =>
+            prev.some((f) => f.id === newFriend.id) ? prev : [newFriend, ...prev],
+          )
+          toast(`You're now friends with @${newFriend.username}!`, "ok")
+        } else {
+          toast("Made friends!", "ok")
+          void refreshFriends()
+        }
+      } else {
+        toast("Request declined — no hard feelings.", "ok")
+      }
+    } catch {
+      toast(
+        action === "accept"
+          ? "Couldn't accept just now — try again in a moment."
+          : "Couldn't decline just now — try again in a moment.",
+        "err",
+      )
+    }
+  }
+
+  // Take back an OUTGOING pending request.
+  const cancelFriendRequest = async (requestId: string) => {
+    try {
+      await apiFetch("/api/chat-friends", {
+        method: "POST",
+        body: JSON.stringify({ token, action: "cancel", requestId }),
+      })
+      setFriendRequestsOut((prev) => prev.filter((r) => r.id !== requestId))
+      toast("Request cancelled.", "ok")
+    } catch {
+      toast("Couldn't cancel just now — try again in a moment.", "err")
+    }
+  }
+
+  // Remove a friend (both directions — the API keeps friendship mutual).
   const removeFriend = async (username: string) => {
     try {
       await apiFetch("/api/chat-friends", {
@@ -4803,7 +5763,7 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
       setFriends((prev) => prev.filter((f) => f.username !== username))
       toast(`Removed @${username}.`, "ok")
     } catch (e) {
-      toast(e instanceof Error ? e.message : "Failed to remove friend.", "err")
+      toast(e instanceof Error ? e.message : "Couldn't remove that friend — try again in a moment.", "err")
     }
   }
 
@@ -4815,6 +5775,11 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
     setMessages([])
     setMembers([])
     setDms([])
+    setFriends([])
+    setFriendRequestsIn([])
+    setFriendRequestsOut([])
+    setNotifications([])
+    setUnread({})
     setChannelId("main")
     socketRef.current?.disconnect()
     socketRef.current = null
@@ -4841,6 +5806,24 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
 
   // Filtered typing indicators for the current channel.
   const activeTyping = typingUsers[channelId] || []
+
+  /* Total unread across every channel + DM — the little orange pill on
+   * the closed channel-switcher button. */
+  const totalUnread = useMemo(
+    () => Object.values(unread).reduce((sum, n) => sum + (n || 0), 0),
+    [unread],
+  )
+
+  /* The right-side player list is scoped to the conversation: public
+   * channels show every member + live-room users; DMs/groups show just
+   * the conversation's members. */
+  const dmPresence = useMemo(
+    () =>
+      dmMeta
+        ? presence.filter((p) => dmMeta.members.some((m) => m.id === p.accountId))
+        : [],
+    [dmMeta, presence],
+  )
 
   // ---------------------------------------------------------------------------
   // Auth gate.
@@ -4886,8 +5869,23 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
               onClick={() => setChannelSwitcher((s) => !s)}
               className="flex items-center gap-1.5 rounded-md px-2 py-1 hover:bg-white/10"
             >
-              {isDm ? <MessageCircle className="h-4 w-4 text-orange-400" /> : <Hash className="h-4 w-4 text-orange-400" />}
-              <span className="text-sm font-semibold">{channelLabel}</span>
+              {isDm ? (
+                dmMeta?.isGroup ? (
+                  <Users className="h-4 w-4 text-orange-400" />
+                ) : (
+                  <MessageCircle className="h-4 w-4 text-orange-400" />
+                )
+              ) : (
+                <Hash className="h-4 w-4 text-orange-400" />
+              )}
+              <span className="max-w-[10rem] truncate text-sm font-semibold sm:max-w-[16rem]">
+                {channelLabel}
+              </span>
+              {totalUnread > 0 && (
+                <span className="grid h-4 min-w-4 place-items-center rounded-full bg-orange-400 px-1 text-[9px] font-bold text-black">
+                  {totalUnread > 99 ? "99+" : totalUnread}
+                </span>
+              )}
               <ChevronDown className="h-3.5 w-3.5 text-white/50" />
             </button>
             <AnimatePresence>
@@ -4896,37 +5894,136 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                   initial={{ opacity: 0, y: -4 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -4 }}
-                  className="veil-scroll-slim absolute left-0 top-9 z-30 max-h-[70vh] w-64 overflow-y-auto rounded-xl border border-white/10 bg-zinc-950/92 backdrop-blur-xl p-1 shadow-2xl"
+                  className="veil-scroll-slim absolute left-0 top-9 z-30 max-h-[70vh] w-72 overflow-y-auto rounded-xl border border-white/10 bg-zinc-950/92 backdrop-blur-xl p-1 shadow-2xl"
                 >
                   <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-white/40">
                     Channels
                   </div>
-                  {CHANNELS.map((c) => (
-                    <button
-                      key={c.id}
-                      onClick={() => {
-                        setChannelId(c.id)
-                        setChannelSwitcher(false)
-                      }}
-                      className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm ${
-                        channelId === c.id ? "bg-white/10" : "hover:bg-white/5"
-                      }`}
-                    >
-                      <Hash className="h-3.5 w-3.5 text-white/40" />
-                      <span className="flex-1 text-left">{c.name}</span>
-                      <span className="text-[10px] text-white/30">{c.desc}</span>
-                    </button>
-                  ))}
+                  {CHANNELS.map((c) => {
+                    const typingHere = (typingUsers[c.id] || []).length
+                    return (
+                      <button
+                        key={c.id}
+                        onClick={() => {
+                          setChannelId(c.id)
+                          setChannelSwitcher(false)
+                        }}
+                        className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm ${
+                          channelId === c.id ? "bg-white/10" : "hover:bg-white/5"
+                        }`}
+                      >
+                        <Hash className="h-3.5 w-3.5 text-white/40" />
+                        <span className="flex-1 text-left">{c.name}</span>
+                        {typingHere > 0 ? (
+                          <span className="flex items-center gap-0.5 text-[9px] italic text-emerald-300/80">
+                            <span className="inline-flex gap-0.5">
+                              <span className="h-1 w-1 animate-bounce rounded-full bg-emerald-300 [animation-delay:0ms]" />
+                              <span className="h-1 w-1 animate-bounce rounded-full bg-emerald-300 [animation-delay:150ms]" />
+                              <span className="h-1 w-1 animate-bounce rounded-full bg-emerald-300 [animation-delay:300ms]" />
+                            </span>
+                          </span>
+                        ) : unread[c.id] > 0 ? (
+                          <span className="grid h-4 min-w-4 place-items-center rounded-full bg-orange-400 px-1 text-[9px] font-bold text-black">
+                            {unread[c.id] > 99 ? "99+" : unread[c.id]}
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-white/30">{c.desc}</span>
+                        )}
+                      </button>
+                    )
+                  })}
                   <div className="mt-1 flex items-center justify-between px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-white/40">
-                    <span>Direct Messages</span>
-                    <button
-                      onClick={() => setShowDmMenu((s) => !s)}
-                      className="rounded p-0.5 hover:bg-white/10"
-                      title="New DM"
-                    >
-                      <Plus className="h-3 w-3" />
-                    </button>
+                    <span>Messages</span>
+                    <span className="flex items-center gap-1">
+                      <button
+                        onClick={() => {
+                          setShowGroupMenu((s) => !s)
+                          setShowDmMenu(false)
+                        }}
+                        className={`rounded p-0.5 hover:bg-white/10 ${showGroupMenu ? "text-orange-300" : ""}`}
+                        title="New group chat — invite friends in"
+                      >
+                        <Users className="h-3 w-3" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowDmMenu((s) => !s)
+                          setShowGroupMenu(false)
+                        }}
+                        className={`rounded p-0.5 hover:bg-white/10 ${showDmMenu ? "text-orange-300" : ""}`}
+                        title="New DM"
+                      >
+                        <Plus className="h-3 w-3" />
+                      </button>
+                    </span>
                   </div>
+                  {showGroupMenu && (
+                    <div className="mx-1 mb-1 rounded-lg border border-white/10 bg-black/30 p-2">
+                      <input
+                        value={groupName}
+                        onChange={(e) => setGroupName(e.target.value)}
+                        placeholder="Group name (e.g. Squad)"
+                        maxLength={64}
+                        className="mb-1.5 w-full rounded-md border border-white/10 bg-black/40 px-2 py-1 text-xs outline-none focus:border-orange-400/50"
+                      />
+                      {friends.length > 0 && (
+                        <div className="veil-scroll-slim mb-1.5 max-h-28 overflow-y-auto rounded-md border border-white/10">
+                          {friends.map((f) => (
+                            <label
+                              key={f.id}
+                              className="flex cursor-pointer items-center gap-2 px-2 py-1 text-[11px] hover:bg-white/5"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={!!groupPicked[f.username]}
+                                onChange={(e) =>
+                                  setGroupPicked((prev) => ({
+                                    ...prev,
+                                    [f.username]: e.target.checked,
+                                  }))
+                                }
+                                className="accent-orange-400"
+                              />
+                              <span
+                                className="grid h-4 w-4 shrink-0 place-items-center rounded-full text-[8px] font-bold text-white"
+                                style={{ backgroundColor: f.avatarColor }}
+                              >
+                                {f.username[0]?.toUpperCase()}
+                              </span>
+                              <span className="flex-1 truncate text-white/75">
+                                {displayName(f)}
+                              </span>
+                            </label>
+                          ))}
+                        </div>
+                      )}
+                      <div className="flex items-center gap-1">
+                        <input
+                          value={groupUserInput}
+                          onChange={(e) => setGroupUserInput(e.target.value)}
+                          placeholder="@username, @username…"
+                          autoCapitalize="none"
+                          className="flex-1 rounded-md border border-white/10 bg-black/40 px-2 py-1 text-xs outline-none"
+                        />
+                        <button
+                          onClick={() => void createGroup()}
+                          disabled={creatingGroup}
+                          className="flex items-center gap-1 rounded-md bg-orange-400 px-2 py-1 text-xs font-semibold text-black disabled:opacity-50"
+                        >
+                          {creatingGroup ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <Users className="h-3 w-3" />
+                          )}
+                          Create
+                        </button>
+                      </div>
+                      <p className="mt-1 text-[9.5px] leading-tight text-white/35">
+                        Tick friends and/or type @usernames — everyone gets in
+                        at once and can invite more later.
+                      </p>
+                    </div>
+                  )}
                   {showDmMenu && (
                     <div className="flex items-center gap-1 px-1 pb-1">
                       <input
@@ -4947,7 +6044,8 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                   )}
                   {dms.length === 0 ? (
                     <p className="px-2 py-1 text-[11px] text-white/30">
-                      No DMs yet. Click + to start one.
+                      No messages yet — start a DM or a group with the buttons
+                      above.
                     </p>
                   ) : (
                     dms.map((d) => {
@@ -4958,6 +6056,7 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                           .map(displayName)
                           .join(", ") ||
                         "DM"
+                      const typingHere = (typingUsers[d.id] || []).length
                       return (
                         <button
                           key={d.id}
@@ -4969,8 +6068,28 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                             channelId === d.id ? "bg-white/10" : "hover:bg-white/5"
                           }`}
                         >
-                          <MessageCircle className="h-3.5 w-3.5 text-white/40" />
+                          {d.isGroup ? (
+                            <Users className="h-3.5 w-3.5 shrink-0 text-orange-300/70" />
+                          ) : (
+                            <MessageCircle className="h-3.5 w-3.5 shrink-0 text-white/40" />
+                          )}
                           <span className="flex-1 truncate text-left">{label}</span>
+                          {typingHere > 0 ? (
+                            <span className="inline-flex gap-0.5" title="someone is typing">
+                              <span className="h-1 w-1 animate-bounce rounded-full bg-emerald-300 [animation-delay:0ms]" />
+                              <span className="h-1 w-1 animate-bounce rounded-full bg-emerald-300 [animation-delay:150ms]" />
+                              <span className="h-1 w-1 animate-bounce rounded-full bg-emerald-300 [animation-delay:300ms]" />
+                            </span>
+                          ) : d.isGroup ? (
+                            <span className="rounded-full bg-white/10 px-1.5 py-0.5 text-[9px] font-semibold text-white/50">
+                              {d.members.length}
+                            </span>
+                          ) : null}
+                          {unread[d.id] > 0 && (
+                            <span className="grid h-4 min-w-4 place-items-center rounded-full bg-orange-400 px-1 text-[9px] font-bold text-black">
+                              {unread[d.id] > 99 ? "99+" : unread[d.id]}
+                            </span>
+                          )}
                         </button>
                       )
                     })
@@ -4978,34 +6097,98 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                   {/* Friends section */}
                   <div className="mt-1 flex items-center justify-between border-t border-white/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-white/40">
                     <span>Friends — {friends.length}</span>
-                    <button
-                      onClick={() => setShowFriendMenu((s) => !s)}
-                      className="rounded p-0.5 hover:bg-white/10"
-                      title="Add friend"
-                    >
-                      <Plus className="h-3 w-3" />
-                    </button>
-                  </div>
-                  {showFriendMenu && (
-                    <div className="flex items-center gap-1 px-1 pb-1">
-                      <input
-                        value={friendTarget}
-                        onChange={(e) => setFriendTarget(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && void addFriend()}
-                        placeholder="@username"
-                        className="flex-1 rounded-md border border-white/10 bg-black/40 px-2 py-1 text-xs outline-none"
-                      />
+                    <div className="flex items-center gap-1.5">
+                      {friendRequestsIn.length > 0 && (
+                        <button
+                          onClick={() => setShowFriendMenu(false)}
+                          className="grid h-4 min-w-4 place-items-center rounded-full bg-orange-400 px-1 text-[9px] font-bold text-black"
+                          title={`${friendRequestsIn.length} friend request${friendRequestsIn.length === 1 ? "" : "s"} waiting`}
+                        >
+                          {friendRequestsIn.length}
+                        </button>
+                      )}
                       <button
-                        onClick={() => void addFriend()}
-                        className="rounded-md bg-orange-400 px-2 py-1 text-xs font-semibold text-black"
+                        onClick={() => setShowFriendMenu((s) => !s)}
+                        className="rounded p-0.5 hover:bg-white/10"
+                        title="Send a friend request"
                       >
-                        Add
+                        <Plus className="h-3 w-3" />
                       </button>
                     </div>
+                  </div>
+                  {showFriendMenu && (
+                    <div className="px-1 pb-1">
+                      <div className="flex items-center gap-1">
+                        <input
+                          value={friendTarget}
+                          onChange={(e) => setFriendTarget(e.target.value)}
+                          onKeyDown={(e) => e.key === "Enter" && void addFriend()}
+                          placeholder="@username"
+                          autoCapitalize="none"
+                          className="flex-1 rounded-md border border-white/10 bg-black/40 px-2 py-1 text-xs outline-none"
+                        />
+                        <button
+                          onClick={() => void addFriend()}
+                          disabled={friendBusy}
+                          className="flex items-center gap-1 rounded-md bg-orange-400 px-2 py-1 text-xs font-semibold text-black disabled:opacity-50"
+                        >
+                          {friendBusy ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <UserPlus className="h-3 w-3" />
+                          )}
+                          Send
+                        </button>
+                      </div>
+                      <p className="mt-1 text-[9.5px] leading-tight text-white/35">
+                        They get a notification — you become friends when they
+                        accept.
+                      </p>
+                    </div>
                   )}
-                  {friends.length === 0 ? (
+                  {/* Incoming friend requests — accept / decline inline */}
+                  {friendRequestsIn.length > 0 && (
+                    <div className="mb-1 space-y-1 px-1">
+                      {friendRequestsIn.map((r) => (
+                        <div
+                          key={r.id}
+                          className="flex items-center gap-2 rounded-md border border-emerald-400/20 bg-emerald-400/5 px-2 py-1.5"
+                        >
+                          <span
+                            className="grid h-5 w-5 shrink-0 place-items-center rounded-full text-[9px] font-bold text-white"
+                            style={{ backgroundColor: r.user.avatarColor || "#f97316" }}
+                          >
+                            {r.user.username?.[0]?.toUpperCase()}
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-xs text-white/85">
+                              {displayName(r.user)}
+                            </span>
+                            <span className="block text-[9.5px] text-emerald-300/70">
+                              wants to be your friend
+                            </span>
+                          </span>
+                          <button
+                            onClick={() => void respondFriend(r.id, "accept")}
+                            className="grid h-6 w-6 shrink-0 place-items-center rounded-md bg-emerald-500/90 text-black hover:bg-emerald-400"
+                            title={`Accept @${r.user.username}`}
+                          >
+                            <Check className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            onClick={() => void respondFriend(r.id, "decline")}
+                            className="grid h-6 w-6 shrink-0 place-items-center rounded-md border border-white/10 text-white/50 hover:bg-red-500/10 hover:text-red-300"
+                            title={`Decline @${r.user.username}`}
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {friends.length === 0 && friendRequestsIn.length === 0 ? (
                     <p className="px-2 py-1 text-[11px] text-white/30">
-                      No friends yet. Click + to add one.
+                      No friends yet. Click + to send a request.
                     </p>
                   ) : (
                     friends.map((f) => (
@@ -5040,17 +6223,78 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                       </div>
                     ))
                   )}
+                  {/* Outgoing requests — pending, cancellable */}
+                  {friendRequestsOut.length > 0 && (
+                    <div className="mt-0.5 space-y-0.5 px-1">
+                      {friendRequestsOut.map((r) => (
+                        <div
+                          key={r.id}
+                          className="group flex w-full items-center gap-2 rounded-md px-2 py-1 text-[11px] hover:bg-white/5"
+                        >
+                          <Clock className="h-3 w-3 shrink-0 text-white/25" />
+                          <span className="flex-1 truncate text-left text-white/40">
+                            {displayName(r.user)}
+                          </span>
+                          <span className="shrink-0 rounded-full bg-white/5 px-1.5 py-0.5 text-[9px] text-white/35">
+                            waiting
+                          </span>
+                          <button
+                            onClick={() => void cancelFriendRequest(r.id)}
+                            className="hidden rounded p-1 text-white/35 hover:bg-red-500/10 hover:text-red-300 group-hover:block"
+                            title="Cancel request"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
 
-          {/* Channel description */}
-          <span className="hidden text-xs text-white/40 sm:inline">
-            {isDm
-              ? "Direct message"
-              : channelMeta?.desc}
-          </span>
+          {/* Channel description + group actions */}
+          {isDm && dmMeta ? (
+            <div className="hidden items-center gap-1.5 sm:flex">
+              <span className="text-xs text-white/40">
+                {dmMeta.isGroup
+                  ? `Group — ${dmMeta.members.length} member${dmMeta.members.length === 1 ? "" : "s"}`
+                  : "Direct message"}
+              </span>
+              <button
+                onClick={() => setShowInvite(true)}
+                className="flex items-center gap-1 rounded-md bg-orange-400/10 px-2 py-0.5 text-[11px] font-semibold text-orange-300 hover:bg-orange-400/20"
+                title="Invite people to this conversation"
+              >
+                <UserPlus className="h-3 w-3" />
+                <span className="hidden md:inline">Invite</span>
+              </button>
+              {dmMeta.isGroup && (
+                <button
+                  onClick={() => {
+                    setRenameDraft(dmMeta.name || "")
+                    setShowRename(true)
+                  }}
+                  className="rounded-md p-1 text-white/40 hover:bg-white/10 hover:text-white"
+                  title="Rename group"
+                >
+                  <Pencil className="h-3 w-3" />
+                </button>
+              )}
+              <button
+                onClick={() => setShowLeaveConfirm(true)}
+                className="rounded-md p-1 text-white/40 hover:bg-red-500/15 hover:text-red-300"
+                title={dmMeta.isGroup ? "Leave group" : "Close DM"}
+              >
+                <LogOut className="h-3 w-3" />
+              </button>
+            </div>
+          ) : (
+            <span className="hidden text-xs text-white/40 sm:inline">
+              {channelMeta?.desc}
+            </span>
+          )}
 
           <div className="ml-auto flex items-center gap-1">
             {/* Clock — isolated so its 1s tick never re-renders the app */}
@@ -5219,6 +6463,23 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                 </div>
               )}
               <div className="py-2">
+                {hasMoreOlder && (
+                  <div className="grid place-items-center py-1.5">
+                    <button
+                      onClick={() => void loadOlder()}
+                      disabled={loadingOlder}
+                      className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] font-medium text-white/60 transition-colors hover:border-white/20 hover:bg-white/10 hover:text-white disabled:opacity-50"
+                      title="Load the previous 100 messages"
+                    >
+                      {loadingOlder ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <ChevronUp className="h-3 w-3" />
+                      )}
+                      {loadingOlder ? "Loading…" : "Load older messages"}
+                    </button>
+                  </div>
+                )}
                 {mergedMessages.length === 0 ? (
                   <div className="grid place-items-center py-20 text-center text-white/40">
                     <Hash className="mb-2 h-8 w-8 opacity-50" />
@@ -5246,6 +6507,7 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                           editing={editingId === m.id}
                           editDraft={editingId === m.id ? editDraft : ""}
                           editBusy={editBusy}
+                          myId={account.id}
                           onReply={handleReply}
                           onPin={togglePin}
                           onDelete={deleteMessage}
@@ -5254,6 +6516,7 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                           onEditSave={handleEditSave}
                           onEditCancel={cancelEdit}
                           onOpenProfile={openProfile}
+                          onReact={toggleReaction}
                         />
                       </div>
                     )
@@ -5445,6 +6708,8 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                     notifications={notifications}
                     onClear={() => setNotifications([])}
                     onClose={() => setShowNotifications(false)}
+                    onFriendAccept={(requestId) => void respondFriend(requestId, "accept")}
+                    onFriendDecline={(requestId) => void respondFriend(requestId, "decline")}
                   />
                 </div>
               )}
@@ -5472,13 +6737,13 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
             </AnimatePresence>
           </div>
 
-          {/* Member list */}
+          {/* Member list — scoped to the conversation for DMs/groups */}
           <AnimatePresence>
             {showMembers && (
               <PlayerList
                 account={account}
-                members={playersMembers}
-                presence={playersPresence}
+                members={isDm && dmMeta ? dmMeta.members : playersMembers}
+                presence={isDm && dmMeta ? dmPresence : playersPresence}
                 onOpenProfile={openProfile}
                 onClose={() => setShowMembers(false)}
               />
@@ -5559,6 +6824,78 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
             onClose={() => setShowMod(false)}
             toast={toast}
           />
+        )}
+        {/* Invite people to a group chat */}
+        {showInvite && dmMeta && (
+          <InviteModal
+            dm={dmMeta}
+            friends={friends}
+            me={account}
+            onInvite={inviteToGroup}
+            onClose={() => setShowInvite(false)}
+          />
+        )}
+        {/* Rename group */}
+        {showRename && dmMeta?.isGroup && (
+          <ModalShell title="Rename group" onClose={() => setShowRename(false)}>
+            <div className="space-y-3">
+              <input
+                autoFocus
+                value={renameDraft}
+                maxLength={64}
+                onChange={(e) => setRenameDraft(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && void renameGroup()}
+                placeholder="New group name"
+                className="w-full rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-sm outline-none focus:border-orange-400/50"
+              />
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => setShowRename(false)}
+                  className="rounded-lg px-3 py-1.5 text-sm text-white/60 hover:bg-white/10"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => void renameGroup()}
+                  disabled={!renameDraft.trim()}
+                  className="flex items-center gap-1.5 rounded-lg bg-orange-400 px-3 py-1.5 text-sm font-semibold text-black disabled:opacity-40"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                  Save name
+                </button>
+              </div>
+            </div>
+          </ModalShell>
+        )}
+        {/* Leave group / close DM confirm */}
+        {showLeaveConfirm && dmMeta && (
+          <ModalShell
+            title={dmMeta.isGroup ? "Leave group?" : "Close this DM?"}
+            onClose={() => setShowLeaveConfirm(false)}
+          >
+            <div className="space-y-3">
+              <p className="text-sm leading-relaxed text-white/70">
+                {dmMeta.isGroup
+                  ? `You'll stop receiving messages from "${dmMeta.name || channelLabel}". Other members keep the group — someone can invite you back anytime.`
+                  : "The DM disappears from your list. The other person keeps their copy — you can always start it again."}
+              </p>
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => setShowLeaveConfirm(false)}
+                  className="rounded-lg px-3 py-1.5 text-sm text-white/60 hover:bg-white/10"
+                >
+                  Stay
+                </button>
+                <button
+                  onClick={() => void leaveGroup()}
+                  className="flex items-center gap-1.5 rounded-lg bg-red-500 px-3 py-1.5 text-sm font-semibold text-white hover:bg-red-400"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                  {dmMeta.isGroup ? "Leave group" : "Close DM"}
+                </button>
+              </div>
+            </div>
+          </ModalShell>
         )}
       </AnimatePresence>
     </div>

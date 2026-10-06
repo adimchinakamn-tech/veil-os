@@ -56,6 +56,12 @@ export async function GET(req: NextRequest): Promise<Response> {
 async function handleGet(req: NextRequest): Promise<Response> {
   try {
     const channelId = req.nextUrl.searchParams.get("channel") || "main"
+    /* "before" (ISO timestamp) — cursor for the "Load older" button: the
+     * client passes the oldest loaded message's createdAt and gets the
+     * 100 rows BEFORE it, prepended under the visible history. */
+    const beforeRaw = req.nextUrl.searchParams.get("before")
+    const before = beforeRaw ? new Date(beforeRaw) : null
+    const beforeOk = before && !Number.isNaN(before.getTime()) ? before : null
 
     // For DM channels, require membership (validated by token below).
     // For public channels, anyone can read.
@@ -86,7 +92,10 @@ async function handleGet(req: NextRequest): Promise<Response> {
     }
 
     const messages = await db.chatMessage.findMany({
-      where: { channelId },
+      where: {
+        channelId,
+        ...(beforeOk ? { createdAt: { lt: beforeOk } } : {}),
+      },
       orderBy: { createdAt: "desc" },
       take: 100,
       include: {
@@ -105,15 +114,24 @@ async function handleGet(req: NextRequest): Promise<Response> {
             legacy: true,
           },
         },
+        reactions: {
+          select: { emoji: true, accountId: true },
+        },
       },
     })
 
-    // Reverse so oldest is first (we fetched desc to get the latest 50).
+    // Reverse so oldest is first (we fetched desc to get the latest 100).
     const ordered = messages.slice().reverse()
 
-    return NextResponse.json({
-      ok: true,
-      messages: ordered.map((m) => ({
+    // Aggregate raw reaction rows into per-emoji chips once, server-side.
+    const withReactions = ordered.map((m) => {
+      const byEmoji = new Map<string, string[]>()
+      for (const r of m.reactions) {
+        const list = byEmoji.get(r.emoji) ?? []
+        list.push(r.accountId)
+        byEmoji.set(r.emoji, list)
+      }
+      return {
         id: m.id,
         channelId: m.channelId,
         content: m.content,
@@ -123,7 +141,18 @@ async function handleGet(req: NextRequest): Promise<Response> {
         createdAt: m.createdAt,
         editedAt: m.editedAt ?? null,
         account: m.account,
-      })),
+        reactions: [...byEmoji.entries()].map(([emoji, usernames]) => ({
+          emoji,
+          usernames,
+        })),
+      }
+    })
+
+    return NextResponse.json({
+      ok: true,
+      messages: withReactions,
+      /* "the fetch window was full" → older rows probably exist beyond it */
+      hasMore: messages.length === 100,
     })
   } catch (err) {
     console.error("[chat-data GET] error", err)
@@ -238,6 +267,9 @@ async function handlePost(req: NextRequest): Promise<Response> {
             legacy: true,
           },
         },
+        reactions: {
+          select: { emoji: true, accountId: true },
+        },
       },
     })
 
@@ -286,6 +318,7 @@ async function handlePost(req: NextRequest): Promise<Response> {
         createdAt: message.createdAt,
         editedAt: message.editedAt ?? null,
         account: message.account,
+        reactions: [], // fresh message — nobody has reacted yet
       },
       account: updated ? toPublicAccount(updated) : null,
     })
