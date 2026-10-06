@@ -28,56 +28,15 @@ export const BACKUP_STATE_FILE = BACKUP_DIR + "/.state.json"
 export const JSDELIVR_LATEST = `https://cdn.jsdelivr.net/gh/${BACKUP_REPO}@main/backups/chat/latest.json`
 export const JSDELIVR_PURGE = `https://purge.jsdelivr.net/gh/${BACKUP_REPO}@main/backups/chat/latest.json`
 
-/* The static site mirror (site/*.html) is served by the same jsDelivr
- * repo. After every push these paths get purged so the CDN mirror is
- * fresh within seconds — "when the site gets updated, jsDelivr also
- * gets updated". The 10 public links are m1..m10/index.xhtml (+ their
- * siblings); their entry pages ride along so every link wakes up fast. */
+/* The CDN front stubs (index.html at the repo root, plus the site/, cdn/
+ * and m1..m10/ copies that keep every previously-shared public link
+ * alive) are served by the same jsDelivr repo. They only change on real
+ * deploys, so they are NOT part of the per-message purge rotation — they
+ * get purged explicitly on site updates (purgeJSDelivrAll). */
 export const SITE_FILES = [
+  "index.html",
+  "cdn/index.html",
   "site/index.html",
-  "site/chat.html",
-  "site/arcade.html",
-  "site/ai.html",
-  "site/stream.html",
-  "site/wallpapers.html",
-  "site/music.html",
-  "site/links.html",
-  "site/history.html",
-  "site/updates.html",
-  "site/settings.html",
-  "site/index.xhtml",
-  "site/chat.xhtml",
-  "site/arcade.xhtml",
-  "site/ai.xhtml",
-  "site/stream.xhtml",
-  "site/wallpapers.xhtml",
-  "site/music.xhtml",
-  "site/links.xhtml",
-  "site/history.xhtml",
-  "site/updates.xhtml",
-  "site/settings.xhtml",
-  "site/version.json",
-  "site/data/latest.json",
-  "site/data/chat-live.json",
-  "site/data/arcade.json",
-  "site/data/wallpapers.json",
-  "site/data/wallpapers-live.json",
-  "site/data/wallpapers-pack.json",
-  "site/data/updates.json",
-  "site/assets/os.js",
-  "site/assets/live.js",
-  "site/assets/app.css",
-  "site/assets/icon.svg",
-  "m1/index.xhtml",
-  "m2/index.xhtml",
-  "m3/index.xhtml",
-  "m4/index.xhtml",
-  "m5/index.xhtml",
-  "m6/index.xhtml",
-  "m7/index.xhtml",
-  "m8/index.xhtml",
-  "m9/index.xhtml",
-  "m10/index.xhtml",
   "m1/index.html",
   "m2/index.html",
   "m3/index.html",
@@ -88,6 +47,16 @@ export const SITE_FILES = [
   "m8/index.html",
   "m9/index.html",
   "m10/index.html",
+  "m1/index.xhtml",
+  "m2/index.xhtml",
+  "m3/index.xhtml",
+  "m4/index.xhtml",
+  "m5/index.xhtml",
+  "m6/index.xhtml",
+  "m7/index.xhtml",
+  "m8/index.xhtml",
+  "m9/index.xhtml",
+  "m10/index.xhtml",
   "backups/chat/latest.json",
   "backups/chat/manifest.json",
 ] as const
@@ -104,8 +73,6 @@ export const JSDELIVR_PURGE_URLS: string[] = SITE_FILES.map(
  * files that actually change with chat content; the pages ride their
  * natural TTL and get purged explicitly on real site updates. */
 const JSDELIVR_DATA_PURGE_URLS: string[] = [
-  "site/data/latest.json",
-  "site/data/chat-live.json",
   "backups/chat/latest.json",
   "backups/chat/manifest.json",
 ].map((f) => `https://purge.jsdelivr.net/gh/${BACKUP_REPO}@main/${f}`)

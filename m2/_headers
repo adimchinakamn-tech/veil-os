@@ -1,0 +1,11 @@
+# Cloudflare Pages headers — Veil CDN front.
+# The front page is a thin static shell that streams the live app; it only
+# changes on real deploys, so a short cache keeps every link fresh.
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Cache-Control: public, max-age=300
+
+/index.html
+  Cache-Control: public, max-age=120

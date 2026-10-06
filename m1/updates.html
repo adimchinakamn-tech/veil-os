@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#09090b">
+<title>Veil OS</title>
+<meta name="description" content="Veil OS — the live web desktop. Chat, stream, arcade, wallpapers, music and AI in one place.">
+<meta property="og:title" content="Veil OS">
+<meta property="og:description" content="The live web desktop — chat, stream, arcade, wallpapers, music and AI.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20rx='14'%20fill='%230c0c0e'/%3E%3Cpath%20d='M18%2018%20L32%2046%20L46%2018'%20stroke='%23f97316'%20stroke-width='6'%20fill='none'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#09090b; --panel:#101013; --line:#232329;
+    --accent:#f97316; --accent-soft:rgba(249,115,22,.14);
+    --text:#e7e7ea; --muted:#8b8b94;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    overflow:hidden;
+  }
+  /* ---- the live app, edge to edge ---- */
+  #live{
+    position:fixed; inset:0; width:100%; height:100%;
+    border:0; background:var(--bg);
+    opacity:0; transition:opacity .45s ease;
+    z-index:1;
+  }
+  #live.on{opacity:1}
+  /* ---- splash overlay ---- */
+  #splash{
+    position:fixed; inset:0; z-index:2;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:26px; background:var(--bg);
+    transition:opacity .5s ease, visibility 0s linear .5s;
+  }
+  #splash.off{opacity:0; visibility:hidden; pointer-events:none}
+  .orbs{position:absolute; inset:0; overflow:hidden; z-index:-1; filter:blur(60px); opacity:.5}
+  .orb{position:absolute; border-radius:50%}
+  .orb.a{width:46vmax; height:46vmax; left:-14vmax; top:-16vmax;
+    background:radial-gradient(circle at 35% 35%, rgba(249,115,22,.34), transparent 62%);
+    animation:drift1 26s ease-in-out infinite alternate}
+  .orb.b{width:40vmax; height:40vmax; right:-12vmax; bottom:-14vmax;
+    background:radial-gradient(circle at 60% 60%, rgba(245,158,11,.16), transparent 60%);
+    animation:drift2 32s ease-in-out infinite alternate}
+  @keyframes drift1{to{transform:translate3d(9vmax,7vmax,0) scale(1.12)}}
+  @keyframes drift2{to{transform:translate3d(-8vmax,-6vmax,0) scale(.92)}}
+  @media (prefers-reduced-motion: reduce){ .orb{animation:none} }
+  .brand{display:flex; flex-direction:column; align-items:center; gap:18px}
+  .mark{
+    width:84px; height:84px; border-radius:22px;
+    background:linear-gradient(180deg,#141417,#0c0c0e);
+    border:1px solid var(--line);
+    box-shadow:0 0 0 1px rgba(249,115,22,.10), 0 24px 70px -18px rgba(249,115,22,.38);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .mark svg{width:46px; height:46px; display:block}
+  .word{font-size:30px; font-weight:650; letter-spacing:.5px}
+  .word b{color:var(--accent); font-weight:650}
+  .sub{font-size:12px; letter-spacing:3.2px; text-transform:uppercase; color:var(--muted)}
+  .status{
+    display:flex; align-items:center; gap:10px;
+    padding:9px 16px; border-radius:999px;
+    background:var(--panel); border:1px solid var(--line);
+    font-size:13px; color:var(--muted); white-space:nowrap;
+  }
+  .dot{width:8px; height:8px; border-radius:50%; background:var(--accent);
+    box-shadow:0 0 0 0 var(--accent-soft); animation:pulse 1.6s ease-out infinite}
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 0 rgba(249,115,22,.45)}
+    70%{box-shadow:0 0 0 9px rgba(249,115,22,0)}
+    100%{box-shadow:0 0 0 0 rgba(249,115,22,0)}
+  }
+  /* ---- slow-connect banner ---- */
+  #slow{
+    position:fixed; left:50%; bottom:34px; transform:translate(-50%,14px);
+    z-index:3; display:flex; align-items:center; gap:14px;
+    background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:12px 14px 12px 18px; font-size:13.5px; color:var(--text);
+    box-shadow:0 18px 50px -12px rgba(0,0,0,.65);
+    opacity:0; visibility:hidden; transition:all .35s ease; max-width:min(92vw,560px);
+  }
+  #slow.on{opacity:1; visibility:visible; transform:translate(-50%,0)}
+  #slow .msg{color:var(--muted); line-height:1.45}
+  #slow .msg b{color:var(--text); font-weight:600}
+  .btn{
+    appearance:none; cursor:pointer; user-select:none;
+    font:inherit; font-size:13px; font-weight:600;
+    padding:9px 16px; border-radius:10px; white-space:nowrap;
+    background:var(--accent); color:#140b05; border:0;
+    transition:transform .12s ease, filter .12s ease;
+  }
+  .btn:hover{filter:brightness(1.08)} .btn:active{transform:scale(.97)}
+  .btn.ghost{background:transparent; color:var(--text); border:1px solid var(--line)}
+  .btn.ghost:hover{border-color:#3a3a42}
+  /* ---- corner pill ---- */
+  #pill{
+    position:fixed; right:14px; bottom:14px; z-index:4;
+    display:flex; align-items:center; gap:8px;
+    padding:8px 13px; border-radius:999px;
+    background:rgba(16,16,19,.82); border:1px solid var(--line);
+    color:var(--muted); font-size:12px; text-decoration:none;
+    backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+    opacity:.28; transition:opacity .2s ease, color .2s ease, border-color .2s ease;
+  }
+  #pill:hover{opacity:1; color:var(--text); border-color:#3a3a42}
+  #pill .v{width:7px; height:7px; border-radius:50%; background:#22c55e}
+  .sr{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}
+  .noscript-box{position:fixed; inset:0; z-index:9; display:flex; align-items:center; justify-content:center; background:var(--bg)}
+  .noscript-box a{color:var(--accent); font-size:18px}
+</style>
+</head>
+<body>
+<a class="sr" href="https://preview-chat-5c473725-60a1-401a-a523-f3055da577e8.space-z.ai/" target="_blank" rel="noopener">Open Veil OS directly (opens in a new tab)</a>
+
+<iframe id="live" title="Veil OS — live desktop"
+  src="https://preview-chat-5c473725-60a1-401a-a523-f3055da577e8.space-z.ai/"
+  allow="autoplay; fullscreen; clipboard-read; clipboard-write; encrypted-media; geolocation; microphone; camera; picture-in-picture; display-capture"
+  allowfullscreen
+  referrerpolicy="strict-origin-when-cross-origin"></iframe>
+
+<div id="splash" aria-hidden="true">
+  <div class="orbs"><div class="orb a"></div><div class="orb b"></div></div>
+  <div class="brand">
+    <div class="mark">
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <path d="M18 18 L32 46 L46 18" stroke="#f97316" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="word">Veil<b>OS</b></div>
+    <div class="sub">Live CDN</div>
+  </div>
+  <div class="status"><span class="dot"></span><span id="statusText">Contacting the live desktop…</span></div>
+</div>
+
+<div id="slow" role="status">
+  <div class="msg"><b>Still connecting.</b> The live box may be waking from a cold boot — it usually comes up within a minute.</div>
+  <button class="btn" id="retryBtn" type="button">Retry</button>
+  <a class="btn ghost" href="https://preview-chat-5c473725-60a1-401a-a523-f3055da577e8.space-z.ai/" target="_blank" rel="noopener">Open direct</a>
+</div>
+
+<a id="pill" href="https://preview-chat-5c473725-60a1-401a-a523-f3055da577e8.space-z.ai/" target="_blank" rel="noopener" aria-label="Open Veil OS directly in a new tab">
+  <span class="v" aria-hidden="true"></span> veil-cdn · open direct ↗
+</a>
+
+<noscript>
+  <meta http-equiv="refresh" content="2; url=https://preview-chat-5c473725-60a1-401a-a523-f3055da577e8.space-z.ai/">
+  <div class="noscript-box"><a href="https://preview-chat-5c473725-60a1-401a-a523-f3055da577e8.space-z.ai/">Veil OS needs JavaScript — tap to continue →</a></div>
+</noscript>
+
+<script>
+(function () {
+  "use strict";
+  /* Veil CDN front — serves the LIVE Veil OS instance edge-to-edge.
+   * To point this front at a different origin (e.g. a self-hosted box),
+   * change TARGET below and re-push; every stub copy uses this too.   */
+  var TARGET = "https://preview-chat-5c473725-60a1-401a-a523-f3055da577e8.space-z.ai/";
+
+  var frame = document.getElementById("live");
+  var splash = document.getElementById("splash");
+  var statusText = document.getElementById("statusText");
+  var slow = document.getElementById("slow");
+
+  var loaded = false;
+  var t4s = setTimeout(function () {
+    if (!loaded) statusText.textContent = "Waking the box — cold boots take a moment…";
+  }, 4000);
+  var t15s = setTimeout(function () {
+    if (!loaded) slow.classList.add("on");
+  }, 15000);
+
+  frame.addEventListener("load", function () {
+    loaded = true;
+    clearTimeout(t4s); clearTimeout(t15s);
+    slow.classList.remove("on");
+    statusText.textContent = "Connected";
+    frame.classList.add("on");
+    splash.classList.add("off");
+  }, { once: true });
+
+  document.getElementById("retryBtn").addEventListener("click", function () {
+    location.reload();
+  });
+
+  /* If someone lands here with a stale cached copy and the app moved,
+   * the pill + banner give a one-tap escape. Nothing else runs here —
+   * the live app does all the work in its own origin. */
+})();
+</script>
+</body>
+</html>

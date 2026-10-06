@@ -16,11 +16,13 @@ import {
  *   bun scripts/chat-backup.ts --force    # always snapshot
  *
  * Pipeline: detect change → snapshot to backups/chat/{latest,history,manifest}
- * → stamp the static CDN mirror (site/) + bump site/version.json
- * → git add+commit → git push (fails quietly until the GitHub token gets
- * Contents:write — the standing watcher will land the backlog) → on a
- * successful push, purge the jsDelivr CDN cache for the backup JSON and
- * every site/ page so the public mirror links are fresh within seconds.
+ * → git add+commit → git push → on a successful push, purge the jsDelivr
+ * edge cache for the backup JSON.
+ *
+ * 2026-10-06: the static CDN mirror (site/ + m1..m10) was replaced by the
+ * live CDN front (index.html stubs streaming the real app), so there is no
+ * mirror to stamp anymore — the backup JSON is the only artifact that
+ * changes with chat content. It doubles as the serverless cold-boot seed.
  */
 
 const ROOT = "/home/z/my-project"
@@ -51,21 +53,13 @@ async function main(): Promise<void> {
   const backup = await collectChatBackup()
   const { latestPath } = writeBackupFiles(backup)
 
-  // ---- stamp the CDN mirror so its pages + version.json follow along ----
-  try {
-    const r = spawnSync("bun", ["scripts/site-build.ts"], { cwd: ROOT, encoding: "utf-8" })
-    if (r.status !== 0) console.error("SITE-STAMP-FAIL " + (r.stderr || "").slice(0, 200))
-  } catch {
-    /* stamping is best-effort */
-  }
-
   // ---- git: stage + commit + push (all best-effort) ----------------------
-  // Browsers on the CDN copies write site/data/chat-live.json straight to
-  // GitHub through the Contents API — adopt the room's remote state first
-  // so a backup commit can never clobber messages sent from the links.
+  // Only the backup artifacts are committed — the CDN front stubs
+  // (index.html / site/ / m1..m10 / cdn/) are static and never change with
+  // chat content. Serverless cold boots + disaster restores read
+  // backups/chat/latest.json, so this push IS the off-site backup.
   git(["fetch", "origin", "main", "--quiet"])
-  git(["checkout", "origin/main", "--", "site/data/chat-live.json"])
-  git(["add", "-A", "backups/chat", "site", "m1", "m2", "m3", "m4", "m5", "m6", "m7", "m8", "m9", "m10"])
+  git(["add", "-A", "backups/chat"])
   const staged = git(["diff", "--cached", "--quiet"])
   let committed = false
   if (staged.code !== 0) {
