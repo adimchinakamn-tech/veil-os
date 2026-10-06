@@ -9,3 +9,7 @@
 
 /index.html
   Cache-Control: public, max-age=120
+
+# The tab icon never changes — cache it hard.
+/veil-icon-192.png
+  Cache-Control: public, max-age=86400
