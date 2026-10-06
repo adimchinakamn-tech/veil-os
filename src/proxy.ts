@@ -31,11 +31,38 @@ import { NextRequest, NextResponse } from "next/server";
 
 const ROUTE_PREFIX = "/api/p/";
 
+/* ── CORS for the app's own APIs ─────────────────────────────────────────
+ * When Veil is served through a path-prefix CDN pull zone, mutations and
+ * the socket relay bypass the zone and hit this origin directly
+ * (cross-origin from the zone's page). Pull-zone caches only carry
+ * GET/HEAD, so POST/PUT/PATCH/DELETE and their preflights arrive here
+ * with a foreign Origin and need permissive CORS to be readable. Chat
+ * auth is Bearer-token based (headers, not cookies), so wildcard origins
+ * grant no session powers; the low-value viewer-stats cookie simply
+ * doesn't ride on cross-origin calls. */
+const API_CORS: Record<string, string> = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods":
+    "GET, HEAD, POST, PUT, PATCH, DELETE, OPTIONS",
+  "Access-Control-Allow-Headers":
+    "authorization, content-type, x-veil-viewer, x-veil-token, x-requested-with",
+  "Access-Control-Max-Age": "86400",
+  Vary: "Origin",
+};
+
 export default function veilGate(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
 
-  // Entry-door requests and Next internals manage themselves.
-  if (pathname.startsWith("/api/") || pathname.startsWith("/_next/")) {
+  // API CORS: answer preflights directly, tag real responses.
+  if (pathname.startsWith("/api/")) {
+    if (req.method === "OPTIONS") {
+      return new NextResponse(null, { status: 204, headers: API_CORS });
+    }
+    const res = NextResponse.next();
+    for (const [k, v] of Object.entries(API_CORS)) res.headers.set(k, v);
+    return res;
+  }
+  if (pathname.startsWith("/_next/")) {
     return NextResponse.next();
   }
 
@@ -67,7 +94,8 @@ export default function veilGate(req: NextRequest) {
 }
 
 export const config = {
-  // Everything except the entry door and Next internals; the logic above
-  // filters the rest.
-  matcher: ["/((?!api|_next).*)"],
+  // Everything except Next internals; the logic above filters the rest.
+  // /api must be included for the CORS block (zone-served deployments
+  // preflight + mutate cross-origin); it used to be excluded.
+  matcher: ["/((?!_next).*)"],
 };

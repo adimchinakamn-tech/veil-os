@@ -852,7 +852,16 @@ function AppsTab({ onLaunchApp }: { onLaunchApp: (app: SiteAppCard) => Promise<v
       window.setTimeout(() => setPackHint(""), 5000);
       return;
     }
-    window.location.href = `/api/offline?ext=${encodeURIComponent(pack.file)}&pw=${encodeURIComponent(pw)}`;
+    // Zone-prefix aware: when the app is served through a path-prefix CDN
+    // (…/z/<zone>/), the download path must carry the prefix or the
+    // navigation escapes to the CDN origin's root and 404s. The layout's
+    // bootstrap shim exposes __veilFixUrl for exactly this — it's a no-op
+    // passthrough on the normal origin.
+    const dlPath = `/api/offline?ext=${encodeURIComponent(pack.file)}&pw=${encodeURIComponent(pw)}`;
+    const zoneFix = (
+      window as unknown as { __veilFixUrl?: (u: string) => string }
+    ).__veilFixUrl;
+    window.location.href = zoneFix ? zoneFix(dlPath) : dlPath;
   };
 
   const unlockManage = async () => {
