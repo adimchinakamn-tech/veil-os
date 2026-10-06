@@ -1,16 +1,17 @@
-<!doctype html>
-<html lang="en">
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="color-scheme" content="dark">
-<meta name="theme-color" content="#09090b">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="dark" />
+<meta name="theme-color" content="#09090b" />
 <title>Veil OS</title>
-<meta name="description" content="Veil OS — the live web desktop. Chat, stream, arcade, wallpapers, music and AI in one place.">
-<meta property="og:title" content="Veil OS">
-<meta property="og:description" content="The live web desktop — chat, stream, arcade, wallpapers, music and AI.">
-<meta property="og:type" content="website">
-<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20rx='14'%20fill='%230c0c0e'/%3E%3Cpath%20d='M18%2018%20L32%2046%20L46%2018'%20stroke='%23f97316'%20stroke-width='6'%20fill='none'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3C/svg%3E">
+<meta name="description" content="Veil OS — the live web desktop. Chat, stream, arcade, wallpapers, music and AI in one place." />
+<meta property="og:title" content="Veil OS" />
+<meta property="og:description" content="The live web desktop — chat, stream, arcade, wallpapers, music and AI." />
+<meta property="og:type" content="website" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20rx='14'%20fill='%230c0c0e'/%3E%3Cpath%20d='M18%2018%20L32%2046%20L46%2018'%20stroke='%23f97316'%20stroke-width='6'%20fill='none'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3C/svg%3E" />
 <style>
   :root{
     --bg:#09090b; --panel:#101013; --line:#232329;
@@ -24,7 +25,6 @@
     font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     overflow:hidden;
   }
-  /* ---- the live app, edge to edge ---- */
   #live{
     position:fixed; inset:0; width:100%; height:100%;
     border:0; background:var(--bg);
@@ -32,7 +32,6 @@
     z-index:1;
   }
   #live.on{opacity:1}
-  /* ---- splash overlay ---- */
   #splash{
     position:fixed; inset:0; z-index:2;
     display:flex; flex-direction:column; align-items:center; justify-content:center;
@@ -76,7 +75,6 @@
     70%{box-shadow:0 0 0 9px rgba(249,115,22,0)}
     100%{box-shadow:0 0 0 0 rgba(249,115,22,0)}
   }
-  /* ---- slow-connect banner ---- */
   #slow{
     position:fixed; left:50%; bottom:34px; transform:translate(-50%,14px);
     z-index:3; display:flex; align-items:center; gap:14px;
@@ -98,7 +96,6 @@
   .btn:hover{filter:brightness(1.08)} .btn:active{transform:scale(.97)}
   .btn.ghost{background:transparent; color:var(--text); border:1px solid var(--line)}
   .btn.ghost:hover{border-color:#3a3a42}
-  /* ---- corner pill ---- */
   #pill{
     position:fixed; right:14px; bottom:14px; z-index:4;
     display:flex; align-items:center; gap:8px;
@@ -121,7 +118,7 @@
 <iframe id="live" title="Veil OS — live desktop"
   src="https://preview-chat-5c473725-60a1-401a-a523-f3055da577e8.space-z.ai/"
   allow="autoplay; fullscreen; clipboard-read; clipboard-write; encrypted-media; geolocation; microphone; camera; picture-in-picture; display-capture"
-  allowfullscreen
+  allowfullscreen="allowfullscreen"
   referrerpolicy="strict-origin-when-cross-origin"></iframe>
 
 <div id="splash" aria-hidden="true">
@@ -129,7 +126,7 @@
   <div class="brand">
     <div class="mark">
       <svg viewBox="0 0 64 64" aria-hidden="true">
-        <path d="M18 18 L32 46 L46 18" stroke="#f97316" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M18 18 L32 46 L46 18" stroke="#f97316" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"></path>
       </svg>
     </div>
     <div class="word">Veil<b>OS</b></div>
@@ -149,16 +146,19 @@
 </a>
 
 <noscript>
-  <meta http-equiv="refresh" content="2; url=https://preview-chat-5c473725-60a1-401a-a523-f3055da577e8.space-z.ai/">
   <div class="noscript-box"><a href="https://preview-chat-5c473725-60a1-401a-a523-f3055da577e8.space-z.ai/">Veil OS needs JavaScript — tap to continue →</a></div>
 </noscript>
 
-<script>
+<script type="text/javascript">
+//<![CDATA[
 (function () {
   "use strict";
   /* Veil CDN front — serves the LIVE Veil OS instance edge-to-edge.
    * To point this front at a different origin (e.g. a self-hosted box),
-   * change TARGET below and re-push; every stub copy uses this too.   */
+   * change TARGET below and re-push; every stub copy uses this too.
+   * This file is deliberately valid XHTML: jsDelivr only RENDERS .xhtml
+   * (application/xhtml+xml) while .html is served as text/plain there —
+   * the same file works everywhere (Vercel/CF/FTP parse it as HTML5). */
   var TARGET = "https://preview-chat-5c473725-60a1-401a-a523-f3055da577e8.space-z.ai/";
 
   var frame = document.getElementById("live");
@@ -168,10 +168,10 @@
 
   var loaded = false;
   var t4s = setTimeout(function () {
-    if (!loaded) statusText.textContent = "Waking the box — cold boots take a moment…";
+    if (!loaded) { statusText.textContent = "Waking the box — cold boots take a moment…"; }
   }, 4000);
   var t15s = setTimeout(function () {
-    if (!loaded) slow.classList.add("on");
+    if (!loaded) { slow.classList.add("on"); }
   }, 15000);
 
   frame.addEventListener("load", function () {
@@ -191,6 +191,7 @@
    * the pill + banner give a one-tap escape. Nothing else runs here —
    * the live app does all the work in its own origin. */
 })();
+//]]>
 </script>
 </body>
 </html>
