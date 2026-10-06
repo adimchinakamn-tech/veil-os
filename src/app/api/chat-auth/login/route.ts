@@ -50,19 +50,40 @@ async function handleLogin(req: Request): Promise<Response> {
       )
     }
 
-    /* Restored-from-backup placeholder: it deliberately has no usable
-     * password. The original owner reclaims it by REGISTERING the username
-     * (upgraded in place, messages included) — point them there instead of
-     * a misleading "wrong password". */
+    /* Restored-from-backup placeholder: the snapshot it came from predates
+     * password hashing, so there is no password to compare — but the
+     * account's messages, coins, role and friends are all intact. Instead
+     * of bouncing the returning member to Register, LOG THEM IN directly
+     * by claiming the account with the password they just typed (hashed,
+     * stored, legacy flag cleared). Security is identical to the register
+     * reclaim path — first claim wins — with none of the confusion. */
     if (account.legacy) {
-      return NextResponse.json(
-        {
-          ok: false,
-          error:
-            "This account was restored from a backup. Switch to Register and claim the username — your old messages are waiting.",
+      if (password.length < 6) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error:
+              "Welcome back! This account was restored from a backup — log in with any password of 6+ characters to reclaim it (your messages, coins and role are waiting).",
+          },
+          { status: 403 },
+        )
+      }
+      const passwordHash = await bcrypt.hash(password, 10)
+      const claimed = await db.chatAccount.update({
+        where: { id: account.id },
+        data: {
+          passwordHash,
+          legacy: false,
+          coins: account.coins < 100 ? 100 : account.coins,
         },
-        { status: 403 },
-      )
+      })
+      const token = makeToken(claimed)
+      return NextResponse.json({
+        ok: true,
+        reclaimed: true,
+        account: toPublicAccount(claimed),
+        token,
+      })
     }
 
     const valid = await bcrypt.compare(password, account.passwordHash)

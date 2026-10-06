@@ -143,6 +143,11 @@
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
+/* Chat channel-switch loading bar — a slim indeterminate slide. */
+@keyframes veil-slide {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(420%); }
+}
 
 .veil-orb-a { animation: veil-float 14s ease-in-out infinite; will-change: transform; }
 .veil-orb-b { animation: veil-float-slow 18s ease-in-out infinite; will-change: transform; }

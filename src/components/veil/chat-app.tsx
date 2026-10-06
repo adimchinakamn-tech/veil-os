@@ -793,7 +793,10 @@ function ChatWallpaperBackdrop() {
   const poster = wallpaper?.thumb ?? undefined
   const theme = wallpaper?.theme ?? "emerald"
 
-  return (
+  /* Memoized: ChatApp re-renders on every keystroke / socket event —
+   * without memo the wallpaper subtree (and its <video>) re-diffs each
+   * time, which measured as a visible chunk of the chat's input lag. */
+  return useMemo(() => (
     <div
       aria-hidden
       className="pointer-events-none absolute inset-0 overflow-hidden"
@@ -820,7 +823,7 @@ function ChatWallpaperBackdrop() {
       {/* readability scrim over the plain wallpaper */}
       <div className="absolute inset-0 bg-black/45" />
     </div>
-  )
+  ), [kind, src, poster, theme])
 }
 
 // ---------------------------------------------------------------------------
@@ -872,6 +875,16 @@ function AuthScreen({
     try {
       const data = await attempt()
       saveStoredAccount(data.account, data.token)
+      /* Claimed a backup-restored account straight from the login form —
+       * celebrate it so the member KNOWS their history came back. */
+      if ((data as { reclaimed?: boolean }).reclaimed) {
+        try {
+          const s = await import("sonner")
+          s.toast.success("Welcome back! Your account was reclaimed from the backup — messages, coins and role are intact.")
+        } catch {
+          /* sonner not loaded — non-fatal */
+        }
+      }
       onAuthed(data.account, data.token)
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Authentication failed."
@@ -1728,10 +1741,10 @@ function UserProfileModal({
           <div className="flex items-start gap-2 rounded-xl border border-amber-300/25 bg-amber-400/5 p-3 text-xs leading-relaxed text-amber-100/80">
             <History className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-300" />
             <p>
-              Restored from a chat backup after the data wipe — messages and
-              coins are intact. Nobody has re-registered this username yet:
-              registering <span className="font-semibold">@{who.username}</span> claims
-              this profile and everything in it.
+              Restored from a chat backup — messages, coins and role are
+              intact. The owner just logs in as{" "}
+              <span className="font-semibold">@{who.username}</span> with any
+              password of 6+ characters to reclaim it.
             </p>
           </div>
         )}
@@ -3423,6 +3436,12 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
     if (!account) return
     let stopped = false
     let timer: ReturnType<typeof setTimeout> | null = null
+    /* Change signature — the room is usually quiet, and re-setting the
+     * arrays every 6s re-rendered the ENTIRE message list (mergedMessages
+     * identity churn) even when nothing changed. Compare first, set only
+     * on a real difference. */
+    let lastMsgSig = ""
+    let lastUserSig = ""
     const tick = async () => {
       try {
         const res = await fetch("/api/chat-live", { cache: "no-store" })
@@ -3438,8 +3457,18 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
             })[]
           }
           if (!stopped && data.ok) {
-            setLiveMessages(Array.isArray(data.messages) ? data.messages : [])
-            setLiveMembers(Array.isArray(data.users) ? data.users : [])
+            const msgs = Array.isArray(data.messages) ? data.messages : []
+            const users = Array.isArray(data.users) ? data.users : []
+            const msgSig = msgs.map((m) => `${m.id}:${m.content.length}`).join("|")
+            const userSig = users.map((u) => `${u.accountId}:${u.online ? 1 : 0}:${u.muted ? 1 : 0}:${u.banned ? 1 : 0}`).join("|")
+            if (msgSig !== lastMsgSig) {
+              lastMsgSig = msgSig
+              setLiveMessages(msgs)
+            }
+            if (userSig !== lastUserSig) {
+              lastUserSig = userSig
+              setLiveMembers(users)
+            }
           }
         }
       } catch {
@@ -3480,6 +3509,12 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
         if (!stopped && data.messages) {
           const fresh = data.messages
           setMessages((prev) => {
+            /* EMPTY-RESPONSE GUARD: an API hiccup (restart window, DB
+             * rehydrate, proxy error page parsed as an empty list) must
+             * never wipe the visible chat — that was the "messages blink
+             * out of existence" bug. Only reconcile when the server sent
+             * a real, non-empty page. */
+            if (fresh.length === 0 && prev.length > 0) return prev
             const byId = new Map(prev.map((m) => [m.id, m]))
             let changed = false
             for (const m of fresh) {
@@ -3634,6 +3669,9 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
   const [showFriendMenu, setShowFriendMenu] = useState(false)
   const [friendTarget, setFriendTarget] = useState("")
   const [dmTarget, setDmTarget] = useState("")
+  /* True while a channel switch's first fetch is in flight — drives the
+   * slim loading bar instead of wiping the message list to empty. */
+  const [channelLoading, setChannelLoading] = useState(false)
 
   // Extensions
   const [extensions, setExtensions] = useState<ExtensionState>(DEFAULT_EXTENSIONS)
@@ -4147,19 +4185,39 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
   // (the "#general messages appearing in #links" bug: the old channel's
   // list stayed rendered while the new fetch was in flight or failed).
   const channelLoadGenRef = useRef(0)
+  /* Pins survive a channel round-trip within the session (they used to be
+   * wiped on every switch — and worse, auto-populated with the channel's
+   * 3 OLDEST messages, which nobody ever asked for). pinnedForRef guards
+   * the sync effect: pins belong to the channel they were made in, so a
+   * switch must not smear the old channel's pins onto the new one. */
+  const pinnedByChannelRef = useRef<Map<string, ChatMessage[]>>(new Map())
+  const pinnedForRef = useRef<string>(channelId)
+  useEffect(() => {
+    if (pinnedForRef.current === channelId) {
+      pinnedByChannelRef.current.set(channelId, pinned)
+    }
+  }, [pinned, channelId])
   useEffect(() => {
     if (!socketRef.current || !account) return
     const socket = socketRef.current
     socket.emit("subscribe", { channelId })
     setPresence([])
     setTypingUsers({})
-    // Drop the previous channel's messages IMMEDIATELY — never leave the
-    // old channel rendered under the new header while the fetch runs.
-    setMessages([])
-    setPinned([])
+    /* Restore this channel's pins from the session map. */
+    pinnedForRef.current = channelId
+    setPinned(pinnedByChannelRef.current.get(channelId) ?? [])
+    /* NO eager setMessages([]) — wiping the list on every switch made the
+     * whole chat "blink out of existence" for the fetch's duration. The
+     * old rows simply stay visible under a slim loading bar until the new
+     * channel's fetch lands (generation-guarded, with retries) and swaps
+     * them in one atomic replace. */
+    setChannelLoading(true)
     const gen = ++channelLoadGenRef.current
-    // Fetch recent messages for this channel.
-    void (async () => {
+    // Fetch recent messages for this channel. Transient failures (dev
+    // recompile, gateway blip, mobile network switch) RETRY a few times
+    // before giving up — a single failed fetch used to blank the channel
+    // to "No messages here yet" until the next poll recovered it.
+    const load = async (attempt: number): Promise<void> => {
       try {
         const data = await apiFetch<{ messages: ChatMessage[] }>(
           `/api/chat-data?channel=${encodeURIComponent(channelId)}${
@@ -4168,13 +4226,19 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
         )
         if (gen !== channelLoadGenRef.current) return // stale — a newer switch won
         setMessages(data.messages || [])
-        setPinned((data.messages || []).slice(0, 3))
+        setChannelLoading(false)
       } catch (e) {
         if (gen !== channelLoadGenRef.current) return // stale — ignore
+        if (attempt < 3) {
+          setTimeout(() => void load(attempt + 1), 1200 * (attempt + 1))
+          return
+        }
         setMessages([])
+        setChannelLoading(false)
         console.error("Failed to load channel messages", e)
       }
-    })()
+    }
+    void load(0)
     return () => {
       socket.emit("unsubscribe", { channelId })
     }
@@ -4189,7 +4253,10 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
       const data = await apiFetch<{ members: ChatAccount[] }>(
         `/api/chat-members?token=${encodeURIComponent(token)}`,
       )
-      setMembers(data.members || [])
+      /* updateMembers (not raw setMembers) — it also re-syncs the
+       * role/tag snapshots embedded in already-rendered messages, so a
+       * freshly promoted mod's badge appears without a reload. */
+      updateMembers(data.members || [])
       /* rehydrate the local account snapshot — the session cookie mirror
        * is slim (identity only), so PFP/bio/coins/tag refresh here from
        * the authoritative row on every load; it also picks up profile
@@ -4204,7 +4271,7 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
        * console.error here used to pop the Next dev overlay open over the
        * chat — a backdrop the user couldn't click through. */
     }
-  }, [token, account?.id])
+  }, [token, account?.id, updateMembers])
 
   /* Re-fetch the CURRENT channel's messages (used after a backup restore
    * imports history behind the UI's back). Same generation guard as the
@@ -4218,8 +4285,11 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
         }`,
       )
       if (gen !== channelLoadGenRef.current) return
-      setMessages(data.messages || [])
-      setPinned((data.messages || []).slice(0, 3))
+      const fresh = data.messages || []
+      setMessages((prev) =>
+        /* Same empty-response guard — a hiccup must not blank the chat. */
+        fresh.length === 0 && prev.length > 0 ? prev : fresh,
+      )
     } catch {
       /* next channel switch / reconnect will re-sync */
     }
@@ -4229,19 +4299,24 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
   /* Open someone's profile card. Prefers the fresh members-list row
    * (role/tag/bio up to date); falls back to the account snapshot
    * embedded in a message so the card still works for departed
-   * members. Self-view offers the "Edit your profile" hand-off. */
+   * members. Self-view offers the "Edit your profile" hand-off.
+   *
+   * Refs, not closure state: a stable identity here is what lets the
+   * memoized MessageRow skip re-renders (it used to change on every
+   * message/member update, re-rendering the whole list). */
   const openProfile = useCallback(
     (accountId: string) => {
-      const fromMembers = members.find((m) => m.id === accountId)
+      const fromMembers = membersRef.current.find((m) => m.id === accountId)
       if (fromMembers) {
         setViewingProfile(fromMembers)
         return
       }
-      if (accountId === account?.id && account) {
-        setViewingProfile(account)
+      const me = accountRef.current
+      if (accountId === me?.id && me) {
+        setViewingProfile(me)
         return
       }
-      const fromMessage = messages.find((m) => m.account.id === accountId)
+      const fromMessage = messagesRef.current.find((m) => m.account.id === accountId)
       if (fromMessage) {
         setViewingProfile({
           id: fromMessage.account.id,
@@ -4263,7 +4338,7 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
         })
       }
     },
-    [members, messages, account],
+    [],
   )
 
   const refreshDms = useCallback(async () => {
@@ -4653,6 +4728,13 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
     setEditingId(null)
     setEditDraft("")
   }, [])
+  /* Stable wrapper — passing an inline arrow as onEditSave gave EVERY
+   * MessageRow a brand-new prop on every keystroke, defeating the memo
+   * and re-rendering the entire list while typing (the "chat is so
+   * laggy" report). */
+  const handleEditSave = useCallback(() => {
+    void saveEdit()
+  }, [saveEdit])
 
   /* Own-message edit rights: a DB message you authored, OR a live-room
    * (git version) message sent under your username — the PATCH routes
@@ -5129,6 +5211,13 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
               className="relative min-h-0 flex-1 overflow-y-auto"
               style={{ scrollbarWidth: "thin" }}
             >
+              {/* Slim loading bar while a channel switch's fetch is in
+               * flight — the previous list stays visible underneath. */}
+              {channelLoading && (
+                <div className="pointer-events-none sticky top-0 z-20 h-0.5 w-full overflow-hidden">
+                  <div className="h-full w-1/3 animate-[veil-slide_1.1s_ease-in-out_infinite] rounded-full bg-gradient-to-r from-transparent via-orange-400 to-transparent" />
+                </div>
+              )}
               <div className="py-2">
                 {mergedMessages.length === 0 ? (
                   <div className="grid place-items-center py-20 text-center text-white/40">
@@ -5162,7 +5251,7 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                           onDelete={deleteMessage}
                           onEditStart={startEdit}
                           onEditDraft={setEditDraft}
-                          onEditSave={() => void saveEdit()}
+                          onEditSave={handleEditSave}
                           onEditCancel={cancelEdit}
                           onOpenProfile={openProfile}
                         />
