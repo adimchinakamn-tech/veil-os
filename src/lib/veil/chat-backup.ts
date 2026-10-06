@@ -96,12 +96,42 @@ export const JSDELIVR_PURGE_URLS: string[] = SITE_FILES.map(
   (f) => `https://purge.jsdelivr.net/gh/${BACKUP_REPO}@main/${f}`,
 )
 
+/* jsDelivr THROTTLES purges per path once they get frequent (a chat
+ * write every minute or two is enough). Purging all 56 surfaces on
+ * every changed message earned a repo-wide throttle and the CDN edge
+ * then serves STALE chat data for up to an hour — the exact "messages
+ * don't show up without a restart" bug. The loop now purges ONLY the
+ * files that actually change with chat content; the pages ride their
+ * natural TTL and get purged explicitly on real site updates. */
+const JSDELIVR_DATA_PURGE_URLS: string[] = [
+  "site/data/latest.json",
+  "site/data/chat-live.json",
+  "backups/chat/latest.json",
+  "backups/chat/manifest.json",
+].map((f) => `https://purge.jsdelivr.net/gh/${BACKUP_REPO}@main/${f}`)
+
 /** Purge every mirror surface on the jsDelivr edge. Never throws —
  * cache purging is an optimization; the branch cache expires by itself. */
 export async function purgeJSDelivrAll(): Promise<string[]> {
   const purged: string[] = []
   await Promise.all(
     JSDELIVR_PURGE_URLS.map(async (url) => {
+      try {
+        const r = await fetch(url, { signal: AbortSignal.timeout(8000) })
+        if (r.ok) purged.push(url)
+      } catch {
+        /* ignore individual purge failures */
+      }
+    }),
+  )
+  return purged
+}
+
+/** The loop's slim purge — just the chat-data files (see note above). */
+export async function purgeJSDelivrData(): Promise<string[]> {
+  const purged: string[] = []
+  await Promise.all(
+    JSDELIVR_DATA_PURGE_URLS.map(async (url) => {
       try {
         const r = await fetch(url, { signal: AbortSignal.timeout(8000) })
         if (r.ok) purged.push(url)
@@ -159,6 +189,10 @@ export type ChatBackupAccount = {
   pfpAccessory: string | null
   legacy: boolean
   createdAt: string
+  /** bcrypt hash — carried so a restore keeps the account LOGGABLE with
+   * the same password (user-requested: usernames + passwords must survive
+   * a reset, otherwise someone else could register the name first) */
+  passwordHash?: string | null
 }
 
 export type ChatBackupMessage = {
@@ -170,6 +204,7 @@ export type ChatBackupMessage = {
   replyToContent: string | null
   replyToUsername: string | null
   createdAt: string
+  editedAt?: string | null
 }
 
 export type ChatBackupV1 = {
@@ -227,6 +262,7 @@ export async function collectChatBackup(): Promise<ChatBackupV1> {
       pfpAccessory: a.pfpAccessory,
       legacy: a.legacy,
       createdAt: a.createdAt.toISOString(),
+      passwordHash: a.passwordHash,
     })),
     messages: messages.map((m) => ({
       id: m.id,
@@ -237,6 +273,7 @@ export async function collectChatBackup(): Promise<ChatBackupV1> {
       replyToContent: m.replyToContent,
       replyToUsername: m.replyToUsername,
       createdAt: m.createdAt.toISOString(),
+      editedAt: m.editedAt ? m.editedAt.toISOString() : null,
     })),
     dms: dms.map((d) => ({
       id: d.id,
@@ -349,6 +386,15 @@ export async function restoreChatBackup(
       res.accountsMapped++
       continue
     }
+    /* Restore the ORIGINAL password hash when the backup carries one —
+     * the user logs back in with the same credentials and nobody can
+     * steal the name by registering first. Only bcrypt-style hashes are
+     * accepted; anything else falls back to the unmatchable placeholder
+     * (old backups, tampered files). */
+    const restoredHash =
+      typeof a.passwordHash === "string" && /^\$2[aby]\$\d{2}\$.{40,}$/ .test(a.passwordHash)
+        ? a.passwordHash
+        : null
     // Recreate as a legacy placeholder. Keep the original id when it is free
     // (stable re-imports); otherwise mint one.
     let newId = a.id
@@ -357,7 +403,7 @@ export async function restoreChatBackup(
       data: {
         id: newId,
         username: a.username,
-        passwordHash: unmatchableHash(),
+        passwordHash: restoredHash ?? unmatchableHash(),
         displayName: a.displayName || a.username,
         avatarColor: a.avatarColor || restoreAvatarColor(a.username),
         avatarImage: typeof a.avatarImage === "string" ? a.avatarImage : null,
@@ -369,7 +415,9 @@ export async function restoreChatBackup(
         tag: a.tag ?? null,
         tagColor: a.tagColor ?? null,
         pfpAccessory: a.pfpAccessory ?? null,
-        legacy: true,
+        /* A restored password = a REAL, loggable account (not a free
+         * name) — legacy stays false so the login route accepts it. */
+        legacy: restoredHash ? false : true,
         createdAt: safeDate(a.createdAt) ?? new Date(),
       },
     })
@@ -433,6 +481,7 @@ export async function restoreChatBackup(
           replyToContent: m.replyToContent ? m.replyToContent.slice(0, 400) : null,
           replyToUsername: m.replyToUsername ?? null,
           createdAt: safeDate(m.createdAt) ?? new Date(),
+          editedAt: safeDate(m.editedAt),
         },
       })
       .catch(() => {

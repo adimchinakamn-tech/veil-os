@@ -411,6 +411,33 @@ io.on("connection", (socket: Socket) => {
     }
   })
 
+  // An author edited their own message — broadcast the new text + the
+  // "(edited)" stamp to everyone in the channel (the editor already
+  // patched its own state from the PATCH /api/chat-data response).
+  socket.on("message_edited", (data: {
+    channel?: string
+    channelId?: string
+    messageId?: string
+    content?: string
+    editedAt?: string
+  }) => {
+    try {
+      if (!account) return
+      const channelId = resolveChannel(data)
+      if (!channelId || !data.messageId || typeof data.content !== "string") return
+      const set = socketChannels.get(socket.id)
+      if (!set || !set.has(channelId)) return
+      io.to(channelId).emit("message_edited", {
+        channelId,
+        messageId: data.messageId,
+        content: data.content,
+        editedAt: data.editedAt ?? new Date().toISOString(),
+      })
+    } catch (err) {
+      console.error("[veil-chat] message_edited error", err)
+    }
+  })
+
   socket.on("disconnect", () => {
     try {
       const set = socketChannels.get(socket.id)

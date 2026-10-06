@@ -155,6 +155,24 @@ export const AD_HOSTS: string[] = [
   "yandex-metrica.com",
   "top-mail.ru",
   "buzzoola.com",
+
+  // — Adult-network ad servers &amp; tracking metrics (observed hammering
+  // the proxy at 2-2.5s per request in dev logs — every one of these
+  // was a full wasted upstream fetch through /api/p) —
+  "pemsrv.com",
+  "exoclick.com",
+  "exosrv.com",
+  "exdynsrv.com",
+  "realsrv.com",
+  "ero-advertising.com",
+  "tsyndicate.com",
+  "tjk-njk.com",
+  "grtbt.com",
+  "novibet.partners",
+  "wsrv.nl",
+  "histats.com",
+  "addthis.com",
+  "sharethis.com",
 ];
 
 // Scrub any accidental whitespace in the list (defensive).

@@ -1,0 +1,5 @@
+{
+  "name": "veil-site-serve",
+  "private": true,
+  "scripts": { "dev": "bun --hot index.ts" }
+}

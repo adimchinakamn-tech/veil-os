@@ -661,7 +661,7 @@ function AppCard({
       viewport={{ once: true, margin: "0px 0px -48px 0px" }}
       transition={{ duration: 0.35, delay: (index % 6) * 0.04 }}
       className={cn(
-        "group relative overflow-hidden rounded-[14px] border border-[#1a2822] bg-[#121f1a] text-left shadow-sm shadow-black/40 transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-[3px] hover:border-[#3f7f63] hover:shadow-[0_10px_28px_rgba(63,127,99,0.2)]"
+        "veil-cv group relative overflow-hidden rounded-[14px] border border-[#1a2822] bg-[#121f1a] text-left shadow-sm shadow-black/40 transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-[3px] hover:border-[#3f7f63] hover:shadow-[0_10px_28px_rgba(63,127,99,0.2)]"
       )}
     >
       <button
@@ -1314,6 +1314,10 @@ export function ArcadeSection({
   }, []);
 
   // ----- catalog fetch (page 1 + featured row; one shared upstream cache) -----
+  // ATOMIC: both responses are fully parsed BEFORE any state flips — an
+  // await between setHasMore(true) and setInitialLoading(false) could split
+  // the mount into two commits and leave the sentinel rendered but never
+  // observed (the dead-observer race that froze the catalog at page 1).
   const loadInitial = React.useCallback(async () => {
     setInitialLoading(true);
     setCatalogError(false);
@@ -1325,30 +1329,34 @@ export function ArcadeSection({
       fetch(`/api/arcade?page=1${qs ? `&${qs}` : ""}`, { cache: "no-store" }),
       fetch(`/api/arcade?hot=1${qs ? `&${qs}` : ""}`, { cache: "no-store" }),
     ]);
-    let ok = false;
+    let mainData: ArcadeResponse | null = null;
+    let hotData: ArcadeResponse | null = null;
     if (mainRes.status === "fulfilled") {
       try {
-        const data = (await mainRes.value.json()) as ArcadeResponse;
-        if (mainRes.value.ok && Array.isArray(data.items)) {
-          setTitles(data.items);
-          setTotal(data.total ?? 0);
-          setHasMore(Boolean(data.hasMore));
-          setPage(1);
-          if (Array.isArray(data.tags)) setTagList(data.tags);
-          ok = true;
-        }
+        mainData = (await mainRes.value.json()) as ArcadeResponse;
       } catch {
-        /* fall through to error state */
+        mainData = null;
       }
     }
-    if (!ok) setCatalogError(true);
     if (hotRes.status === "fulfilled") {
       try {
-        const data = (await hotRes.value.json()) as ArcadeResponse;
-        if (hotRes.value.ok && Array.isArray(data.items)) setHot(data.items);
+        hotData = (await hotRes.value.json()) as ArcadeResponse;
       } catch {
-        /* featured row is optional */
+        hotData = null;
       }
+    }
+    /* ——— everything below runs in one synchronous block ——— */
+    if (mainData && mainRes.status === "fulfilled" && mainRes.value.ok && Array.isArray(mainData.items)) {
+      setTitles(mainData.items);
+      setTotal(mainData.total ?? 0);
+      setHasMore(Boolean(mainData.hasMore));
+      setPage(1);
+      if (Array.isArray(mainData.tags)) setTagList(mainData.tags);
+    } else {
+      setCatalogError(true);
+    }
+    if (hotData && hotRes.status === "fulfilled" && hotRes.value.ok && Array.isArray(hotData.items)) {
+      setHot(hotData.items);
     }
     setInitialLoading(false);
   }, [sort, tag]);
@@ -1389,22 +1397,30 @@ export function ArcadeSection({
     }
   }, [loadingMore, hasMore, page, sort, tag]);
 
-  /* ----- Veil twist: the catalog feeds itself — an IntersectionObserver  */
-  /* ----- watches a sentinel under the grid and pulls the next page in   */
-  /* ----- as you scroll, so it reads like xylora's one endless grid.     */
-  const sentinelRef = React.useRef<HTMLDivElement>(null);
-  React.useEffect(() => {
-    const el = sentinelRef.current;
-    if (!el || typeof IntersectionObserver === "undefined") return;
-    const io = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((e) => e.isIntersecting)) void loadMore();
-      },
-      { rootMargin: "700px 0px" }
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, [loadMore, tab, query]);
+  /* ----- Veil twist: the catalog feeds itself — a CALLBACK-REF      */
+  /* ----- IntersectionObserver watches the sentinel under the grid    */
+  /* ----- and pulls the next page in as you scroll. A callback ref    */
+  /* ----- (not useRef + effect) observes the node exactly when it     */
+  /* ----- mounts and whenever loadMore changes — immune to the        */
+  /* ----- render-split race that used to leave the catalog stuck      */
+  /* ----- after page 1.                                              */
+  const sentinelIoRef = React.useRef<IntersectionObserver | null>(null);
+  const attachSentinel = React.useCallback(
+    (el: HTMLDivElement | null) => {
+      sentinelIoRef.current?.disconnect();
+      sentinelIoRef.current = null;
+      if (!el || typeof IntersectionObserver === "undefined") return;
+      const io = new IntersectionObserver(
+        (entries) => {
+          if (entries.some((e) => e.isIntersecting)) void loadMore();
+        },
+        { rootMargin: "700px 0px" }
+      );
+      io.observe(el);
+      sentinelIoRef.current = io;
+    },
+    [loadMore]
+  );
 
   // ----- server-side search (debounced), alongside the client filter -----
   // Both catalogs are queried in parallel: GN-Math and The Stash (the UGS
@@ -1997,7 +2013,7 @@ export function ArcadeSection({
                       itself as you approach the bottom — no button, just cards. */}
                   {hasMore && (
                     <>
-                      <div ref={sentinelRef} aria-hidden className="h-2" />
+                      <div ref={attachSentinel} aria-hidden className="h-2" />
                       {loadingMore && (
                         <div className="mt-3">
                           <SkeletonGrid count={6} />

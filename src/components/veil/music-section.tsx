@@ -260,7 +260,7 @@ function SongCard({
 /* Section                                                              */
 /* ------------------------------------------------------------------ */
 
-export function MusicSection({ onBack }: { onBack: () => void }) {
+export function MusicSection({ onBack, open = true }: { onBack: () => void; open?: boolean }) {
   const reduceMotion = useReducedMotion();
   const [input, setInput] = React.useState("");
   const [resolving, setResolving] = React.useState(false);
@@ -272,11 +272,25 @@ export function MusicSection({ onBack }: { onBack: () => void }) {
   const [searching, setSearching] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
   const [searchError, setSearchError] = React.useState<string | null>(null);
+  /* Search sequencing: only the LATEST submission may commit its results
+   * (two quick searches used to race and the slower/older response won,
+   * showing results for query A under a "Results for B" header). */
+  const searchSeq = React.useRef(0);
 
-  // Wide panel while the section is open; pill (music still playing) after.
+  // Wide panel while the section is OPEN; pill (music still playing) after.
+  // Driven by the `open` PROP, not mount/unmount — sections stay mounted
+  // (hidden) once opened, so the old mount-only effect never re-attached
+  // the panel and closing the section never docked it back to the pill.
   React.useEffect(() => {
-    setMusicAttached(true);
-    return () => setMusicAttached(false);
+    setMusicAttached(open);
+  }, [open]);
+
+  // The persistent player's Stop clears our now-playing state so "Live"
+  // badges and Pause icons don't stick on cards forever.
+  React.useEffect(() => {
+    const onStop = () => setNowPlaying(null);
+    window.addEventListener("veil:music-stop", onStop);
+    return () => window.removeEventListener("veil:music-stop", onStop);
   }, []);
 
   const handlePlay = React.useCallback(
@@ -305,14 +319,23 @@ export function MusicSection({ onBack }: { onBack: () => void }) {
       setSearchError(null);
       setSearching(true);
       setSearchQuery(raw);
+      const seq = ++searchSeq.current;
       searchMusic(raw)
         .then((items) => {
+          if (seq !== searchSeq.current) return; /* a newer search won */
           setResults(items);
           if (items.length === 0) {
             setSearchError("No playable songs matched — try a shorter query (title or artist).");
           }
         })
-        .finally(() => setSearching(false));
+        .catch(() => {
+          if (seq !== searchSeq.current) return;
+          setResults([]);
+          setSearchError("Song search is unreachable right now — try again in a moment.");
+        })
+        .finally(() => {
+          if (seq === searchSeq.current) setSearching(false);
+        });
       return;
     }
     setResolving(true);

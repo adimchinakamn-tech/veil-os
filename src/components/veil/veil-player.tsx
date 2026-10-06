@@ -34,6 +34,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ExternalLink,
   Music2,
+  PanelTopClose,
   PanelTopOpen,
   Pause,
   Play,
@@ -70,11 +71,31 @@ export function VeilMusicPlayer() {
   const [pos, setPos] = React.useState(0);
   const [dur, setDur] = React.useState(0);
   const [audioError, setAudioError] = React.useState(false);
+  /* The known-full-length fallback, mirrored into a ref so seek() can
+   * use it for Infinity-duration streams (progressive mp3s whose
+   * metadata never resolves). */
+  const durRef = React.useRef(0);
+  React.useEffect(() => {
+    durRef.current = dur;
+  }, [dur]);
+  /* Monotonic play counter — bumped on EVERY play dispatch. It rides
+   * the media element keys so re-playing the SAME song remounts the
+   * element (autoPlay re-fires) instead of silently doing nothing. */
+  const [playNonce, setPlayNonce] = React.useState(0);
+  /* Pending stop timer — a new track within the 180ms close window must
+   * cancel it (the old bug: the timer fired AFTER the new track was set
+   * and nulled it). */
+  const stopTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   React.useEffect(() => {
     const onPlay = (e: Event) => {
       const d = (e as CustomEvent<MusicPlayDetail>).detail;
       if (!d?.embed && !d?.preview) return;
+      /* cancel any pending stop — this dispatch wins */
+      if (stopTimerRef.current !== null) {
+        clearTimeout(stopTimerRef.current);
+        stopTimerRef.current = null;
+      }
       setTrack({
         kind: d.kind,
         embed: d.embed,
@@ -87,6 +108,7 @@ export function VeilMusicPlayer() {
       setPos(0);
       setDur(d.preview && !d.preview.previewOnly ? d.preview.ms / 1000 : 0);
       setAudioError(false);
+      setPlayNonce((n) => n + 1);
     };
     const onAttach = (e: Event) =>
       setAttached(Boolean((e as CustomEvent<{ attach?: boolean }>).detail?.attach));
@@ -95,6 +117,7 @@ export function VeilMusicPlayer() {
     return () => {
       window.removeEventListener("veil:music-play", onPlay);
       window.removeEventListener("veil:music-attach", onAttach);
+      if (stopTimerRef.current !== null) clearTimeout(stopTimerRef.current);
     };
   }, []);
 
@@ -102,7 +125,12 @@ export function VeilMusicPlayer() {
   const stop = () => {
     setClosing(true);
     setMusicAttached(false);
-    window.setTimeout(() => {
+    /* tell the Music section (and anyone listening) so "Live" badges
+     * and now-playing state clear instead of sticking forever */
+    window.dispatchEvent(new CustomEvent("veil:music-stop"));
+    if (stopTimerRef.current !== null) clearTimeout(stopTimerRef.current);
+    stopTimerRef.current = window.setTimeout(() => {
+      stopTimerRef.current = null;
       setTrack(null);
       setAttached(false);
       setClosing(false);
@@ -114,14 +142,21 @@ export function VeilMusicPlayer() {
   const toggle = React.useCallback(() => {
     const a = audioRef.current;
     if (!a) return;
-    if (a.paused) void a.play().catch(() => {});
-    else a.pause();
+    if (a.paused) {
+      if (a.ended) a.currentTime = 0; /* replay after end, not a dead 0s */
+      void a.play().catch(() => {});
+    } else a.pause();
   }, []);
 
   const seek = React.useCallback((frac: number) => {
     const a = audioRef.current;
-    if (!a || !Number.isFinite(a.duration) || a.duration <= 0) return;
-    a.currentTime = Math.max(0, Math.min(1, frac)) * a.duration;
+    if (!a) return;
+    /* Infinity-duration streams: fall back to the known full length —
+     * the scrub bar used to silently no-op on those. */
+    const total =
+      Number.isFinite(a.duration) && a.duration > 0 ? a.duration : durRef.current;
+    if (!Number.isFinite(total) || total <= 0) return;
+    a.currentTime = Math.max(0, Math.min(1, frac)) * total;
     setPos(a.currentTime);
   }, []);
 
@@ -211,21 +246,24 @@ export function VeilMusicPlayer() {
               <div className="min-w-0 flex-1">
                 {attached && (
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-fuchsia-300/80">
-                    {isPreview
-                      ? previewOnly
-                        ? "Now playing · 30s preview"
-                        : "Now playing · SoundCloud"
-                      : "Now playing · Spotify"}
+                    {audioError
+                      ? "Playback error"
+                      : isPreview
+                        ? previewOnly
+                          ? "Now playing · 30s preview"
+                          : "Now playing · SoundCloud"
+                        : "Now playing · Spotify"}
                   </p>
                 )}
                 <p
                   className={cn(
-                    "truncate font-medium text-zinc-100",
+                    "truncate font-medium",
+                    audioError ? "text-rose-300/90" : "text-zinc-100",
                     attached ? "text-[13px] leading-tight" : "text-[12.5px]"
                   )}
-                  title={track.title}
+                  title={audioError ? "Couldn't stream that one — try another result." : track.title}
                 >
-                  {track.title}
+                  {audioError ? "Couldn't stream — try another" : track.title}
                 </p>
                 {attached && track.preview && (
                   <p className="truncate text-[11.5px] leading-tight text-zinc-500">
@@ -259,6 +297,17 @@ export function VeilMusicPlayer() {
                     className="flex size-8 items-center justify-center rounded-full text-zinc-400 transition hover:bg-zinc-800/70 hover:text-fuchsia-300"
                   >
                     <PanelTopOpen aria-hidden className="size-4" />
+                  </button>
+                )}
+                {attached && (
+                  <button
+                    type="button"
+                    aria-label="Collapse the music player to a pill"
+                    title="Collapse to pill"
+                    onClick={() => setAttached(false)}
+                    className="flex size-8 items-center justify-center rounded-full text-zinc-400 transition hover:bg-zinc-800/70 hover:text-fuchsia-300"
+                  >
+                    <PanelTopClose aria-hidden className="size-4" />
                   </button>
                 )}
                 <a
@@ -306,13 +355,16 @@ export function VeilMusicPlayer() {
             {isPreview ? (
               <audio
                 ref={audioRef}
-                key={track.preview?.url}
+                key={`${track.preview?.url ?? "none"}#${playNonce}`}
                 src={track.preview?.url}
                 autoPlay
                 preload="auto"
                 onPlay={() => setPlaying(true)}
                 onPause={() => setPlaying(false)}
-                onEnded={() => setPlaying(false)}
+                onEnded={() => {
+                  setPlaying(false);
+                  setPos(0);
+                }}
                 onError={() => {
                   setPlaying(false);
                   setAudioError(true);
@@ -337,7 +389,7 @@ export function VeilMusicPlayer() {
                 )}
               >
                 <iframe
-                  key={track.embed}
+                  key={`${track.embed}#${playNonce}`}
                   src={track.embed}
                   title={`Spotify embed: ${track.title}`}
                   width="100%"

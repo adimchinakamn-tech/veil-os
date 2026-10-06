@@ -110,6 +110,19 @@ export const AD_HOSTS: string[] = [
   "snap.licdn.com",
   "bat.bing.com",
   "ads.linkedin.com",
+  // Adult-network ad servers & tracking metrics (observed 2-2.5s proxy
+  // round-trips per hit in dev logs — pure waste)
+  "pemsrv.com",
+  "exdynsrv.com",
+  "realsrv.com",
+  "ero-advertising.com",
+  "tsyndicate.com",
+  "tjk-njk.com",
+  "grtbt.com",
+  "wsrv.nl",
+  "histats.com",
+  "addthis.com",
+  "sharethis.com",
 ];
 
 /** Literal tokens matched against pathname+query (lowercased). */

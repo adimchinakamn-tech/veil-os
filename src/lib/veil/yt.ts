@@ -403,8 +403,11 @@ function kick<T>(key: string, loader: () => Promise<T>): Promise<T> {
     .then((body) => {
       cache.set(key, { at: Date.now(), body });
       inflight.delete(key);
-      if (cache.size > 300) {
-        // drop the oldest sixth — a Map keeps insertion order
+      if (cache.size > 150) {
+        // drop the oldest third — a Map keeps insertion order. Entries here
+        // are whole feed pages / video bodies (heavy: cards + formats +
+        // related lists), so 150 kept the dev-server heap ~40MB lighter
+        // than the old 300 cap with no observable hit-rate change.
         for (const k of [...cache.keys()].slice(0, 50)) cache.delete(k);
       }
       return body as T;
