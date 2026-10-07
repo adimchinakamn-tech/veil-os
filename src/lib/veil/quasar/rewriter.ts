@@ -5,7 +5,7 @@
  *
  * HTML pipeline:
  *   1. Shield <script> bodies and <style> bodies with placeholders so the tag
- *      scanner never mangles JS (this mirrors how Ultraviolet scans).
+ *      scanner never mangles JS (this mirrors how Ultraviolet/Scramjet scan).
  *   2. Scan opening tags and rewrite URL-bearing attributes (href, src, srcset,
  *      action, poster, ...) + inline style="" attributes.
  *   3. Strip <base>, CSP metas, integrity attributes; rewrite meta refresh and

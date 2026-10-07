@@ -13,6 +13,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
   ArrowRight,
+  Bug,
   ChevronDown,
   ChevronUp,
   ExternalLink,
@@ -25,18 +26,33 @@ import {
   RotateCw,
   ShieldCheck,
   Sparkles,
+  Volume2,
+  VolumeX,
+  Search,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { KeyboardHelp } from "@/components/veil/keyboard-help";
 import { NewTab } from "@/components/veil/new-tab";
+import { FindBar } from "@/components/veil/quasar-find-bar";
+import { QuasarDebugPanel } from "@/components/veil/quasar-debug-panel";
 import {
+  QuasarTabStrip,
+  type TabMenuAction,
+} from "@/components/veil/quasar-tab-strip";
+import {
+  DEFAULT_TAB_CTX,
+  encodeQuasarPath,
   engineFrameSrc,
   faviconUrls,
   isVeilAppUrl,
   normalizeInput,
+  proxyEngineId,
+  quasarCtxActive,
   veilAppFrameSrc,
   type HistoryResponse,
+  type QuasarTabCtx,
+  type TabEgress,
 } from "@/lib/veil/shared";
 
 export interface Tab {
@@ -45,7 +61,17 @@ export interface Tab {
   idx: number;
   reloadKey: number;
   title: string;
+  /* ── Quasar v2.1.0 per-tab context ── baked into every encoded blob
+   * for this tab: cookie container, egress route, UA override. Plus the
+   * chrome-level pin / mute flags. */
+  container: string;
+  egress: TabEgress;
+  ua: string;
+  pinned: boolean;
+  muted: boolean;
 }
+
+export type { TabEgress, TabMenuAction };
 
 const BAR_IDLE_MS = 2600;
 
@@ -123,6 +149,10 @@ export function BrowserView({
   onCloseTab,
   onSwitchTab,
   onOpenInNewTab,
+  onTabAction,
+  onReorder,
+  onReopen,
+  canReopen,
 }: {
   tabs: Tab[];
   activeId: string;
@@ -144,6 +174,13 @@ export function BrowserView({
   onSwitchTab: (id: string) => void;
   /** Open a URL as a NEW tab (target=_blank / middle-click inside engine pages). */
   onOpenInNewTab: (url: string) => void;
+  /** Quasar v2.1.0 — context-menu action on a tab (pin/mute/container/…). */
+  onTabAction: (tabId: string, action: TabMenuAction) => void;
+  /** Quasar v2.1.0 — drag reorder. */
+  onReorder: (dragId: string, targetId: string, place: "before" | "after") => void;
+  /** Quasar v2.1.0 — reopen the last closed tab. */
+  onReopen: () => void;
+  canReopen: boolean;
 }) {
   const [barVisible, setBarVisible] = React.useState(true);
   /* Manually hidden via the corner-arrow/chevron — while true, the usual
@@ -161,6 +198,19 @@ export function BrowserView({
   const urlInputRef = React.useRef<HTMLInputElement>(null);
   const hideTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const frameRef = React.useRef<HTMLIFrameElement>(null);
+
+  /* ── Quasar v2.1.0 state: find-in-page + engine debug panel ── */
+  const [findOpen, setFindOpen] = React.useState(false);
+  const [findQuery, setFindQuery] = React.useState("");
+  const [findResult, setFindResult] = React.useState<{ count: number; index: number; found: boolean }>({
+    count: 0,
+    index: 0,
+    found: false,
+  });
+  const findIndexRef = React.useRef(0);
+  const [debugOpen, setDebugOpen] = React.useState(false);
+  /* ctx-encoded frame source (async, only when ctx levers are engaged) */
+  const [ctxFrameSrc, setCtxFrameSrc] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     if (!editing) setEditValue(target);
@@ -227,7 +277,7 @@ export function BrowserView({
       const el = e.target as HTMLElement | null;
       const typing = el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable);
       if (e.key === "f" || e.key === "F") {
-        if (!typing) {
+        if (!typing && !e.ctrlKey && !e.metaKey) {
           e.preventDefault();
           void toggleFullscreen();
         }
@@ -245,12 +295,20 @@ export function BrowserView({
         urlInputRef.current?.focus();
         urlInputRef.current?.select();
         setEditing(true);
-      } else if ((e.metaKey || e.ctrlKey) && (e.key === "t" || e.key === "T")) {
+      } else if ((e.metaKey || e.ctrlKey) && !e.shiftKey && (e.key === "t" || e.key === "T")) {
+        // (Ctrl+Shift+T reopen is handled globally in page.tsx — it works
+        // from the start page too, not just while the chrome is mounted.)
         e.preventDefault();
         onNewTab();
       } else if ((e.metaKey || e.ctrlKey) && (e.key === "w" || e.key === "W")) {
         e.preventDefault();
         if (activeId) onCloseTab(activeId);
+      } else if ((e.metaKey || e.ctrlKey) && (e.key === "f" || e.key === "F")) {
+        // Quasar v2.1.0 — find in page (chrome-level; the frame forwards its
+        // own Ctrl+F as a find-open message).
+        e.preventDefault();
+        setBarVisible(true);
+        setFindOpen(true);
       } else if (e.ctrlKey && e.key === "Tab") {
         // Cycle tabs
         e.preventDefault();
@@ -309,7 +367,111 @@ export function BrowserView({
   // else goes through whichever proxy engine is selected (Settings ›
   // Browsing › Proxy engine) — engineFrameSrc decides the lane.
   const isFt = isVeilAppUrl(target);
-  const frameSrc = isFt ? veilAppFrameSrc(target) : engineFrameSrc(target);
+  const activeTabCtx: QuasarTabCtx = React.useMemo(() => {
+    const t = tabs.find((x) => x.id === activeId);
+    return t
+      ? { container: t.container, egress: t.egress, ua: t.ua }
+      : DEFAULT_TAB_CTX;
+  }, [tabs, activeId]);
+  const ctxEngaged = !isFt && proxyEngineId() === "quasar" && quasarCtxActive(activeTabCtx);
+
+  /* Quasar v2.1.0 — when the active tab carries a context (container /
+   * egress / UA), the proxied path must be encoded server-side so the ctx
+   * rides inside the encrypted blob. Default tabs keep the instant
+   * legacy blob (zero regression, no extra round-trip). */
+  React.useEffect(() => {
+    if (!ctxEngaged || !target) {
+      setCtxFrameSrc(null);
+      return;
+    }
+    let alive = true;
+    void encodeQuasarPath(target, activeTabCtx).then((p) => {
+      if (alive) setCtxFrameSrc(p);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [ctxEngaged, target, activeTabCtx, reloadKey]);
+
+  const frameSrc = isFt
+    ? veilAppFrameSrc(target)
+    : ctxEngaged
+      ? (ctxFrameSrc ?? engineFrameSrc(target))
+      : engineFrameSrc(target);
+
+  /* ── Quasar v2.1.0 find-in-page protocol (with the injected hooks) ──
+   *
+   * chrome → frame:  { __quasar: 'quasar-find', q, dir }
+   * frame → chrome:  { __quasar: 'find-open' }   (Ctrl+F pressed inside)
+   * frame → chrome:  { __quasar: 'find-result', count, found } */
+  const postFind = React.useCallback((q: string, dir: "next" | "prev") => {
+    frameRef.current?.contentWindow?.postMessage({ __quasar: "quasar-find", q, dir }, "*");
+  }, []);
+
+  const onFindQueryChange = React.useCallback(
+    (q: string) => {
+      setFindQuery(q);
+      setFindResult((prev) => ({ ...prev, count: 0, index: 0, found: false }));
+      findIndexRef.current = 0;
+      postFind(q, "next");
+    },
+    [postFind]
+  );
+
+  const findNext = React.useCallback(() => {
+    setFindResult((prev) => {
+      const idx = prev.count > 0 ? (prev.index % prev.count) + 1 : 1;
+      findIndexRef.current = idx;
+      return { ...prev, index: idx };
+    });
+    postFind(findQuery, "next");
+  }, [findQuery, postFind]);
+
+  const findPrev = React.useCallback(() => {
+    setFindResult((prev) => {
+      const idx = prev.count > 0 ? ((prev.index - 2 + prev.count) % prev.count) + 1 : 1;
+      findIndexRef.current = idx;
+      return { ...prev, index: idx };
+    });
+    postFind(findQuery, "prev");
+  }, [findQuery, postFind]);
+
+  const closeFind = React.useCallback(() => {
+    setFindOpen(false);
+    setFindQuery("");
+    setFindResult({ count: 0, index: 0, found: false });
+    findIndexRef.current = 0;
+  }, []);
+
+  // Frame → chrome find messages (find-open request + find-result counts).
+  React.useEffect(() => {
+    const onMsg = (e: MessageEvent) => {
+      const d = e.data as { __quasar?: string; count?: number; found?: boolean } | undefined;
+      if (!d || typeof d !== "object" || typeof d.__quasar !== "string") return;
+      if (d.__quasar === "find-open") {
+        setFindOpen(true);
+      } else if (d.__quasar === "find-result") {
+        setFindResult((prev) => ({
+          count: typeof d.count === "number" ? d.count : prev.count,
+          index: prev.index || 1,
+          found: d.found !== false,
+        }));
+      }
+    };
+    window.addEventListener("message", onMsg);
+    return () => window.removeEventListener("message", onMsg);
+  }, []);
+
+  /* Mute relay — the engine hooks mute every <audio>/<video> element in
+   * the frame (and auto-mute new ones while the flag is up). */
+  const activeTabMuted = React.useMemo(
+    () => tabs.find((x) => x.id === activeId)?.muted ?? false,
+    [tabs, activeId]
+  );
+  React.useEffect(() => {
+    if (!target || isFt) return;
+    frameRef.current?.contentWindow?.postMessage({ __quasar: "quasar-mute", muted: activeTabMuted }, "*");
+  }, [activeTabMuted, target, isFt, reloadKey, frameSrc]);
 
   return (
     <motion.div
@@ -342,6 +504,23 @@ export function BrowserView({
         <NewTab onNavigate={onNavigate} history={history} onHome={onHome} />
       )}
 
+      {/* ------- Find-in-page bar (Quasar v2.1.0) ------- */}
+      {findOpen && target && !isFt && (
+        <FindBar
+          query={findQuery}
+          count={findResult.count}
+          index={findResult.index}
+          found={findResult.found}
+          onQueryChange={onFindQueryChange}
+          onNext={findNext}
+          onPrev={findPrev}
+          onClose={closeFind}
+        />
+      )}
+
+      {/* ------- Quasar engine debug panel (v2.1.0) ------- */}
+      <QuasarDebugPanel open={debugOpen} onClose={() => setDebugOpen(false)} />
+
       {/* ------- Loading progress ------- */}
       <AnimatePresence>
         {loading && (
@@ -372,52 +551,24 @@ export function BrowserView({
         onMouseLeave={revealBar}
       >
         <div className="bg-zinc-950/92 shadow-2xl shadow-black/30 backdrop-blur-xl">
-          {/* Tab strip (only when more than one tab) */}
-          {tabs.length > 1 && (
-            <div className="veil-scroll-slim mx-auto flex max-w-[1600px] items-center gap-1 overflow-x-auto px-2 pt-1.5">
-              {tabs.map((t) => {
-                const tTarget = t.idx >= 0 ? t.stack[t.idx] : "";
-                const tTitle = t.idx === -1 ? "New tab" : t.title || (loading && t.id === activeId ? "Loading…" : tTarget);
-                const active = t.id === activeId;
-                return (
-                  <div
-                    key={t.id}
-                    role="tab"
-                    aria-selected={active}
-                    tabIndex={0}
-                    onClick={() => onSwitchTab(t.id)}
-                    onMouseDown={(e) => {
-                      // Middle-click closes the tab (browser convention).
-                      if (e.button === 1) {
-                        e.preventDefault();
-                        onCloseTab(t.id);
-                      }
-                    }}
-                    className={
-                      "group relative flex h-9 min-w-[140px] max-w-[220px] cursor-pointer items-center gap-2 rounded-t-lg border-t-2 px-3 transition " +
-                      (active
-                        ? "border-t-emerald-400 bg-zinc-900 text-zinc-100"
-                        : "border-t-transparent bg-zinc-900/40 text-zinc-400 hover:bg-zinc-900/70 hover:text-zinc-200")
-                    }
-                  >
-                    <TabFavicon target={tTarget} title={t.title} />
-                    <span className="min-w-0 flex-1 truncate text-[12.5px]">{tTitle || "New tab"}</span>
-                    <button
-                      type="button"
-                      aria-label="Close tab"
-                      title="Close tab (Ctrl+W)"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onCloseTab(t.id);
-                      }}
-                      className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-zinc-500 opacity-0 transition hover:bg-zinc-700 hover:text-zinc-100 group-hover:opacity-100"
-                    >
-                      <X aria-hidden className="h-3 w-3" />
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
+          {/* Tab strip (Quasar v2.1.0: drag reorder, pin, mute, per-tab
+              container / egress / UA context menu) — always visible once
+              there is at least one tab, so the + button and right-click
+              menu are reachable even with a single tab. */}
+          {tabs.length > 0 && (
+            <QuasarTabStrip
+              tabs={tabs}
+              activeId={activeId}
+              loading={loading}
+              onSelect={onSwitchTab}
+              onClose={onCloseTab}
+              onNewTab={onNewTab}
+              onReorder={onReorder}
+              onAction={onTabAction}
+              onReopen={onReopen}
+              canReopen={canReopen}
+              renderFavicon={(tTarget, tTitle) => <TabFavicon target={tTarget} title={tTitle} />}
+            />
           )}
 
           {/* Main control row */}
@@ -494,6 +645,28 @@ export function BrowserView({
             <div className="flex items-center gap-0.5">
               <IconBtn label="New tab (Ctrl+T)" onClick={onNewTab}>
                 <Plus aria-hidden />
+              </IconBtn>
+              <IconBtn
+                label={activeTabMuted ? "Unmute tab" : "Mute tab"}
+                onClick={() => activeId && onTabAction(activeId, { type: "toggle-mute" })}
+              >
+                {activeTabMuted ? <VolumeX aria-hidden className="text-amber-300" /> : <Volume2 aria-hidden />}
+              </IconBtn>
+              <IconBtn
+                label="Find in page (Ctrl+F)"
+                onClick={() => {
+                  setBarVisible(true);
+                  setFindOpen(true);
+                }}
+                disabled={!target || isFt}
+              >
+                <Search aria-hidden />
+              </IconBtn>
+              <IconBtn
+                label="Quasar engine debug"
+                onClick={() => setDebugOpen((v) => !v)}
+              >
+                <Bug aria-hidden />
               </IconBtn>
               <KeyboardHelp
                 trigger={

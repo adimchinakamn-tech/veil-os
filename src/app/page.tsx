@@ -18,6 +18,7 @@ import * as React from "react";
 import { AnimatePresence } from "framer-motion";
 import { StartPage, type SectionId } from "@/components/veil/start-page";
 import { BrowserView, type Tab } from "@/components/veil/browser";
+import type { TabMenuAction } from "@/components/veil/quasar-tab-strip";
 import { AiSection } from "@/components/veil/ai-section";
 import { ArcadeSection } from "@/components/veil/arcade-section";
 import { StreamSection } from "@/components/veil/stream-section";
@@ -65,6 +66,25 @@ function makeTab(url?: string): Tab {
     idx: url ? 0 : -1,
     reloadKey: 0,
     title: "",
+    /* Quasar v2.1.0 per-tab context */
+    container: "default",
+    egress: "auto",
+    ua: "",
+    pinned: false,
+    muted: false,
+  };
+}
+
+/** Normalize a restored/persisted tab — fills the v2.1.0 context fields
+ *  so pre-upgrade sessions keep loading without undefined access. */
+function normTab(t: Tab): Tab {
+  return {
+    ...t,
+    container: typeof t.container === "string" ? t.container : "default",
+    egress: t.egress === "direct" || t.egress === "upstream" ? t.egress : "auto",
+    ua: typeof t.ua === "string" ? t.ua : "",
+    pinned: t.pinned === true,
+    muted: t.muted === true,
   };
 }
 
@@ -197,7 +217,7 @@ export default function Home() {
               (t) => t && typeof t.id === "string" && Array.isArray(t.stack)
             );
             if (valid.length) {
-              setTabs(valid.slice(0, 8));
+              setTabs(valid.slice(0, 8).map(normTab));
               const a =
                 parsed.activeId && valid.some((t) => t.id === parsed.activeId)
                   ? parsed.activeId
@@ -273,7 +293,7 @@ export default function Home() {
     const enteringBrowse = wasHomeRef.current;
     const id = needsNewTab ? uid() : activeIdRef.current!;
     setTabs((ts) => {
-      if (needsNewTab) return [...ts, { id, stack: [url], idx: 0, reloadKey: 0, title: seedTitle }];
+      if (needsNewTab) return [...ts, normTab({ id, stack: [url], idx: 0, reloadKey: 0, title: seedTitle })];
       return ts.map((t) => {
         if (t.id !== id) return t;
         if (t.idx === -1) return { ...t, stack: [url], idx: 0, title: seedTitle };
@@ -348,7 +368,26 @@ export default function Home() {
     const clean = url.trim();
     if (!clean || !/^https?:\/\//i.test(clean)) return;
     const id = uid();
-    setTabs((ts) => [...ts, { id, stack: [clean], idx: 0, reloadKey: 0, title: "" }]);
+    setTabs((ts) => [...ts, normTab({ id, stack: [clean], idx: 0, reloadKey: 0, title: "" })]);
+    setActiveId(id);
+    setLoading(true);
+  }, []);
+
+  /* ── Quasar v2.1.0: closed-tab stack (Ctrl+Shift+T reopen) ──
+   * (declared before closeTab — closeTab pushes onto this stack) */
+  const closedTabsRef = React.useRef<Tab[]>([]);
+  const [canReopen, setCanReopen] = React.useState(false);
+  const pushClosed = React.useCallback((t: Tab) => {
+    closedTabsRef.current = [...closedTabsRef.current.slice(-9), t];
+    setCanReopen(true);
+  }, []);
+  const reopenTab = React.useCallback(() => {
+    const last = closedTabsRef.current.pop();
+    closedTabsRef.current = closedTabsRef.current.slice();
+    setCanReopen(closedTabsRef.current.length > 0);
+    if (!last) return;
+    const id = uid();
+    setTabs((ts) => [...ts, { ...last, id, reloadKey: last.reloadKey + 1 }]);
     setActiveId(id);
     setLoading(true);
   }, []);
@@ -358,6 +397,7 @@ export default function Home() {
       const idx = tabs.findIndex((t) => t.id === id);
       if (idx === -1) return;
       const next = tabs.filter((t) => t.id !== id);
+      pushClosed(tabs[idx]);
       setTabs(next);
       if (next.length === 0) {
         setActiveId(null);
@@ -369,12 +409,102 @@ export default function Home() {
         setLoading(true);
       }
     },
-    [tabs, activeId, refreshHistory]
+    [tabs, activeId, refreshHistory, pushClosed]
   );
 
   const switchTab = React.useCallback((id: string) => {
     setActiveId(id);
     setLoading(true);
+  }, []);
+
+  /* ── Quasar v2.1.0: tab context-menu actions ── */
+  const onTabAction = React.useCallback(
+    (tabId: string, action: TabMenuAction) => {
+      if (action.type === "toggle-pin" || action.type === "toggle-mute") {
+        setTabs((ts) =>
+          ts.map((t) =>
+            t.id === tabId
+              ? { ...t, pinned: action.type === "toggle-pin" ? !t.pinned : t.pinned, muted: action.type === "toggle-mute" ? !t.muted : t.muted }
+              : t
+          )
+        );
+        // Changing the ctx levers re-encodes the blob → reload the tab.
+        if (action.type === "toggle-mute") return; // mute is live-relayed, no reload needed
+        return;
+      }
+      if (action.type === "duplicate") {
+        setTabs((ts) => {
+          const src = ts.find((t) => t.id === tabId);
+          if (!src) return ts;
+          const copy: Tab = { ...src, id: uid(), reloadKey: 0 };
+          const at = ts.findIndex((t) => t.id === tabId);
+          const next = [...ts.slice(0, at + 1), copy, ...ts.slice(at + 1)];
+          return next;
+        });
+        return;
+      }
+      if (action.type === "close") {
+        closeTab(tabId);
+        return;
+      }
+      if (action.type === "close-others") {
+        setTabs((ts) => {
+          const keep = ts.filter((t) => t.id === tabId || t.pinned);
+          for (const t of ts) {
+            if (!keep.some((k) => k.id === t.id)) pushClosed(t);
+          }
+          return keep;
+        });
+        return;
+      }
+      if (action.type === "container" || action.type === "egress" || action.type === "ua") {
+        setTabs((ts) =>
+          ts.map((t) => {
+            if (t.id !== tabId) return t;
+            if (action.type === "container") return { ...t, container: action.container, reloadKey: t.reloadKey + 1 };
+            if (action.type === "egress") return { ...t, egress: action.egress, reloadKey: t.reloadKey + 1 };
+            return { ...t, ua: action.ua, reloadKey: t.reloadKey + 1 };
+          })
+        );
+        setLoading(true);
+        return;
+      }
+      if (action.type === "drop-container") {
+        // Wipe the container's cookie jars server-side, then reset the tab.
+        void fetch("/api/container", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ op: "drop", container: action.container }),
+        }).catch(() => {
+          /* best effort */
+        });
+        setTabs((ts) =>
+          ts.map((t) =>
+            t.id === tabId || t.container === action.container
+              ? { ...t, container: "default", reloadKey: t.reloadKey + 1 }
+              : t
+          )
+        );
+        setLoading(true);
+        return;
+      }
+    },
+    [closeTab, pushClosed]
+  );
+
+  /* ── Quasar v2.1.0: drag reorder ── */
+  const reorderTab = React.useCallback((dragId: string, targetId: string, place: "before" | "after") => {
+    if (dragId === targetId) return;
+    setTabs((ts) => {
+      const from = ts.findIndex((t) => t.id === dragId);
+      if (from === -1) return ts;
+      const [moved] = ts.splice(from, 1);
+      let to = ts.findIndex((t) => t.id === targetId);
+      if (to === -1) return [...ts, moved];
+      if (place === "after") to += 1;
+      ts.splice(to, 0, moved);
+      return [...ts];
+    });
   }, []);
 
   const home = React.useCallback(() => {
@@ -483,6 +613,13 @@ export default function Home() {
       const el = e.target as HTMLElement | null;
       const typing =
         el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable);
+      // Quasar v2.1.0 — reopen closed tab works from BOTH modes (the
+      // browser-chrome handler only lives while a tab is open).
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === "t" || e.key === "T")) {
+        e.preventDefault();
+        reopenTab();
+        return;
+      }
       if (e.key === "Escape") {
         if (section) {
           // A section handles its own Esc first (arcade tuck, dialogs) —
@@ -506,7 +643,7 @@ export default function Home() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [mode, section, closeSection, home]);
+  }, [mode, section, closeSection, home, reopenTab]);
 
   // ----- privacy reset on tab switch -----
   // Settings › Browsing: by default, switching to another browser tab
@@ -649,6 +786,10 @@ export default function Home() {
             onCloseTab={closeTab}
             onSwitchTab={switchTab}
             onOpenInNewTab={openInNewTab}
+            onTabAction={onTabAction}
+            onReorder={reorderTab}
+            onReopen={reopenTab}
+            canReopen={canReopen}
           />
         )}
       </AnimatePresence>

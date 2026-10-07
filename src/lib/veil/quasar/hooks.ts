@@ -1,31 +1,24 @@
 /**
- * Quasar Client Hooks (v2.0.4, Veil integration)
- * ------------------------------------------------
+ * Quasar Client Hooks
+ * -------------------
  * A bundle injected as the first <script> of every proxied HTML page.
  * It installs runtime shims so that dynamic JavaScript inside proxied pages
  * keeps hitting the proxy:
  *
  *   - fetch / XMLHttpRequest / sendBeacon / EventSource
  *   - WebSocket (routed through the ws-bridge mini-service)
- *   - Element.setAttribute + src/href/action/srcset property setters
+ *   - Element.setAttribute + src/href/action property setters
  *   - History API (pushState / replaceState)
- *   - window.open → NEW VEIL TABS (never escapes to the host browser)
- *   - MutationObserver URL safety net for late-inserted DOM
+ *   - window.open
  *   - document.cookie (in-memory shim synced to the server cookie jar)
- *   - v2.0.4: per-origin storage partitioning, virtual location layer
- *     (virtLoc sites), postMessage origin unwrap (pmOrigins), stealth marks
  *   - Service worker isolation (target sites cannot register their own SW)
  *   - Navigation API interception (Chromium) for same-origin escape hatches
- *
- * VEIL BRIDGES (kept from the previous integration — the shell depends on
- * them): __veil nav/title/mouse/esc/open-tab postMessages drive tab titles,
- * history rows, the control-bar reveal, Escape handling and popup tabs.
  *
  * The bundle is plain ES5-ish code: no backticks, no template interpolation,
  * so it can be safely embedded as a string inside HTML.
  */
 
-import { CODEC_SOURCE } from "./codec-server";
+import { CODEC_SOURCE, encodeCtxSuffix, type RequestCtx } from "./codec-server";
 import { QUASAR_VERSION } from "./version";
 import { ADBLOCK_SOURCE } from "./adblock";
 import { STEALTH_SOURCE } from "./stealth";
@@ -92,6 +85,15 @@ try {
   }
 } catch (e) { TARGET_ORIGIN = TARGET_ORIGIN || null; }
 
+/* v2.1.0 per-tab context: container (multi-account isolation), egress mode
+   and UA override ride INSIDE every blob this page generates, so cookies,
+   storage and egress stay scoped to the tab that made the request. The
+   server hands over the already-encoded suffix (PAGE_DATA.ctxs); c= is kept
+   separately for the storage/cookie namespaces. */
+var QCONTAINER = (PAGE_DATA && PAGE_DATA.c) || 'default';
+var QCTX = (PAGE_DATA && PAGE_DATA.ctxs) || '';
+function ctxSuffix() { return QCTX; }
+
 function currentTargetOrigin() {
   try {
     if (PAGE_DATA.o) return PAGE_DATA.o;
@@ -124,11 +126,11 @@ function toProxy(absURL) {
       if (u.pathname.indexOf('/p/') === 0) return u.href;
       var ro = currentTargetOrigin();
       if (ro) {
-        return APP + '/p/' + C.encodeOrigin(ro) + u.pathname + u.search;
+        return APP + '/p/' + C.encodeOrigin(ro, ctxSuffix()) + u.pathname + u.search;
       }
       return u.href;
     }
-    return APP + '/p/' + C.encodeOrigin(u.origin) + u.pathname + u.search + (u.hash || '');
+    return APP + '/p/' + C.encodeOrigin(u.origin, ctxSuffix()) + u.pathname + u.search + (u.hash || '');
   } catch (e) { return absURL; }
 }
 
@@ -160,7 +162,6 @@ function rewriteSrcset(v) {
 
 /* ---------- parent sync ---------- */
 var lastPinged = null;
-var lastTitle = null;
 function pingParent() {
   try {
     if (window.parent && window.parent !== window) {
@@ -168,20 +169,6 @@ function pingParent() {
       if (real && real !== lastPinged) {
         lastPinged = real;
         window.parent.postMessage({ __quasar: 'location', url: real, title: document.title || '' }, APP);
-        /* Veil shell bridge — drives tab titles, history rows and the
-           loading state, exactly like the built-in engine's control script. */
-        window.parent.postMessage({ __veil: 1, type: 'nav', url: real, d: { title: document.title || '' } }, APP);
-      }
-    }
-  } catch (e) {}
-}
-function pingTitle() {
-  try {
-    if (window.parent && window.parent !== window) {
-      var t = document.title || '';
-      if (t !== lastTitle) {
-        lastTitle = t;
-        window.parent.postMessage({ __veil: 1, type: 'title', d: { title: t } }, APP);
       }
     }
   } catch (e) {}
@@ -192,25 +179,6 @@ if (document.readyState === 'loading') {
   pingParent();
 }
 window.addEventListener('load', pingParent);
-setInterval(pingTitle, 2000);
-
-/* Veil control-bar reveal relay: mouse near the frame's top edge */
-window.addEventListener('mousemove', function (e) {
-  try {
-    if (e.clientY <= 120 && window.parent && window.parent !== window) {
-      window.parent.postMessage({ __veil: 1, type: 'mouse', d: { y: e.clientY } }, APP);
-    }
-  } catch (e) {}
-}, { passive: true });
-
-/* Escape relay — the frame owns focus, the shell's own listener never fires */
-window.addEventListener('keydown', function (e) {
-  try {
-    if (e.key === 'Escape' && window.parent && window.parent !== window) {
-      window.parent.postMessage({ __veil: 1, type: 'esc' }, APP);
-    }
-  } catch (e) {}
-}, true);
 
 /* ---------- keyboard shortcut relay ---------- */
 /* Keyboard shortcuts (Alt+T/W/←/→/R) are handled by the Quasar app window.
@@ -229,6 +197,77 @@ try {
       }
     } catch (err) {}
   }, true);
+} catch (e) {}
+
+/* ---------- v2.1.0 find-in-page + mute control relay ---------- */
+/* The app chrome drives these via postMessage (it cannot reach into a
+   cross-origin-looking tunnel document itself). Find uses window.find for
+   navigation and a TreeWalker pass for the match count. Ctrl/Cmd+F inside
+   the page is forwarded to the chrome so there is one find bar, not two. */
+try {
+  document.addEventListener('keydown', function (e) {
+    try {
+      if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
+      var k = (e.key || '').toLowerCase();
+      if (k === 'f') {
+        e.preventDefault();
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ __quasar: 'find-open' }, APP);
+        }
+      }
+    } catch (err) {}
+  }, true);
+} catch (e) {}
+try {
+  window.addEventListener('message', function (e) {
+    try {
+      if (e.origin !== APP) return;
+      var d = e.data;
+      if (!d || typeof d !== 'object') return;
+      if (d.__quasar === 'quasar-find') {
+        var q = String(d.q || '');
+        var found = false;
+        var count = 0;
+        try {
+          if (q) {
+            var walker = document.createTreeWalker(document.body || document.documentElement, NodeFilter.SHOW_TEXT, {
+              acceptNode: function (n) {
+                return n.nodeValue && n.nodeValue.toLowerCase().indexOf(q.toLowerCase()) !== -1
+                  ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+              }
+            });
+            var total = 0;
+            while (walker.nextNode()) { total++; if (total > 9999) break; }
+            count = total;
+            found = window.find(q, false, d.dir === 'prev');
+            if (!found && total) found = window.find(q, false, false);
+          } else {
+            try { window.getSelection().removeAllRanges(); } catch (er) {}
+          }
+        } catch (er) {}
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ __quasar: 'find-result', count: count, found: found }, APP);
+        }
+      } else if (d.__quasar === 'quasar-mute') {
+        var muted = !!d.muted;
+        try {
+          var media = document.querySelectorAll('audio,video');
+          for (var mi = 0; mi < media.length; mi++) { try { media[mi].muted = muted; } catch (me) {} }
+        } catch (er) {}
+        if (!muted) return;
+        if (!window.__quasarMuteMo__) {
+          var mMo = new MutationObserver(function () {
+            try {
+              var mm = document.querySelectorAll('audio,video');
+              for (var x = 0; x < mm.length; x++) { try { if (!mm[x].muted) mm[x].muted = true; } catch (me2) {} }
+            } catch (er2) {}
+          });
+          mMo.observe(document.documentElement || document, { childList: true, subtree: true });
+          window.__quasarMuteMo__ = mMo;
+        }
+      }
+    } catch (err) {}
+  });
 } catch (e) {}
 
 /* ---------- capture originals ---------- */
@@ -502,144 +541,10 @@ try {
   window.addEventListener('popstate', function () { try { pingParent(); } catch (e) {} });
 } catch (e) {}
 
-/* ---------- window.open + new-tab links: open INSIDE Veil ---------- */
-/* Popups, target=_blank links and ad redirects must never escape to the
-   host browser — they open as fresh Veil tabs through the engine lane.
-   The parent shell listens for {__veil:1, type:'open-tab'} and handles
-   the rest. AD popups (matched by the adblock layer that loaded before
-   this engine) are counted and dropped instead of opened. Sites that poke
-   the returned window get an inert stub so their code keeps running. */
-
-function toReal(u) {
-  try {
-    if (u == null) return null;
-    var s = String(u);
-    if (s === '') return currentRealHref();
-    if (s.charAt(0) === '#') return (currentRealHref() || '') + s;
-    if (/^[a-z][a-z0-9+.-]*:/i.test(s) && !/^https?:/i.test(s)) return s;
-    /* already proxied? decode the /p/<blob>/... form back to the real URL */
-    try {
-      var pu = new URL(s, location.href);
-      if (pu.origin === APP && pu.pathname.indexOf('/p/') === 0) {
-        var m = pu.pathname.match(/^\/p\/([A-Za-z0-9_-]+)(\/.*)?$/);
-        if (m) {
-          var po = C.decodeOrigin(m[1]);
-          /* Client codec can only decode session-XOR blobs; AES blobs decode
-             to garbage — validate the origin shape, don't trust it. */
-          if (po && /^https?:\/\//i.test(po)) {
-            return po + (m[2] || '/') + pu.search + (pu.hash || '');
-          }
-          /* AES blob (or garbage): hand the PROXIED path to the shell; it
-             resolves the real URL server-side (/api/codec) before opening
-             the tab. */
-          return pu.pathname + pu.search + (pu.hash || '');
-        }
-        return null;
-      }
-    } catch (e) {}
-    /* relative or absolute real URL — resolve against the REAL page URL */
-    var base = currentRealHref() || (TARGET_ORIGIN ? TARGET_ORIGIN + '/' : null);
-    if (!base) return null;
-    var abs = new URL(s, base);
-    if (!isProxyable(abs)) return null;
-    return abs.href;
-  } catch (e) { return null; }
-}
-
-function fakeWindow() {
-  var noop = function () {};
-  var stub = {
-    closed: false, opener: null, name: '', status: '', innerWidth: 0, innerHeight: 0,
-    close: noop, focus: noop, blur: noop, print: noop, moveTo: noop, resizeTo: noop,
-    scrollTo: noop, setInterval: noop, setTimeout: function (fn) { return 0; },
-    clearTimeout: noop, clearInterval: noop,
-    postMessage: noop, addEventListener: noop, removeEventListener: noop,
-    location: { href: 'about:blank', replace: noop, assign: noop, reload: noop, toString: function () { return 'about:blank'; } },
-    document: { write: noop, writeln: noop, open: noop, close: noop, title: '' },
-    navigator: navigator
-  };
-  try { Object.defineProperty(stub, 'closed', { get: function () { return true; } }); } catch (e) {}
-  return stub;
-}
-
-function isAdTarget(u) {
-  try {
-    var ab = window.__QUASAR_ADBLOCK__;
-    return !!(ab && typeof ab.isAd === 'function' && ab.isAd(u));
-  } catch (e) { return false; }
-}
-
-function openInVeil(url) {
-  try {
-    window.parent.postMessage({ __veil: 1, type: 'open-tab', url: url, d: {} }, APP);
-  } catch (e) {}
-}
-
-try {
-  nativeLike(window, 'open', function open(url, name, specs) {
-    try {
-      var real = toReal(url);
-      if (real && /^https?:/i.test(real)) {
-        if (isAdTarget(real)) {
-          /* counted + dropped by the adblock layer (stats surface in the UI) */
-          try { window.__QUASAR_ADBLOCK__.count('popups'); } catch (e0) {}
-          return fakeWindow();
-        }
-        openInVeil(real);
-        return fakeWindow();
-      }
-      if (real && real.charAt(0) === '/' && real.indexOf('/p/') === 0) {
-        openInVeil(real);
-        return fakeWindow();
-      }
-      if (real) return fakeWindow();
-    } catch (e) {}
-    return fakeWindow();
-  }, 3);
-} catch (e) {}
-
-/* target=_blank / named-target anchors + target=_top escape attempts.
-   _blank and named targets become new Veil tabs; _top/_parent (which
-   would replace the whole Veil OS with the proxied page!) are demoted
-   to normal in-frame navigation. AD targets are counted + blocked. */
-try {
-  document.addEventListener('click', function (e) {
-    try {
-      if (!e.target || !e.target.closest) return;
-      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-      var a = e.target.closest('a[href]');
-      if (!a) return;
-      var tgt = (a.getAttribute('target') || '').toLowerCase();
-      if (!tgt || tgt === '_self') return;
-      var href = a.getAttribute('href') || '';
-      if (!href || href.charAt(0) === '#') return;
-      if (tgt === '_top' || tgt === '_parent') {
-        /* navigate THIS frame instead of hijacking the whole window */
-        e.preventDefault();
-        e.stopPropagation();
-        window.location.href = resolve(href);
-        return;
-      }
-      /* _blank or a named window → new Veil tab */
-      var real = toReal(href);
-      if (real && /^https?:/i.test(real)) {
-        if (isAdTarget(real)) {
-          try { window.__QUASAR_ADBLOCK__.count('popups'); } catch (e0) {}
-          e.preventDefault();
-          e.stopPropagation();
-          return;
-        }
-        e.preventDefault();
-        e.stopPropagation();
-        openInVeil(real);
-      } else if (real && real.indexOf('/p/') === 0) {
-        e.preventDefault();
-        e.stopPropagation();
-        openInVeil(real);
-      }
-    } catch (e2) {}
-  }, true);
-} catch (e) {}
+/* ---------- window.open ---------- */
+/* v1.3.8: popups/popunders are owned by the adblock bundle (loaded before
+   this engine) — it blocks script-opened windows and in-tunnels gesture
+   opens. Nothing to do here; window.open is already hardened. */
 
 /* ---------- document.cookie shim (synced with server jar) ---------- */
 var cookieMap = {};
@@ -653,7 +558,7 @@ function syncCookies() {
       _fetch(APP + '/api/cookie', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ url: real, cookies: cookieMap })
+        body: JSON.stringify({ url: real, cookies: cookieMap, container: QCONTAINER })
       }).catch(function () {});
     } catch (e) {}
   }, 500);
@@ -693,7 +598,7 @@ try {
   } catch (e) {}
   var real0 = currentRealHref();
   if (real0 && _fetch) {
-    _fetch(APP + '/api/cookie?url=' + encodeURIComponent(real0))
+    _fetch(APP + '/api/cookie?url=' + encodeURIComponent(real0) + '&c=' + encodeURIComponent(QCONTAINER))
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (data) {
         if (data && data.cookies) {
@@ -704,14 +609,17 @@ try {
   }
 } catch (e) {}
 
-/* ---------- v2.0.4 storage partitioning ---------- */
+/* ---------- v2.0.4 storage partitioning (v2.1.0: per container) ---------- */
 /* localStorage/sessionStorage are namespaced by the REAL target origin so
    two proxied sites can never read each other's boot state (Discord keeps
    gateway state in localStorage — unpartitioned it corrupted across sites
-   sharing the app origin). Shims are window-instance accessors presenting
-   native-looking methods via the stealth registry. */
+   sharing the app origin). v2.1.0 adds the container dimension: non-default
+   containers get their own namespace so two accounts on the same site stay
+   isolated. The default container keeps the exact v2.0.4 prefix (no
+   migration for existing deployments). Shims are window-instance accessors
+   presenting native-looking methods via the stealth registry. */
 try {
-  var qNs = '__quasar:' + (currentTargetOrigin() || '@null') + ':';
+  var qNs = '__quasar:' + (QCONTAINER && QCONTAINER !== 'default' ? QCONTAINER + ':' : '') + (currentTargetOrigin() || '@null') + ':';
   function qOwnKeys(real) {
     var out = [];
     try {
@@ -816,6 +724,19 @@ try {
         }).catch(function () {});
       } catch (e) {}
     })();
+    /* v2.1.0 — announce this tab's context (container/egress/UA) to the
+       service worker. The SW cannot decrypt blobs, so cross-origin requests
+       it re-encodes itself get the suffix from this announce map (keyed by
+       client id). Announced at document start and on every controller change
+       — each iframe navigation is a fresh client. */
+    var announceCtx = function () {
+      try {
+        var ctl = navigator.serviceWorker.controller;
+        if (ctl && QCTX) ctl.postMessage({ __quasar: 'ctx', ctx: QCTX });
+      } catch (e) {}
+    };
+    announceCtx();
+    try { navigator.serviceWorker.addEventListener('controllerchange', announceCtx); } catch (e) {}
   }
 } catch (e) {}
 
@@ -1133,12 +1054,15 @@ function inlineJson(value: unknown): string {
  * The two head scripts injected BEFORE the hook bundle (buffered and
  * streaming pipelines both use this):
  *   __QUASAR_DATA__ — real target origin/URL of this document (clients can't
- *     decrypt AES blobs, so page context is handed over in plaintext here).
+ *     decrypt AES blobs, so page context is handed over in plaintext here)
+ *     plus the v2.1.0 per-tab context: container id (c), egress mode (e) and
+ *     the raw UA-override suffix token (ua, base64url as it appears in blobs).
  *   __QUASAR_SITE__ — per-site client hook names to run at document start.
  */
 export function quasarHeadParts(
   targetUrl: string,
-  site: SiteFix | null
+  site: SiteFix | null,
+  ctx?: RequestCtx
 ): { pageDataTag: string; siteConfigTag: string } {
   let origin = "";
   try {
@@ -1146,8 +1070,10 @@ export function quasarHeadParts(
   } catch {
     origin = "";
   }
+  const container = ctx?.container || "default";
+  const ctxs = encodeCtxSuffix({ container: ctx?.container, egress: ctx?.egress, ua: ctx?.ua });
   return {
-    pageDataTag: `<script data-quasar="page">window.__QUASAR_DATA__={o:${inlineJson(origin)},u:${inlineJson(targetUrl)},v:${inlineJson(QUASAR_VERSION)},dm:${inlineJson(DIRECT_MEDIA_HOSTS)}};</script>`,
+    pageDataTag: `<script data-quasar="page">window.__QUASAR_DATA__={o:${inlineJson(origin)},u:${inlineJson(targetUrl)},v:${inlineJson(QUASAR_VERSION)},dm:${inlineJson(DIRECT_MEDIA_HOSTS)},c:${inlineJson(container)},ctxs:${inlineJson(ctxs)}};</script>`,
     siteConfigTag: `<script data-quasar="site">window.__QUASAR_SITE__=${inlineJson({
       hooks: site?.clientHooks ?? [],
       virtLoc: !!site?.flags?.virtLoc,

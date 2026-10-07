@@ -43,9 +43,39 @@ function refererIsProxied(request) {
   }
 }
 
-function toProxy(abs) {
+function toProxy(abs, ctx) {
   var u = new URL(abs);
-  return APP + '/p/' + C.encodeOrigin(u.origin) + u.pathname + u.search;
+  return APP + '/p/' + C.encodeOrigin(u.origin, ctx || '') + u.pathname + u.search;
+}
+
+/* ---------- v2.1.0 per-tab context map ----------
+   The SW cannot decrypt AES blobs, so when it re-encodes a cross-origin
+   request itself it needs the requesting tab's context (container /
+   egress / UA) from somewhere. Every proxied page announces its encoded
+   ctx suffix at document start (hooks.ts); the SW keys it by client id and
+   reuses it for that client's subsequent cross-origin intercepts and
+   "!rel" relays. Recent-first pruning keeps the map bounded. */
+var CTX = {};
+function pruneCtx() {
+  var keys = Object.keys(CTX);
+  if (keys.length > 200) {
+    for (var i = 0; i < keys.length - 200; i++) delete CTX[keys[i]];
+  }
+}
+self.addEventListener('message', function (e) {
+  try {
+    var d = e.data;
+    if (d && d.__quasar === 'ctx' && e.source && e.source.id) {
+      CTX[e.source.id] = String(d.ctx || '').slice(0, 500);
+      pruneCtx();
+    }
+  } catch (err) {}
+});
+function ctxFor(e) {
+  try {
+    if (e && e.clientId && CTX[e.clientId]) return CTX[e.clientId];
+  } catch (err) {}
+  return '';
 }
 
 var SW_HEADER_BLOCKLIST = {
@@ -183,7 +213,8 @@ self.addEventListener('fetch', function (e) {
   if (isDirectMediaHost(url)) return;
 
   // Cross-origin absolute request from a controlled page -> proxy it.
-  e.respondWith(fetch(toProxy(url.href), {
+  // The tab's ctx suffix (container/egress/UA) rides inside the fresh blob.
+  e.respondWith(fetch(toProxy(url.href, ctxFor(e)), {
     method: req.method,
     headers: filteredHeaders(req),
     redirect: 'follow'

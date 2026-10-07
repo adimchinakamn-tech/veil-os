@@ -1,8 +1,5 @@
 /**
- * Veil — Quasar engine service worker script (served at /api/sw).
- * ------------------------------------------------------------------
- * Ported from the user-uploaded quasar-proxy engine (src/app/api/sw/route.ts).
- *
+ * Quasar Service Worker script — served at /api/sw.
  * `Service-Worker-Allowed: /p/` lets the worker register with the /p/ scope
  * even though the script lives at /api/sw.
  */

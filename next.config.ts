@@ -6,11 +6,23 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   reactStrictMode: false,
-  // Quasar v1.3.8: the proxy engine imports undici/acorn directly from
+  // Quasar v2.1.0: the proxy engine imports undici/acorn directly from
   // route handlers. They must stay external (never bundled) — the raw
   // undici fetch bypasses Next's dev fetch instrumentation (which corrupts
   // large streamed bodies), and bundling it would reintroduce that wrapper.
-  serverExternalPackages: ["undici", "acorn", "acorn-walk"],
+  // bgutils-js + jsdom power the server-side YouTube poToken module;
+  // playwright-core/playwright are OPTIONAL peers for the real-browser
+  // poToken farm (QUASAR_POTOKEN_BROWSER=1) — externalizing keeps the
+  // dynamic import a runtime require that fails gracefully when absent.
+  serverExternalPackages: [
+    "undici",
+    "acorn",
+    "acorn-walk",
+    "bgutils-js",
+    "jsdom",
+    "playwright-core",
+    "playwright",
+  ],
   // Hide the floating Next.js dev-tools badge (the little circular "N"
   // pinned bottom-left in dev mode) — it reads as part of the site and
   // there is nothing to debug from the preview panel.

@@ -1,12 +1,17 @@
 /**
  * Quasar URL Codec
  * ----------------
- * Encodes only the ORIGIN (scheme://host[:port]) of a target URL into an
+ * Encodes the ORIGIN (scheme://host[:port]) of a target URL into an
  * XOR-obfuscated base64url blob. The original path/query stay readable in the
  * proxied URL, so relative URL resolution inside proxied pages "just works":
  *
  *   https://en.wikipedia.org/wiki/Main_Page
  *     => /p/<blob>/wiki/Main_Page
+ *
+ * v2.1.0 — blobs may additionally carry a per-tab context suffix (appended to
+ * the encrypted plaintext after a '~'): container id (multi-account cookie/
+ * storage isolation), egress mode and a User-Agent override. The suffix is
+ * opaque to whoever holds the blob — it is validated server-side on decode.
  *
  * Isomorphic: uses btoa/atob + TextEncoder so the exact same logic runs on
  * the server (route handlers), in injected page hooks, in the service worker,
@@ -51,8 +56,10 @@ export function buildCodecSource(secretB64: string, prefixed = false): string {
     for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
     return bytes;
   }
-  function encodeOrigin(origin){
-    var x = xorBytes(new TextEncoder().encode(String(origin)));
+  function encodeOrigin(origin, ctx){
+    var s = String(origin);
+    if (ctx) s += '~' + String(ctx);
+    var x = xorBytes(new TextEncoder().encode(s));
     if (PREFIX) {
       var withPrefix = new Uint8Array(x.length + 1);
       withPrefix[0] = PREFIX;
@@ -99,15 +106,20 @@ function b64urlDecode(str: string): Uint8Array {
   return bytes;
 }
 
-export function encodeOrigin(origin: string): string {
-  return b64urlEncode(xorBytes(new TextEncoder().encode(String(origin))));
+export function encodeOrigin(origin: string, ctx?: string): string {
+  const s = String(origin) + (ctx ? "~" + ctx : "");
+  return b64urlEncode(xorBytes(new TextEncoder().encode(s)));
 }
 
-/** Decodes a blob. Returns null when the blob is invalid. */
+/**
+ * Decode a legacy-format blob (origin only, no context suffix). Returns null
+ * when the blob is invalid.
+ */
 export function decodeOrigin(blob: string): string | null {
   try {
     const s = new TextDecoder().decode(xorBytes(b64urlDecode(blob)));
-    return /^https?:\/\//.test(s) ? s : null;
+    const origin = s.split("~")[0] ?? s;
+    return /^https?:\/\//.test(origin) ? origin : null;
   } catch {
     return null;
   }

@@ -10,6 +10,10 @@
  *   https://en.wikipedia.org/wiki/Main_Page
  *     => /p/<aes-blob>/wiki/Main_Page
  *
+ * v2.1.0 — the encrypted plaintext may carry a per-tab context suffix
+ * ("~c=<container>~e=<egress>~u=<b64 ua>") that drives multi-account
+ * containers, egress selection and UA overrides. Old blobs decode unchanged.
+ *
  * Decoding accepts three blob formats (first byte of the raw payload):
  *   0x01 — AES-256-GCM (server-emitted, strongest)
  *   0x02 — session XOR (client-generated: hooks/SW can't run async WebCrypto
@@ -140,11 +144,12 @@ function xorWith(bytes: Buffer, secret: string): Buffer {
 /* Encoding (server-emitted URLs are always AES)                       */
 /* ------------------------------------------------------------------ */
 
-export function encodeOriginAes(origin: string): string {
+export function encodeOriginAes(origin: string, ctx?: string): string {
   const key = Buffer.from(ensureKey().aes, "hex");
   const iv = randomBytes(12);
   const cipher = createCipheriv("aes-256-gcm", key, iv);
-  const ct = Buffer.concat([cipher.update(String(origin), "utf8"), cipher.final()]);
+  const plain = String(origin) + (ctx ? "~" + ctx : "");
+  const ct = Buffer.concat([cipher.update(plain, "utf8"), cipher.final()]);
   const tag = cipher.getAuthTag();
   // payload = 0x01 || iv(12) || ct || tag(16)
   const payload = Buffer.concat([Buffer.from([0x01]), iv, ct, tag]);
@@ -233,8 +238,91 @@ export function decodeBlobRaw(blob: string): string | null {
 /** Decode a blob into an http(s) origin, or null. */
 export function decodeOrigin(blob: string): string | null {
   const raw = decodeBlobRaw(blob);
-  if (raw && /^https?:\/\//.test(raw)) return raw;
+  if (raw) {
+    const origin = raw.split("~")[0] ?? raw;
+    if (/^https?:\/\//.test(origin)) return origin;
+  }
   return null;
+}
+
+/* ------------------------------------------------------------------ */
+/* v2.1.0 — per-tab context (container / egress / UA override)          */
+/* ------------------------------------------------------------------ */
+
+export interface BlobCtx {
+  /** Container id (multi-account isolation). "default" when absent. */
+  container: string;
+  /** Egress mode: undefined (auto), "direct" or "upstream". */
+  egress?: "direct" | "upstream";
+  /** User-Agent override (validated printable string). */
+  ua?: string;
+}
+
+export const DEFAULT_CONTAINER = "default";
+
+/** Per-request context as carried through to the fetcher (all optional). */
+export interface RequestCtx {
+  container?: string;
+  egress?: "direct" | "upstream";
+  ua?: string;
+}
+
+const CONTAINER_RE = /^[A-Za-z0-9_-]{1,40}$/;
+const B64URL_RE = /^[A-Za-z0-9_-]{1,400}$/;
+
+/** Build the canonical plaintext suffix for a context ("c=x~e=direct~u=..."). */
+export function encodeCtxSuffix(ctx: Partial<Pick<BlobCtx, "container" | "egress" | "ua">>): string {
+  const parts: string[] = [];
+  if (ctx.container && ctx.container !== DEFAULT_CONTAINER && CONTAINER_RE.test(ctx.container)) {
+    parts.push("c=" + ctx.container);
+  }
+  if (ctx.egress === "direct" || ctx.egress === "upstream") parts.push("e=" + ctx.egress);
+  if (ctx.ua) {
+    const b64 = Buffer.from(ctx.ua.slice(0, 300), "utf8")
+      .toString("base64")
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/, "");
+    if (B64URL_RE.test(b64)) parts.push("u=" + b64);
+  }
+  return parts.join("~");
+}
+
+/** Parse + strictly validate a plaintext suffix. Invalid pieces are dropped. */
+export function parseCtxSuffix(suffix: string): BlobCtx {
+  const ctx: BlobCtx = { container: DEFAULT_CONTAINER };
+  if (!suffix) return ctx;
+  for (const pair of suffix.split("~")) {
+    const eq = pair.indexOf("=");
+    if (eq <= 0) continue;
+    const k = pair.slice(0, eq);
+    const v = pair.slice(eq + 1);
+    if (k === "c" && CONTAINER_RE.test(v)) ctx.container = v;
+    else if (k === "e" && (v === "direct" || v === "upstream")) ctx.egress = v;
+    else if (k === "u" && B64URL_RE.test(v)) {
+      try {
+        let t = v.replace(/-/g, "+").replace(/_/g, "/");
+        while (t.length % 4 !== 0) t += "=";
+        const ua = Buffer.from(t, "base64").toString("utf8");
+        // Header value safety: printable ASCII without CR/LF (header injection).
+        if (ua && ua.length <= 300 && /^[\x20-\x7e]+$/.test(ua)) ctx.ua = ua;
+      } catch {
+        /* drop invalid ua */
+      }
+    }
+  }
+  return ctx;
+}
+
+/** Decode a blob into origin + parsed context (null when undecodable). */
+export function decodeBlobFull(blob: string): (BlobCtx & { origin: string }) | null {
+  const raw = decodeBlobRaw(blob);
+  if (!raw) return null;
+  const tilde = raw.indexOf("~");
+  const origin = tilde === -1 ? raw : raw.slice(0, tilde);
+  if (!/^https?:\/\//.test(origin)) return null;
+  const ctx = parseCtxSuffix(tilde === -1 ? "" : raw.slice(tilde + 1));
+  return { origin, ...ctx };
 }
 
 /* ------------------------------------------------------------------ */
@@ -243,41 +331,95 @@ export function decodeOrigin(blob: string): string | null {
 
 const BLOB_RE = /^[A-Za-z0-9_-]+$/;
 
-/** Convert an absolute http(s) URL into its encrypted proxied path. */
-export function proxyPath(url: string | URL): string {
+/**
+ * Convert an absolute http(s) URL into its encrypted proxied path.
+ * `ctx` is an already-encoded plaintext suffix (encodeCtxSuffix output).
+ */
+export function proxyPath(url: string | URL, ctx?: string): string {
   const u = url instanceof URL ? url : new URL(url);
-  return "/p/" + encodeOriginAes(u.origin) + u.pathname + u.search + u.hash;
+  return "/p/" + encodeOriginAes(u.origin, ctx) + u.pathname + u.search + u.hash;
 }
 
 /**
- * Parse a proxied pathname into target parts.
- * The special blob `!rel` resolves the rest-path against `refererTarget`
- * (the service worker uses this for escaped root-relative requests, because
- * it cannot decrypt AES blobs itself).
+ * Parse a proxied pathname into target parts + per-tab context.
+ * The special blob `!rel` resolves the rest-path against `refererHref` (a
+ * full proxied href — the service worker uses this for escaped root-relative
+ * requests because it cannot decrypt AES blobs itself). The referer's blob
+ * also supplies the context for !rel requests, so containers survive
+ * root-relative subresource loads.
+ */
+export function parseProxiedRequest(
+  pathname: string,
+  search = "",
+  refererHref?: string | null
+): { origin: string; rest: string; target: string; container: string; egress?: "direct" | "upstream"; ua?: string } | null {
+  const m = pathname.match(/^\/p\/(!rel|[A-Za-z0-9_-]+)(\/[^?]*)?$/);
+  if (!m) return null;
+  const blob = m[1];
+  const rest = m[2] ?? "/";
+  if (blob === "!rel") {
+    if (!refererHref) return null;
+    try {
+      const ru = new URL(refererHref);
+      const rm = ru.pathname.match(/^\/p\/([A-Za-z0-9_-]+)(\/[^?]*)?$/);
+      const full = rm ? decodeBlobFull(rm[1]) : null;
+      if (!full) return null;
+      return {
+        origin: full.origin,
+        rest,
+        target: full.origin + rest + (search || ""),
+        container: full.container,
+        egress: full.egress,
+        ua: full.ua,
+      };
+    } catch {
+      return null;
+    }
+  }
+  if (!BLOB_RE.test(blob)) return null;
+  const full = decodeBlobFull(blob);
+  if (!full) return null;
+  return {
+    origin: full.origin,
+    rest,
+    target: full.origin + rest + (search || ""),
+    container: full.container,
+    egress: full.egress,
+    ua: full.ua,
+  };
+}
+
+/**
+ * Parse a proxied pathname into target parts (no per-tab context).
+ * The special blob `!rel` resolves the rest-path against `refererHref`
+ * (a full proxied href). Kept alongside parseProxiedRequest for callers
+ * that only need origin+rest (fetcher referer mapping, decodeProxiedHref).
  */
 export function parseProxiedPath(
   pathname: string,
   search = "",
-  refererTarget?: string | null
+  refererHref?: string | null
 ): { origin: string; rest: string; target: string } | null {
   const m = pathname.match(/^\/p\/(!rel|[A-Za-z0-9_-]+)(\/[^?]*)?$/);
   if (!m) return null;
   const blob = m[1];
   const rest = m[2] ?? "/";
   if (blob === "!rel") {
-    if (!refererTarget) return null;
+    if (!refererHref) return null;
     try {
-      const rt = new URL(refererTarget);
-      if (rt.protocol !== "http:" && rt.protocol !== "https:") return null;
-      return { origin: rt.origin, rest, target: rt.origin + rest + (search || "") };
+      const rh = new URL(refererHref);
+      const rm = rh.pathname.match(/^\/p\/([A-Za-z0-9_-]+)(\/[^?]*)?$/);
+      const full = rm ? decodeBlobFull(rm[1]) : null;
+      if (!full) return null;
+      return { origin: full.origin, rest, target: full.origin + rest + (search || "") };
     } catch {
       return null;
     }
   }
   if (!BLOB_RE.test(blob)) return null;
-  const origin = decodeOrigin(blob);
-  if (!origin) return null;
-  return { origin, rest, target: origin + rest + (search || "") };
+  const full = decodeBlobFull(blob);
+  if (!full) return null;
+  return { origin: full.origin, rest, target: full.origin + rest + (search || "") };
 }
 
 /** Decode a proxied href back into the real URL (server side). */

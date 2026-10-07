@@ -978,7 +978,7 @@ export function UpdatesSection({ onBack }: { onBack: () => void }) {
                 </div>
                 <div>
                   <h2 className="text-[15px] font-semibold tracking-tight text-zinc-50">Veil AI</h2>
-                  <p className="text-[12px] text-zinc-500">The site’s own developer, on call</p>
+                  <p className="text-[12px] text-zinc-500">Owner tools &amp; site management</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">

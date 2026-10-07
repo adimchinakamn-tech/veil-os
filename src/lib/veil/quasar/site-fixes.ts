@@ -208,3 +208,139 @@ export function siteFixFor(url: string | URL): SiteFix | null {
 export const CLIENT_HOOK_NAMES: string[] = Array.from(
   new Set(FIXES.flatMap((f) => f.clientHooks ?? []))
 );
+
+/* ------------------------------------------------------------------ */
+/* v2.1.0 — site-fix packs from disk (community contributions)          */
+/* ------------------------------------------------------------------ */
+/**
+ * JSON fix packs live in QUASAR_SITE_FIXES_DIR (default ./site-fixes.d).
+ * Each *.json file holds one SiteFix object or an array of them; entries are
+ * spliced BEFORE the built-ins so a pack can override on suffix-length ties
+ * (longest suffix still wins regardless). Reload: files' combined mtime is
+ * polled every 30s — drop a pack in, it goes live without a restart. Invalid
+ * entries are skipped with a log line; nothing here can throw at runtime.
+ */
+
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { join, resolve as pathResolve } from "node:path";
+
+function packsDir(): string {
+  return process.env.QUASAR_SITE_FIXES_DIR
+    ? pathResolve(process.env.QUASAR_SITE_FIXES_DIR)
+    : join(process.cwd(), "site-fixes.d");
+}
+
+function dirStamp(dir: string): string {
+  try {
+    let stamp = "";
+    for (const f of readdirSync(dir)) {
+      if (!f.toLowerCase().endsWith(".json")) continue;
+      stamp += f + ":" + statSync(join(dir, f)).mtimeMs + ";";
+    }
+    return stamp;
+  } catch {
+    return "";
+  }
+}
+
+function coerceFix(raw: unknown, source: string): SiteFix | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+  if (typeof r.id !== "string" || !Array.isArray(r.match) || !r.match.length) return null;
+  const match = r.match.filter((m): m is string => typeof m === "string" && m.length > 1);
+  if (!match.length) return null;
+  const fix: SiteFix = { id: r.id.slice(0, 60), match };
+  if (r.note && typeof r.note === "string") fix.note = r.note.slice(0, 400);
+  if (r.requestHeaders && typeof r.requestHeaders === "object") {
+    const rh: Record<string, string> = {};
+    for (const [k, v] of Object.entries(r.requestHeaders as Record<string, unknown>)) {
+      if (typeof v === "string") rh[k.slice(0, 60)] = v.slice(0, 400);
+    }
+    if (Object.keys(rh).length) fix.requestHeaders = rh;
+  }
+  if (Array.isArray(r.stripRequestHeaders)) {
+    fix.stripRequestHeaders = r.stripRequestHeaders
+      .filter((s): s is string => typeof s === "string")
+      .map((s) => s.slice(0, 60));
+  }
+  if (Array.isArray(r.clientHooks)) {
+    fix.clientHooks = r.clientHooks
+      .filter((s): s is string => typeof s === "string" && /^[a-zA-Z0-9_-]{1,40}$/.test(s));
+  }
+  if (r.flags && typeof r.flags === "object") {
+    const f = r.flags as Record<string, unknown>;
+    fix.flags = {
+      noAst: f.noAst === true,
+      noStream: f.noStream === true,
+      noJsonMedia: f.noJsonMedia === true,
+      virtLoc: f.virtLoc === true,
+    };
+  }
+  console.log(
+    `[quasar] site-fix pack entry "${fix.id}" loaded (${fix.match.length} hosts) from ${source}`
+  );
+  return fix;
+}
+
+let lastStamp = "";
+let packsWatcher: ReturnType<typeof setInterval> | null = null;
+/** Pack entries currently spliced into FIXES (removed again on reload). */
+let loadedPacks: SiteFix[] = [];
+
+export function reloadSiteFixes(): number {
+  const dir = packsDir();
+  let count = 0;
+  const fixes: SiteFix[] = [];
+  if (existsSync(dir)) {
+    for (const f of readdirSync(dir)) {
+      if (!f.toLowerCase().endsWith(".json")) continue;
+      try {
+        const parsed = JSON.parse(readFileSync(join(dir, f), "utf8"));
+        const list: unknown[] = Array.isArray(parsed) ? parsed : [parsed];
+        for (const item of list) {
+          const fix = coerceFix(item, f);
+          if (fix) fixes.push(fix);
+        }
+      } catch (err) {
+        console.error(`[quasar] site-fix pack ${f} unreadable:`, err);
+      }
+    }
+  }
+  // Swap out previously loaded packs, splice the fresh set in front of the
+  // built-ins (equal-length suffix ties resolve to the pack; everything else
+  // still follows longest-suffix-wins), then invalidate the lookup cache.
+  for (let i = FIXES.length - 1; i >= 0; i--) {
+    if (loadedPacks.includes(FIXES[i])) FIXES.splice(i, 1);
+  }
+  FIXES.unshift(...fixes);
+  loadedPacks = fixes;
+  count = fixes.length;
+  cache.clear();
+  return count;
+}
+
+(function initPacks() {
+  try {
+    const n = reloadSiteFixes();
+    if (n) console.log(`[quasar] ${n} site-fix pack entr${n === 1 ? "y" : "ies"} loaded from ${packsDir()}`);
+    lastStamp = dirStamp(packsDir());
+  } catch {
+    return;
+  }
+  if (packsWatcher) return;
+  packsWatcher = setInterval(() => {
+    try {
+      const stamp = dirStamp(packsDir());
+      if (stamp !== lastStamp) {
+        lastStamp = stamp;
+        const n = reloadSiteFixes();
+        console.log(`[quasar] site-fix packs reloaded: ${n} active entr${n === 1 ? "y" : "ies"}`);
+      }
+    } catch {
+      /* watcher is best-effort */
+    }
+  }, 30_000);
+  try {
+    (packsWatcher as unknown as { unref?: () => void }).unref?.();
+  } catch {}
+})();

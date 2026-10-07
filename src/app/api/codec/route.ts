@@ -1,22 +1,21 @@
 /**
- * Veil — Quasar Codec API (v1.3.8).
- * ------------------------------------------------------------------
- * Ported from the user-uploaded quasar-proxy engine (src/app/api/codec/route.ts).
- *
- * Batch encode/decode for the trusted Veil shell:
+ * Quasar Codec API — batch encode/decode for the trusted UI.
  *   POST /api/codec { op: "encode", urls: string[] }  -> { paths: (string|null)[] }
  *   POST /api/codec { op: "decode", paths: string[] } -> { urls: (string|null)[] }
  *
- * The shell uses this to display the real URL behind an AES-encrypted
- * proxied path (client scripts cannot decrypt AES blobs — the engine hands
- * the shell a /p/<blob>/... path for popups it could not decode, and this
- * endpoint resolves it). Gate: this endpoint is the only way a client can
- * decrypt, and it is rate-limited + password-gated — it exists for the same
- * user who already sees the pages.
+ * The UI uses this to build AES-encrypted proxied paths for the address bar
+ * and to display the real URL of the iframe's current location. Gate: this
+ * endpoint is the only way a client can decrypt, and it is rate-limited +
+ * password-gated — it exists for the same user who already sees the pages.
  */
 
 import { NextRequest } from "next/server";
-import { proxyPath, decodeProxiedHref } from "@/lib/veil/quasar/codec-server";
+import {
+  proxyPath,
+  decodeProxiedHref,
+  encodeCtxSuffix,
+  DEFAULT_CONTAINER,
+} from "@/lib/veil/quasar/codec-server";
 import { allowRequest, clientKeyOf, gate } from "@/lib/veil/quasar/security";
 
 export const runtime = "nodejs";
@@ -42,7 +41,14 @@ export async function POST(req: NextRequest): Promise<Response> {
     return Response.json({ error: "rate-limited" }, { status: 429 });
   }
 
-  let body: { op?: string; urls?: unknown; paths?: unknown };
+  let body: {
+    op?: string;
+    urls?: unknown;
+    paths?: unknown;
+    container?: unknown;
+    egress?: unknown;
+    ua?: unknown;
+  };
   try {
     body = await req.json();
   } catch {
@@ -52,11 +58,21 @@ export async function POST(req: NextRequest): Promise<Response> {
   if (body.op === "encode") {
     const urls = cleanArray(body.urls);
     if (!urls) return Response.json({ error: "bad-urls" }, { status: 400 });
+    // v2.1.0 — optional per-tab context baked into every blob: container,
+    // egress mode and UA override. Validated/normalized by encodeCtxSuffix.
+    const ctxSuffix = encodeCtxSuffix({
+      container:
+        typeof body.container === "string" && body.container !== DEFAULT_CONTAINER
+          ? body.container
+          : undefined,
+      egress: body.egress === "direct" || body.egress === "upstream" ? body.egress : undefined,
+      ua: typeof body.ua === "string" ? body.ua : undefined,
+    });
     const paths = urls.map((u) => {
       try {
         const parsed = new URL(u);
         if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null;
-        return proxyPath(parsed.href).split("#")[0];
+        return proxyPath(parsed.href, ctxSuffix).split("#")[0];
       } catch {
         return null;
       }

@@ -4408,7 +4408,12 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
           pfpAccessory: known?.pfpAccessory ?? null,
         },
       }
-      setMessages((prev) => [...prev, msg])
+      setMessages((prev) =>
+        // Dedup inside the updater too: messagesRef updates in an effect, so
+        // a poll merge that already landed this id can race the socket echo
+        // (observed as duplicate React keys in the message list).
+        prev.some((m) => m.id === msg.id) ? prev : [...prev, msg],
+      )
       // Notification + sound.
       if (extensions.notification_sound) {
         try {
@@ -5084,7 +5089,9 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
           method: "POST",
           body: JSON.stringify({ token, channelId, content: slash.content }),
         })
-        setMessages((prev) => [...prev, data.message])
+        setMessages((prev) =>
+          prev.some((m) => m.id === data.message.id) ? prev : [...prev, data.message]
+        )
         if (data.account) setAccount(data.account)
         socketRef.current?.emit("message", {
           channelId,
@@ -5116,7 +5123,9 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
           replyToUsername,
         }),
       })
-      setMessages((prev) => [...prev, data.message])
+      setMessages((prev) =>
+          prev.some((m) => m.id === data.message.id) ? prev : [...prev, data.message]
+        )
       if (data.account) setAccount(data.account)
       // Relay via socket.
       socketRef.current?.emit("message", {
@@ -5143,7 +5152,9 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
         method: "POST",
         body: JSON.stringify({ token, channelId, content }),
       })
-      setMessages((prev) => [...prev, data.message])
+      setMessages((prev) =>
+          prev.some((m) => m.id === data.message.id) ? prev : [...prev, data.message]
+        )
       if (data.account) setAccount(data.account)
       socketRef.current?.emit("message", {
         channelId,
