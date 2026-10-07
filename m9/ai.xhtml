@@ -126,17 +126,6 @@
   .btn:hover{filter:brightness(1.08)} .btn:active{transform:scale(.97)}
   .btn.ghost{background:transparent; color:var(--text); border:1px solid var(--line)}
   .btn.ghost:hover{border-color:#1f5238}
-  #pill{
-    position:fixed; right:14px; bottom:14px; z-index:4;
-    display:flex; align-items:center; gap:8px;
-    padding:8px 13px; border-radius:999px;
-    background:rgba(7,19,13,.82); border:1px solid var(--line);
-    color:var(--muted); font-size:12px; text-decoration:none;
-    backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
-    opacity:.28; transition:opacity .2s ease, color .2s ease, border-color .2s ease;
-  }
-  #pill:hover{opacity:1; color:var(--text); border-color:#1f5238}
-  #pill .v{width:7px; height:7px; border-radius:50%; background:var(--accent)}
   .sr{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}
   .noscript-box{position:fixed; inset:0; z-index:9; display:flex; align-items:center; justify-content:center; background:var(--bg); color:var(--muted); font-size:16px}
 </style>
@@ -192,10 +181,6 @@
   <button class="btn" id="retryBtn" type="button">Retry</button>
   <a class="btn ghost" id="slowLink" href="#" target="_blank" rel="noopener">Open direct</a>
 </div>
-
-<a id="pill" href="#" target="_blank" rel="noopener" aria-label="Open Veil OS directly in a new tab">
-  <span class="v" aria-hidden="true"></span> veil-cdn · open direct ↗
-</a>
 
 <noscript>
   <div class="noscript-box"><span>Veil OS needs JavaScript to run.</span></div>
@@ -268,7 +253,7 @@
    * real destination on first interaction — the markup never carries
    * the upstream origin. */
   function armLinks(U) {
-    var ids = ["pill", "slowLink"];
+    var ids = ["slowLink"];
     for (var i = 0; i < ids.length; i++) {
       (function (el) {
         if (!el) { return; }
