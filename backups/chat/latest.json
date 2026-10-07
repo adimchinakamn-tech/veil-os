@@ -1,10 +1,10 @@
 {
   "veil": "chat-backup",
   "version": 1,
-  "exportedAt": "2026-10-07T22:40:00.198Z",
+  "exportedAt": "2026-10-07T22:41:34.643Z",
   "counts": {
-    "accounts": 22,
-    "messages": 14,
+    "accounts": 21,
+    "messages": 13,
     "dms": 5
   },
   "accounts": [
@@ -385,24 +385,6 @@
       "legacy": false,
       "createdAt": "2026-10-07T22:26:18.410Z",
       "passwordHash": "$2b$10$Y6f/blPbg9sNOQevX1yio.CyZv2v0YohmUNxkVoXkdQ.jRH1ODUoO"
-    },
-    {
-      "id": "cmuyowe4y0000oqzpdr7yni3p",
-      "username": "qasugg01",
-      "displayName": "qasugg01",
-      "avatarColor": "#f97316",
-      "avatarImage": null,
-      "bio": "",
-      "role": "member",
-      "muted": false,
-      "banned": false,
-      "coins": 101,
-      "tag": null,
-      "tagColor": null,
-      "pfpAccessory": null,
-      "legacy": false,
-      "createdAt": "2026-10-07T22:39:12.274Z",
-      "passwordHash": "$2b$10$No3r8R24E10S3H4Lg6xADuJWJc5WCuCsgzniUwx9S9n7v.zZOXTbO"
     }
   ],
   "messages": [
@@ -547,17 +529,6 @@
       "replyToContent": null,
       "replyToUsername": null,
       "createdAt": "2026-10-07T13:29:27.678Z",
-      "editedAt": null
-    },
-    {
-      "id": "cmuyowtfh0002oqzp19fheugu",
-      "channelId": "suggestions",
-      "accountId": "cmuyowe4y0000oqzpdr7yni3p",
-      "content": "Welcome to #suggestions — drop your site & feature ideas here!",
-      "replyTo": null,
-      "replyToContent": null,
-      "replyToUsername": null,
-      "createdAt": "2026-10-07T22:39:32.094Z",
       "editedAt": null
     }
   ],
