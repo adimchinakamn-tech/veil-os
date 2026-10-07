@@ -1,11 +1,11 @@
 {
   "veil": "chat-backup",
   "version": 1,
-  "exportedAt": "2026-10-07T22:26:43.209Z",
+  "exportedAt": "2026-10-07T22:27:46.980Z",
   "counts": {
     "accounts": 21,
     "messages": 49,
-    "dms": 4
+    "dms": 5
   },
   "accounts": [
     {
@@ -956,6 +956,13 @@
       "isGroup": true,
       "ownerId": "cmux8grew0000q314i6tkw3f9",
       "createdAt": "2026-10-06T22:13:47.694Z"
+    },
+    {
+      "id": "cmuyoh3l9000yoqzk11m69qkz",
+      "name": null,
+      "isGroup": false,
+      "ownerId": "cmuu20ppm0005jkxecvmo7qpu",
+      "createdAt": "2026-10-07T22:27:18.765Z"
     }
   ],
   "dmMembers": [
@@ -1014,8 +1021,27 @@
     {
       "dmId": "cmux8jv3i000qq34lhts07uo6",
       "accountId": "cmux8grhv0001q314zumx5ox6"
+    },
+    {
+      "dmId": "cmuyoh3l9000yoqzk11m69qkz",
+      "accountId": "cmuu20ppm0005jkxecvmo7qpu"
+    },
+    {
+      "dmId": "cmuyoh3l9000yoqzk11m69qkz",
+      "accountId": "cmuyoft0p000qoqzkaikxem5z"
     }
   ],
-  "friends": [],
+  "friends": [
+    {
+      "accountId": "cmuu20ppm0005jkxecvmo7qpu",
+      "friendId": "cmuyoft0p000qoqzkaikxem5z",
+      "createdAt": "2026-10-07T22:27:09.797Z"
+    },
+    {
+      "accountId": "cmuyoft0p000qoqzkaikxem5z",
+      "friendId": "cmuu20ppm0005jkxecvmo7qpu",
+      "createdAt": "2026-10-07T22:27:09.799Z"
+    }
+  ],
   "reactions": []
 }
