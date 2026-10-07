@@ -831,9 +831,30 @@ export function StartPage({
         out.push({ kind: "visit", title: (v.title || v.host).slice(0, 60), sub: v.host, url: v.url, host: v.host });
       }
     }
-    // Local video search — the FreeTube library answers every query, on
-    // every proxy engine (the program never proxied, searches stay local).
-    if (q) {
+    // Always offer the web search row. For plain queries it sits at the TOP
+    // (index 0) so pressing Enter searches the web — the expected default.
+    // It only sinks to the end when a URL intent or quick link owns slot 0.
+    const engineLabel = { bing: "Bing", duckduckgo: "DuckDuckGo", brave: "Brave", google: "Google", ecosia: "Ecosia" }[searchEngineId()] ?? "the web";
+    const webRow: Suggestion = {
+      kind: "search",
+      title: `Search ${engineLabel} for “${input.trim().slice(0, 40)}”`,
+      sub: "",
+      url: "",
+      host: "",
+    };
+    if (urlIntent) {
+      out.push(
+        {
+          kind: "search",
+          title: `Search videos for “${input.trim().slice(0, 40)}”`,
+          sub: "FreeTube — the local library",
+          url: `https://freetube.veil.local/#/search/${encodeURIComponent(input.trim())}`,
+          host: "freetube.veil.local",
+        },
+        webRow
+      );
+    } else {
+      out.unshift(webRow);
       out.push({
         kind: "search",
         title: `Search videos for “${input.trim().slice(0, 40)}”`,
@@ -842,15 +863,6 @@ export function StartPage({
         host: "freetube.veil.local",
       });
     }
-    // Always offer the web search row at the end (or top for plain queries).
-    const engineLabel = { bing: "Bing", duckduckgo: "DuckDuckGo", brave: "Brave", google: "Google", ecosia: "Ecosia" }[searchEngineId()] ?? "the web";
-    out.push({
-      kind: "search",
-      title: `Search ${engineLabel} for “${input.trim().slice(0, 40)}”`,
-      sub: "",
-      url: "",
-      host: "",
-    });
     return out;
   }, [input, history]);
 
