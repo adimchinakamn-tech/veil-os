@@ -19,6 +19,7 @@ export async function OPTIONS(): Promise<Response> {
 const PUBLIC_CHANNELS = [
   "main",
   "sharelinks",
+  "suggestions",
   "links",
   "announcements",
 ] as const

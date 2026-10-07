@@ -38,7 +38,7 @@ function summarize(
   }))
 }
 
-const PUBLIC_CHANNELS = ["main", "sharelinks", "links", "announcements"] as const
+const PUBLIC_CHANNELS = ["main", "sharelinks", "suggestions", "links", "announcements"] as const
 
 /**
  * POST /api/chat-reactions — toggle an emoji reaction on a message.

@@ -218,6 +218,7 @@ const SUPER_ADMIN_USERNAME = "Veil"
 const CHANNELS = [
   { id: "main", name: "general", label: "#general", desc: "General chat — say hi!", modOnly: false },
   { id: "sharelinks", name: "sharelinks", label: "#sharelinks", desc: "Drop links, sites, finds", modOnly: false },
+  { id: "suggestions", name: "suggestions", label: "#suggestions", desc: "Suggest sites, features & ideas", modOnly: false },
   { id: "links", name: "links", label: "#links", desc: "Curated links — mods & owner", modOnly: true },
   { id: "announcements", name: "announcements", label: "#announcements", desc: "Official news — mods & owner", modOnly: true },
 ] as const
