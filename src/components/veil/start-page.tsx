@@ -47,6 +47,7 @@ import {
   Search,
   Settings,
   Snowflake,
+  Sparkles,
   Sun,
   WifiOff,
 } from "lucide-react";
@@ -321,16 +322,38 @@ function randomSplashLine(): string {
 /* ------------------------------------------------------------------ */
 
 /** Every arrangeable block of the start page. */
-type WidgetId = "clock" | "weather" | "presence" | "brand" | "search" | "hints" | "dock" | "recent" | "stats";
+type WidgetId =
+  | "clock"
+  | "weather"
+  | "presence"
+  | "brand"
+  | "search"
+  | "hints"
+  | "dock"
+  | "suggestions"
+  | "recent"
+  | "stats";
 
 /** The ONLY thing the layout editor controls: the order the apps render
- * in. No resizing, no hiding — the user's call. */
+ * in. No resizing, no hiding, no redesign — the page keeps its classic
+ * column look no matter how things are arranged. */
 interface StartLayout {
   order: WidgetId[];
   customized: boolean;
 }
 
-const DEFAULT_ORDER: WidgetId[] = ["clock", "weather", "presence", "brand", "search", "hints", "dock", "recent", "stats"];
+const DEFAULT_ORDER: WidgetId[] = [
+  "clock",
+  "weather",
+  "presence",
+  "brand",
+  "search",
+  "hints",
+  "dock",
+  "suggestions",
+  "recent",
+  "stats",
+];
 const LAYOUT_KEY = "veil.start.layout.v1";
 
 const WIDGET_LABELS: Record<WidgetId, string> = {
@@ -341,28 +364,25 @@ const WIDGET_LABELS: Record<WidgetId, string> = {
   search: "Search bar",
   hints: "Keyboard hints",
   dock: "Section dock",
+  suggestions: "Suggestions",
   recent: "Recently viewed",
   stats: "Stats line",
 };
 
-const SPAN_CLASS: Record<number, string> = {
-  1: "col-span-1",
-  2: "col-span-2",
-  3: "col-span-2 md:col-span-3",
-  4: "col-span-2 md:col-span-4",
-};
-/** Each widget's resting width in the bento grid (clock + weather share
- * a row, search and the dock run full width) — fixed, not editable. */
-const GRID_DEFAULT_SIZES: Record<WidgetId, number> = {
-  clock: 2,
-  weather: 2,
-  presence: 1,
-  brand: 2,
-  search: 4,
-  hints: 2,
-  dock: 4,
-  recent: 4,
-  stats: 2,
+/** How each block sits in the classic column: its top margin (the
+ * hand-tuned default rhythm) and whether it centers or runs wide.
+ * Reordering never changes these — the editor is move-only. */
+const COLUMN_ITEM: Record<WidgetId, string> = {
+  clock: "flex w-full justify-center",
+  weather: "mt-3.5 flex w-full justify-center",
+  presence: "mt-3.5 flex w-full justify-center",
+  brand: "mt-9 w-full",
+  search: "mt-7 w-full",
+  hints: "mt-3.5 flex w-full justify-center",
+  dock: "mt-8 flex w-full justify-center",
+  suggestions: "mt-10 w-full",
+  recent: "mt-10 w-full",
+  stats: "mt-10 w-full",
 };
 
 function readStartLayout(): StartLayout {
@@ -987,9 +1007,8 @@ export function StartPage({
         };
 
   /* ---- the arrangeable widget bodies ----
-   * Shared by the classic column (default) and the bento grid (the
-   * layout editor). Margins live on the WRAPPERS, not the nodes, so the
-   * grid's gap can do the spacing. */
+   * The classic column renders them in the saved order — the layout
+   * editor only reorders; margins live on the wrappers (COLUMN_ITEM). */
   const widgetNodes: Record<WidgetId, React.ReactNode> = {
     clock: (
       <StartClock clock24={clock24} />
@@ -1297,6 +1316,20 @@ export function StartPage({
         })}
       </nav>
     ),
+    suggestions: (
+      <section {...rise(0.27)} aria-label="Suggestions" className="veil-rise w-full">
+        <div className="mb-3 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
+          <Sparkles aria-hidden className="size-3.5 text-emerald-300/80" />
+          Suggestions
+        </div>
+        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+          {QUICK_LINKS.map((s) => (
+            <SuggestionCard key={s.url} link={s} onNavigate={onNavigate} />
+          ))}
+        </div>
+        <p className="mt-2.5 text-[11px] text-zinc-600">Picked to read well through the veil.</p>
+      </section>
+    ),
     recent:
       recent.length > 0 ? (
         <section {...rise(0.3)} aria-label="Recently viewed" className="veil-rise w-full">
@@ -1334,7 +1367,6 @@ export function StartPage({
       </p>
     ),
   };
-  const gridMode = editing || layout.customized;
 
   return (
     <div className="fixed inset-0 overflow-y-auto veil-scroll-slim bg-zinc-950 text-zinc-100">
@@ -1383,99 +1415,82 @@ export function StartPage({
       {/* ── start content ── */}
       <div
         className={cn(
-          "relative mx-auto flex min-h-full w-full flex-col items-center px-4 py-10 transition-opacity duration-500 sm:px-6 sm:py-16",
-          gridMode ? "max-w-5xl" : "max-w-3xl",
+          "relative mx-auto flex min-h-full w-full max-w-3xl flex-col items-center px-4 py-10 transition-opacity duration-500 sm:px-6 sm:py-16",
           editing && "pb-24",
-          uiHidden && "pointer-events-none opacity-0"
+          uiHidden && "pointer-events-none opacity-0",
         )}
       >
-        {gridMode ? (
-          /* ── the bento grid — the customized / editing layout ── */
-          <div className="grid w-full grid-cols-2 gap-4 pt-3 md:grid-cols-4 md:gap-5">
-            {layout.order
-              .filter((w) => widgetNodes[w] != null)
-              .map((w) => {
-                const size = GRID_DEFAULT_SIZES[w];
-                return (
-                  <section
-                    key={w}
-                    aria-label={WIDGET_LABELS[w]}
-                    draggable={editing}
-                    onDragStart={editing ? () => setDragId(w) : undefined}
-                    onDragEnd={editing ? () => { setDragId(null); setDropTarget(null); } : undefined}
-                    onDragOver={
-                      editing && dragId && dragId !== w
-                        ? (e: React.DragEvent) => {
-                            e.preventDefault();
-                            setDropTarget(w);
-                          }
-                        : undefined
-                    }
-                    onDragLeave={editing ? () => setDropTarget((t) => (t === w ? null : t)) : undefined}
-                    onDrop={editing ? () => dropWidgetOn(w) : undefined}
-                    className={cn(
-                      "relative rounded-2xl border border-white/10 bg-black/35 p-4 backdrop-blur-md",
-                      SPAN_CLASS[size],
-                      editing && "outline-dashed outline-2 outline-white/25",
-                      editing && dragId === w && "opacity-40",
-                      editing && dropTarget === w && dragId !== w && "outline-2 outline-emerald-300/80"
-                    )}
-                  >
-                    {editing && (
-                      <div className="absolute -top-3.5 left-3 right-3 z-20 flex items-center justify-between gap-1 rounded-full border border-white/15 bg-zinc-950/90 py-1 pl-2.5 pr-1.5 text-zinc-300 shadow-lg backdrop-blur-md">
-                        <span className="flex min-w-0 items-center gap-1 text-[10px] font-semibold">
-                          <GripVertical aria-hidden className="size-3 shrink-0 text-zinc-500" />
-                          <span className="truncate">{WIDGET_LABELS[w]}</span>
-                        </span>
-                        <span className="flex shrink-0 items-center gap-0.5">
-                          <button
-                            type="button"
-                            onClick={() => moveWidget(w, -1)}
-                            aria-label={`Move ${WIDGET_LABELS[w]} earlier`}
-                            className="flex size-5.5 items-center justify-center rounded-full transition hover:bg-white/10 hover:text-white"
-                          >
-                            <ChevronUp aria-hidden className="size-3" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => moveWidget(w, 1)}
-                            aria-label={`Move ${WIDGET_LABELS[w]} later`}
-                            className="flex size-5.5 items-center justify-center rounded-full transition hover:bg-white/10 hover:text-white"
-                          >
-                            <ChevronDown aria-hidden className="size-3" />
-                          </button>
-                        </span>
-                      </div>
-                    )}
-                    {widgetNodes[w]}
-                  </section>
-                );
-              })}
-          </div>
-        ) : (
-          /* ── the classic column — the untouched default look ── */
-          <div className="flex w-full flex-col items-center">
-            {widgetNodes.clock}
-            <div className="mt-3.5 flex w-full justify-center">{widgetNodes.weather}</div>
-            <div className="mt-3.5 flex w-full justify-center">{widgetNodes.presence}</div>
-            <div className="mt-9 w-full">{widgetNodes.brand}</div>
-            <div className="mt-7 w-full">{widgetNodes.search}</div>
-            <div className="mt-3.5 flex w-full justify-center">{widgetNodes.hints}</div>
-            <div className="mt-8 flex w-full justify-center">{widgetNodes.dock}</div>
-            {widgetNodes.recent ? <div className="mt-10 w-full">{widgetNodes.recent}</div> : null}
-            <div className="mt-10 w-full">{widgetNodes.stats}</div>
-          </div>
-        )}
+        {/* ── the classic column, rendered from the saved order — the
+            layout editor only moves these blocks around, the page's look
+            never changes (no grid redesign: move-only, that's the deal) ── */}
+        <div className="flex w-full flex-col items-center">
+          {layout.order
+            .filter((w) => widgetNodes[w] != null)
+            .map((w) => (
+              <section
+                key={w}
+                {...(editing ? { "aria-label": WIDGET_LABELS[w] } : {})}
+                draggable={editing}
+                onDragStart={editing ? () => setDragId(w) : undefined}
+                onDragEnd={editing ? () => { setDragId(null); setDropTarget(null); } : undefined}
+                onDragOver={
+                  editing && dragId && dragId !== w
+                    ? (e: React.DragEvent) => {
+                        e.preventDefault();
+                        setDropTarget(w);
+                      }
+                    : undefined
+                }
+                onDragLeave={editing ? () => setDropTarget((t) => (t === w ? null : t)) : undefined}
+                onDrop={editing ? () => dropWidgetOn(w) : undefined}
+                className={cn(
+                  COLUMN_ITEM[w],
+                  editing &&
+                    "relative rounded-2xl px-3 py-2.5 outline-dashed outline-2 outline-white/25",
+                  editing && dragId === w && "opacity-40",
+                  editing && dropTarget === w && dragId !== w && "outline-2 outline-emerald-300/80",
+                )}
+              >
+                {editing && (
+                  <div className="absolute -top-3.5 left-3 right-3 z-20 flex items-center justify-between gap-1 rounded-full border border-white/15 bg-zinc-950/90 py-1 pl-2.5 pr-1.5 text-zinc-300 shadow-lg backdrop-blur-md">
+                    <span className="flex min-w-0 items-center gap-1 text-[10px] font-semibold">
+                      <GripVertical aria-hidden className="size-3 shrink-0 text-zinc-500" />
+                      <span className="truncate">{WIDGET_LABELS[w]}</span>
+                    </span>
+                    <span className="flex shrink-0 items-center gap-0.5">
+                      <button
+                        type="button"
+                        onClick={() => moveWidget(w, -1)}
+                        aria-label={`Move ${WIDGET_LABELS[w]} earlier`}
+                        className="flex size-5.5 items-center justify-center rounded-full transition hover:bg-white/10 hover:text-white"
+                      >
+                        <ChevronUp aria-hidden className="size-3" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => moveWidget(w, 1)}
+                        aria-label={`Move ${WIDGET_LABELS[w]} later`}
+                        className="flex size-5.5 items-center justify-center rounded-full transition hover:bg-white/10 hover:text-white"
+                      >
+                        <ChevronDown aria-hidden className="size-3" />
+                      </button>
+                    </span>
+                  </div>
+                )}
+                {widgetNodes[w]}
+              </section>
+            ))}
+        </div>
       </div>
 
       {/* ── the layout editor's action bar ── */}
       {editing && (
         <div className="fixed inset-x-0 bottom-0 z-[70] border-t border-white/10 bg-zinc-950/90 backdrop-blur-xl">
-          <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2.5">
+          <div className="mx-auto flex max-w-3xl flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2.5">
             <span className="flex items-center gap-2 text-[12.5px] font-semibold text-zinc-100">
               <LayoutGrid aria-hidden className="size-4 text-emerald-300" /> Arrange the start page
             </span>
-            <span className="hidden text-[11px] text-zinc-500 sm:inline">drag a card (or the arrows) to move it — that's all the editor does</span>
+            <span className="hidden text-[11px] text-zinc-500 sm:inline">drag a block (or the arrows) to move it — that's all the editor does</span>
             <span className="flex-1" />
             <button
               type="button"
@@ -1527,6 +1542,60 @@ function SuggestionFavicon({ host }: { host: string }) {
     );
   }
   return <Globe aria-hidden className="size-4 text-zinc-400" />;
+}
+
+/* A suggested site — the Suggestions block's card. Mirrors RecentCard's
+ * glass look so the two grids read as siblings. */
+function SuggestionCard({
+  link,
+  onNavigate,
+}: {
+  link: (typeof QUICK_LINKS)[number];
+  onNavigate: (url: string) => void;
+}) {
+  const urls = React.useMemo(() => faviconUrls(link.host), [link.host]);
+  const [idx, setIdx] = React.useState(0);
+  return (
+    <button
+      type="button"
+      onClick={() => onNavigate(link.url)}
+      aria-label={`Open ${link.name}`}
+      className={cn(
+        "group flex items-center gap-2.5 rounded-2xl border bg-black/35 p-3 text-left backdrop-blur-md transition-all hover:-translate-y-0.5 hover:bg-black/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300",
+        link.featured
+          ? "border-emerald-500/30 hover:border-emerald-400/50"
+          : "border-white/10 hover:border-emerald-500/40",
+      )}
+    >
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-zinc-800">
+        {idx < urls.length ? (
+          <img
+            src={urls[idx]}
+            alt=""
+            width={18}
+            height={18}
+            loading="lazy"
+            onError={() => setIdx((i) => i + 1)}
+            className="size-[18px] rounded-sm object-contain"
+          />
+        ) : (
+          <Globe aria-hidden className="size-4 text-zinc-500" />
+        )}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="flex items-center gap-1.5">
+          <span className="truncate text-[12.5px] font-medium text-zinc-200 group-hover:text-zinc-100">{link.name}</span>
+          {link.tag ? (
+            <span className="shrink-0 rounded-full border border-emerald-400/25 bg-emerald-400/10 px-1.5 py-px text-[9px] font-semibold uppercase tracking-wide text-emerald-300">
+              {link.tag}
+            </span>
+          ) : null}
+        </span>
+        <span className="block truncate text-[10.5px] text-zinc-500">{link.desc}</span>
+      </span>
+      <ArrowRight aria-hidden className="size-3.5 shrink-0 text-zinc-600 transition group-hover:translate-x-0.5 group-hover:text-emerald-300" />
+    </button>
+  );
 }
 
 function RecentCard({ visit, onNavigate }: { visit: Visit; onNavigate: (url: string) => void }) {
