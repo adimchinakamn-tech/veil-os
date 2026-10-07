@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   Check,
   Circle,
@@ -219,16 +220,26 @@ export function QuasarTabStrip({
         aria-label="Open tabs"
         className={`flex items-center gap-1 overflow-x-auto px-2 pt-1.5 ${SCROLLBAR}`}
       >
-        {displayTabs.map((t) => {
-          const tTarget = t.idx >= 0 ? t.stack[t.idx] : "";
-          const tTitle = t.idx === -1 ? "New tab" : t.title || (loading && t.id === activeId ? "Loading…" : tTarget);
-          const active = t.id === activeId;
-          const isPinned = t.pinned;
-          const mark = dropMark?.id === t.id ? dropMark.side : null;
-          return (
-            <div
-              key={t.id}
-              role="tab"
+        {/* AnimatePresence + layout: new tabs spring in, closed tabs
+            shrink out, and the survivors glide to fill the gap — the same
+            physics as a native browser chrome. */}
+        <AnimatePresence initial={false}>
+          {displayTabs.map((t) => {
+            const tTarget = t.idx >= 0 ? t.stack[t.idx] : "";
+            const tTitle = t.idx === -1 ? "New tab" : t.title || (loading && t.id === activeId ? "Loading…" : tTarget);
+            const active = t.id === activeId;
+            const isPinned = t.pinned;
+            const mark = dropMark?.id === t.id ? dropMark.side : null;
+            return (
+              <motion.div
+                key={t.id}
+                layout
+                initial={{ opacity: 0, scale: 0.72 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.72, transition: { duration: 0.16, ease: "easeOut" } }}
+                transition={{ type: "spring", stiffness: 520, damping: 34 }}
+                style={{ transformOrigin: "top center" }}
+                role="tab"
               tabIndex={0}
               aria-selected={active}
               draggable
@@ -283,10 +294,17 @@ export function QuasarTabStrip({
                   : "min-w-[140px] max-w-[220px] px-3 py-2"
               } ${
                 active
-                  ? "border-zinc-700/80 bg-zinc-900 text-zinc-100"
+                  ? "border-zinc-700/80 bg-zinc-900 text-zinc-100 shadow-[0_1px_10px_rgba(0,0,0,0.35)]"
                   : "border-transparent bg-zinc-900/40 text-zinc-400 hover:bg-zinc-900/70 hover:text-zinc-200"
               } ${dragId === t.id ? "opacity-40" : ""}`}
             >
+              {/* Active tab — emerald top accent line */}
+              {active ? (
+                <span
+                  aria-hidden="true"
+                  className="absolute inset-x-1 top-0 h-[2px] rounded-full bg-gradient-to-r from-emerald-400/0 via-emerald-400 to-emerald-400/0"
+                />
+              ) : null}
               {/* Drop indicator lines */}
               {mark === "before" ? (
                 <span
@@ -339,17 +357,19 @@ export function QuasarTabStrip({
                   </button>
                 </>
               ) : null}
-            </div>
+            </motion.div>
           );
-        })}
-        <button
+          })}
+        </AnimatePresence>
+        <motion.button
+          whileTap={{ scale: 0.86 }}
           onClick={onNewTab}
           aria-label="New tab (Ctrl+T)"
           title="New tab (Ctrl+T)"
-          className="mb-0.5 ml-1 shrink-0 rounded-lg p-2 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-100"
+          className="mb-0.5 ml-1 shrink-0 rounded-lg p-2 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-emerald-300"
         >
           <Plus className="size-4" aria-hidden="true" />
-        </button>
+        </motion.button>
       </div>
 
       {/* Tab context menu */}

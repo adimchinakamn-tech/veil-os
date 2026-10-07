@@ -1,15 +1,31 @@
 "use client";
 
 /**
- * Veil — new-tab start page.
+ * Veil — new-tab start page (v2 overhaul).
+ *
  * Shown inside the browsing overlay when the active tab has no target yet.
- * A compact, focused launcher: command bar + quick links + recent history.
+ * Now a proper "OS new tab": the applied wallpaper (video / image / the
+ * default emerald live theme from first boot) paints the whole surface,
+ * with a live clock + greeting, a glass command bar, glass quick links
+ * and recent history — all on translucent cards over the backdrop.
  */
 
 import * as React from "react";
-import { motion } from "framer-motion";
-import { ArrowRight, Clock, History as HistoryIcon, Maximize2, Search, Sparkles } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { motion, useReducedMotion } from "framer-motion";
+import {
+  ArrowRight,
+  Clock,
+  History as HistoryIcon,
+  LogOut,
+  Maximize2,
+  Search,
+} from "lucide-react";
+import { BackdropVideo } from "@/components/veil/backdrop-video";
+import {
+  loadWallpaperSelection,
+  THEME_GRADIENTS,
+  type WallpaperSelection,
+} from "@/lib/veil/wallpapers";
 import {
   faviconUrls,
   normalizeInput,
@@ -26,7 +42,7 @@ function FaviconImg({ host, name, className }: { host: string; name: string; cla
     return (
       <div
         aria-hidden
-        className={`flex items-center justify-center rounded-md bg-emerald-500/15 font-semibold text-emerald-300 ${className ?? "h-8 w-8"}`}
+        className={`flex items-center justify-center rounded-lg bg-emerald-400/20 font-semibold text-emerald-100 ring-1 ring-white/20 ${className ?? "h-8 w-8"}`}
         style={{ fontSize: 13 }}
       >
         {name.replace(/^www\./, "").charAt(0).toUpperCase()}
@@ -41,10 +57,31 @@ function FaviconImg({ host, name, className }: { host: string; name: string; cla
       height={32}
       loading="lazy"
       onError={() => setIdx((i) => i + 1)}
-      className={`rounded-md bg-zinc-800 object-contain p-0.5 ${className ?? "h-8 w-8"}`}
+      className={`rounded-lg bg-zinc-900 object-contain p-0.5 ring-1 ring-white/15 ${className ?? "h-8 w-8"}`}
     />
   );
 }
+
+/* ── live clock ─────────────────────────────────────────────────────── */
+
+function useNow() {
+  const [now, setNow] = React.useState(() => new Date());
+  React.useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  return now;
+}
+
+function greetingFor(d: Date): string {
+  const h = d.getHours();
+  if (h < 5) return "Up late, veiling the night";
+  if (h < 12) return "Good morning";
+  if (h < 18) return "Good afternoon";
+  return "Good evening";
+}
+
+/* ── the page ───────────────────────────────────────────────────────── */
 
 export function NewTab({
   onNavigate,
@@ -57,6 +94,18 @@ export function NewTab({
 }) {
   const [input, setInput] = React.useState("");
   const inputRef = React.useRef<HTMLInputElement>(null);
+  const reduceMotion = useReducedMotion();
+  const now = useNow();
+
+  /* ── the applied wallpaper — live-tracked, defaults to the emerald
+   *    live theme (the green look from first boot) ── */
+  const [wallpaper, setWallpaper] = React.useState<WallpaperSelection | null>(null);
+  React.useEffect(() => {
+    const sync = () => setWallpaper(loadWallpaperSelection());
+    sync();
+    window.addEventListener("veil:wallpaper-changed", sync);
+    return () => window.removeEventListener("veil:wallpaper-changed", sync);
+  }, []);
 
   React.useEffect(() => {
     const t = setTimeout(() => inputRef.current?.focus(), 80);
@@ -71,84 +120,101 @@ export function NewTab({
 
   const stats = history?.stats;
 
+  const clock = now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  const dateLine = now.toLocaleDateString([], {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
+
+  /* Wallpaper lanes — same three-way logic as the start page. */
+  const wpKind = wallpaper?.kind ?? "animated";
+  const wpTheme = wallpaper?.theme ?? "emerald";
+  const wpSrc = wallpaper?.src ?? "";
+  const wpThumb = wallpaper?.thumb ?? undefined;
+
   return (
-    <div className="absolute inset-0 overflow-y-auto bg-zinc-950 pt-16 text-zinc-100 veil-scroll-slim">
-      {/* Backdrop: floating orbs */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="veil-orb-a absolute -top-32 left-1/2 h-[360px] w-[560px] -translate-x-1/2 rounded-full bg-emerald-500/15 blur-[120px]" />
-        <div className="veil-orb-b absolute top-40 right-[14%] h-48 w-48 rounded-full bg-teal-500/10 blur-[90px]" />
-        <div
-          className="absolute inset-0 opacity-[0.12]"
-          style={{
-            backgroundImage:
-              "linear-gradient(to right, #3f3f46 1px, transparent 1px), linear-gradient(to bottom, #3f3f46 1px, transparent 1px)",
-            backgroundSize: "52px 52px",
-            maskImage: "radial-gradient(ellipse 70% 55% at 50% 35%, black 30%, transparent 100%)",
-            WebkitMaskImage: "radial-gradient(ellipse 70% 55% at 50% 35%, black 30%, transparent 100%)",
-          }}
-        />
+    <div className="absolute inset-0 overflow-y-auto bg-zinc-950 text-zinc-100 veil-scroll-slim">
+      {/* ── wallpaper backdrop (applied wallpaper, or the emerald live
+          theme you get when you first join) ── */}
+      <div aria-hidden className="pointer-events-none fixed inset-0 overflow-hidden">
+        {wpKind === "video" && wpSrc ? (
+          <BackdropVideo src={wpSrc} poster={wpThumb} />
+        ) : wpKind === "image" && wpSrc ? (
+          <img src={wpSrc} alt="" className="size-full object-cover" />
+        ) : (
+          <div className={`absolute inset-0 bg-gradient-to-br ${THEME_GRADIENTS[wpTheme] ?? THEME_GRADIENTS.emerald}`}>
+            <div className={`absolute -top-40 left-[25%] h-[26rem] w-[40rem] rounded-full bg-white/10 blur-3xl ${reduceMotion ? "" : "veil-orb-a"}`} />
+            <div className={`absolute -bottom-32 right-[8%] h-80 w-80 rounded-full bg-black/10 blur-3xl ${reduceMotion ? "" : "veil-orb-b"}`} />
+          </div>
+        )}
+        {/* readability scrim + vignette over any wallpaper */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/30 to-black/50" />
+        <div className="veil-vignette absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-black/45 to-transparent" />
       </div>
 
+      {/* ── content ── */}
       <motion.div
-        initial={{ opacity: 0, y: 12 }}
+        initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="relative mx-auto w-full max-w-3xl px-4 pb-24 pt-10 sm:px-6"
+        transition={{ duration: 0.45, ease: "easeOut" }}
+        className="relative mx-auto w-full max-w-3xl px-4 pb-24 pt-28 sm:px-6 sm:pt-32"
       >
-        {/* Brand mark */}
-        <div className="mb-7 flex items-center justify-center gap-2.5">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15 ring-1 ring-emerald-500/30">
-            <Sparkles aria-hidden className="h-4.5 w-4.5 text-emerald-400" />
-          </span>
-          <span className="text-lg font-semibold tracking-tight">
-            Veil<span className="text-emerald-400">.</span>
-          </span>
-        </div>
-
-        <motion.h2
+        {/* ── live clock + greeting ── */}
+        <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.05 }}
-          className="text-center text-2xl font-bold tracking-tight sm:text-3xl"
+          transition={{ duration: 0.5, delay: 0.05 }}
+          className="text-center"
         >
-          Where to next?
-        </motion.h2>
+          <p className="text-6xl font-extralight tracking-tight text-white drop-shadow-[0_2px_18px_rgba(0,0,0,0.45)] sm:text-7xl">
+            <span className="tabular-nums">{clock}</span>
+          </p>
+          <p className="mt-2.5 text-[14.5px] font-medium text-white/75 drop-shadow sm:text-[15.5px]">
+            {dateLine} · {greetingFor(now)}
+          </p>
+        </motion.div>
 
-        {/* Command bar */}
+        {/* ── command bar (glass) ── */}
         <motion.form
-          initial={{ opacity: 0, y: 12 }}
+          initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
+          transition={{ duration: 0.45, delay: 0.12 }}
           onSubmit={submit}
-          className="mx-auto mt-7 flex w-full max-w-2xl items-center gap-2"
+          className="mx-auto mt-9 flex w-full max-w-2xl items-center gap-2.5"
           role="search"
         >
           <div className="group relative flex-1">
-            <Search aria-hidden className="pointer-events-none absolute left-4 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-zinc-500 transition group-focus-within:text-emerald-400" />
-            <Input
+            <Search
+              aria-hidden
+              className="pointer-events-none absolute left-4 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-white/50 transition group-focus-within:text-emerald-300"
+            />
+            <input
               ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Type a URL — or search the web…"
+              placeholder="Search the web or type a URL…"
               aria-label="URL or search query"
               spellCheck={false}
               autoCapitalize="none"
               autoComplete="off"
-              className="h-13 rounded-2xl border-zinc-800 bg-zinc-900/90 pl-11 pr-4 text-[15px] text-zinc-100 shadow-2xl shadow-black/40 placeholder:text-zinc-500 focus-visible:border-emerald-500/60 focus-visible:ring-emerald-500/30"
+              className="h-13 w-full rounded-2xl border border-white/15 bg-zinc-950/55 pl-11 pr-4 text-[15px] text-white shadow-2xl shadow-black/50 outline-none backdrop-blur-xl transition placeholder:text-white/40 hover:border-white/25 focus:border-emerald-300/60 focus:bg-zinc-950/70 focus:shadow-[0_0_0_4px_rgba(52,211,153,0.18)]"
             />
           </div>
-          <button
+          <motion.button
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.96 }}
             type="submit"
-            className="flex h-13 items-center gap-1.5 rounded-2xl bg-emerald-500 px-5 text-[15px] font-semibold text-emerald-950 shadow-lg shadow-emerald-500/25 transition hover:bg-emerald-400"
+            className="flex h-13 shrink-0 items-center gap-1.5 rounded-2xl bg-emerald-400 px-5 text-[15px] font-semibold text-emerald-950 shadow-xl shadow-emerald-500/25 transition hover:bg-emerald-300"
           >
             <Maximize2 aria-hidden className="h-4 w-4" />
             <span className="hidden sm:inline">Browse</span>
-          </button>
+          </motion.button>
         </motion.form>
 
-        {/* Quick links */}
-        <div className="mt-10">
-          <div className="mb-3 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+        {/* ── quick links (glass cards) ── */}
+        <div className="mt-11">
+          <div className="mb-3 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-white/55">
             <Clock aria-hidden className="h-3.5 w-3.5" />
             Launch pads
           </div>
@@ -156,48 +222,56 @@ export function NewTab({
             {QUICK_LINKS.map((s, i) => (
               <motion.button
                 key={s.url}
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: 0.12 + i * 0.04 }}
+                transition={{ duration: 0.35, delay: 0.16 + i * 0.05 }}
+                whileHover={{ y: -3 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => onNavigate(s.url)}
-                className="group flex items-center gap-3 rounded-xl border border-zinc-800/80 bg-zinc-900/40 p-3 text-left transition hover:-translate-y-0.5 hover:border-emerald-500/40 hover:bg-zinc-900"
+                className="group flex items-center gap-3 rounded-2xl border border-white/12 bg-zinc-950/45 p-3 text-left shadow-lg shadow-black/25 backdrop-blur-md transition-colors hover:border-emerald-300/40 hover:bg-zinc-950/65"
               >
                 <FaviconImg host={s.host} name={s.name} className="h-9 w-9 shrink-0" />
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[13px] font-semibold text-zinc-100">{s.name}</span>
-                  <span className="block truncate text-[11px] text-zinc-500">{s.desc}</span>
+                  <span className="block truncate text-[13px] font-semibold text-white">{s.name}</span>
+                  <span className="block truncate text-[11px] text-white/55">{s.desc}</span>
                 </span>
-                <ArrowRight aria-hidden className="h-3.5 w-3.5 shrink-0 text-zinc-600 transition group-hover:translate-x-0.5 group-hover:text-emerald-400" />
+                <ArrowRight
+                  aria-hidden
+                  className="h-3.5 w-3.5 shrink-0 text-white/35 transition group-hover:translate-x-0.5 group-hover:text-emerald-300"
+                />
               </motion.button>
             ))}
           </div>
         </div>
 
-        {/* Recent history (mini) */}
+        {/* ── recent history (glass rows) ── */}
         {history && history.visits.length > 0 && (
           <div className="mt-9">
-            <div className="mb-3 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+            <div className="mb-3 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-white/55">
               <HistoryIcon aria-hidden className="h-3.5 w-3.5" />
               Recently viewed
             </div>
             <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              {history.visits.slice(0, 6).map((v) => {
+              {history.visits.slice(0, 6).map((v, i) => {
                 const title = v.title || v.url.replace(/^https?:\/\//, "");
                 return (
                   <li key={v.id}>
-                    <button
+                    <motion.button
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: 0.24 + i * 0.04 }}
                       onClick={() => onNavigate(v.url)}
-                      className="flex w-full items-center gap-3 rounded-xl border border-zinc-800/70 bg-zinc-900/30 p-2.5 text-left transition hover:border-emerald-500/40 hover:bg-zinc-900"
+                      className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-zinc-950/35 p-2.5 text-left backdrop-blur-md transition hover:border-emerald-300/35 hover:bg-zinc-950/60"
                     >
                       <FaviconImg host={v.host} name={v.host} className="h-8 w-8 shrink-0" />
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-[13px] font-medium text-zinc-200">{title}</span>
-                        <span className="block truncate text-[11px] text-zinc-500">
+                        <span className="block truncate text-[13px] font-medium text-white/90">{title}</span>
+                        <span className="block truncate text-[11px] text-white/50">
                           {v.host} · {timeAgo(v.updatedAt)}
-                          {v.visitCount > 1 && <span className="text-emerald-500/80"> · {v.visitCount}×</span>}
+                          {v.visitCount > 1 && <span className="text-emerald-300/80"> · {v.visitCount}×</span>}
                         </span>
                       </span>
-                    </button>
+                    </motion.button>
                   </li>
                 );
               })}
@@ -205,22 +279,26 @@ export function NewTab({
           </div>
         )}
 
-        {/* Stats line */}
-        {stats && (
-          <p className="mt-9 text-center text-[12px] text-zinc-600">
-            {stats.sites.toLocaleString()} sites visited · {stats.pageVisits.toLocaleString()} page loads · all server-side
-          </p>
-        )}
-
-        {/* Home button */}
-        <div className="mt-8 text-center">
+        {/* ── footer: stats + exit ── */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.35 }}
+          className="mt-11 flex flex-col items-center gap-4"
+        >
+          {stats && (
+            <p className="text-center text-[12px] text-white/45">
+              {stats.sites.toLocaleString()} sites visited · {stats.pageVisits.toLocaleString()} page loads · all server-side
+            </p>
+          )}
           <button
             onClick={onHome}
-            className="text-[12.5px] text-zinc-500 underline-offset-4 transition hover:text-zinc-300 hover:underline"
+            className="flex items-center gap-2 rounded-full border border-white/15 bg-zinc-950/45 px-5 py-2.5 text-[12.5px] font-medium text-white/70 shadow-lg shadow-black/25 backdrop-blur-md transition hover:border-white/30 hover:bg-zinc-950/65 hover:text-white"
           >
+            <LogOut aria-hidden className="h-3.5 w-3.5" />
             Close all tabs and return to the start page
           </button>
-        </div>
+        </motion.div>
       </motion.div>
     </div>
   );
