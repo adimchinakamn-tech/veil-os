@@ -1,9 +1,9 @@
 {
   "veil": "chat-backup",
   "version": 1,
-  "exportedAt": "2026-10-07T22:28:20.197Z",
+  "exportedAt": "2026-10-07T22:39:26.070Z",
   "counts": {
-    "accounts": 21,
+    "accounts": 22,
     "messages": 13,
     "dms": 5
   },
@@ -107,7 +107,7 @@
       "bio": "",
       "role": "member",
       "muted": false,
-      "banned": true,
+      "banned": false,
       "coins": 142,
       "tag": null,
       "tagColor": null,
@@ -385,6 +385,24 @@
       "legacy": false,
       "createdAt": "2026-10-07T22:26:18.410Z",
       "passwordHash": "$2b$10$Y6f/blPbg9sNOQevX1yio.CyZv2v0YohmUNxkVoXkdQ.jRH1ODUoO"
+    },
+    {
+      "id": "cmuyowe4y0000oqzpdr7yni3p",
+      "username": "qasugg01",
+      "displayName": "qasugg01",
+      "avatarColor": "#f97316",
+      "avatarImage": null,
+      "bio": "",
+      "role": "member",
+      "muted": false,
+      "banned": false,
+      "coins": 100,
+      "tag": null,
+      "tagColor": null,
+      "pfpAccessory": null,
+      "legacy": false,
+      "createdAt": "2026-10-07T22:39:12.274Z",
+      "passwordHash": "$2b$10$No3r8R24E10S3H4Lg6xADuJWJc5WCuCsgzniUwx9S9n7v.zZOXTbO"
     }
   ],
   "messages": [
