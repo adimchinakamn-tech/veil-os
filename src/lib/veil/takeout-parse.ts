@@ -29,10 +29,10 @@ export interface TakeoutHistoryRow {
   at?: number;
 }
 
-/** how many rows an import keeps (newest first — the client's history
- * store caps at 300 anyway, but 1200 gives the feed's watched-filter
- * full coverage). */
-export const MAX_HISTORY_ROWS = 1200;
+/** how many rows an import keeps (newest first — 2026-10-07 user ask:
+ * "stream history should be infinite max 1,000,000"; the browser's
+ * localStorage quota is the real ceiling and is handled best-effort). */
+export const MAX_HISTORY_ROWS = 1_000_000;
 
 /* ------------------------------------------------------------------ */
 /* file-name matchers                                                  */

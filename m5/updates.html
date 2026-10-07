@@ -124,8 +124,6 @@
     transition:transform .12s ease, filter .12s ease;
   }
   .btn:hover{filter:brightness(1.08)} .btn:active{transform:scale(.97)}
-  .btn.ghost{background:transparent; color:var(--text); border:1px solid var(--line)}
-  .btn.ghost:hover{border-color:#1f5238}
   .sr{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}
   .noscript-box{position:fixed; inset:0; z-index:9; display:flex; align-items:center; justify-content:center; background:var(--bg); color:var(--muted); font-size:16px}
 </style>
@@ -179,7 +177,6 @@
 <div id="slow" role="status">
   <div class="msg"><b>Still connecting.</b> The live box may be waking from a cold boot — it usually comes up within a minute.</div>
   <button class="btn" id="retryBtn" type="button">Retry</button>
-  <a class="btn ghost" id="slowLink" href="#" target="_blank" rel="noopener">Open direct</a>
 </div>
 
 <noscript>
@@ -252,27 +249,7 @@
   /* Direct-open links stay inert (#) in the DOM and only arm with the
    * real destination on first interaction — the markup never carries
    * the upstream origin. */
-  function armLinks(U) {
-    var ids = ["slowLink"];
-    for (var i = 0; i < ids.length; i++) {
-      (function (el) {
-        if (!el) { return; }
-        var arm = function () {
-          if (el.getAttribute("href") === "#") { el.setAttribute("href", U); }
-        };
-        el.addEventListener("pointerenter", arm, { once: true });
-        el.addEventListener("focus", arm, { once: true });
-        el.addEventListener("touchstart", arm, { passive: true, once: true });
-        el.addEventListener("click", function (ev) {
-          if (el.getAttribute("href") === "#") {
-            ev.preventDefault();
-            arm();
-            window.open(U, "_blank", "noopener");
-          }
-        });
-      })(document.getElementById(ids[i]));
-    }
-  }
+  function armLinks(U) { /* open-direct removed */ }
 
   document.getElementById("retryBtn").addEventListener("click", function () {
     location.reload();

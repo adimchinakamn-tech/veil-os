@@ -336,7 +336,10 @@ interface HistoryEntry {
   at: number;
 }
 const HISTORY_KEY = "veil.stream.history.v1";
-const HISTORY_CAP = 300;
+/* 2026-10-07: effectively unlimited (user ask: "stream history should be
+ * infinite max 1,000,000") — localStorage quota errors are already
+ * swallowed best-effort in writeHistory, so a huge cap degrades safely. */
+const HISTORY_CAP = 1_000_000;
 const HISTORY_PAUSED_KEY = "veil.stream.history.paused.v1";
 
 /** Paused watch history (YouTube's "pause watch history"): while on,
