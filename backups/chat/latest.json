@@ -1,10 +1,10 @@
 {
   "veil": "chat-backup",
   "version": 1,
-  "exportedAt": "2026-10-07T22:59:14.712Z",
+  "exportedAt": "2026-10-07T23:01:39.550Z",
   "counts": {
     "accounts": 20,
-    "messages": 14,
+    "messages": 15,
     "dms": 5
   },
   "accounts": [
@@ -108,7 +108,7 @@
       "role": "member",
       "muted": false,
       "banned": false,
-      "coins": 145,
+      "coins": 146,
       "tag": null,
       "tagColor": null,
       "pfpAccessory": null,
@@ -506,12 +506,12 @@
       "id": "cmuyplpem0005oq724dig2ixf",
       "channelId": "main",
       "accountId": "cmuu20ppm0005jkxecvmo7qpu",
-      "content": "next person who types is a mod",
+      "content": "next person who types is a mod besides me",
       "replyTo": null,
       "replyToContent": null,
       "replyToUsername": null,
       "createdAt": "2026-10-07T22:58:53.278Z",
-      "editedAt": null
+      "editedAt": "2026-10-07T22:59:16.075Z"
     },
     {
       "id": "cmuyplz5z0009oq72i519hi3j",
@@ -522,6 +522,17 @@
       "replyToContent": null,
       "replyToUsername": null,
       "createdAt": "2026-10-07T22:59:05.928Z",
+      "editedAt": null
+    },
+    {
+      "id": "cmuypoyqz000doq72n73zms9o",
+      "channelId": "suggestions",
+      "accountId": "cmuu20ppm0005jkxecvmo7qpu",
+      "content": "updating chat what should I add",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-10-07T23:01:25.355Z",
       "editedAt": null
     }
   ],
