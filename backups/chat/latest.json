@@ -1,10 +1,10 @@
 {
   "veil": "chat-backup",
   "version": 1,
-  "exportedAt": "2026-10-07T22:41:34.643Z",
+  "exportedAt": "2026-10-07T22:57:10.615Z",
   "counts": {
-    "accounts": 21,
-    "messages": 13,
+    "accounts": 20,
+    "messages": 12,
     "dms": 5
   },
   "accounts": [
@@ -108,7 +108,7 @@
       "role": "member",
       "muted": false,
       "banned": false,
-      "coins": 142,
+      "coins": 143,
       "tag": null,
       "tagColor": null,
       "pfpAccessory": null,
@@ -133,24 +133,6 @@
       "legacy": false,
       "createdAt": "2026-10-06T11:32:25.917Z",
       "passwordHash": "$2b$10$UKucHkKNBXAQGs5m1cQK1.U018tltAm49vzuX4xP3WOGN2yuXCQha"
-    },
-    {
-      "id": "cmuwse71t000gn0bjiacs77os",
-      "username": "veiluser",
-      "displayName": "veiluser",
-      "avatarColor": "#c0392b",
-      "avatarImage": null,
-      "bio": "",
-      "role": "member",
-      "muted": false,
-      "banned": false,
-      "coins": 102,
-      "tag": null,
-      "tagColor": null,
-      "pfpAccessory": null,
-      "legacy": false,
-      "createdAt": "2026-10-06T14:41:29.394Z",
-      "passwordHash": "$2b$10$yPAht4VNvs5Fa/IHsuoGiuCHPUGdNxZVqSmGzBccGxgUot14G/TB6"
     },
     {
       "id": "cmux1xus6000rq35cyofvra9o",
@@ -455,28 +437,6 @@
       "editedAt": null
     },
     {
-      "id": "cmuwsejxv0001n0xl68lkw4pz",
-      "channelId": "main",
-      "accountId": "cmuwse71t000gn0bjiacs77os",
-      "content": "hi",
-      "replyTo": null,
-      "replyToContent": null,
-      "replyToUsername": null,
-      "createdAt": "2026-10-06T14:41:46.100Z",
-      "editedAt": null
-    },
-    {
-      "id": "cmuwspbuj0005n0xlxmr04ram",
-      "channelId": "main",
-      "accountId": "cmuwse71t000gn0bjiacs77os",
-      "content": "thanks for the links",
-      "replyTo": null,
-      "replyToContent": null,
-      "replyToUsername": null,
-      "createdAt": "2026-10-06T14:50:08.827Z",
-      "editedAt": null
-    },
-    {
       "id": "cmux7soiw0002q36mqmunxx0x",
       "channelId": "main",
       "accountId": "cmux7sfts0000q36mms87j340",
@@ -529,6 +489,17 @@
       "replyToContent": null,
       "replyToUsername": null,
       "createdAt": "2026-10-07T13:29:27.678Z",
+      "editedAt": null
+    },
+    {
+      "id": "cmuypj7oy0001oq72fwqy0k18",
+      "channelId": "suggestions",
+      "accountId": "cmuu20ppm0005jkxecvmo7qpu",
+      "content": "hi",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-10-07T22:56:57.010Z",
       "editedAt": null
     }
   ],
