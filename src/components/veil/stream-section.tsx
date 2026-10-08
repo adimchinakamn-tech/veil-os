@@ -382,14 +382,39 @@ function readHistory(): HistoryEntry[] {
   }
 }
 
-function writeHistory(entries: HistoryEntry[]): void {
-  try {
-    window.localStorage.setItem(HISTORY_KEY, JSON.stringify(entries));
-  } catch {
-    /* storage full or unavailable — history is best-effort */
+function writeHistory(entries: HistoryEntry[]): number {
+  /* A giant imported history (a full YouTube Takeout can carry years —
+   * 10k+ rows) can exceed the ~5MB localStorage quota. Dropping the
+   * whole write on quota errors is how imports silently "maxed out":
+   * everything past the last successful write vanished. Instead, trim
+   * the OLDEST entries in geometric steps until it fits — the newest
+   * watched history always survives, and the count lands wherever the
+   * device's quota actually is (never an arbitrary constant).
+   * Returns how many entries actually persisted. */
+  const tryWrite = (list: HistoryEntry[]): boolean => {
+    try {
+      window.localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
+      return true;
+    } catch {
+      return false;
+    }
+  };
+  let landed = entries.length;
+  if (!tryWrite(entries)) {
+    /* quota (or storage unavailable) — trim oldest, geometrically */
+    let keep = Math.floor(entries.length / 2);
+    landed = 0;
+    while (keep >= 300) {
+      if (tryWrite(entries.slice(0, keep))) {
+        landed = keep;
+        break;
+      }
+      keep = Math.floor(keep / 2);
+    }
   }
   _watchedIds = null; /* drop the watched-id cache */
   window.dispatchEvent(new Event("veil-stream-history"));
+  return landed;
 }
 
 /** The channels this device watches most (by watch count) — sent up with
@@ -6966,10 +6991,11 @@ function importWatchHistory(rows: TakeoutHistoryRow[]): number {
   if (fresh.length === 0) return 0;
   /* newest first, capped like the native store */
   const merged = [...existing, ...fresh].sort((a, b) => b.at - a.at).slice(0, HISTORY_CAP);
-  writeHistory(merged);
-  /* honest count: only what actually landed after the cap */
+  const landed = writeHistory(merged);
+  /* honest count: only what actually landed after the cap AND the
+   * device's storage quota (writeHistory trims oldest on quota). */
   const freshIds = new Set(fresh.map((f) => f.card.id));
-  return merged.filter((m) => freshIds.has(m.card.id)).length;
+  return merged.slice(0, landed).filter((m) => freshIds.has(m.card.id)).length;
 }
 
 /** The full "Import from YouTube" flow — shared by the Subscriptions

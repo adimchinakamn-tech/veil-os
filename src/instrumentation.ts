@@ -55,6 +55,12 @@ export async function register(): Promise<void> {
     // now 1024MB (package.json) with the watchdog line at 1.75GB, so the
     // compact threshold sits at 1.35GB — comfortably above the working set,
     // well below the line, and checked every 60s.
+    // v4 (2026-10-08 "never randomly restarts" round): interval 60s → 30s
+    // and the compact line 1.35GB → 1.30GB — the observed plateau drifts
+    // 1.65 → 2.05GB in ~1h, and every extra compaction pass before the
+    // 1.75GB planned-restart line buys the session more uptime between
+    // clean relaunches (the alternative is the kernel OOM-killing the
+    // whole box). No-op without --expose-gc.
     const maybeGc = (globalThis as { gc?: () => void }).gc;
     if (typeof maybeGc === "function") {
       let lastRss = 0;
@@ -62,9 +68,9 @@ export async function register(): Promise<void> {
       setInterval(() => {
         try {
           const rss = process.memoryUsage().rss;
-          // Compact harder when RSS is creeping (within 400 MB of the
+          // Compact harder when RSS is creeping (within 450 MB of the
           // watchdog's 1.75 GB line) — every tick instead of waiting.
-          const nearLimit = rss > 1.35 * 1024 * 1024 * 1024;
+          const nearLimit = rss > 1.3 * 1024 * 1024 * 1024;
           if (nearLimit || stableTicks % 5 === 0) {
             maybeGc();
           }
@@ -72,7 +78,7 @@ export async function register(): Promise<void> {
           else stableTicks++;
           lastRss = rss;
         } catch { /* never throw in the timer */ }
-      }, 60 * 1000).unref();
+      }, 30 * 1000).unref();
     }
   } catch {
     /* never break server boot */
