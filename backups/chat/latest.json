@@ -1,10 +1,10 @@
 {
   "veil": "chat-backup",
   "version": 1,
-  "exportedAt": "2026-10-08T20:58:51.180Z",
+  "exportedAt": "2026-10-08T21:02:57.080Z",
   "counts": {
-    "accounts": 16,
-    "messages": 33,
+    "accounts": 15,
+    "messages": 32,
     "dms": 0
   },
   "accounts": [
@@ -277,24 +277,6 @@
       "legacy": false,
       "createdAt": "2026-10-08T19:29:37.293Z",
       "passwordHash": "$2b$10$D7eCKpypal84K6pj5.7TO.FPVGl0Z7gt4G1Mq3wBzWjdrGcgCJsS2"
-    },
-    {
-      "id": "cmv00ndd30002pp9ifls5p837",
-      "username": "qarecovery1",
-      "displayName": "qarecovery1",
-      "avatarColor": "#f97316",
-      "avatarImage": null,
-      "bio": "",
-      "role": "member",
-      "muted": false,
-      "banned": false,
-      "coins": 101,
-      "tag": null,
-      "tagColor": null,
-      "pfpAccessory": null,
-      "legacy": false,
-      "createdAt": "2026-10-08T20:55:52.935Z",
-      "passwordHash": "$2b$10$G5F97AG85cbVU49K3J/cCeuOlPoPFdZ7V2VORPDH0o23za5yy0KPG"
     }
   ],
   "messages": [
@@ -648,17 +630,6 @@
       "replyToContent": null,
       "replyToUsername": null,
       "createdAt": "2026-10-08T18:46:32.139Z",
-      "editedAt": null
-    },
-    {
-      "id": "cmv00qpwv0001pp23ljkm2251",
-      "channelId": "main",
-      "accountId": "cmv00ndd30002pp9ifls5p837",
-      "content": "QA recovery check — animations are back 🎬",
-      "replyTo": null,
-      "replyToContent": null,
-      "replyToUsername": null,
-      "createdAt": "2026-10-08T20:58:29.167Z",
       "editedAt": null
     }
   ],
