@@ -1,10 +1,10 @@
 {
   "veil": "chat-backup",
   "version": 1,
-  "exportedAt": "2026-10-08T22:38:50.680Z",
+  "exportedAt": "2026-10-08T22:39:24.429Z",
   "counts": {
-    "accounts": 17,
-    "messages": 31,
+    "accounts": 16,
+    "messages": 32,
     "dms": 0
   },
   "accounts": [
@@ -108,7 +108,7 @@
       "role": "member",
       "muted": false,
       "banned": false,
-      "coins": 123,
+      "coins": 124,
       "tag": null,
       "tagColor": null,
       "pfpAccessory": null,
@@ -295,24 +295,6 @@
       "legacy": false,
       "createdAt": "2026-10-08T22:16:54.169Z",
       "passwordHash": "$2b$10$yki5cpQA.kdTAAqvCXaAUueIosuji/RQTOV9mc72ZDlwC1w9kCWdO"
-    },
-    {
-      "id": "cmv042w8t0000pph4ubewywes",
-      "username": "qafixfront1",
-      "displayName": "qafixfront1",
-      "avatarColor": "#9b59b6",
-      "avatarImage": null,
-      "bio": "",
-      "role": "member",
-      "muted": false,
-      "banned": false,
-      "coins": 101,
-      "tag": null,
-      "tagColor": null,
-      "pfpAccessory": null,
-      "legacy": false,
-      "createdAt": "2026-10-08T22:31:56.093Z",
-      "passwordHash": "$2b$10$tW5rDVEiLS0pk3YYcKW91uOKuynO2xVTZKSuQaXgO9BuOfoexmTuS"
     }
   ],
   "messages": [
@@ -655,6 +637,17 @@
       "replyToContent": null,
       "replyToUsername": null,
       "createdAt": "2026-10-08T18:46:32.139Z",
+      "editedAt": null
+    },
+    {
+      "id": "cmv04bxx40005pphzezmbkw3y",
+      "channelId": "main",
+      "accountId": "cmuu20ppm0005jkxecvmo7qpu",
+      "content": "bruh",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-10-08T22:38:58.168Z",
       "editedAt": null
     }
   ],
