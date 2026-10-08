@@ -1,9 +1,9 @@
 {
   "veil": "chat-backup",
   "version": 1,
-  "exportedAt": "2026-10-08T23:46:50.514Z",
+  "exportedAt": "2026-10-08T23:56:27.615Z",
   "counts": {
-    "accounts": 17,
+    "accounts": 18,
     "messages": 33,
     "dms": 0
   },
@@ -313,6 +313,24 @@
       "legacy": false,
       "createdAt": "2026-10-08T23:33:10.815Z",
       "passwordHash": "$2b$10$sNSqB0p0Cow03hg9JcN8.OztGJWyEWzfUE/tt6jOhviRP3yV7sWra"
+    },
+    {
+      "id": "cmv072yjk0000pp5za3vpkqew",
+      "username": "qaanimtest2",
+      "displayName": "qaanimtest2",
+      "avatarColor": "#1abc9c",
+      "avatarImage": null,
+      "bio": "",
+      "role": "member",
+      "muted": false,
+      "banned": false,
+      "coins": 100,
+      "tag": null,
+      "tagColor": null,
+      "pfpAccessory": null,
+      "legacy": false,
+      "createdAt": "2026-10-08T23:55:57.921Z",
+      "passwordHash": "$2b$10$qGOTDrl68b9oKGsZ850eCeTCVPab.GnLfJXeRQfYSYUK8oPBU3zfS"
     }
   ],
   "messages": [
