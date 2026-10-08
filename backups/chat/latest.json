@@ -1,10 +1,10 @@
 {
   "veil": "chat-backup",
   "version": 1,
-  "exportedAt": "2026-10-08T20:56:16.189Z",
+  "exportedAt": "2026-10-08T20:58:51.180Z",
   "counts": {
     "accounts": 16,
-    "messages": 32,
+    "messages": 33,
     "dms": 0
   },
   "accounts": [
@@ -288,7 +288,7 @@
       "role": "member",
       "muted": false,
       "banned": false,
-      "coins": 100,
+      "coins": 101,
       "tag": null,
       "tagColor": null,
       "pfpAccessory": null,
@@ -648,6 +648,17 @@
       "replyToContent": null,
       "replyToUsername": null,
       "createdAt": "2026-10-08T18:46:32.139Z",
+      "editedAt": null
+    },
+    {
+      "id": "cmv00qpwv0001pp23ljkm2251",
+      "channelId": "main",
+      "accountId": "cmv00ndd30002pp9ifls5p837",
+      "content": "QA recovery check — animations are back 🎬",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-10-08T20:58:29.167Z",
       "editedAt": null
     }
   ],
