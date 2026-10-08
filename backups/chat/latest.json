@@ -1,9 +1,9 @@
 {
   "veil": "chat-backup",
   "version": 1,
-  "exportedAt": "2026-10-08T22:16:55.969Z",
+  "exportedAt": "2026-10-08T22:32:08.895Z",
   "counts": {
-    "accounts": 16,
+    "accounts": 17,
     "messages": 31,
     "dms": 0
   },
@@ -295,6 +295,24 @@
       "legacy": false,
       "createdAt": "2026-10-08T22:16:54.169Z",
       "passwordHash": "$2b$10$yki5cpQA.kdTAAqvCXaAUueIosuji/RQTOV9mc72ZDlwC1w9kCWdO"
+    },
+    {
+      "id": "cmv042w8t0000pph4ubewywes",
+      "username": "qafixfront1",
+      "displayName": "qafixfront1",
+      "avatarColor": "#9b59b6",
+      "avatarImage": null,
+      "bio": "",
+      "role": "member",
+      "muted": false,
+      "banned": false,
+      "coins": 100,
+      "tag": null,
+      "tagColor": null,
+      "pfpAccessory": null,
+      "legacy": false,
+      "createdAt": "2026-10-08T22:31:56.093Z",
+      "passwordHash": "$2b$10$tW5rDVEiLS0pk3YYcKW91uOKuynO2xVTZKSuQaXgO9BuOfoexmTuS"
     }
   ],
   "messages": [
