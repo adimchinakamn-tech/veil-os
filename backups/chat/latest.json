@@ -1,10 +1,10 @@
 {
   "veil": "chat-backup",
   "version": 1,
-  "exportedAt": "2026-10-08T02:05:20.501Z",
+  "exportedAt": "2026-10-08T02:12:29.390Z",
   "counts": {
     "accounts": 22,
-    "messages": 19,
+    "messages": 20,
     "dms": 5
   },
   "accounts": [
@@ -396,7 +396,7 @@
       "role": "member",
       "muted": false,
       "banned": false,
-      "coins": 101,
+      "coins": 102,
       "tag": null,
       "tagColor": null,
       "pfpAccessory": null,
@@ -613,6 +613,17 @@
       "replyToContent": null,
       "replyToUsername": null,
       "createdAt": "2026-10-08T01:58:42.170Z",
+      "editedAt": null
+    },
+    {
+      "id": "cmuywi9fi0001oqfkg393c3uu",
+      "channelId": "sharelinks",
+      "accountId": "cmuyw612g0000oq8yg3f9nxoi",
+      "content": "QA glide test",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-10-08T02:12:09.918Z",
       "editedAt": null
     }
   ],
