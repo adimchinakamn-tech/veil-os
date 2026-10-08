@@ -1,10 +1,10 @@
 {
   "veil": "chat-backup",
   "version": 1,
-  "exportedAt": "2026-10-08T23:56:27.615Z",
+  "exportedAt": "2026-10-08T23:57:31.671Z",
   "counts": {
     "accounts": 18,
-    "messages": 33,
+    "messages": 34,
     "dms": 0
   },
   "accounts": [
@@ -324,7 +324,7 @@
       "role": "member",
       "muted": false,
       "banned": false,
-      "coins": 100,
+      "coins": 101,
       "tag": null,
       "tagColor": null,
       "pfpAccessory": null,
@@ -695,6 +695,17 @@
       "replyToContent": null,
       "replyToUsername": null,
       "createdAt": "2026-10-08T23:46:30.804Z",
+      "editedAt": null
+    },
+    {
+      "id": "cmv074gfw0002pp5zu4ttfm07",
+      "channelId": "main",
+      "accountId": "cmv072yjk0000pp5za3vpkqew",
+      "content": "animations are live! 🎬 testing mega motion",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-10-08T23:57:07.772Z",
       "editedAt": null
     }
   ],
