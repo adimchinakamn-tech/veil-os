@@ -312,3 +312,171 @@
   content-visibility: auto;
   contain-intrinsic-size: auto 180px;
 }
+
+/* ── Chat motion blitz ────────────────────────────────────────────────
+   The chat gets the full motion treatment: live messages land with a
+   spring, glow briefly, reactions pop, the composer breathes. Every
+   class below is pure CSS so the 60fps work stays on the compositor
+   (transform/opacity/clip only), and all of it folds flat under the
+   OS reduced-motion preference. */
+
+/* Live message entrance — soft rise with a whisper of scale. */
+@keyframes veil-msg-in {
+  from { opacity: 0; transform: translateY(14px) scale(0.985); }
+  60%  { opacity: 1; }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.veil-msg-in { animation: veil-msg-in 0.42s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* Fresh-message glow — an orange tint that burns off after landing. */
+@keyframes veil-msg-fresh {
+  0%   { background-color: rgba(251, 146, 60, 0.16); }
+  100% { background-color: rgba(251, 146, 60, 0); }
+}
+/* Fresh-message glow — an orange tint that burns off after landing.
+   `backwards` (not `both`): once finished the fill must release so the
+   row's normal hover background keeps working. */
+.veil-msg-fresh { animation: veil-msg-fresh 1.6s ease-out 0.1s backwards; }
+
+/* Reaction chip pop — overshoots like a sticker slap. */
+@keyframes veil-react-pop {
+  0%   { transform: scale(0); }
+  70%  { transform: scale(1.25); }
+  100% { transform: scale(1); }
+}
+.veil-react-pop { animation: veil-react-pop 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+/* Count bump when a reaction tally changes. */
+@keyframes veil-count-bump {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.45); }
+  100% { transform: scale(1); }
+}
+.veil-count-bump { animation: veil-count-bump 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+/* Typing dots — a lazy wave. */
+@keyframes veil-typing-dot {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.45; }
+  30%           { transform: translateY(-4px); opacity: 1; }
+}
+.veil-typing-dot { animation: veil-typing-dot 1.15s ease-in-out infinite; }
+
+/* Unread/notification badge pop. */
+@keyframes veil-badge-pop {
+  0%   { transform: scale(0); }
+  60%  { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+.veil-badge-pop { animation: veil-badge-pop 0.34s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+/* Send button — ready-to-fly glow ring when there's text to send. */
+@keyframes veil-send-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(251, 146, 60, 0.45); }
+  50%      { box-shadow: 0 0 0 7px rgba(251, 146, 60, 0); }
+}
+.veil-send-glow { animation: veil-send-glow 1.9s ease-out infinite; }
+
+/* Upload bar — candy-stripe shimmer while bytes stream. */
+@keyframes veil-upload-stripes {
+  from { background-position: 0 0; }
+  to   { background-position: 28px 0; }
+}
+.veil-upload-stripes {
+  background-image: linear-gradient(
+    115deg,
+    rgba(255, 255, 255, 0.28) 25%, transparent 25%,
+    transparent 50%, rgba(255, 255, 255, 0.28) 50%,
+    rgba(255, 255, 255, 0.28) 75%, transparent 75%
+  );
+  background-size: 28px 28px;
+  animation: veil-upload-stripes 0.7s linear infinite;
+}
+
+/* Composer focus — a warm gradient edge that sweeps the border. */
+@keyframes veil-composer-sweep {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.veil-composer-focus:focus-within {
+  border-color: rgba(251, 146, 60, 0.55);
+  box-shadow: 0 0 0 1px rgba(251, 146, 60, 0.25), 0 4px 24px -8px rgba(251, 146, 60, 0.35);
+}
+.veil-composer-focus::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(100deg, transparent 30%, rgba(251, 146, 60, 0.75) 50%, transparent 70%);
+  background-size: 200% 100%;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+.veil-composer-focus:focus-within::before {
+  opacity: 1;
+  animation: veil-composer-sweep 2.6s linear infinite;
+}
+
+/* Message links — underline grows from the left on hover. */
+.veil-msg-link {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0% 1px;
+  background-position: 0 92%;
+  background-repeat: no-repeat;
+  transition: background-size 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.veil-msg-link:hover { background-size: 100% 1px; }
+
+/* Empty-state icon — a slow friendly bob. */
+@keyframes veil-empty-bob {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50%      { transform: translateY(-7px) rotate(3deg); }
+}
+.veil-empty-bob { animation: veil-empty-bob 3.4s ease-in-out infinite; }
+
+/* Online presence dot — a soft heartbeat. */
+@keyframes veil-online-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.5); }
+  50%      { box-shadow: 0 0 0 4px rgba(52, 211, 153, 0); }
+}
+.veil-online-pulse { animation: veil-online-pulse 2.2s ease-out infinite; }
+
+/* Message hover — a hairline of light under the row. */
+.veil-msg-row { position: relative; }
+.veil-msg-row::after {
+  content: "";
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: 0;
+  height: 1px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(251, 146, 60, 0.35), transparent);
+  transform: scaleX(0);
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+.veil-msg-row:hover::after { transform: scaleX(1); }
+
+@media (prefers-reduced-motion: reduce) {
+  .veil-msg-in,
+  .veil-msg-fresh,
+  .veil-react-pop,
+  .veil-count-bump,
+  .veil-typing-dot,
+  .veil-badge-pop,
+  .veil-send-glow,
+  .veil-upload-stripes,
+  .veil-empty-bob,
+  .veil-online-pulse {
+    animation: none;
+  }
+  .veil-composer-focus::before { display: none; }
+  .veil-msg-row::after { display: none; }
+  .veil-msg-link { transition: none; }
+}
