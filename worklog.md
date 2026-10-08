@@ -92,6 +92,18 @@ implemented, browser-verified, and pushed.
   _headers) + README covering GitHub→jsDelivr deploy, fingerprint
   retargeting (XOR 0x5b), the beacon self-heal, and cache purging.
 
+### 6b. jsDelivr propagation status (end of round)
+- The multi-mirror beacon upgrade (gcore→cdn→fastly fallback) is
+  committed + pushed (1eab0aa) but jsDelivr entered its purge-THROTTLE
+  window (~550 purges in 10 min this round) — cdn/fastly still serve
+  the previous stub revision. That revision carries the CORRECT 401a
+  fingerprint, so every mirror works right now; only the beacon
+  self-heal layer lags (and gcore.jsdelivr.net already serves both the
+  new stubs + the beacon). NEXT CYCLE: verify
+  `curl -s https://cdn.jsdelivr.net/gh/ok5678765s/veil-os@main/m1/index.html
+  | grep -c gcore` returns 1 (propagation done); if still 0 after an
+  hour, purge m1..m10/index.html once — do NOT hammer purge.jsdelivr.net.
+
 ### 7. QA (agent-browser) — ALL PASSED
 - Start page via preview gateway: hydrated, 9 × veil-rise-fancy, clock
   glow, live clock/weather, 3-5 online.
