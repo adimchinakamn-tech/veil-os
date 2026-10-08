@@ -20,6 +20,7 @@ import {
   X,
 } from "lucide-react";
 import type { Tab, TabEgress } from "@/components/veil/browser";
+import { useFancyMotion } from "@/lib/veil/motion";
 
 /* Custom scrollbar (same language as the rest of the chrome). */
 const SCROLLBAR = "veil-scroll-slim";
@@ -157,6 +158,9 @@ export function QuasarTabStrip({
   const [naming, setNaming] = React.useState(false);
   const [nameVal, setNameVal] = React.useState("");
   const nameInputRef = React.useRef<HTMLInputElement | null>(null);
+  /* Settings › Appearance — "More animations": springier tabs, menus that
+     land like they mean it, a playful + button. */
+  const fancy = useFancyMotion();
 
   // Pinned tabs always lead the strip (stable partition, order preserved).
   const displayTabs = [...tabs.filter((t) => t.pinned), ...tabs.filter((t) => !t.pinned)];
@@ -234,10 +238,20 @@ export function QuasarTabStrip({
               <motion.div
                 key={t.id}
                 layout
-                initial={{ opacity: 0, scale: 0.72 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.72, transition: { duration: 0.16, ease: "easeOut" } }}
-                transition={{ type: "spring", stiffness: 520, damping: 34 }}
+                initial={
+                  fancy
+                    ? { opacity: 0, scale: 0.6, y: -12 }
+                    : { opacity: 0, scale: 0.72 }
+                }
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{
+                  opacity: 0,
+                  scale: 0.72,
+                  y: fancy ? -10 : 0,
+                  transition: { duration: 0.16, ease: "easeOut" },
+                }}
+                transition={{ type: "spring", stiffness: fancy ? 470 : 520, damping: fancy ? 25 : 34 }}
+                whileHover={fancy ? { y: -2 } : undefined}
                 style={{ transformOrigin: "top center" }}
                 role="tab"
               tabIndex={0}
@@ -363,6 +377,8 @@ export function QuasarTabStrip({
         </AnimatePresence>
         <motion.button
           whileTap={{ scale: 0.86 }}
+          whileHover={fancy ? { scale: 1.18, rotate: 90 } : undefined}
+          transition={{ type: "spring", stiffness: 480, damping: 20 }}
           onClick={onNewTab}
           aria-label="New tab (Ctrl+T)"
           title="New tab (Ctrl+T)"
@@ -384,10 +400,13 @@ export function QuasarTabStrip({
               closeMenu();
             }}
           />
-          <div
+          <motion.div
             role="menu"
             aria-label={`Tab menu: ${menuTab.title || "New Tab"}`}
-            style={{ left: menuXY!.x, top: menuXY!.y }}
+            initial={fancy ? { opacity: 0, scale: 0.94, y: -6 } : false}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 520, damping: 30 }}
+            style={{ left: menuXY!.x, top: menuXY!.y, transformOrigin: "top left" }}
             className="fixed z-50 max-h-[min(560px,calc(100vh-16px))] w-72 overflow-y-auto rounded-lg border border-zinc-800 bg-zinc-900 py-1 shadow-2xl"
           >
             {/* Actions */}
@@ -574,7 +593,7 @@ export function QuasarTabStrip({
                 );
               })}
             </div>
-          </div>
+          </motion.div>
         </>
       ) : null}
     </>

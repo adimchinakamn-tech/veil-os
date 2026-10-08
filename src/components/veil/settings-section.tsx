@@ -44,6 +44,7 @@ import {
   Settings2,
   ShieldCheck,
   Siren,
+  Sparkles,
   Thermometer,
   Timer,
   Trash2,
@@ -453,6 +454,7 @@ function AppearanceTab() {
   const [proxyEngine, setProxyEngineState] = React.useState<ProxyEngineId>(DEFAULT_PROXY_ENGINE);
   const [hoverPreviews, setHoverPreviews] = React.useState(true);
   const [dim, setDim] = React.useState<"0" | "25" | "55">("0");
+  const [moreAnim, setMoreAnim] = React.useState(true);
   const [name, setName] = React.useState("");
 
   React.useEffect(() => {
@@ -465,6 +467,7 @@ function AppearanceTab() {
       setHoverPreviews(window.localStorage.getItem("veil:hover-previews") !== "0");
       const d = window.localStorage.getItem("veil:backdrop-dim");
       setDim(d === "25" || d === "55" ? d : "0");
+      setMoreAnim(window.localStorage.getItem("veil:more-animations") !== "0");
       setName((window.localStorage.getItem("veil:greeting-name") ?? "").slice(0, 24));
     } catch {
       /* private mode — defaults */
@@ -588,6 +591,26 @@ function AppearanceTab() {
             setDim(id as "0" | "25" | "55");
             try {
               window.localStorage.setItem("veil:backdrop-dim", id);
+            } catch {
+              /* ignore */
+            }
+          })
+        }
+      />
+      <SwitchRow
+        icon={Sparkles}
+        label="More animations"
+        hint="Beautiful motion everywhere in the veiled browser — pages glide in behind a soft blur, a light-sweep follows every navigation, tabs spring, buttons breathe. Off is calmer and leaner."
+        value={moreAnim ? "on" : "off"}
+        options={[
+          { id: "on", label: "On" },
+          { id: "off", label: "Off" },
+        ]}
+        onChange={(id) =>
+          save(() => {
+            setMoreAnim(id === "on");
+            try {
+              window.localStorage.setItem("veil:more-animations", id === "on" ? "1" : "0");
             } catch {
               /* ignore */
             }

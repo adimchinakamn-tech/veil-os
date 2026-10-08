@@ -21,6 +21,7 @@ import {
   Search,
 } from "lucide-react";
 import { BackdropVideo } from "@/components/veil/backdrop-video";
+import { FANCY_GLIDE_EASE, useFancyMotion } from "@/lib/veil/motion";
 import {
   loadWallpaperSelection,
   THEME_GRADIENTS,
@@ -95,6 +96,7 @@ export function NewTab({
   const [input, setInput] = React.useState("");
   const inputRef = React.useRef<HTMLInputElement>(null);
   const reduceMotion = useReducedMotion();
+  const fancy = useFancyMotion();
   const now = useNow();
 
   /* ── the applied wallpaper — live-tracked, defaults to the emerald
@@ -155,16 +157,36 @@ export function NewTab({
 
       {/* ── content ── */}
       <motion.div
-        initial={{ opacity: 0, y: 14 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, ease: "easeOut" }}
+        initial={
+          fancy
+            ? { opacity: 0, y: 26, scale: 0.985, filter: "blur(10px)" }
+            : { opacity: 0, y: 14 }
+        }
+        animate={
+          fancy
+            ? { opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }
+            : { opacity: 1, y: 0 }
+        }
+        transition={fancy ? { duration: 0.6, ease: FANCY_GLIDE_EASE } : { duration: 0.45, ease: "easeOut" }}
         className="relative mx-auto w-full max-w-3xl px-4 pb-24 pt-28 sm:px-6 sm:pt-32"
       >
         {/* ── live clock + greeting ── */}
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.05 }}
+          initial={
+            fancy
+              ? { opacity: 0, y: 14, scale: 0.94, filter: "blur(6px)" }
+              : { opacity: 0, y: 10 }
+          }
+          animate={
+            fancy
+              ? { opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }
+              : { opacity: 1, y: 0 }
+          }
+          transition={
+            fancy
+              ? { type: "spring", stiffness: 210, damping: 24, delay: 0.05 }
+              : { duration: 0.5, delay: 0.05 }
+          }
           className="text-center"
         >
           <p className="text-6xl font-extralight tracking-tight text-white drop-shadow-[0_2px_18px_rgba(0,0,0,0.45)] sm:text-7xl">
@@ -177,9 +199,17 @@ export function NewTab({
 
         {/* ── command bar (glass) ── */}
         <motion.form
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, delay: 0.12 }}
+          initial={
+            fancy
+              ? { opacity: 0, y: 18, scale: 0.98 }
+              : { opacity: 0, y: 14 }
+          }
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={
+            fancy
+              ? { type: "spring", stiffness: 260, damping: 26, delay: 0.12 }
+              : { duration: 0.45, delay: 0.12 }
+          }
           onSubmit={submit}
           className="mx-auto mt-9 flex w-full max-w-2xl items-center gap-2.5"
           role="search"
@@ -202,8 +232,9 @@ export function NewTab({
             />
           </div>
           <motion.button
-            whileHover={{ scale: 1.03 }}
+            whileHover={fancy ? { scale: 1.04, boxShadow: "0 18px 44px rgba(52,211,153,0.35)" } : { scale: 1.03 }}
             whileTap={{ scale: 0.96 }}
+            transition={{ type: "spring", stiffness: 460, damping: 24 }}
             type="submit"
             className="flex h-13 shrink-0 items-center gap-1.5 rounded-2xl bg-emerald-400 px-5 text-[15px] font-semibold text-emerald-950 shadow-xl shadow-emerald-500/25 transition hover:bg-emerald-300"
           >
@@ -222,10 +253,18 @@ export function NewTab({
             {QUICK_LINKS.map((s, i) => (
               <motion.button
                 key={s.url}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35, delay: 0.16 + i * 0.05 }}
-                whileHover={{ y: -3 }}
+                initial={
+                  fancy
+                    ? { opacity: 0, y: 16, scale: 0.96 }
+                    : { opacity: 0, y: 12 }
+                }
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={
+                  fancy
+                    ? { type: "spring", stiffness: 320, damping: 24, delay: 0.16 + i * 0.055 }
+                    : { duration: 0.35, delay: 0.16 + i * 0.05 }
+                }
+                whileHover={fancy ? { y: -4, scale: 1.02 } : { y: -3 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => onNavigate(s.url)}
                 className="group flex items-center gap-3 rounded-2xl border border-white/12 bg-zinc-950/45 p-3 text-left shadow-lg shadow-black/25 backdrop-blur-md transition-colors hover:border-emerald-300/40 hover:bg-zinc-950/65"
@@ -257,9 +296,18 @@ export function NewTab({
                 return (
                   <li key={v.id}>
                     <motion.button
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: 0.24 + i * 0.04 }}
+                      initial={
+                        fancy
+                          ? { opacity: 0, x: -12 }
+                          : { opacity: 0, y: 8 }
+                      }
+                      animate={fancy ? { opacity: 1, x: 0 } : { opacity: 1, y: 0 }}
+                      transition={
+                        fancy
+                          ? { type: "spring", stiffness: 340, damping: 26, delay: 0.24 + i * 0.045 }
+                          : { duration: 0.3, delay: 0.24 + i * 0.04 }
+                      }
+                      whileHover={fancy ? { x: 4 } : undefined}
                       onClick={() => onNavigate(v.url)}
                       className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-zinc-950/35 p-2.5 text-left backdrop-blur-md transition hover:border-emerald-300/35 hover:bg-zinc-950/60"
                     >
@@ -281,8 +329,8 @@ export function NewTab({
 
         {/* ── footer: stats + exit ── */}
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          initial={fancy ? { opacity: 0, y: 10 } : { opacity: 0 }}
+          animate={fancy ? { opacity: 1, y: 0 } : { opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.35 }}
           className="mt-11 flex flex-col items-center gap-4"
         >
@@ -291,13 +339,16 @@ export function NewTab({
               {stats.sites.toLocaleString()} sites visited · {stats.pageVisits.toLocaleString()} page loads · all server-side
             </p>
           )}
-          <button
+          <motion.button
+            whileHover={fancy ? { scale: 1.04 } : undefined}
+            whileTap={fancy ? { scale: 0.95 } : undefined}
+            transition={{ type: "spring", stiffness: 460, damping: 24 }}
             onClick={onHome}
             className="flex items-center gap-2 rounded-full border border-white/15 bg-zinc-950/45 px-5 py-2.5 text-[12.5px] font-medium text-white/70 shadow-lg shadow-black/25 backdrop-blur-md transition hover:border-white/30 hover:bg-zinc-950/65 hover:text-white"
           >
             <LogOut aria-hidden className="h-3.5 w-3.5" />
             Close all tabs and return to the start page
-          </button>
+          </motion.button>
         </motion.div>
       </motion.div>
     </div>
