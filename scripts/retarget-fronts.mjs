@@ -60,8 +60,11 @@ function currentBeacon() {
   }
 }
 
-/* already current (and the beacon agrees) → zero network, zero writes */
-if (currentFingerprint() === origin) {
+/* already current (and the beacon agrees) → zero network, zero writes.
+ * --refresh-beacon forces the full pass (fingerprint check + beacon
+ * block upgrade + purge) without changing the origin. */
+const forceRefresh = process.argv.includes("--refresh-beacon");
+if (!forceRefresh && currentFingerprint() === origin) {
   if (currentBeacon() !== origin) {
     writeFileSync(
       join(ROOT, "backups/live-origin.json"),
@@ -121,8 +124,8 @@ const files = [
   }),
 ];
 
-/* ---- 4. the beacon-fallback block (idempotent insert) ------------------ */
-const BEACON_URL = "https://cdn.jsdelivr.net/gh/ok5678765s/veil-os@main/backups/live-origin.json";
+/* ---- 4. the beacon-fallback block (idempotent insert/refresh) ---------- */
+const BEACON_PATH_IN_REPO = "gh/ok5678765s/veil-os@main/backups/live-origin.json";
 const BEACON_MARK = "veil-beacon";
 const BEACON_BLOCK = `
   /* ${BEACON_MARK} — self-heal: if this front's fingerprint went stale
@@ -130,16 +133,21 @@ const BEACON_BLOCK = `
    * the box pushes to the repo (served + purged via jsDelivr). Never
    * overrides a frame that already finished loading the real app. */
   try {
-    fetch("${BEACON_URL}", { cache: "no-store" })
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (j) {
-        var o = j && typeof j.origin === "string" ? j.origin : "";
+    var BEACONS = ["https://gcore.jsdelivr.net/", "https://cdn.jsdelivr.net/", "https://fastly.jsdelivr.net/"].map(function (h) { return h + "${BEACON_PATH_IN_REPO}"; });
+    (function nextBeacon(i) {
+      if (i >= BEACONS.length) return;
+      fetch(BEACONS[i], { cache: "no-store" })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (j) {
+          if (!j) { nextBeacon(i + 1); return; }
+          var o = typeof j.origin === "string" ? j.origin : "";
         if (!/^https:\\/\\/preview-chat-[a-f0-9-]+\\.space-z\\.ai$/.test(o) || o === U) return;
         if (loaded) return; /* the fingerprint origin answered — keep it */
         try { frame.contentWindow.location.replace(o); }
         catch (e2) { frame.src = o; }
-      })
-      .catch(function () {});
+        })
+        .catch(function () { nextBeacon(i + 1); });
+    })(0);
   } catch (e3) { /* old browsers keep the fingerprint path */ }
 `;
 
@@ -162,11 +170,18 @@ for (const f of files) {
     if (next !== text) fingerprints++;
   }
 
-  /* 4b. inject/refresh the beacon block right after the initial
+  /* 4b. inject or REFRESH the beacon block right after the initial
    * navigation (the `try { frame.contentWindow.location.replace(U); }`
-   * ... `})();` tail of the boot IIFE) */
-  if (next.includes(BEACON_MARK)) {
-    beacons++;
+   * ... `})();` tail of the boot IIFE). An existing marker with an older
+   * block shape (single-mirror fetch) is replaced wholesale so upgrades
+   * propagate on the next retarget run. */
+  const beaconRegion = /\n  \/\* veil-beacon[\s\S]*?\} catch \(e3\) \{ \/\* old browsers keep the fingerprint path \*\/ \}\n/;
+  if (beaconRegion.test(next)) {
+    const fresh = next.replace(beaconRegion, BEACON_BLOCK);
+    if (fresh !== next) {
+      next = fresh;
+      beacons++;
+    }
   } else {
     const anchor = /  try \{\n    frame\.contentWindow\.location\.replace\(U\);\n  \} catch \(e\) \{\n    frame\.src = U;\n  \}\n\}\)\(\);/;
     if (anchor.test(next)) {

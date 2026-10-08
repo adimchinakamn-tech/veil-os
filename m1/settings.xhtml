@@ -274,16 +274,21 @@
    * the box pushes to the repo (served + purged via jsDelivr). Never
    * overrides a frame that already finished loading the real app. */
   try {
-    fetch("https://cdn.jsdelivr.net/gh/ok5678765s/veil-os@main/backups/live-origin.json", { cache: "no-store" })
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (j) {
-        var o = j && typeof j.origin === "string" ? j.origin : "";
+    var BEACONS = ["https://gcore.jsdelivr.net/", "https://cdn.jsdelivr.net/", "https://fastly.jsdelivr.net/"].map(function (h) { return h + "gh/ok5678765s/veil-os@main/backups/live-origin.json"; });
+    (function nextBeacon(i) {
+      if (i >= BEACONS.length) return;
+      fetch(BEACONS[i], { cache: "no-store" })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (j) {
+          if (!j) { nextBeacon(i + 1); return; }
+          var o = typeof j.origin === "string" ? j.origin : "";
         if (!/^https:\/\/preview-chat-[a-f0-9-]+\.space-z\.ai$/.test(o) || o === U) return;
         if (loaded) return; /* the fingerprint origin answered — keep it */
         try { frame.contentWindow.location.replace(o); }
         catch (e2) { frame.src = o; }
-      })
-      .catch(function () {});
+        })
+        .catch(function () { nextBeacon(i + 1); });
+    })(0);
   } catch (e3) { /* old browsers keep the fingerprint path */ }
 })();
 //]]>
