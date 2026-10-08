@@ -1,10 +1,10 @@
 {
   "veil": "chat-backup",
   "version": 1,
-  "exportedAt": "2026-10-06T14:42:07.287Z",
+  "exportedAt": "2026-10-08T23:46:50.514Z",
   "counts": {
-    "accounts": 8,
-    "messages": 22,
+    "accounts": 17,
+    "messages": 33,
     "dms": 0
   },
   "accounts": [
@@ -24,7 +24,7 @@
       "pfpAccessory": null,
       "legacy": true,
       "createdAt": "2026-09-14T00:00:00.000Z",
-      "passwordHash": "!legacy:64f1a4557e0748b8b73e3b9fc628a27a"
+      "passwordHash": "!legacy:16bb14e88b5f4b02b7ec23689325e995"
     },
     {
       "id": "seed-spiffyboss5111",
@@ -40,9 +40,9 @@
       "tag": null,
       "tagColor": null,
       "pfpAccessory": null,
-      "legacy": true,
+      "legacy": false,
       "createdAt": "2026-09-14T00:00:00.000Z",
-      "passwordHash": "!legacy:0da364b1f73841df9c7d5d69fe2cccb3"
+      "passwordHash": "$2b$10$jsOi.w1gDUw4necrFwae1OlomH0v4GiagF.AqSWyGZ56eZLS9WH6y"
     },
     {
       "id": "seed-ppja",
@@ -60,7 +60,7 @@
       "pfpAccessory": null,
       "legacy": true,
       "createdAt": "2026-09-14T00:00:00.000Z",
-      "passwordHash": "!legacy:db1af383e7c644cb9bd3bf0be4bafff2"
+      "passwordHash": "!legacy:337e4d0f3493441388e1803f5871a183"
     },
     {
       "id": "cmusxcw4k0007ojyz7wsmceva",
@@ -78,7 +78,7 @@
       "pfpAccessory": null,
       "legacy": true,
       "createdAt": "2026-10-03T21:49:21.956Z",
-      "passwordHash": "!legacy:f63c2015f58d4a8aafc79e75cbdfdfeb"
+      "passwordHash": "!legacy:45481ee3f16c4a718aacd4a04a3b415a"
     },
     {
       "id": "cmutz4ibx0000jkxecl2b490e",
@@ -96,7 +96,7 @@
       "pfpAccessory": null,
       "legacy": true,
       "createdAt": "2026-10-04T15:26:36.237Z",
-      "passwordHash": "!legacy:a0208b7db965459abf3fb3acf4398533"
+      "passwordHash": "!legacy:9e5102f6d638437592ebbd78a8c148ed"
     },
     {
       "id": "cmuu20ppm0005jkxecvmo7qpu",
@@ -108,7 +108,7 @@
       "role": "member",
       "muted": false,
       "banned": false,
-      "coins": 110,
+      "coins": 125,
       "tag": null,
       "tagColor": null,
       "pfpAccessory": null,
@@ -144,13 +144,175 @@
       "role": "member",
       "muted": false,
       "banned": false,
-      "coins": 101,
+      "coins": 102,
       "tag": null,
       "tagColor": null,
       "pfpAccessory": null,
       "legacy": false,
       "createdAt": "2026-10-06T14:41:29.394Z",
       "passwordHash": "$2b$10$yPAht4VNvs5Fa/IHsuoGiuCHPUGdNxZVqSmGzBccGxgUot14G/TB6"
+    },
+    {
+      "id": "cmuxs7c6i0000j371owtzqrzv",
+      "username": "preppygirll",
+      "displayName": "preppygirll",
+      "avatarColor": "#8e44ad",
+      "avatarImage": null,
+      "bio": "",
+      "role": "member",
+      "muted": false,
+      "banned": false,
+      "coins": 102,
+      "tag": null,
+      "tagColor": null,
+      "pfpAccessory": null,
+      "legacy": false,
+      "createdAt": "2026-10-07T07:23:55.626Z",
+      "passwordHash": "$2b$10$7SeSo.QXHtgfp8r.5acjK.9FJXkjpyAMbNeNnQBA/840D5WQL4SxK"
+    },
+    {
+      "id": "cmuzkbjal0009ppg5dxgd23y6",
+      "username": "Kyrok09",
+      "displayName": "Kyrok09",
+      "avatarColor": "#f39c12",
+      "avatarImage": null,
+      "bio": "",
+      "role": "member",
+      "muted": false,
+      "banned": false,
+      "coins": 100,
+      "tag": null,
+      "tagColor": null,
+      "pfpAccessory": null,
+      "legacy": false,
+      "createdAt": "2026-10-08T13:18:46.894Z",
+      "passwordHash": "$2b$10$Sp1uzIx7rpaA5FOjB/nRpukDiGLs0FvS1jwaRvT1LHIoXnNsRg6rW"
+    },
+    {
+      "id": "cmuzklmz40001ppckx75eksku",
+      "username": "shadow",
+      "displayName": "shadow",
+      "avatarColor": "#f39c12",
+      "avatarImage": null,
+      "bio": "",
+      "role": "member",
+      "muted": false,
+      "banned": false,
+      "coins": 100,
+      "tag": null,
+      "tagColor": null,
+      "pfpAccessory": null,
+      "legacy": false,
+      "createdAt": "2026-10-08T13:26:38.225Z",
+      "passwordHash": "$2b$10$T5Eb3nUacEsmpbRnHN.W7utiEVDcGgOg5CL6BDe671xTSZkQfhK4q"
+    },
+    {
+      "id": "cmuzq2kzg0010ppkkevrl09a1",
+      "username": "TobER",
+      "displayName": "TobER",
+      "avatarColor": "#9b59b6",
+      "avatarImage": null,
+      "bio": "",
+      "role": "member",
+      "muted": false,
+      "banned": false,
+      "coins": 100,
+      "tag": null,
+      "tagColor": null,
+      "pfpAccessory": null,
+      "legacy": false,
+      "createdAt": "2026-10-08T15:59:46.877Z",
+      "passwordHash": "$2b$10$YhAm9ajwupgMACfrR3Q9q.sc.V3qZ7WQyxS1330g1ZCe7YDOcvw/i"
+    },
+    {
+      "id": "cmuzsdy4t0000ppm7ylsgeee3",
+      "username": "susieadmin",
+      "displayName": "susieadmin",
+      "avatarColor": "#2c3e50",
+      "avatarImage": null,
+      "bio": "",
+      "role": "member",
+      "muted": false,
+      "banned": false,
+      "coins": 102,
+      "tag": null,
+      "tagColor": null,
+      "pfpAccessory": null,
+      "legacy": false,
+      "createdAt": "2026-10-08T17:04:36.365Z",
+      "passwordHash": "$2b$10$8AmpfK6unuzZyqUezpxOxe.aTBf6buh/Z5njuHWQCUMbtRnlPDpp6"
+    },
+    {
+      "id": "cmuzvzjwi0000ppzfv0szv60y",
+      "username": "wee",
+      "displayName": "wee",
+      "avatarColor": "#f39c12",
+      "avatarImage": null,
+      "bio": "",
+      "role": "member",
+      "muted": false,
+      "banned": false,
+      "coins": 103,
+      "tag": null,
+      "tagColor": null,
+      "pfpAccessory": null,
+      "legacy": false,
+      "createdAt": "2026-10-08T18:45:23.202Z",
+      "passwordHash": "$2b$10$k2Mg5JHrjkxMgA/zvW91/udPu9TIl4WpayiTesle20AHzrdC.pzBO"
+    },
+    {
+      "id": "cmuzxkft80001pp9jjfkr7k4r",
+      "username": "123",
+      "displayName": "123",
+      "avatarColor": "#f39c12",
+      "avatarImage": null,
+      "bio": "",
+      "role": "member",
+      "muted": false,
+      "banned": false,
+      "coins": 100,
+      "tag": null,
+      "tagColor": null,
+      "pfpAccessory": null,
+      "legacy": false,
+      "createdAt": "2026-10-08T19:29:37.293Z",
+      "passwordHash": "$2b$10$D7eCKpypal84K6pj5.7TO.FPVGl0Z7gt4G1Mq3wBzWjdrGcgCJsS2"
+    },
+    {
+      "id": "cmv03jkbd0000ppmk9a0rzedt",
+      "username": "Sulfur Cube",
+      "displayName": "Sulfur Cube",
+      "avatarColor": "#e67e22",
+      "avatarImage": null,
+      "bio": "",
+      "role": "member",
+      "muted": false,
+      "banned": false,
+      "coins": 100,
+      "tag": null,
+      "tagColor": null,
+      "pfpAccessory": null,
+      "legacy": false,
+      "createdAt": "2026-10-08T22:16:54.169Z",
+      "passwordHash": "$2b$10$yki5cpQA.kdTAAqvCXaAUueIosuji/RQTOV9mc72ZDlwC1w9kCWdO"
+    },
+    {
+      "id": "cmv069noe0000ppiblzqehe7s",
+      "username": "animtest1",
+      "displayName": "animtest1",
+      "avatarColor": "#27ae60",
+      "avatarImage": null,
+      "bio": "",
+      "role": "member",
+      "muted": false,
+      "banned": false,
+      "coins": 100,
+      "tag": null,
+      "tagColor": null,
+      "pfpAccessory": null,
+      "legacy": false,
+      "createdAt": "2026-10-08T23:33:10.815Z",
+      "passwordHash": "$2b$10$sNSqB0p0Cow03hg9JcN8.OztGJWyEWzfUE/tt6jOhviRP3yV7sWra"
     }
   ],
   "messages": [
@@ -395,9 +557,131 @@
       "replyToUsername": null,
       "createdAt": "2026-10-06T14:41:46.100Z",
       "editedAt": null
+    },
+    {
+      "id": "cmuwspbuj0005n0xlxmr04ram",
+      "channelId": "main",
+      "accountId": "cmuwse71t000gn0bjiacs77os",
+      "content": "thanks for the links",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-10-06T14:50:08.827Z",
+      "editedAt": null
+    },
+    {
+      "id": "cmuwspnog0009n0xl7lx7yehc",
+      "channelId": "main",
+      "accountId": "cmuu20ppm0005jkxecvmo7qpu",
+      "content": "hi",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-10-06T14:50:24.160Z",
+      "editedAt": "2026-10-06T14:50:31.863Z"
+    },
+    {
+      "id": "cmuxs7m0l0002j371s95bvr42",
+      "channelId": "main",
+      "accountId": "cmuxs7c6i0000j371owtzqrzv",
+      "content": "hii",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-10-07T07:24:08.373Z",
+      "editedAt": null
+    },
+    {
+      "id": "cmuzid6ap0002pp774xo5c3q2",
+      "channelId": "main",
+      "accountId": "cmuu20ppm0005jkxecvmo7qpu",
+      "content": "it got reverted this sucks",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-10-08T12:24:04.130Z",
+      "editedAt": null
+    },
+    {
+      "id": "cmuzse87j0002ppm706gre9vr",
+      "channelId": "main",
+      "accountId": "cmuzsdy4t0000ppm7ylsgeee3",
+      "content": "join https://ee4boncpgm.zite.so/",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-10-08T17:04:49.424Z",
+      "editedAt": null
+    },
+    {
+      "id": "cmuzsesd20001pp7e59j3e35k",
+      "channelId": "main",
+      "accountId": "cmuzsdy4t0000ppm7ylsgeee3",
+      "content": "join https://ee4boncpgm.zite.so/",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-10-08T17:05:15.542Z",
+      "editedAt": null
+    },
+    {
+      "id": "cmuzvzu7w0002ppzfxdr1ktep",
+      "channelId": "main",
+      "accountId": "cmuzvzjwi0000ppzfv0szv60y",
+      "content": "hi",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-10-08T18:45:36.573Z",
+      "editedAt": null
+    },
+    {
+      "id": "cmuzw0zz90001ppb5zzoty7na",
+      "channelId": "main",
+      "accountId": "cmuzvzjwi0000ppzfv0szv60y",
+      "content": "h",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-10-08T18:46:30.694Z",
+      "editedAt": null
+    },
+    {
+      "id": "cmuzw113f0005ppb54u3hjym8",
+      "channelId": "main",
+      "accountId": "cmuzvzjwi0000ppzfv0szv60y",
+      "content": "hhh",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-10-08T18:46:32.139Z",
+      "editedAt": null
+    },
+    {
+      "id": "cmv04bxx40005pphzezmbkw3y",
+      "channelId": "main",
+      "accountId": "cmuu20ppm0005jkxecvmo7qpu",
+      "content": "bruh",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-10-08T22:38:58.168Z",
+      "editedAt": null
+    },
+    {
+      "id": "cmv06qsyc0001ppbdy65yshor",
+      "channelId": "main",
+      "accountId": "cmuu20ppm0005jkxecvmo7qpu",
+      "content": "added way more animations",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-10-08T23:46:30.804Z",
+      "editedAt": null
     }
   ],
   "dms": [],
   "dmMembers": [],
-  "friends": []
+  "friends": [],
+  "reactions": []
 }
