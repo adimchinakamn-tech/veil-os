@@ -1,7 +1,7 @@
 {
   "veil": "chat-backup",
   "version": 1,
-  "exportedAt": "2026-10-08T02:12:29.390Z",
+  "exportedAt": "2026-10-08T02:13:33.399Z",
   "counts": {
     "accounts": 22,
     "messages": 20,
@@ -738,5 +738,11 @@
       "createdAt": "2026-10-07T22:27:09.799Z"
     }
   ],
-  "reactions": []
+  "reactions": [
+    {
+      "messageId": "cmuywi9fi0001oqfkg393c3uu",
+      "accountId": "cmuyw612g0000oq8yg3f9nxoi",
+      "emoji": "🔥"
+    }
+  ]
 }

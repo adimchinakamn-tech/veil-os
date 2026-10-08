@@ -1,11 +1,11 @@
 {
   "veil": "chat-backup",
   "version": 1,
-  "exportedAt": "2026-10-06T02:16:30.109Z",
+  "exportedAt": "2026-10-08T02:13:33.399Z",
   "counts": {
-    "accounts": 7,
-    "messages": 17,
-    "dms": 0
+    "accounts": 22,
+    "messages": 20,
+    "dms": 5
   },
   "accounts": [
     {
@@ -24,7 +24,7 @@
       "pfpAccessory": null,
       "legacy": true,
       "createdAt": "2026-09-14T00:00:00.000Z",
-      "passwordHash": "!legacy:9719f5a46be44954921a60ba02eba43a"
+      "passwordHash": "!legacy:34b6a626028b4dfea128fcc37cda802d"
     },
     {
       "id": "seed-spiffyboss5111",
@@ -42,7 +42,7 @@
       "pfpAccessory": null,
       "legacy": true,
       "createdAt": "2026-09-14T00:00:00.000Z",
-      "passwordHash": "!legacy:6e2715152ef64b1995eebf668a5fee6c"
+      "passwordHash": "!legacy:935f911290c3413bad13b18f413e328c"
     },
     {
       "id": "seed-ppja",
@@ -60,7 +60,7 @@
       "pfpAccessory": null,
       "legacy": true,
       "createdAt": "2026-09-14T00:00:00.000Z",
-      "passwordHash": "!legacy:789d4a1392e74a1f8aa193d10c1f3e3c"
+      "passwordHash": "!legacy:7eef286188f64ae892fabe8fea49a02e"
     },
     {
       "id": "cmusxcw4k0007ojyz7wsmceva",
@@ -78,7 +78,7 @@
       "pfpAccessory": null,
       "legacy": true,
       "createdAt": "2026-10-03T21:49:21.956Z",
-      "passwordHash": "!legacy:9bc8f8d0004f4910943e1c0f5fc053f9"
+      "passwordHash": "!legacy:0fe444ab898e4373b78d71c082c939fa"
     },
     {
       "id": "cmutz4ibx0000jkxecl2b490e",
@@ -96,7 +96,7 @@
       "pfpAccessory": null,
       "legacy": true,
       "createdAt": "2026-10-04T15:26:36.237Z",
-      "passwordHash": "!legacy:c77936107a114badb1380bb2cf9db86d"
+      "passwordHash": "!legacy:adeae9d780bf46bf88ca43705bbf83b8"
     },
     {
       "id": "cmuu20ppm0005jkxecvmo7qpu",
@@ -108,7 +108,7 @@
       "role": "member",
       "muted": false,
       "banned": false,
-      "coins": 103,
+      "coins": 149,
       "tag": null,
       "tagColor": null,
       "pfpAccessory": null,
@@ -117,9 +117,45 @@
       "passwordHash": "$2b$10$wgZdfrvRghwA3SNf/R1ZwOe0EBEZiT/fJ9AA2lKmaOIX51V9DKNMC"
     },
     {
-      "id": "cmuw1quyt0000na5tprofyov1",
-      "username": "zonetest",
-      "displayName": "zonetest",
+      "id": "cmuwln2d80000n0xx8fu8raov",
+      "username": "rick",
+      "displayName": "rick",
+      "avatarColor": "#2c3e50",
+      "avatarImage": null,
+      "bio": "",
+      "role": "member",
+      "muted": false,
+      "banned": false,
+      "coins": 110,
+      "tag": null,
+      "tagColor": null,
+      "pfpAccessory": null,
+      "legacy": false,
+      "createdAt": "2026-10-06T11:32:25.917Z",
+      "passwordHash": "$2b$10$UKucHkKNBXAQGs5m1cQK1.U018tltAm49vzuX4xP3WOGN2yuXCQha"
+    },
+    {
+      "id": "cmux1xus6000rq35cyofvra9o",
+      "username": "dixon myers",
+      "displayName": "dixon myers",
+      "avatarColor": "#27ae60",
+      "avatarImage": null,
+      "bio": "",
+      "role": "member",
+      "muted": false,
+      "banned": false,
+      "coins": 100,
+      "tag": null,
+      "tagColor": null,
+      "pfpAccessory": null,
+      "legacy": false,
+      "createdAt": "2026-10-06T19:08:43.158Z",
+      "passwordHash": "$2b$10$nz6Wxut8MOE2y.kqRvHeEeIpnZITD2mO2qVhcCm7U9WMGdrfaSr9u"
+    },
+    {
+      "id": "cmux7sfts0000q36mms87j340",
+      "username": "cookiegod5578",
+      "displayName": "cookiegod5578",
       "avatarColor": "#2980b9",
       "avatarImage": null,
       "bio": "",
@@ -131,44 +167,245 @@
       "tagColor": null,
       "pfpAccessory": null,
       "legacy": false,
-      "createdAt": "2026-10-06T02:15:30.629Z",
-      "passwordHash": "$2b$10$aM4r3MqLlQJj8q4JcRLtKeNiOWNaqK1pQpmGF2jpiHlI7VyLaa0bG"
+      "createdAt": "2026-10-06T21:52:28.193Z",
+      "passwordHash": "$2b$10$jnFtnGIGEyTYaZjfG8zOY.Eni0MFwNBYXTIeqSH81JyfcXxN1QSxi"
+    },
+    {
+      "id": "cmux8grew0000q314i6tkw3f9",
+      "username": "gt_a1",
+      "displayName": "gt_a1 tester",
+      "avatarColor": "#1abc9c",
+      "avatarImage": null,
+      "bio": "",
+      "role": "member",
+      "muted": false,
+      "banned": false,
+      "coins": 102,
+      "tag": null,
+      "tagColor": null,
+      "pfpAccessory": null,
+      "legacy": false,
+      "createdAt": "2026-10-06T22:11:22.953Z",
+      "passwordHash": "$2b$10$vfKMHm2ut3tvxcZh0V6wceZQDRN0VF59.Nhx7xr0EJQmdbeRsw7au"
+    },
+    {
+      "id": "cmux8grhv0001q314zumx5ox6",
+      "username": "gt_b1",
+      "displayName": "gt_b1 tester",
+      "avatarColor": "#2c3e50",
+      "avatarImage": null,
+      "bio": "",
+      "role": "member",
+      "muted": false,
+      "banned": false,
+      "coins": 100,
+      "tag": null,
+      "tagColor": null,
+      "pfpAccessory": null,
+      "legacy": false,
+      "createdAt": "2026-10-06T22:11:23.059Z",
+      "passwordHash": "$2b$10$39bwiJ/uj5mnDR3HnHjuM.GxwoZE.gXdkR.OxYZBuSoc67hLibqS2"
+    },
+    {
+      "id": "cmux8grkr0002q3141zaev4r3",
+      "username": "gt_c1",
+      "displayName": "gt_c1 tester",
+      "avatarColor": "#c0392b",
+      "avatarImage": null,
+      "bio": "",
+      "role": "member",
+      "muted": false,
+      "banned": false,
+      "coins": 100,
+      "tag": null,
+      "tagColor": null,
+      "pfpAccessory": null,
+      "legacy": false,
+      "createdAt": "2026-10-06T22:11:23.163Z",
+      "passwordHash": "$2b$10$bV3CtZPmlbDP9qqlySMM9upYRO/NpLcpdMdKBIsIMPcExz94aYCZy"
+    },
+    {
+      "id": "cmux8grnf0003q314h2g0hav4",
+      "username": "gt_d1",
+      "displayName": "gt_d1 tester",
+      "avatarColor": "#8e44ad",
+      "avatarImage": null,
+      "bio": "",
+      "role": "member",
+      "muted": false,
+      "banned": false,
+      "coins": 100,
+      "tag": null,
+      "tagColor": null,
+      "pfpAccessory": null,
+      "legacy": false,
+      "createdAt": "2026-10-06T22:11:23.259Z",
+      "passwordHash": "$2b$10$BR.RdMgolLW1MJqnnwbhwu.PbtRE1vkvN158xzXdewcSWOKyJnkAq"
+    },
+    {
+      "id": "cmux8jv0e000nq34lb36vk5ee",
+      "username": "gt_e1",
+      "displayName": "E tester",
+      "avatarColor": "#f97316",
+      "avatarImage": null,
+      "bio": "",
+      "role": "member",
+      "muted": false,
+      "banned": false,
+      "coins": 100,
+      "tag": null,
+      "tagColor": null,
+      "pfpAccessory": null,
+      "legacy": false,
+      "createdAt": "2026-10-06T22:13:47.582Z",
+      "passwordHash": "$2b$10$/eTUyDnPiyorIOWkewtDQ.agSJwI68h6Lfyy61lPFWzuelOdzsCAm"
+    },
+    {
+      "id": "cmuxepp0v0000q3eyck3uf2hk",
+      "username": "bat man",
+      "displayName": "bat man",
+      "avatarColor": "#c0392b",
+      "avatarImage": null,
+      "bio": "",
+      "role": "member",
+      "muted": false,
+      "banned": false,
+      "coins": 100,
+      "tag": null,
+      "tagColor": null,
+      "pfpAccessory": null,
+      "legacy": false,
+      "createdAt": "2026-10-07T01:06:17.456Z",
+      "passwordHash": "$2b$10$v6zleJTMVRt7EMWv3wuxmuzcXrb76W/KIgSPjLX8nWdCKCCBQvUmu"
+    },
+    {
+      "id": "cmuxi6sgb000oq3t23j5rsdbb",
+      "username": "Sulfur Cube",
+      "displayName": "Sulfur Cube",
+      "avatarColor": "#9b59b6",
+      "avatarImage": null,
+      "bio": "",
+      "role": "member",
+      "muted": false,
+      "banned": false,
+      "coins": 100,
+      "tag": null,
+      "tagColor": null,
+      "pfpAccessory": null,
+      "legacy": false,
+      "createdAt": "2026-10-07T02:43:33.900Z",
+      "passwordHash": "$2b$10$OFrfRd1RwQKput.cN.cN4eQLUGEts9ipIWLIk7lpXV5QKGbmGNKmW"
+    },
+    {
+      "id": "cmuxs7c6i0000j371owtzqrzv",
+      "username": "preppygirll",
+      "displayName": "preppygirll",
+      "avatarColor": "#8e44ad",
+      "avatarImage": null,
+      "bio": "",
+      "role": "member",
+      "muted": false,
+      "banned": false,
+      "coins": 102,
+      "tag": null,
+      "tagColor": null,
+      "pfpAccessory": null,
+      "legacy": false,
+      "createdAt": "2026-10-07T07:23:55.626Z",
+      "passwordHash": "$2b$10$7SeSo.QXHtgfp8r.5acjK.9FJXkjpyAMbNeNnQBA/840D5WQL4SxK"
+    },
+    {
+      "id": "cmuy598c00000oqtnipfiho9y",
+      "username": "brah",
+      "displayName": "brah",
+      "avatarColor": "#9b59b6",
+      "avatarImage": null,
+      "bio": "",
+      "role": "member",
+      "muted": false,
+      "banned": false,
+      "coins": 101,
+      "tag": null,
+      "tagColor": null,
+      "pfpAccessory": null,
+      "legacy": false,
+      "createdAt": "2026-10-07T13:29:18.960Z",
+      "passwordHash": "$2b$10$lB6JxSQ/Sv9xaK7bbZdesOrD8ZCKLVPUe9puOZV/Gux62lIUcwQpS"
+    },
+    {
+      "id": "cmuy8rxlt0000oqvgvy8mho2j",
+      "username": "LOL",
+      "displayName": "LOL",
+      "avatarColor": "#2980b9",
+      "avatarImage": null,
+      "bio": "",
+      "role": "member",
+      "muted": false,
+      "banned": false,
+      "coins": 100,
+      "tag": null,
+      "tagColor": null,
+      "pfpAccessory": null,
+      "legacy": false,
+      "createdAt": "2026-10-07T15:07:50.370Z",
+      "passwordHash": "$2b$10$DN2Yz99ytBSIvyjW0PsUGefoeBn5rA/fHCt9ZXFqjwhSrU2qP1.FC"
+    },
+    {
+      "id": "cmuyoft0p000qoqzkaikxem5z",
+      "username": "ha[[y",
+      "displayName": "ha[[y",
+      "avatarColor": "#27ae60",
+      "avatarImage": null,
+      "bio": "",
+      "role": "member",
+      "muted": false,
+      "banned": false,
+      "coins": 100,
+      "tag": null,
+      "tagColor": null,
+      "pfpAccessory": null,
+      "legacy": false,
+      "createdAt": "2026-10-07T22:26:18.410Z",
+      "passwordHash": "$2b$10$Y6f/blPbg9sNOQevX1yio.CyZv2v0YohmUNxkVoXkdQ.jRH1ODUoO"
+    },
+    {
+      "id": "cmuysio370000oq76ctbcrs7y",
+      "username": "rtyu",
+      "displayName": "rtyu",
+      "avatarColor": "#c0392b",
+      "avatarImage": null,
+      "bio": "",
+      "role": "moderator",
+      "muted": false,
+      "banned": false,
+      "coins": 101,
+      "tag": null,
+      "tagColor": null,
+      "pfpAccessory": null,
+      "legacy": false,
+      "createdAt": "2026-10-08T00:20:30.451Z",
+      "passwordHash": "$2b$10$diitSuOS2DLtVrmzDcYdQOefd.PLM/xJJOASwLxGo8bnUXXmquQa."
+    },
+    {
+      "id": "cmuyw612g0000oq8yg3f9nxoi",
+      "username": "qablitzaa",
+      "displayName": "qablitzaa",
+      "avatarColor": "#2980b9",
+      "avatarImage": null,
+      "bio": "",
+      "role": "member",
+      "muted": false,
+      "banned": false,
+      "coins": 102,
+      "tag": null,
+      "tagColor": null,
+      "pfpAccessory": null,
+      "legacy": false,
+      "createdAt": "2026-10-08T02:02:39.208Z",
+      "passwordHash": "$2b$10$K1xO7jMz8i7f7NwvGX6R3u3bUnDFMv3UBKi7dVeGdmDfvAu5D21GK"
     }
   ],
   "messages": [
-    {
-      "id": "gen-restore-001",
-      "channelId": "main",
-      "accountId": "cmuu20ppm0005jkxecvmo7qpu",
-      "content": "yo",
-      "replyTo": null,
-      "replyToContent": null,
-      "replyToUsername": null,
-      "createdAt": "2026-09-15T16:22:00.000Z",
-      "editedAt": null
-    },
-    {
-      "id": "gen-restore-002",
-      "channelId": "main",
-      "accountId": "cmuu20ppm0005jkxecvmo7qpu",
-      "content": "https://media2.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3bTJpODZoenUxb2o2YWJob3Bya2F1NzJ3cmZiYmNkajE4cGpybXpkNCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/ASd0Ukj0y3qMM/giphy.gif",
-      "replyTo": null,
-      "replyToContent": null,
-      "replyToUsername": null,
-      "createdAt": "2026-09-16T22:13:00.000Z",
-      "editedAt": null
-    },
-    {
-      "id": "gen-restore-005",
-      "channelId": "main",
-      "accountId": "cmuu20ppm0005jkxecvmo7qpu",
-      "content": "holy grammar",
-      "replyTo": null,
-      "replyToContent": null,
-      "replyToUsername": null,
-      "createdAt": "2026-09-17T22:24:00.000Z",
-      "editedAt": null
-    },
     {
       "id": "gen-restore-006",
       "channelId": "main",
@@ -178,17 +415,6 @@
       "replyToContent": null,
       "replyToUsername": null,
       "createdAt": "2026-09-17T22:29:00.000Z",
-      "editedAt": null
-    },
-    {
-      "id": "gen-restore-007",
-      "channelId": "main",
-      "accountId": "cmuu20ppm0005jkxecvmo7qpu",
-      "content": "yo wtf",
-      "replyTo": null,
-      "replyToContent": null,
-      "replyToUsername": null,
-      "createdAt": "2026-09-17T22:56:00.000Z",
       "editedAt": null
     },
     {
@@ -225,17 +451,6 @@
       "editedAt": null
     },
     {
-      "id": "gen-restore-011",
-      "channelId": "main",
-      "accountId": "cmuu20ppm0005jkxecvmo7qpu",
-      "content": "lol",
-      "replyTo": null,
-      "replyToContent": null,
-      "replyToUsername": null,
-      "createdAt": "2026-09-18T00:34:00.000Z",
-      "editedAt": null
-    },
-    {
       "id": "cmusxdh3i0009ojyz6ey45iy9",
       "channelId": "main",
       "accountId": "cmusxcw4k0007ojyz7wsmceva",
@@ -244,39 +459,6 @@
       "replyToContent": null,
       "replyToUsername": null,
       "createdAt": "2026-10-03T21:49:49.134Z",
-      "editedAt": null
-    },
-    {
-      "id": "cmut4prva0005ll9zo0f01h7y",
-      "channelId": "links",
-      "accountId": "cmuu20ppm0005jkxecvmo7qpu",
-      "content": "https://veil-os.vercel.app/",
-      "replyTo": null,
-      "replyToContent": null,
-      "replyToUsername": null,
-      "createdAt": "2026-10-04T01:15:20.278Z",
-      "editedAt": null
-    },
-    {
-      "id": "cmut6fvy00008llgb1b8bm1pm",
-      "channelId": "sharelinks",
-      "accountId": "cmuu20ppm0005jkxecvmo7qpu",
-      "content": "https://actstudy.s3.amazonaws.com/index.html https://s3.amazonaws.com/actstudy/index.html https://actstudy.s3.dualstack.us-east-1.amazonaws.com/index.html https://s3.dualstack.us-east-1.amazonaws.com/actstudy/index.html https://actstudy.s3.us-east-1.amazonaws.com/index.html https://s3.us-east-1.amazonaws.com/actstudy/index.html https://actstudy.s3-fips.us-east-1.amazonaws.com/index.html https://actstudy.s3-fips.dualstack.us-east-1.amazonaws.com/index.html",
-      "replyTo": null,
-      "replyToContent": null,
-      "replyToUsername": null,
-      "createdAt": "2026-10-04T02:03:38.233Z",
-      "editedAt": null
-    },
-    {
-      "id": "cmut6zp6w0001ll41sfohp5o2",
-      "channelId": "links",
-      "accountId": "cmuu20ppm0005jkxecvmo7qpu",
-      "content": "http://veilisgoated.b-cdn.net/",
-      "replyTo": null,
-      "replyToContent": null,
-      "replyToUsername": null,
-      "createdAt": "2026-10-04T02:19:02.599Z",
       "editedAt": null
     },
     {
@@ -291,40 +473,276 @@
       "editedAt": null
     },
     {
-      "id": "cmuu22jcu000bjkxe99svjiw5",
-      "channelId": "links",
-      "accountId": "cmuu20ppm0005jkxecvmo7qpu",
-      "content": "https://veil-fur034ika-aquidrizzler-1761s-projects.vercel.app/",
-      "replyTo": null,
-      "replyToContent": null,
-      "replyToUsername": null,
-      "createdAt": "2026-10-04T16:49:03.103Z",
-      "editedAt": null
-    },
-    {
-      "id": "cmuu22m2r000fjkxe9xle1mtx",
-      "channelId": "links",
-      "accountId": "cmuu20ppm0005jkxecvmo7qpu",
-      "content": "https://veil-os-git-main-aquidrizzler-1761s-projects.vercel.app/chat.html",
-      "replyTo": null,
-      "replyToContent": null,
-      "replyToUsername": null,
-      "createdAt": "2026-10-04T16:49:06.627Z",
-      "editedAt": null
-    },
-    {
-      "id": "cmuw1ry2n0002na5tn25nynak",
+      "id": "cmux7soiw0002q36mqmunxx0x",
       "channelId": "main",
-      "accountId": "cmuw1quyt0000na5tprofyov1",
-      "content": "hello from the zone test",
+      "accountId": "cmux7sfts0000q36mms87j340",
+      "content": "I'm bored as hell",
       "replyTo": null,
       "replyToContent": null,
       "replyToUsername": null,
-      "createdAt": "2026-10-06T02:16:21.312Z",
+      "createdAt": "2026-10-06T21:52:39.465Z",
+      "editedAt": null
+    },
+    {
+      "id": "cmux8grqt000bq314m7swu8lx",
+      "channelId": "cmux8grpd0005q314wzasutng",
+      "accountId": "cmux8grew0000q314i6tkw3f9",
+      "content": "hello group @gt_b1",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-10-06T22:11:23.381Z",
+      "editedAt": null
+    },
+    {
+      "id": "cmux8igr9000dq34l2l8139f5",
+      "channelId": "cmux8iga90007q34llnsu2m7l",
+      "accountId": "cmux8grew0000q314i6tkw3f9",
+      "content": "hello group @gt_b1",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-10-06T22:12:42.454Z",
+      "editedAt": null
+    },
+    {
+      "id": "cmuxs7m0l0002j371s95bvr42",
+      "channelId": "main",
+      "accountId": "cmuxs7c6i0000j371owtzqrzv",
+      "content": "hii",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-10-07T07:24:08.373Z",
+      "editedAt": null
+    },
+    {
+      "id": "cmuy59f250002oqtnnwrkfxaq",
+      "channelId": "main",
+      "accountId": "cmuy598c00000oqtnipfiho9y",
+      "content": "yooo",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-10-07T13:29:27.678Z",
+      "editedAt": null
+    },
+    {
+      "id": "cmuypj7oy0001oq72fwqy0k18",
+      "channelId": "suggestions",
+      "accountId": "cmuu20ppm0005jkxecvmo7qpu",
+      "content": "hi",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-10-07T22:56:57.010Z",
+      "editedAt": null
+    },
+    {
+      "id": "cmuyplpem0005oq724dig2ixf",
+      "channelId": "main",
+      "accountId": "cmuu20ppm0005jkxecvmo7qpu",
+      "content": "next person who types is a mod besides me",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-10-07T22:58:53.278Z",
+      "editedAt": "2026-10-07T22:59:16.075Z"
+    },
+    {
+      "id": "cmuyplz5z0009oq72i519hi3j",
+      "channelId": "main",
+      "accountId": "cmuu20ppm0005jkxecvmo7qpu",
+      "content": "added friends",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-10-07T22:59:05.928Z",
+      "editedAt": null
+    },
+    {
+      "id": "cmuypoyqz000doq72n73zms9o",
+      "channelId": "suggestions",
+      "accountId": "cmuu20ppm0005jkxecvmo7qpu",
+      "content": "updating chat what should I add",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-10-07T23:01:25.355Z",
+      "editedAt": null
+    },
+    {
+      "id": "cmuysj0zu0002oq76tpykiuna",
+      "channelId": "main",
+      "accountId": "cmuysio370000oq76ctbcrs7y",
+      "content": "Omg",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-10-08T00:20:47.179Z",
+      "editedAt": null
+    },
+    {
+      "id": "cmuytery10001oq04jgqylv3s",
+      "channelId": "main",
+      "accountId": "cmuu20ppm0005jkxecvmo7qpu",
+      "content": "wut",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-10-08T00:45:28.441Z",
+      "editedAt": null
+    },
+    {
+      "id": "cmuytg34k0001oq6x4zgja2gb",
+      "channelId": "main",
+      "accountId": "cmuu20ppm0005jkxecvmo7qpu",
+      "content": "ur mod now",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-10-08T00:46:29.588Z",
+      "editedAt": null
+    },
+    {
+      "id": "cmuyw0y620001oqwgehbt6odu",
+      "channelId": "main",
+      "accountId": "cmuu20ppm0005jkxecvmo7qpu",
+      "content": "added animatons",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-10-08T01:58:42.170Z",
+      "editedAt": null
+    },
+    {
+      "id": "cmuywi9fi0001oqfkg393c3uu",
+      "channelId": "sharelinks",
+      "accountId": "cmuyw612g0000oq8yg3f9nxoi",
+      "content": "QA glide test",
+      "replyTo": null,
+      "replyToContent": null,
+      "replyToUsername": null,
+      "createdAt": "2026-10-08T02:12:09.918Z",
       "editedAt": null
     }
   ],
-  "dms": [],
-  "dmMembers": [],
-  "friends": []
+  "dms": [
+    {
+      "id": "cmux8grpd0005q314wzasutng",
+      "name": "Smoke Squad",
+      "isGroup": true,
+      "ownerId": "cmux8grew0000q314i6tkw3f9",
+      "createdAt": "2026-10-06T22:11:23.329Z"
+    },
+    {
+      "id": "cmux8hmfi0001q34lfnu4347a",
+      "name": "Smoke Squad",
+      "isGroup": true,
+      "ownerId": "cmux8grew0000q314i6tkw3f9",
+      "createdAt": "2026-10-06T22:12:03.151Z"
+    },
+    {
+      "id": "cmux8iga90007q34llnsu2m7l",
+      "name": "Renamed Squad",
+      "isGroup": true,
+      "ownerId": "cmux8grew0000q314i6tkw3f9",
+      "createdAt": "2026-10-06T22:12:41.842Z"
+    },
+    {
+      "id": "cmux8jv3i000qq34lhts07uo6",
+      "name": null,
+      "isGroup": true,
+      "ownerId": "cmux8grew0000q314i6tkw3f9",
+      "createdAt": "2026-10-06T22:13:47.694Z"
+    },
+    {
+      "id": "cmuyoh3l9000yoqzk11m69qkz",
+      "name": null,
+      "isGroup": false,
+      "ownerId": "cmuyoft0p000qoqzkaikxem5z",
+      "createdAt": "2026-10-07T22:27:18.765Z"
+    }
+  ],
+  "dmMembers": [
+    {
+      "dmId": "cmux8grpd0005q314wzasutng",
+      "accountId": "cmux8grew0000q314i6tkw3f9"
+    },
+    {
+      "dmId": "cmux8grpd0005q314wzasutng",
+      "accountId": "cmux8grhv0001q314zumx5ox6"
+    },
+    {
+      "dmId": "cmux8grpd0005q314wzasutng",
+      "accountId": "cmux8grkr0002q3141zaev4r3"
+    },
+    {
+      "dmId": "cmux8grpd0005q314wzasutng",
+      "accountId": "cmux8grnf0003q314h2g0hav4"
+    },
+    {
+      "dmId": "cmux8hmfi0001q34lfnu4347a",
+      "accountId": "cmux8grew0000q314i6tkw3f9"
+    },
+    {
+      "dmId": "cmux8hmfi0001q34lfnu4347a",
+      "accountId": "cmux8grhv0001q314zumx5ox6"
+    },
+    {
+      "dmId": "cmux8hmfi0001q34lfnu4347a",
+      "accountId": "cmux8grkr0002q3141zaev4r3"
+    },
+    {
+      "dmId": "cmux8iga90007q34llnsu2m7l",
+      "accountId": "cmux8grew0000q314i6tkw3f9"
+    },
+    {
+      "dmId": "cmux8iga90007q34llnsu2m7l",
+      "accountId": "cmux8grkr0002q3141zaev4r3"
+    },
+    {
+      "dmId": "cmux8iga90007q34llnsu2m7l",
+      "accountId": "cmux8grnf0003q314h2g0hav4"
+    },
+    {
+      "dmId": "cmux8iga90007q34llnsu2m7l",
+      "accountId": "cmux8jv0e000nq34lb36vk5ee"
+    },
+    {
+      "dmId": "cmux8jv3i000qq34lhts07uo6",
+      "accountId": "cmux8grew0000q314i6tkw3f9"
+    },
+    {
+      "dmId": "cmux8jv3i000qq34lhts07uo6",
+      "accountId": "cmux8jv0e000nq34lb36vk5ee"
+    },
+    {
+      "dmId": "cmux8jv3i000qq34lhts07uo6",
+      "accountId": "cmux8grhv0001q314zumx5ox6"
+    },
+    {
+      "dmId": "cmuyoh3l9000yoqzk11m69qkz",
+      "accountId": "cmuyoft0p000qoqzkaikxem5z"
+    }
+  ],
+  "friends": [
+    {
+      "accountId": "cmuu20ppm0005jkxecvmo7qpu",
+      "friendId": "cmuyoft0p000qoqzkaikxem5z",
+      "createdAt": "2026-10-07T22:27:09.797Z"
+    },
+    {
+      "accountId": "cmuyoft0p000qoqzkaikxem5z",
+      "friendId": "cmuu20ppm0005jkxecvmo7qpu",
+      "createdAt": "2026-10-07T22:27:09.799Z"
+    }
+  ],
+  "reactions": [
+    {
+      "messageId": "cmuywi9fi0001oqfkg393c3uu",
+      "accountId": "cmuyw612g0000oq8yg3f9nxoi",
+      "emoji": "🔥"
+    }
+  ]
 }
