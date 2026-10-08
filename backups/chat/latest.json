@@ -1,9 +1,9 @@
 {
   "veil": "chat-backup",
   "version": 1,
-  "exportedAt": "2026-10-08T01:59:05.936Z",
+  "exportedAt": "2026-10-08T02:02:40.661Z",
   "counts": {
-    "accounts": 21,
+    "accounts": 22,
     "messages": 19,
     "dms": 5
   },
@@ -385,6 +385,24 @@
       "legacy": false,
       "createdAt": "2026-10-08T00:20:30.451Z",
       "passwordHash": "$2b$10$diitSuOS2DLtVrmzDcYdQOefd.PLM/xJJOASwLxGo8bnUXXmquQa."
+    },
+    {
+      "id": "cmuyw612g0000oq8yg3f9nxoi",
+      "username": "qablitzaa",
+      "displayName": "qablitzaa",
+      "avatarColor": "#2980b9",
+      "avatarImage": null,
+      "bio": "",
+      "role": "member",
+      "muted": false,
+      "banned": false,
+      "coins": 100,
+      "tag": null,
+      "tagColor": null,
+      "pfpAccessory": null,
+      "legacy": false,
+      "createdAt": "2026-10-08T02:02:39.208Z",
+      "passwordHash": "$2b$10$K1xO7jMz8i7f7NwvGX6R3u3bUnDFMv3UBKi7dVeGdmDfvAu5D21GK"
     }
   ],
   "messages": [
