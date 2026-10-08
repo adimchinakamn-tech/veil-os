@@ -1,9 +1,9 @@
 {
   "veil": "chat-backup",
   "version": 1,
-  "exportedAt": "2026-10-08T02:13:33.399Z",
+  "exportedAt": "2026-10-08T02:15:38.710Z",
   "counts": {
-    "accounts": 22,
+    "accounts": 23,
     "messages": 20,
     "dms": 5
   },
@@ -403,6 +403,24 @@
       "legacy": false,
       "createdAt": "2026-10-08T02:02:39.208Z",
       "passwordHash": "$2b$10$K1xO7jMz8i7f7NwvGX6R3u3bUnDFMv3UBKi7dVeGdmDfvAu5D21GK"
+    },
+    {
+      "id": "cmuywmki50000oqmf1sl1or9h",
+      "username": "qatypist2",
+      "displayName": "qatypist2",
+      "avatarColor": "#2980b9",
+      "avatarImage": null,
+      "bio": "",
+      "role": "member",
+      "muted": false,
+      "banned": false,
+      "coins": 100,
+      "tag": null,
+      "tagColor": null,
+      "pfpAccessory": null,
+      "legacy": false,
+      "createdAt": "2026-10-08T02:15:30.892Z",
+      "passwordHash": "$2b$10$DbYdH0/sLikPVW0/PjFBwOZsRTWSVLn0sQeM47TGh7qizM.X91nBW"
     }
   ],
   "messages": [
