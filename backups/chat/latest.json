@@ -1,9 +1,9 @@
 {
   "veil": "chat-backup",
   "version": 1,
-  "exportedAt": "2026-10-08T22:08:52.215Z",
+  "exportedAt": "2026-10-08T22:16:55.969Z",
   "counts": {
-    "accounts": 15,
+    "accounts": 16,
     "messages": 31,
     "dms": 0
   },
@@ -277,6 +277,24 @@
       "legacy": false,
       "createdAt": "2026-10-08T19:29:37.293Z",
       "passwordHash": "$2b$10$D7eCKpypal84K6pj5.7TO.FPVGl0Z7gt4G1Mq3wBzWjdrGcgCJsS2"
+    },
+    {
+      "id": "cmv03jkbd0000ppmk9a0rzedt",
+      "username": "Sulfur Cube",
+      "displayName": "Sulfur Cube",
+      "avatarColor": "#e67e22",
+      "avatarImage": null,
+      "bio": "",
+      "role": "member",
+      "muted": false,
+      "banned": false,
+      "coins": 100,
+      "tag": null,
+      "tagColor": null,
+      "pfpAccessory": null,
+      "legacy": false,
+      "createdAt": "2026-10-08T22:16:54.169Z",
+      "passwordHash": "$2b$10$yki5cpQA.kdTAAqvCXaAUueIosuji/RQTOV9mc72ZDlwC1w9kCWdO"
     }
   ],
   "messages": [
