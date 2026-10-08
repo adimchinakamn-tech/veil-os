@@ -590,7 +590,7 @@ function FileBubble({ f }: { f: ChatFile }) {
       href={dl}
       target="_blank"
       rel="noopener noreferrer"
-      className="mt-1 flex max-w-sm items-center gap-3 rounded-lg border border-white/10 bg-black/30 p-3 transition hover:border-orange-400/40"
+      className="veil-hover-lift mt-1 flex max-w-sm items-center gap-3 rounded-lg border border-white/10 bg-black/30 p-3 transition hover:border-orange-400/40"
       title={`Download ${f.name}`}
     >
       <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-orange-400/15 text-orange-300">
@@ -1041,17 +1041,20 @@ function AuthScreen({
           <span className="hidden sm:inline">Veil</span>
         </motion.button>
       )}
-      <motion.div
-        initial={{ opacity: 0, y: 26, scale: 0.955, filter: "blur(10px)" }}
-        animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
-        transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
-        className="relative w-full max-w-md rounded-3xl border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-xl"
-      >
+      {/* veil-drop-bounce wrapper — the card lands with a squash-stretch
+          bounce (mega tier); the inner framer entrance composes on top. */}
+      <div className="veil-drop-bounce w-full max-w-md">
+        <motion.div
+          initial={{ opacity: 0, y: 26, scale: 0.955, filter: "blur(10px)" }}
+          animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+          transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+          className="relative w-full max-w-md rounded-3xl border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-xl"
+        >
         <div className="mb-6 flex flex-col items-center text-center">
           <motion.div
             animate={{ y: [0, -5, 0] }}
             transition={{ duration: 3.6, repeat: Infinity, ease: "easeInOut" }}
-            className="mb-3 grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 shadow-lg shadow-orange-500/30"
+            className="veil-pulse-glow mb-3 grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 shadow-lg shadow-orange-500/30"
           >
             <MessageCircle className="h-7 w-7 text-white" />
           </motion.div>
@@ -1059,7 +1062,7 @@ function AuthScreen({
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.18, duration: 0.35, ease: "easeOut" }}
-            className="text-2xl font-semibold tracking-tight"
+            className="veil-text-shine text-2xl font-semibold tracking-tight"
           >
             Veil Chat
           </motion.h1>
@@ -1067,7 +1070,7 @@ function AuthScreen({
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.26, duration: 0.35, ease: "easeOut" }}
-            className="mt-1 text-sm text-white/60"
+            className="veil-text-breathe mt-1 text-sm text-white/60"
           >
             {mode === "login"
               ? "Welcome back"
@@ -1084,7 +1087,7 @@ function AuthScreen({
           <button
             type="button"
             onClick={() => setMode("login")}
-            className={`relative flex-1 rounded-lg px-3 py-1.5 transition-colors ${
+            className={`veil-hover-lift veil-press relative flex-1 rounded-lg px-3 py-1.5 transition-colors ${
               mode === "login" ? "text-white" : "text-white/60 hover:text-white"
             }`}
           >
@@ -1100,7 +1103,7 @@ function AuthScreen({
           <button
             type="button"
             onClick={() => setMode("register")}
-            className={`relative flex-1 rounded-lg px-3 py-1.5 transition-colors ${
+            className={`veil-hover-lift veil-press relative flex-1 rounded-lg px-3 py-1.5 transition-colors ${
               mode === "register" ? "text-white" : "text-white/60 hover:text-white"
             }`}
           >
@@ -1134,7 +1137,7 @@ function AuthScreen({
               placeholder="3+ chars"
               autoCapitalize="none"
               autoCorrect="off"
-              className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm outline-none transition-[border-color,box-shadow] duration-300 placeholder:text-white/30 focus:border-orange-400/50 focus:shadow-[0_0_0_3px_rgba(251,146,60,0.12)]"
+              className="veil-focus-bloom w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm outline-none transition-[border-color,box-shadow] duration-300 placeholder:text-white/30 focus:border-orange-400/50 focus:shadow-[0_0_0_3px_rgba(251,146,60,0.12)]"
             />
           </motion.div>
           <motion.div
@@ -1148,7 +1151,7 @@ function AuthScreen({
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="6+ characters"
-              className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm outline-none transition-[border-color,box-shadow] duration-300 placeholder:text-white/30 focus:border-orange-400/50 focus:shadow-[0_0_0_3px_rgba(251,146,60,0.12)]"
+              className="veil-focus-bloom w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm outline-none transition-[border-color,box-shadow] duration-300 placeholder:text-white/30 focus:border-orange-400/50 focus:shadow-[0_0_0_3px_rgba(251,146,60,0.12)]"
             />
           </motion.div>
 
@@ -1161,24 +1164,31 @@ function AuthScreen({
                 transition={{ duration: 0.45, ease: "easeOut" }}
                 className="rounded-lg border border-red-400/30 bg-red-500/10 px-3 py-2 text-xs text-red-200"
               >
-                {error}
+                {/* jelly wobble re-triggers per distinct error via key */}
+                <span key={error} className="veil-jelly inline-block">{error}</span>
               </motion.div>
             )}
           </AnimatePresence>
 
-          <motion.button
-            type="submit"
-            disabled={loading || !username || !password}
-            whileHover={{ scale: 1.02, y: -1 }}
-            whileTap={{ scale: 0.97 }}
-            transition={CHAT_POP}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 bg-[length:200%_100%] bg-left px-4 py-2.5 text-sm font-semibold text-white transition-[background-position,opacity] duration-500 hover:bg-right disabled:opacity-50 disabled:hover:bg-left"
-          >
-            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-            {mode === "login" ? "Log In" : "Create account"}
-          </motion.button>
+          {/* border-dance wrapper + press — the framer tap lives on the
+              button, the conic border and squeeze live here so the
+              transforms compose instead of fighting. */}
+          <div className="veil-border-dance veil-press rounded-lg">
+            <motion.button
+              type="submit"
+              disabled={loading || !username || !password}
+              whileHover={{ scale: 1.02, y: -1 }}
+              whileTap={{ scale: 0.97 }}
+              transition={CHAT_POP}
+              className="veil-hover-glow flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 bg-[length:200%_100%] bg-left px-4 py-2.5 text-sm font-semibold text-white transition-[background-position,opacity] duration-500 hover:bg-right disabled:opacity-50 disabled:hover:bg-left"
+            >
+              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+              {mode === "login" ? "Log In" : "Create account"}
+            </motion.button>
+          </div>
         </form>
-      </motion.div>
+        </motion.div>
+      </div>
     </div>
   )
 }
@@ -1302,7 +1312,7 @@ function GifPicker({
               setQuery(s === "Trending" ? "" : s)
               void search(s === "Trending" ? "trending" : s)
             }}
-            className="rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-[11px] text-white/70 transition-colors hover:border-emerald-400/40 hover:bg-emerald-400/10 hover:text-emerald-200"
+            className="veil-hover-bounce veil-press rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-[11px] text-white/70 transition-colors hover:border-emerald-400/40 hover:bg-emerald-400/10 hover:text-emerald-200"
           >
             {s}
           </button>
@@ -1322,11 +1332,11 @@ function GifPicker({
         />
         <button
           onClick={() => query.trim() && void search(query.trim())}
-          className="rounded-md bg-white/10 px-2 py-1 text-xs text-white hover:bg-white/20"
+          className="veil-press rounded-md bg-white/10 px-2 py-1 text-xs text-white hover:bg-white/20"
         >
           Search
         </button>
-        <button onClick={onClose} className="text-white/50 hover:text-white">
+        <button onClick={onClose} className="veil-hover-wobble text-white/50 hover:text-white">
           <X className="h-4 w-4" />
         </button>
       </div>
@@ -1355,13 +1365,13 @@ function GifPicker({
             {searched ? "No GIFs found." : "Search for a GIF."}
           </div>
         ) : (
-          <div className="grid grid-cols-3 gap-2">
+          <div className="veil-slide-up-pop grid grid-cols-3 gap-2">
             {gifs.map((g) => (
               <button
                 key={g.id}
                 onClick={() => onPick(g.url)}
                 title={g.title || undefined}
-                className="group relative aspect-square overflow-hidden rounded-md bg-black/40 transition-transform hover:scale-105"
+                className="veil-hover-glow group relative aspect-square overflow-hidden rounded-md bg-black/40 transition-transform hover:scale-105"
               >
                 { }
                 <img
@@ -1382,7 +1392,7 @@ function GifPicker({
         {hasMore && !loading && gifs.length > 0 && !loadingMore && (
           <button
             onClick={() => void loadMore()}
-            className="mt-2 w-full rounded-md border border-white/10 bg-white/5 py-1.5 text-[11px] font-medium text-white/70 hover:bg-white/10 hover:text-white"
+            className="veil-hover-bounce mt-2 w-full rounded-md border border-white/10 bg-white/5 py-1.5 text-[11px] font-medium text-white/70 hover:bg-white/10 hover:text-white"
           >
             More GIFs ↓
           </button>
@@ -1419,16 +1429,16 @@ function EmojiPicker({
     >
       <div className="mb-2 flex items-center justify-between">
         <span className="text-xs font-medium text-white/70">Emoji</span>
-        <button onClick={onClose} className="text-white/50 hover:text-white">
+        <button onClick={onClose} className="veil-hover-wobble text-white/50 hover:text-white">
           <X className="h-4 w-4" />
         </button>
       </div>
-      <div className="grid max-h-60 grid-cols-8 gap-1 overflow-y-auto rounded-lg bg-black/30 p-2">
+      <div className="veil-slide-up-pop grid max-h-60 grid-cols-8 gap-1 overflow-y-auto rounded-lg bg-black/30 p-2">
         {EMOJI_SET.map((e) => (
           <button
             key={e}
             onClick={() => onPick(e)}
-            className="grid h-8 w-8 place-items-center rounded-md text-lg transition-colors hover:bg-white/10"
+            className="veil-hover-bounce veil-press grid h-8 w-8 place-items-center rounded-md text-lg transition-colors hover:bg-white/10"
           >
             {e}
           </button>
@@ -1473,11 +1483,11 @@ function ModalShell({
         <div className="flex items-center justify-between border-b border-white/10 px-5 py-3">
           <div className="flex items-center gap-2 text-white">
             {icon}
-            <h3 className="text-sm font-semibold">{title}</h3>
+            <h3 className="veil-text-shine text-sm font-semibold">{title}</h3>
           </div>
           <button
             onClick={onClose}
-            className="rounded-md p-1 text-white/50 hover:bg-white/10 hover:text-white"
+            className="veil-hover-wobble rounded-md p-1 text-white/50 hover:bg-white/10 hover:text-white"
           >
             <X className="h-4 w-4" />
           </button>
@@ -1560,9 +1570,11 @@ function ShopModal({
       onClose={onClose}
       maxWidth="max-w-2xl"
     >
-      <div className="mb-4 flex items-center justify-between rounded-xl border border-white/10 bg-black/30 px-4 py-3">
+      {/* key={coins} — the balance pill flashes (level-flash) and the
+          coin emoji 720°-flips every time the balance changes. */}
+      <div key={account.coins} className="veil-level-flash mb-4 flex items-center justify-between rounded-xl border border-white/10 bg-black/30 px-4 py-3">
         <span className="text-sm text-white/70">Your balance</span>
-        <span className="flex items-center gap-1.5 font-semibold text-orange-300">
+        <span key={account.coins} className="veil-coin-flip flex items-center gap-1.5 font-semibold text-orange-300">
           🪙 {account.coins} <span className="text-xs text-white/50">Veil Coins</span>
         </span>
       </div>
@@ -1574,7 +1586,7 @@ function ShopModal({
       ) : (
         <div className="space-y-6">
           <section>
-            <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-white/50">
+            <h4 className="veil-text-shine mb-2 text-xs font-semibold uppercase tracking-wide text-white/50">
               Name Tags
             </h4>
             <div className="grid gap-2 sm:grid-cols-2">
@@ -1584,7 +1596,7 @@ function ShopModal({
                 return (
                   <div
                     key={t.id}
-                    className="flex items-center justify-between rounded-xl border border-white/10 bg-black/20 p-3"
+                    className="veil-hover-lift veil-hover-tilt veil-border-dance flex items-center justify-between rounded-xl border border-white/10 bg-black/20 p-3"
                   >
                     <div className="flex flex-col gap-1">
                       <TagBadge tag={t.tagText} color={t.tagColor} />
@@ -1600,7 +1612,7 @@ function ShopModal({
                       <button
                         disabled={!afford || buying === t.id}
                         onClick={() => void buy(t)}
-                        className="rounded-md bg-orange-400 px-3 py-1 text-xs font-semibold text-black disabled:opacity-40"
+                        className="veil-press veil-hover-glow rounded-md bg-orange-400 px-3 py-1 text-xs font-semibold text-black disabled:opacity-40"
                       >
                         {buying === t.id ? "…" : "Buy"}
                       </button>
@@ -1612,7 +1624,7 @@ function ShopModal({
           </section>
 
           <section>
-            <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-white/50">
+            <h4 className="veil-text-shine mb-2 text-xs font-semibold uppercase tracking-wide text-white/50">
               PFP Accessories
             </h4>
             <div className="grid gap-2 sm:grid-cols-2">
@@ -1623,7 +1635,7 @@ function ShopModal({
                 return (
                   <div
                     key={a.id}
-                    className="flex items-center justify-between rounded-xl border border-white/10 bg-black/20 p-3"
+                    className="veil-hover-lift veil-hover-tilt veil-border-dance flex items-center justify-between rounded-xl border border-white/10 bg-black/20 p-3"
                   >
                     <div className="flex items-center gap-3">
                       <div className="grid h-9 w-9 place-items-center rounded-full bg-white/10 text-lg">
@@ -1644,7 +1656,7 @@ function ShopModal({
                       <button
                         disabled={!afford || buying === a.id}
                         onClick={() => void buy(a)}
-                        className="rounded-md bg-orange-400 px-3 py-1 text-xs font-semibold text-black disabled:opacity-40"
+                        className="veil-press veil-hover-glow rounded-md bg-orange-400 px-3 py-1 text-xs font-semibold text-black disabled:opacity-40"
                       >
                         {buying === a.id ? "…" : "Buy"}
                       </button>
@@ -1768,6 +1780,11 @@ function ProfileModal({
       <div className="flex flex-col gap-5">
         <div className="flex items-center gap-4">
           <div className="relative">
+            {/* mega tier: spinning dashed halo around the avatar */}
+            <span
+              aria-hidden
+              className="veil-ring-spin pointer-events-none absolute -inset-1 rounded-full border-2 border-dashed border-orange-400/50"
+            />
             <AvatarWithAccessory
               account={{
                 avatarColor: account.avatarColor,
@@ -1781,7 +1798,7 @@ function ProfileModal({
             <button
               onClick={() => fileRef.current?.click()}
               disabled={processing}
-              className="absolute -bottom-1 -right-1 grid h-7 w-7 place-items-center rounded-full border-2 border-black/60 bg-orange-400 text-black disabled:opacity-60"
+              className="veil-hover-bounce absolute -bottom-1 -right-1 grid h-7 w-7 place-items-center rounded-full border-2 border-black/60 bg-orange-400 text-black disabled:opacity-60"
               title="Upload new picture (auto-resized to 256×256)"
             >
               {processing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
@@ -1796,10 +1813,10 @@ function ProfileModal({
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <span className="text-lg font-semibold">{displayName({ displayName: displayNameInput, username: account.username })}</span>
+              <span className="veil-text-shine text-lg font-semibold">{displayName({ displayName: displayNameInput, username: account.username })}</span>
               {roleLabel(account) && (
                 <span
-                  className="rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase text-white"
+                  className="veil-pop-in veil-stagger-2 veil-hover-wobble rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase text-white"
                   style={{ backgroundColor: roleColor(account) }}
                 >
                   {roleLabel(account)}
@@ -1807,7 +1824,7 @@ function ProfileModal({
               )}
             </div>
             <span className="text-xs text-white/50">@{account.username}</span>
-            {account.tag && <div className="mt-1"><TagBadge tag={account.tag} color={account.tagColor} /></div>}
+            {account.tag && <div className="mt-1"><TagBadge tag={account.tag} color={account.tagColor} className="veil-pop-in veil-stagger-3 veil-hover-wobble" /></div>}
           </div>
         </div>
 
@@ -1818,20 +1835,20 @@ function ProfileModal({
             onChange={(e) => setBio(e.target.value)}
             rows={3}
             placeholder="Tell others about yourself…"
-            className="w-full resize-none rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm outline-none focus:border-orange-400/50"
+            className="veil-focus-bloom w-full resize-none rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm outline-none focus:border-orange-400/50"
           />
           <div className="mt-1 text-right text-[10px] text-white/40">{bio.length}/500</div>
         </div>
 
-        <div className="flex items-center justify-between rounded-xl border border-white/10 bg-black/20 px-4 py-2 text-sm">
+        <div key={account.coins} className="veil-level-flash flex items-center justify-between rounded-xl border border-white/10 bg-black/20 px-4 py-2 text-sm">
           <span className="text-white/70">Veil Coin balance</span>
-          <span className="font-semibold text-orange-300">🪙 {account.coins}</span>
+          <span key={account.coins} className="veil-coin-flip font-semibold text-orange-300">🪙 {account.coins}</span>
         </div>
 
         <button
           disabled={saving}
           onClick={() => void save()}
-          className="flex items-center justify-center gap-2 rounded-lg bg-orange-400 px-4 py-2 text-sm font-semibold text-black disabled:opacity-50"
+          className="veil-press veil-hover-glow flex items-center justify-center gap-2 rounded-lg bg-orange-400 px-4 py-2 text-sm font-semibold text-black disabled:opacity-50"
         >
           {saving && <Loader2 className="h-4 w-4 animate-spin" />}
           Save changes
@@ -1889,10 +1906,10 @@ function UserProfileModal({
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="truncate text-lg font-semibold">{displayName(who)}</span>
+              <span className="veil-text-shine truncate text-lg font-semibold">{displayName(who)}</span>
               {roleLabel(who) && (
                 <span
-                  className="rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase text-white"
+                  className="veil-pop-in veil-stagger-2 veil-hover-wobble rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase text-white"
                   style={{ backgroundColor: roleColor(who) }}
                 >
                   {roleLabel(who)}
@@ -1902,14 +1919,14 @@ function UserProfileModal({
             <div className="mt-0.5 text-xs text-white/50">@{who.username}</div>
             {who.tag && (
               <div className="mt-1.5">
-                <TagBadge tag={who.tag} color={who.tagColor} />
+                <TagBadge tag={who.tag} color={who.tagColor} className="veil-pop-in veil-stagger-3 veil-hover-wobble" />
               </div>
             )}
           </div>
         </div>
 
         {/* Bio — the point of the card */}
-        <div className="rounded-xl border border-white/10 bg-black/30 p-3.5">
+        <div className="veil-slide-up-pop veil-stagger-1 rounded-xl border border-white/10 bg-black/30 p-3.5">
           <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-white/40">
             Bio
           </p>
@@ -1936,17 +1953,17 @@ function UserProfileModal({
 
         {/* Facts strip */}
         <div className="grid grid-cols-3 gap-2">
-          <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-center">
+          <div className="veil-slide-up-pop veil-stagger-2 rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-center">
             <p className="text-[10px] uppercase tracking-wider text-white/40">Coins</p>
             <p className="mt-0.5 text-sm font-semibold text-orange-300">🪙 {who.coins}</p>
           </div>
-          <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-center">
+          <div className="veil-slide-up-pop veil-stagger-3 rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-center">
             <p className="text-[10px] uppercase tracking-wider text-white/40">Status</p>
             <p className={`mt-0.5 text-sm font-semibold ${online ? "text-emerald-300" : "text-white/50"}`}>
               {online ? "Online" : "Offline"}
             </p>
           </div>
-          <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-center">
+          <div className="veil-slide-up-pop veil-stagger-4 rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-center">
             <p className="text-[10px] uppercase tracking-wider text-white/40">Joined</p>
             <p className="mt-0.5 text-sm font-semibold text-white/80">{joined}</p>
           </div>
@@ -1955,7 +1972,7 @@ function UserProfileModal({
         {isMe && (
           <button
             onClick={onEdit}
-            className="flex items-center justify-center gap-2 rounded-lg border border-orange-400/40 bg-orange-400/10 px-4 py-2 text-sm font-semibold text-orange-300 transition hover:bg-orange-400/20"
+            className="veil-press veil-hover-glow flex items-center justify-center gap-2 rounded-lg border border-orange-400/40 bg-orange-400/10 px-4 py-2 text-sm font-semibold text-orange-300 transition hover:bg-orange-400/20"
           >
             <Camera className="h-4 w-4" /> Edit your profile
           </button>
@@ -2054,15 +2071,15 @@ function ExtensionsModal({
       maxWidth="max-w-xl"
     >
       <div className="space-y-2">
-        {EXTENSION_DEFS.map((ext) => {
+        {EXTENSION_DEFS.map((ext, ei) => {
           const enabled = state[ext.id]
           return (
             <div
               key={ext.id}
-              className="flex items-center justify-between rounded-xl border border-white/10 bg-black/20 p-3"
+              className={`veil-slide-left-pop veil-stagger-${(ei % 8) + 1} veil-hover-lift flex items-center justify-between rounded-xl border border-white/10 bg-black/20 p-3`}
             >
               <div className="flex items-center gap-3">
-                <div className="grid h-9 w-9 place-items-center rounded-lg bg-white/10 text-orange-300">
+                <div className="veil-hover-spin grid h-9 w-9 place-items-center rounded-lg bg-white/10 text-orange-300">
                   {ext.icon}
                 </div>
                 <div className="flex flex-col">
@@ -2081,7 +2098,7 @@ function ExtensionsModal({
                 role="switch"
                 aria-checked={enabled}
                 onClick={() => onToggle(ext.id, !enabled)}
-                className={`relative h-6 w-11 rounded-full transition-colors ${
+                className={`veil-press relative h-6 w-11 rounded-full transition-colors ${
                   enabled ? "bg-orange-400" : "bg-white/15"
                 }`}
               >
@@ -2161,10 +2178,10 @@ function TransferModal({
       onClose={onClose}
     >
       <div className="space-y-4">
-        <div className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm">
+        <div key={account.coins} className="veil-level-flash rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm">
           <div className="flex justify-between">
             <span className="text-white/70">Your balance</span>
-            <span className="font-semibold text-orange-300">🪙 {account.coins}</span>
+            <span key={account.coins} className="veil-coin-flip font-semibold text-orange-300">🪙 {account.coins}</span>
           </div>
         </div>
 
@@ -2177,7 +2194,7 @@ function TransferModal({
             autoCapitalize="none"
             autoCorrect="off"
             list="member-usernames"
-            className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm outline-none focus:border-orange-400/50"
+            className="veil-focus-bloom w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm outline-none focus:border-orange-400/50"
           />
           <datalist id="member-usernames">
             {otherMembers.map((m) => (
@@ -2188,11 +2205,11 @@ function TransferModal({
           </datalist>
           {otherMembers.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-1.5">
-              {otherMembers.slice(0, 8).map((m) => (
+              {otherMembers.slice(0, 8).map((m, mi) => (
                 <button
                   key={m.id}
                   onClick={() => setToUsername(m.username)}
-                  className="flex items-center gap-1 rounded-full bg-white/5 px-2 py-1 text-xs hover:bg-white/10"
+                  className={`veil-pop-in veil-stagger-${(mi % 8) + 1} flex items-center gap-1 rounded-full bg-white/5 px-2 py-1 text-xs hover:bg-white/10`}
                 >
                   <AvatarWithAccessory
                     account={m}
@@ -2213,14 +2230,14 @@ function TransferModal({
             max={account.coins}
             value={amount}
             onChange={(e) => setAmount(Math.max(0, Math.floor(Number(e.target.value) || 0)))}
-            className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm outline-none focus:border-orange-400/50"
+            className="veil-focus-bloom w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm outline-none focus:border-orange-400/50"
           />
           <div className="mt-2 flex gap-1.5">
             {[10, 50, 100, 500].map((n) => (
               <button
                 key={n}
                 onClick={() => setAmount(n)}
-                className="rounded-md bg-white/5 px-2 py-1 text-xs hover:bg-white/10"
+                className="veil-hover-bounce veil-press rounded-md bg-white/5 px-2 py-1 text-xs hover:bg-white/10"
               >
                 🪙 {n}
               </button>
@@ -2231,7 +2248,7 @@ function TransferModal({
         <button
           disabled={sending || amount < 1 || !toUsername.trim()}
           onClick={() => void send()}
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-orange-400 px-4 py-2 text-sm font-semibold text-black disabled:opacity-50"
+          className="veil-press veil-hover-glow flex w-full items-center justify-center gap-2 rounded-lg bg-orange-400 px-4 py-2 text-sm font-semibold text-black disabled:opacity-50"
         >
           {sending && <Loader2 className="h-4 w-4 animate-spin" />}
           Send 🪙 {amount || 0}
@@ -2308,10 +2325,10 @@ function InviteModal({
             In here now — {dm.members.length}
           </p>
           <div className="flex flex-wrap gap-1">
-            {dm.members.map((m) => (
+            {dm.members.map((m, mi) => (
               <span
                 key={m.id}
-                className={`flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[11px] ${
+                className={`veil-pop-in veil-stagger-${(mi % 8) + 1} flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[11px] ${
                   m.id === me.id
                     ? "border-orange-400/40 bg-orange-400/10 text-orange-200"
                     : "border-white/10 bg-white/[0.04] text-white/70"
@@ -2336,10 +2353,10 @@ function InviteModal({
               Your friends
             </p>
             <div className="veil-scroll-slim max-h-40 space-y-0.5 overflow-y-auto rounded-lg border border-white/10">
-              {candidates.map((f) => (
+              {candidates.map((f, fi) => (
                 <label
                   key={f.id}
-                  className="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-xs hover:bg-white/5"
+                  className={`veil-slide-right-pop veil-stagger-${(fi % 8) + 1} flex cursor-pointer items-center gap-2 px-2 py-1.5 text-xs hover:bg-white/5`}
                 >
                   <input
                     type="checkbox"
@@ -2384,7 +2401,7 @@ function InviteModal({
             }}
             placeholder="@username, @username…"
             autoCapitalize="none"
-            className="w-full rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-sm outline-none focus:border-orange-400/50"
+            className="veil-focus-bloom w-full rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-sm outline-none focus:border-orange-400/50"
           />
         </div>
 
@@ -2405,7 +2422,7 @@ function InviteModal({
           <button
             onClick={() => void invite()}
             disabled={busy || targets.length === 0}
-            className="flex items-center gap-1.5 rounded-lg bg-orange-400 px-3 py-1.5 text-sm font-semibold text-black disabled:opacity-40"
+            className="veil-press veil-hover-glow flex items-center gap-1.5 rounded-lg bg-orange-400 px-3 py-1.5 text-sm font-semibold text-black disabled:opacity-40"
           >
             {busy ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -2442,7 +2459,7 @@ function PinnedPanel({
         <span className="flex items-center gap-1.5 text-sm font-semibold text-white">
           <Pin className="h-3.5 w-3.5 text-orange-400" /> Pinned messages
         </span>
-        <button onClick={onClose} className="text-white/50 hover:text-white">
+        <button onClick={onClose} className="veil-hover-wobble text-white/50 hover:text-white">
           <X className="h-4 w-4" />
         </button>
       </div>
@@ -2452,8 +2469,8 @@ function PinnedPanel({
             No pinned messages in this channel yet.
           </p>
         ) : (
-          messages.slice(0, 12).map((m) => (
-            <div key={m.id} className="rounded-lg border border-white/5 bg-black/30 p-2 text-xs">
+          messages.slice(0, 12).map((m, pi) => (
+            <div key={m.id} className={`veil-slide-right-pop veil-stagger-${(pi % 8) + 1} rounded-lg border border-white/5 bg-black/30 p-2 text-xs`}>
               <div className="flex items-center gap-1.5">
                 <AvatarWithAccessory
                   account={{
@@ -2518,11 +2535,11 @@ function NotificationsPanel({
         <div className="flex items-center gap-1">
           <button
             onClick={onClear}
-            className="rounded-md px-2 py-0.5 text-xs text-white/60 hover:bg-white/10"
+            className="veil-hover-wobble rounded-md px-2 py-0.5 text-xs text-white/60 hover:bg-white/10"
           >
             Clear
           </button>
-          <button onClick={onClose} className="text-white/50 hover:text-white">
+          <button onClick={onClose} className="veil-hover-wobble text-white/50 hover:text-white">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -2531,10 +2548,10 @@ function NotificationsPanel({
         {notifications.length === 0 ? (
           <p className="py-6 text-center text-xs text-white/40">All caught up.</p>
         ) : (
-          notifications.map((n) => (
+          notifications.map((n, ni) => (
             <div
               key={n.id}
-              className={`rounded-lg border p-2 text-xs ${
+              className={`veil-slide-right-pop veil-stagger-${(ni % 8) + 1} rounded-lg border p-2 text-xs ${
                 n.read
                   ? "border-white/5 bg-black/20"
                   : n.kind === "friend_request"
@@ -2545,7 +2562,7 @@ function NotificationsPanel({
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-1 font-medium text-white">
                   {n.kind === "friend_request" && (
-                    <UserPlus className="h-3 w-3 text-emerald-300" />
+                    <UserPlus className="veil-bounce-soft h-3 w-3 text-emerald-300" />
                   )}
                   {n.kind === "friend_accepted" && (
                     <Check className="h-3 w-3 text-emerald-300" />
@@ -2559,13 +2576,13 @@ function NotificationsPanel({
                 <div className="mt-1.5 flex gap-1.5">
                   <button
                     onClick={() => onFriendAccept?.(n.requestId!)}
-                    className="flex flex-1 items-center justify-center gap-1 rounded-md bg-emerald-500/90 px-2 py-1 text-[11px] font-semibold text-black hover:bg-emerald-400"
+                    className="veil-hover-bounce veil-press flex flex-1 items-center justify-center gap-1 rounded-md bg-emerald-500/90 px-2 py-1 text-[11px] font-semibold text-black hover:bg-emerald-400"
                   >
                     <Check className="h-3 w-3" /> Accept
                   </button>
                   <button
                     onClick={() => onFriendDecline?.(n.requestId!)}
-                    className="flex-1 rounded-md border border-white/10 px-2 py-1 text-[11px] font-medium text-white/60 hover:bg-white/10 hover:text-white"
+                    className="veil-hover-wobble veil-press flex-1 rounded-md border border-white/10 px-2 py-1 text-[11px] font-medium text-white/60 hover:bg-white/10 hover:text-white"
                   >
                     Decline
                   </button>
@@ -2704,7 +2721,7 @@ function BackupPanel({
         <span className="flex items-center gap-1.5 text-sm font-semibold text-white">
           <DatabaseBackup className="h-3.5 w-3.5 text-emerald-400" /> Chat backups
         </span>
-        <button onClick={onClose} className="text-white/50 hover:text-white">
+        <button onClick={onClose} className="veil-hover-wobble text-white/50 hover:text-white">
           <X className="h-4 w-4" />
         </button>
       </div>
@@ -2738,15 +2755,15 @@ function BackupPanel({
 
           {/* Snapshot facts */}
           <div className="grid grid-cols-3 gap-2">
-            <div className="rounded-lg border border-white/5 bg-black/20 px-2 py-1.5 text-center">
+            <div className="veil-slide-up-pop veil-stagger-1 rounded-lg border border-white/5 bg-black/20 px-2 py-1.5 text-center">
               <p className="text-[9px] uppercase tracking-wide text-white/40">Messages</p>
               <p className="text-sm font-semibold text-white/90">{status.lastCounts?.messages ?? status.dbCounts.messages}</p>
             </div>
-            <div className="rounded-lg border border-white/5 bg-black/20 px-2 py-1.5 text-center">
+            <div className="veil-slide-up-pop veil-stagger-2 rounded-lg border border-white/5 bg-black/20 px-2 py-1.5 text-center">
               <p className="text-[9px] uppercase tracking-wide text-white/40">Accounts</p>
               <p className="text-sm font-semibold text-white/90">{status.lastCounts?.accounts ?? status.dbCounts.accounts}</p>
             </div>
-            <div className="rounded-lg border border-white/5 bg-black/20 px-2 py-1.5 text-center">
+            <div className="veil-slide-up-pop veil-stagger-3 rounded-lg border border-white/5 bg-black/20 px-2 py-1.5 text-center">
               <p className="text-[9px] uppercase tracking-wide text-white/40">Snapshots</p>
               <p className="text-sm font-semibold text-white/90">{status.historyCount}</p>
             </div>
@@ -2817,7 +2834,7 @@ function BackupPanel({
             <button
               onClick={() => void backupNow()}
               disabled={busy !== "none"}
-              className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-orange-400 px-3 py-2 text-xs font-semibold text-black transition hover:bg-orange-300 disabled:opacity-50"
+              className="veil-press veil-hover-glow flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-orange-400 px-3 py-2 text-xs font-semibold text-black transition hover:bg-orange-300 disabled:opacity-50"
             >
               {busy === "backup" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <DatabaseBackup className="h-3.5 w-3.5" />}
               Back up now
@@ -2826,7 +2843,7 @@ function BackupPanel({
               <button
                 onClick={() => setConfirming(true)}
                 disabled={busy !== "none"}
-                className="flex items-center justify-center gap-1.5 rounded-lg border border-white/15 px-3 py-2 text-xs font-semibold text-white/80 transition hover:border-white/30 hover:text-white disabled:opacity-50"
+                className="veil-press flex items-center justify-center gap-1.5 rounded-lg border border-white/15 px-3 py-2 text-xs font-semibold text-white/80 transition hover:border-white/30 hover:text-white disabled:opacity-50"
                 title="Pull the latest snapshot back from the jsDelivr CDN"
               >
                 <RotateCcw className="h-3.5 w-3.5" />
@@ -2836,7 +2853,7 @@ function BackupPanel({
               <button
                 onClick={() => void restoreNow()}
                 disabled={busy !== "none"}
-                className="flex items-center justify-center gap-1.5 rounded-lg border border-red-400/40 bg-red-500/15 px-3 py-2 text-xs font-semibold text-red-200 transition hover:bg-red-500/25 disabled:opacity-50"
+                className="veil-press veil-hover-glow flex items-center justify-center gap-1.5 rounded-lg border border-red-400/40 bg-red-500/15 px-3 py-2 text-xs font-semibold text-red-200 transition hover:bg-red-500/25 disabled:opacity-50"
               >
                 {busy === "restore" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RotateCcw className="h-3.5 w-3.5" />}
                 Sure?
@@ -2909,7 +2926,7 @@ function SearchPanel({
             <button
               key={m.id}
               onClick={() => onJump(m.id)}
-              className="block w-full rounded-lg border border-white/5 bg-black/30 p-2 text-left text-xs hover:bg-black/40"
+              className="veil-hover-glow block w-full rounded-lg border border-white/5 bg-black/30 p-2 text-left text-xs hover:bg-black/40"
             >
               <div className="flex items-center gap-1.5">
                 <span className="font-medium" style={{ color: roleColor(m.account) }}>
@@ -3060,7 +3077,7 @@ export function ModPanel({
               placeholder="@username"
               autoCapitalize="none"
               list="member-mod-usernames"
-              className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm outline-none focus:border-orange-400/50"
+              className="veil-focus-bloom w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm outline-none focus:border-orange-400/50"
             />
             <datalist id="member-mod-usernames">
               {members.map((m) => (
@@ -3076,7 +3093,7 @@ export function ModPanel({
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="Rule violation, spam, etc."
-              className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm outline-none focus:border-orange-400/50"
+              className="veil-focus-bloom w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm outline-none focus:border-orange-400/50"
             />
           </div>
         </div>
@@ -3089,7 +3106,7 @@ export function ModPanel({
                 key={a.id}
                 disabled={busy || disabled || !target.trim()}
                 onClick={a.onClick}
-                className="flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-white disabled:opacity-40"
+                className="veil-press veil-hover-glow flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-white disabled:opacity-40"
                 style={{ backgroundColor: a.color + "33", border: `1px solid ${a.color}` }}
               >
                 {a.icon}
@@ -3111,12 +3128,12 @@ export function ModPanel({
               value={messageId}
               onChange={(e) => setMessageId(e.target.value)}
               placeholder="Message ID"
-              className="flex-1 rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm outline-none focus:border-orange-400/50"
+              className="veil-focus-bloom flex-1 rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm outline-none focus:border-orange-400/50"
             />
             <button
               disabled={busy || !messageId.trim()}
               onClick={() => void call("delete_message", undefined, messageId)}
-              className="flex items-center gap-1.5 rounded-lg bg-red-500/80 px-3 py-2 text-xs font-semibold text-white disabled:opacity-40"
+              className="veil-press veil-hover-glow flex items-center gap-1.5 rounded-lg bg-red-500/80 px-3 py-2 text-xs font-semibold text-white disabled:opacity-40"
             >
               <Trash2 className="h-3.5 w-3.5" />
               Delete
@@ -3130,15 +3147,15 @@ export function ModPanel({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Filter members…"
-              className="flex-1 rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm outline-none focus:border-orange-400/50"
+              className="veil-focus-bloom flex-1 rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm outline-none focus:border-orange-400/50"
             />
             <span className="text-xs text-white/50">{filtered.length} shown</span>
           </div>
           <div className="max-h-60 space-y-1 overflow-y-auto rounded-lg border border-white/10 bg-black/20 p-2">
-            {filtered.map((m) => (
+            {filtered.map((m, mi) => (
               <div
                 key={m.id}
-                className={`flex items-center justify-between rounded-md px-2 py-1.5 text-xs ${
+                className={`veil-slide-left-pop veil-stagger-${(mi % 8) + 1} flex items-center justify-between rounded-md px-2 py-1.5 text-xs ${
                   m.banned || m.ipBanned
                     ? "bg-red-500/10 opacity-70"
                     : m.muted
@@ -3170,7 +3187,7 @@ export function ModPanel({
                   {m.ipBanned && <span className="text-[9px] text-red-400">IP-BAN</span>}
                   <button
                     onClick={() => setTarget(m.username)}
-                    className="rounded bg-white/10 px-1.5 py-0.5 text-[10px] hover:bg-white/20"
+                    className="veil-hover-bounce rounded bg-white/10 px-1.5 py-0.5 text-[10px] hover:bg-white/20"
                   >
                     select
                   </button>
@@ -3233,11 +3250,11 @@ function PlayerList({
         whileHover={{ x: 3 }}
         onClick={() => onOpenProfile(m.id)}
         title={`${displayName(m)} — view profile`}
-        className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left outline-none ring-orange-400/60 transition focus-visible:ring-2 ${
+        className={`veil-hover-glow flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left outline-none ring-orange-400/60 transition focus-visible:ring-2 ${
           isMe ? "bg-orange-400/10" : "hover:bg-white/5"
         }`}
       >
-        <div className="relative">
+        <div className={`veil-swirl-in veil-stagger-${(idx % 8) + 1} relative`}>
           <AvatarWithAccessory account={m} size={28} />
           <span
             className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-black/60 ${
@@ -3245,7 +3262,7 @@ function PlayerList({
             }`}
           />
         </div>
-        <div className="min-w-0 flex-1">
+        <div className={`veil-slide-left-pop veil-stagger-${(idx % 8) + 1} min-w-0 flex-1`}>
           <div className="flex items-center gap-1.5">
             <span
               className="truncate text-sm font-medium"
@@ -3283,7 +3300,7 @@ function PlayerList({
         </span>
         <button
           onClick={onClose}
-          className="rounded p-1 text-white/50 hover:bg-white/10 hover:text-white"
+          className="veil-hover-wobble rounded p-1 text-white/50 hover:bg-white/10 hover:text-white"
         >
           <X className="h-3.5 w-3.5" />
         </button>
@@ -3293,7 +3310,7 @@ function PlayerList({
         style={{ scrollbarWidth: "thin" }}
       >
         <section>
-          <h4 className="mb-1 px-1 text-[10px] font-semibold uppercase tracking-wide text-white/40">
+          <h4 className="veil-text-shine mb-1 px-1 text-[10px] font-semibold uppercase tracking-wide text-white/40">
             Online — {buckets.online.length}
           </h4>
           <div className="space-y-0.5">
@@ -3307,7 +3324,7 @@ function PlayerList({
           </div>
         </section>
         <section>
-          <h4 className="mb-1 px-1 text-[10px] font-semibold uppercase tracking-wide text-white/40">
+          <h4 className="veil-text-shine mb-1 px-1 text-[10px] font-semibold uppercase tracking-wide text-white/40">
             Offline — {buckets.offline.length}
           </h4>
           <div className="space-y-0.5">
@@ -3333,7 +3350,7 @@ function MusicBar({ onClose }: { onClose: () => void }) {
       className="border-t border-white/10 bg-[#0d0d1f] text-white"
     >
       <div className="flex items-center gap-3 px-3 py-2">
-        <div className="grid h-9 w-9 place-items-center rounded-md bg-gradient-to-br from-emerald-500 to-emerald-700 text-white">
+        <div className="veil-pulse-glow grid h-9 w-9 place-items-center rounded-md bg-gradient-to-br from-emerald-500 to-emerald-700 text-white">
           <Music className="h-4 w-4" />
         </div>
         <div className="flex-1 min-w-0">
@@ -3344,14 +3361,14 @@ function MusicBar({ onClose }: { onClose: () => void }) {
         </div>
         <button
           onClick={() => setExpanded((e) => !e)}
-          className="rounded-md p-1.5 text-white/60 hover:bg-white/10 hover:text-white"
+          className="veil-hover-wobble rounded-md p-1.5 text-white/60 hover:bg-white/10 hover:text-white"
           title={expanded ? "Collapse" : "Expand"}
         >
           {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
         </button>
         <button
           onClick={onClose}
-          className="rounded-md p-1.5 text-white/60 hover:bg-white/10 hover:text-white"
+          className="veil-hover-wobble rounded-md p-1.5 text-white/60 hover:bg-white/10 hover:text-white"
           title="Hide player"
         >
           <X className="h-4 w-4" />
@@ -3661,7 +3678,12 @@ const MessageRow = memo(function MessageRow({
     <div
       className={`veil-msg-row group relative flex gap-3 px-3 py-1 transition-colors hover:bg-white/[0.03] ${
         grouped ? "py-0.5" : "mt-2"
-      } ${fresh ? "veil-msg-in veil-msg-fresh" : ""}`}
+      } ${fresh ? "veil-msg-in veil-msg-fresh" : ""} ${
+        /* mega tier: directional entrance — others slide in from the left,
+         * own messages from the right (fancy-gated classes; they take the
+         * transform slot from veil-msg-in only while the setting is ON). */
+        isMe ? "veil-slide-right-pop" : "veil-slide-left-pop"
+      }`}
     >
       <div className="w-10 shrink-0">
         {!grouped && (
@@ -3693,7 +3715,7 @@ const MessageRow = memo(function MessageRow({
             <button
               type="button"
               onClick={() => onOpenProfile(msg.account.id)}
-              className="rounded text-left text-sm font-semibold outline-none ring-orange-400/60 transition hover:underline focus-visible:ring-2"
+              className="veil-hover-glow rounded text-left text-sm font-semibold outline-none ring-orange-400/60 transition hover:underline focus-visible:ring-2"
               style={{ color: roleColor(msg.account) }}
             >
               {displayName(msg.account)}
@@ -3709,7 +3731,7 @@ const MessageRow = memo(function MessageRow({
                 {roleLabel(msg.account)}
               </span>
             )}
-            <span className="text-[10px] text-white/40">
+            <span className="veil-hover-glow text-[10px] text-white/40">
               {formatTime(msg.createdAt)}
             </span>
           </div>
@@ -3759,7 +3781,7 @@ const MessageRow = memo(function MessageRow({
                   }
                 }}
                 rows={3}
-                className="w-full resize-none rounded-lg border border-white/15 bg-black/40 px-2.5 py-1.5 text-sm text-white outline-none focus:border-orange-400/50 disabled:opacity-60"
+                className="veil-focus-bloom w-full resize-none rounded-lg border border-white/15 bg-black/40 px-2.5 py-1.5 text-sm text-white outline-none focus:border-orange-400/50 disabled:opacity-60"
               />
               <div className="mt-1.5 flex items-center justify-end gap-1.5">
                 <span className="mr-auto text-[10px] text-white/35">
@@ -3769,7 +3791,7 @@ const MessageRow = memo(function MessageRow({
                   type="button"
                   onClick={onEditCancel}
                   disabled={editBusy}
-                  className="rounded-md px-2.5 py-1 text-xs font-medium text-white/60 hover:bg-white/10 hover:text-white disabled:opacity-40"
+                  className="veil-hover-wobble rounded-md px-2.5 py-1 text-xs font-medium text-white/60 hover:bg-white/10 hover:text-white disabled:opacity-40"
                 >
                   Cancel
                 </button>
@@ -3777,7 +3799,7 @@ const MessageRow = memo(function MessageRow({
                   type="button"
                   onClick={onEditSave}
                   disabled={editBusy || !editDraft.trim()}
-                  className="flex items-center gap-1 rounded-md bg-orange-400 px-2.5 py-1 text-xs font-semibold text-black hover:opacity-90 disabled:opacity-40"
+                  className="veil-press veil-hover-glow flex items-center gap-1 rounded-md bg-orange-400 px-2.5 py-1 text-xs font-semibold text-black hover:opacity-90 disabled:opacity-40"
                 >
                   {editBusy ? (
                     <Loader2 className="h-3 w-3 animate-spin" />
@@ -3829,10 +3851,10 @@ const MessageRow = memo(function MessageRow({
                       : "border-white/10 bg-white/[0.05] text-white/60 hover:border-white/20 hover:bg-white/10"
                   }`}
                 >
-                  <span className="text-[12px] leading-none">{r.emoji}</span>
+                  <span className="veil-hover-bounce text-[12px] leading-none">{r.emoji}</span>
                   <span
                     key={r.usernames.length}
-                    className="veil-count-bump font-semibold tabular-nums"
+                    className="veil-count-bump veil-hover-wobble font-semibold tabular-nums"
                   >
                     {r.usernames.length}
                   </span>
@@ -6114,7 +6136,7 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
               {totalUnread > 0 && (
                 <span
                   key={totalUnread}
-                  className="veil-badge-pop grid h-4 min-w-4 place-items-center rounded-full bg-orange-400 px-1 text-[9px] font-bold text-black"
+                  className="veil-badge-pop veil-bounce-soft grid h-4 min-w-4 place-items-center rounded-full bg-orange-400 px-1 text-[9px] font-bold text-black"
                 >
                   {totalUnread > 99 ? "99+" : totalUnread}
                 </span>
@@ -6133,7 +6155,7 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                   exit={{ opacity: 0, y: -4 }}
                   className="veil-scroll-slim absolute left-0 top-9 z-30 max-h-[70vh] w-72 overflow-y-auto rounded-xl border border-white/10 bg-zinc-950/92 backdrop-blur-xl p-1 shadow-2xl"
                 >
-                  <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-white/40">
+                  <div className="veil-text-shine px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-white/40">
                     Channels
                   </div>
                   {CHANNELS.map((c, ci) => {
@@ -6150,7 +6172,9 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                           setChannelSwitcher(false)
                         }}
                         className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm ${
-                          channelId === c.id ? "bg-white/10" : "hover:bg-white/5"
+                          channelId === c.id
+                            ? "veil-pulse-glow bg-white/10"
+                            : "veil-hover-glow hover:bg-white/5"
                         }`}
                       >
                         <Hash className="h-3.5 w-3.5 text-white/40" />
@@ -6160,7 +6184,7 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                         ) : unread[c.id] > 0 ? (
                           <span
                             key={unread[c.id]}
-                            className="veil-badge-pop grid h-4 min-w-4 place-items-center rounded-full bg-orange-400 px-1 text-[9px] font-bold text-black"
+                            className="veil-badge-pop veil-bounce-soft grid h-4 min-w-4 place-items-center rounded-full bg-orange-400 px-1 text-[9px] font-bold text-black"
                           >
                             {unread[c.id] > 99 ? "99+" : unread[c.id]}
                           </span>
@@ -6202,7 +6226,7 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                         onChange={(e) => setGroupName(e.target.value)}
                         placeholder="Group name (e.g. Squad)"
                         maxLength={64}
-                        className="mb-1.5 w-full rounded-md border border-white/10 bg-black/40 px-2 py-1 text-xs outline-none focus:border-orange-400/50"
+                        className="veil-focus-bloom mb-1.5 w-full rounded-md border border-white/10 bg-black/40 px-2 py-1 text-xs outline-none focus:border-orange-400/50"
                       />
                       {friends.length > 0 && (
                         <div className="veil-scroll-slim mb-1.5 max-h-28 overflow-y-auto rounded-md border border-white/10">
@@ -6246,7 +6270,7 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                         <button
                           onClick={() => void createGroup()}
                           disabled={creatingGroup}
-                          className="flex items-center gap-1 rounded-md bg-orange-400 px-2 py-1 text-xs font-semibold text-black disabled:opacity-50"
+                          className="veil-press flex items-center gap-1 rounded-md bg-orange-400 px-2 py-1 text-xs font-semibold text-black disabled:opacity-50"
                         >
                           {creatingGroup ? (
                             <Loader2 className="h-3 w-3 animate-spin" />
@@ -6270,11 +6294,11 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                         onKeyDown={(e) => e.key === "Enter" && void createDm()}
                         placeholder="@username"
                         autoCapitalize="none"
-                        className="flex-1 rounded-md border border-white/10 bg-black/40 px-2 py-1 text-xs outline-none"
+                        className="veil-focus-bloom flex-1 rounded-md border border-white/10 bg-black/40 px-2 py-1 text-xs outline-none"
                       />
                       <button
                         onClick={() => void createDm()}
-                        className="rounded-md bg-orange-400 px-2 py-1 text-xs font-semibold text-black"
+                        className="veil-press rounded-md bg-orange-400 px-2 py-1 text-xs font-semibold text-black"
                       >
                         Open
                       </button>
@@ -6307,7 +6331,9 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                             setChannelSwitcher(false)
                           }}
                           className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm ${
-                            channelId === d.id ? "bg-white/10" : "hover:bg-white/5"
+                            channelId === d.id
+                              ? "veil-pulse-glow bg-white/10"
+                              : "veil-hover-glow hover:bg-white/5"
                           }`}
                         >
                           {d.isGroup ? (
@@ -6326,7 +6352,7 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                           {unread[d.id] > 0 && (
                             <span
                               key={unread[d.id]}
-                              className="veil-badge-pop grid h-4 min-w-4 place-items-center rounded-full bg-orange-400 px-1 text-[9px] font-bold text-black"
+                              className="veil-badge-pop veil-bounce-soft grid h-4 min-w-4 place-items-center rounded-full bg-orange-400 px-1 text-[9px] font-bold text-black"
                             >
                               {unread[d.id] > 99 ? "99+" : unread[d.id]}
                             </span>
@@ -6342,7 +6368,7 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                       {friendRequestsIn.length > 0 && (
                         <button
                           onClick={() => setShowFriendMenu(false)}
-                          className="grid h-4 min-w-4 place-items-center rounded-full bg-orange-400 px-1 text-[9px] font-bold text-black"
+                          className="veil-bounce-soft grid h-4 min-w-4 place-items-center rounded-full bg-orange-400 px-1 text-[9px] font-bold text-black"
                           title={`${friendRequestsIn.length} friend request${friendRequestsIn.length === 1 ? "" : "s"} waiting`}
                         >
                           {friendRequestsIn.length}
@@ -6366,12 +6392,12 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                           onKeyDown={(e) => e.key === "Enter" && void addFriend()}
                           placeholder="@username"
                           autoCapitalize="none"
-                          className="flex-1 rounded-md border border-white/10 bg-black/40 px-2 py-1 text-xs outline-none"
+                          className="veil-focus-bloom flex-1 rounded-md border border-white/10 bg-black/40 px-2 py-1 text-xs outline-none"
                         />
                         <button
                           onClick={() => void addFriend()}
                           disabled={friendBusy}
-                          className="flex items-center gap-1 rounded-md bg-orange-400 px-2 py-1 text-xs font-semibold text-black disabled:opacity-50"
+                          className="veil-press veil-hover-glow flex items-center gap-1 rounded-md bg-orange-400 px-2 py-1 text-xs font-semibold text-black disabled:opacity-50"
                         >
                           {friendBusy ? (
                             <Loader2 className="h-3 w-3 animate-spin" />
@@ -6390,10 +6416,10 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                   {/* Incoming friend requests — accept / decline inline */}
                   {friendRequestsIn.length > 0 && (
                     <div className="mb-1 space-y-1 px-1">
-                      {friendRequestsIn.map((r) => (
+                      {friendRequestsIn.map((r, ri) => (
                         <div
                           key={r.id}
-                          className="flex items-center gap-2 rounded-md border border-emerald-400/20 bg-emerald-400/5 px-2 py-1.5"
+                          className={`veil-slide-right-pop veil-stagger-${(ri % 8) + 1} flex items-center gap-2 rounded-md border border-emerald-400/20 bg-emerald-400/5 px-2 py-1.5`}
                         >
                           <span
                             className="grid h-5 w-5 shrink-0 place-items-center rounded-full text-[9px] font-bold text-white"
@@ -6411,14 +6437,14 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                           </span>
                           <button
                             onClick={() => void respondFriend(r.id, "accept")}
-                            className="grid h-6 w-6 shrink-0 place-items-center rounded-md bg-emerald-500/90 text-black hover:bg-emerald-400"
+                            className="veil-hover-bounce veil-press grid h-6 w-6 shrink-0 place-items-center rounded-md bg-emerald-500/90 text-black hover:bg-emerald-400"
                             title={`Accept @${r.user.username}`}
                           >
                             <Check className="h-3.5 w-3.5" />
                           </button>
                           <button
                             onClick={() => void respondFriend(r.id, "decline")}
-                            className="grid h-6 w-6 shrink-0 place-items-center rounded-md border border-white/10 text-white/50 hover:bg-red-500/10 hover:text-red-300"
+                            className="veil-hover-wobble veil-press grid h-6 w-6 shrink-0 place-items-center rounded-md border border-white/10 text-white/50 hover:bg-red-500/10 hover:text-red-300"
                             title={`Decline @${r.user.username}`}
                           >
                             <X className="h-3.5 w-3.5" />
@@ -6432,10 +6458,10 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                       No friends yet. Click + to send a request.
                     </p>
                   ) : (
-                    friends.map((f) => (
+                    friends.map((f, fi) => (
                       <div
                         key={f.id}
-                        className="group flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-white/5"
+                        className={`veil-slide-right-pop veil-stagger-${(fi % 8) + 1} veil-hover-glow group flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-white/5`}
                       >
                         <span
                           className="grid h-5 w-5 shrink-0 place-items-center rounded-full text-[9px] font-bold text-white"
@@ -6449,14 +6475,14 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                             setDmTarget(f.username)
                             void createDm()
                           }}
-                          className="hidden rounded p-1 text-white/40 hover:bg-white/10 hover:text-white group-hover:block"
+                          className="veil-hover-bounce hidden rounded p-1 text-white/40 hover:bg-white/10 hover:text-white group-hover:block"
                           title="DM"
                         >
                           <MessageCircle className="h-3 w-3" />
                         </button>
                         <button
                           onClick={() => void removeFriend(f.username)}
-                          className="hidden rounded p-1 text-white/40 hover:bg-red-500/10 hover:text-red-300 group-hover:block"
+                          className="veil-hover-wobble hidden rounded p-1 text-white/40 hover:bg-red-500/10 hover:text-red-300 group-hover:block"
                           title="Remove friend"
                         >
                           <X className="h-3 w-3" />
@@ -6467,10 +6493,10 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                   {/* Outgoing requests — pending, cancellable */}
                   {friendRequestsOut.length > 0 && (
                     <div className="mt-0.5 space-y-0.5 px-1">
-                      {friendRequestsOut.map((r) => (
+                      {friendRequestsOut.map((r, roi) => (
                         <div
                           key={r.id}
-                          className="group flex w-full items-center gap-2 rounded-md px-2 py-1 text-[11px] hover:bg-white/5"
+                          className={`veil-slide-right-pop veil-stagger-${(roi % 8) + 1} group flex w-full items-center gap-2 rounded-md px-2 py-1 text-[11px] hover:bg-white/5`}
                         >
                           <Clock className="h-3 w-3 shrink-0 text-white/25" />
                           <span className="flex-1 truncate text-left text-white/40">
@@ -6550,7 +6576,8 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
               className="flex items-center gap-1 rounded-md bg-orange-400/10 px-2 py-1 text-xs font-semibold text-orange-300 hover:bg-orange-400/20"
               title="Send coins"
             >
-              🪙 {account.coins.toLocaleString()}
+              {/* keyed span — flips 720° whenever the balance changes */}
+              <span key={account.coins} className="veil-coin-flip">🪙 {account.coins.toLocaleString()}</span>
             </motion.button>
 
             {/* Daily reward */}
@@ -6561,8 +6588,8 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
             />
 
             {/* Online count */}
-            <span className="hidden items-center gap-1 rounded-md bg-white/5 px-2 py-1 text-xs text-white/60 md:flex">
-              <Circle className="h-2 w-2 fill-emerald-400 text-emerald-400" />
+            <span className="veil-hover-glow hidden items-center gap-1 rounded-md bg-white/5 px-2 py-1 text-xs text-white/60 md:flex">
+              <Circle className="veil-twinkle h-2 w-2 fill-emerald-400 text-emerald-400" />
               {presence.length} online
             </span>
 
@@ -6684,7 +6711,7 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
             )}
 
             {/* Avatar with camera */}
-            <div className="relative">
+            <div className="veil-pulse-glow relative">
               <motion.button
                 onClick={() => setShowProfile(true)}
                 whileHover={{ scale: 1.12 }}
@@ -6745,7 +6772,7 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                     <button
                       onClick={() => void loadOlder()}
                       disabled={loadingOlder}
-                      className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] font-medium text-white/60 transition-colors hover:border-white/20 hover:bg-white/10 hover:text-white disabled:opacity-50"
+                      className="veil-hover-lift flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] font-medium text-white/60 transition-colors hover:border-white/20 hover:bg-white/10 hover:text-white disabled:opacity-50"
                       title="Load the previous 100 messages"
                     >
                       {loadingOlder ? (
@@ -6761,7 +6788,7 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                   <div className="veil-rise grid place-items-center py-20 text-center text-white/40">
                     <Hash className="veil-empty-bob mb-2 h-8 w-8 opacity-50" />
                     <p className="text-sm">No messages here yet.</p>
-                    <p className="mt-1 text-xs">Be the first to say something!</p>
+                    <p className="veil-text-breathe mt-1 text-xs">Be the first to say something!</p>
                   </div>
                 ) : (
                   /* Keyed by channel — every switch re-plays a soft rise for
@@ -6818,7 +6845,7 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                       transition={{ duration: 0.24, ease: "easeOut" }}
                       className="px-4 py-1.5"
                     >
-                      <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] py-1 pl-2.5 pr-3 text-xs text-white/50 shadow-lg backdrop-blur-sm">
+                      <span className="veil-pulse-glow inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] py-1 pl-2.5 pr-3 text-xs text-white/50 shadow-lg backdrop-blur-sm">
                         <TypingDots />
                         <span className="italic">
                           {activeTyping
@@ -6853,7 +6880,7 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                   </span>
                   <button
                     onClick={() => setReplyTo(null)}
-                    className="ml-auto rounded p-0.5 text-white/40 hover:bg-white/10 hover:text-white"
+                    className="veil-hover-wobble ml-auto rounded p-0.5 text-white/40 hover:bg-white/10 hover:text-white"
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>
@@ -6919,8 +6946,9 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
               </AnimatePresence>
 
               {/* The composer — on focus a warm gradient edge sweeps the
-                  border while the glow ring holds (veil-composer-focus). */}
-              <div className="veil-composer-focus relative flex items-center gap-1.5 rounded-xl border border-white/10 bg-black/30 px-2 py-1.5 transition-[border-color,box-shadow] duration-300">
+                  border while the glow ring holds (veil-composer-focus).
+                  Mega tier adds the veil-pulse-glow breathing halo. */}
+              <div className="veil-composer-focus veil-pulse-glow relative flex items-center gap-1.5 rounded-xl border border-white/10 bg-black/30 px-2 py-1.5 transition-[border-color,box-shadow] duration-300">
                 <motion.button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={!!upload}
@@ -6931,7 +6959,7 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                   title="Attach a file (up to 300 MB) — images, videos and audio play inline"
                   aria-label="Attach a file"
                 >
-                  <Paperclip className="h-4 w-4" />
+                  <Paperclip className="veil-hover-spin h-4 w-4" />
                 </motion.button>
                 <input
                   ref={fileInputRef}
@@ -6953,7 +6981,7 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                   whileHover={{ scale: 1.08, y: -1 }}
                   whileTap={{ scale: 0.88 }}
                   transition={CHAT_POP}
-                  className={`rounded-md px-1.5 py-1 text-[10px] font-bold hover:bg-white/10 ${
+                  className={`veil-hover-glow rounded-md px-1.5 py-1 text-[10px] font-bold hover:bg-white/10 ${
                     showGif ? "text-orange-300" : "text-white/60"
                   }`}
                   title="Search GIFs"
@@ -6973,17 +7001,17 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                   }`}
                   title="Emoji"
                 >
-                  <Smile className="h-4 w-4" />
+                  <Smile className="veil-hover-wobble h-4 w-4" />
                 </motion.button>
                 <motion.button
                   onClick={() => setShowTransfer(true)}
                   whileHover={{ scale: 1.15, rotate: [0, -9, 9, 0] }}
                   whileTap={{ scale: 0.85 }}
                   transition={CHAT_POP}
-                  className="rounded-md p-1.5 text-white/60 hover:bg-white/10"
+                  className="veil-hover-glow rounded-md p-1.5 text-white/60 hover:bg-white/10"
                   title="Send coins"
                 >
-                  <Gift className="h-4 w-4" />
+                  <Gift className="veil-hover-bounce h-4 w-4" />
                 </motion.button>
                 <input
                   ref={inputRef}
@@ -7000,28 +7028,32 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                 />
                 {/* Send — swells with a breathing glow ring the moment
                     there is text to send, pops its icon ready, and squeezes
-                    on tap as the message flies. */}
-                <motion.button
-                  onClick={() => void sendMessage()}
-                  disabled={!input.trim()}
-                  whileHover={input.trim() ? { scale: 1.14, rotate: -8 } : undefined}
-                  whileTap={{ scale: 0.82 }}
-                  transition={CHAT_POP}
-                  className={`grid h-8 w-8 place-items-center rounded-md bg-orange-400 text-black transition-[opacity,box-shadow] duration-300 ${
-                    input.trim() ? "veil-send-glow" : "opacity-40"
-                  }`}
-                  title="Send"
-                >
-                  <motion.span
-                    key={input.trim() ? "armed" : "idle"}
-                    initial={{ scale: 0.55, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
+                    on tap as the message flies. Mega tier: the wrapper owns
+                    press + hover-bounce so it composes with framer's
+                    whileHover/whileTap transforms on the button itself. */}
+                <div className={`veil-press ${input.trim() ? "veil-hover-bounce" : ""}`}>
+                  <motion.button
+                    onClick={() => void sendMessage()}
+                    disabled={!input.trim()}
+                    whileHover={input.trim() ? { scale: 1.14, rotate: -8 } : undefined}
+                    whileTap={{ scale: 0.82 }}
                     transition={CHAT_POP}
-                    className="grid place-items-center"
+                    className={`grid h-8 w-8 place-items-center rounded-md bg-orange-400 text-black transition-[opacity,box-shadow] duration-300 ${
+                      input.trim() ? "veil-send-glow" : "opacity-40"
+                    }`}
+                    title="Send"
                   >
-                    <Send className="h-4 w-4" />
-                  </motion.span>
-                </motion.button>
+                    <motion.span
+                      key={input.trim() ? "armed" : "idle"}
+                      initial={{ scale: 0.55, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={CHAT_POP}
+                      className="grid place-items-center"
+                    >
+                      <Send className="h-4 w-4" />
+                    </motion.span>
+                  </motion.button>
+                </div>
               </div>
             </div>
           </main>
@@ -7329,7 +7361,7 @@ function DailyRewardButton({
       disabled={!status?.eligible || claiming}
       className={`relative flex items-center gap-1 rounded-md px-2 py-1 text-xs ${
         status?.eligible
-          ? "bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25"
+          ? "veil-bounce-soft bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25"
           : "bg-white/5 text-white/40"
       }`}
       title={
@@ -7345,7 +7377,7 @@ function DailyRewardButton({
         {status?.eligible ? "Daily" : `${status?.streak || 0}🔥`}
       </span>
       {status && status.streak > 0 && status.eligible && (
-        <span className="absolute -right-0.5 -top-0.5 grid h-3.5 min-w-3.5 place-items-center rounded-full bg-orange-400 text-[8px] font-bold text-black">
+        <span className="veil-pop-in absolute -right-0.5 -top-0.5 grid h-3.5 min-w-3.5 place-items-center rounded-full bg-orange-400 text-[8px] font-bold text-black">
           {status.streak}
         </span>
       )}

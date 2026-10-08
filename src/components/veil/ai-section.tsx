@@ -193,7 +193,7 @@ function InlineText({
           type="button"
           onClick={() => onOpenUrl(linkHref)}
           aria-label={`Open ${linkLabel} through Veil`}
-          className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/15 px-3 py-1 align-middle text-[12.5px] font-medium text-emerald-300 transition hover:bg-emerald-500/25 hover:ring-2 hover:ring-emerald-500/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+          className="veil-press inline-flex max-w-full items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/15 px-3 py-1 align-middle text-[12.5px] font-medium text-emerald-300 transition hover:bg-emerald-500/25 hover:ring-2 hover:ring-emerald-500/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
         >
           <Link2 aria-hidden className="h-3.5 w-3.5 shrink-0" />
           <span className="truncate">{linkLabel}</span>
@@ -396,7 +396,7 @@ function ExtCodeDialog({ ext, open, onOpenChange }: { ext: AiExt; open: boolean;
           <Button
             type="button"
             onClick={copy}
-            className="h-8 gap-1.5 rounded-xl bg-zinc-800 px-3 text-[12.5px] font-medium text-zinc-200 hover:bg-zinc-700"
+            className="veil-press h-8 gap-1.5 rounded-xl bg-zinc-800 px-3 text-[12.5px] font-medium text-zinc-200 hover:bg-zinc-700"
           >
             {copied ? <Check aria-hidden className="h-3.5 w-3.5 text-emerald-400" /> : <Copy aria-hidden className="h-3.5 w-3.5" />}
             {copied ? "Copied" : "Copy code"}
@@ -405,7 +405,7 @@ function ExtCodeDialog({ ext, open, onOpenChange }: { ext: AiExt; open: boolean;
             type="button"
             variant="outline"
             onClick={openPreview}
-            className="h-8 gap-1.5 rounded-xl border-zinc-700 bg-zinc-900/60 px-3 text-[12.5px] font-medium text-zinc-300 hover:border-violet-500/40 hover:text-violet-200"
+            className="veil-press h-8 gap-1.5 rounded-xl border-zinc-700 bg-zinc-900/60 px-3 text-[12.5px] font-medium text-zinc-300 hover:border-violet-500/40 hover:text-violet-200"
           >
             <ExternalLink aria-hidden className="h-3.5 w-3.5" />
             Open preview
@@ -414,7 +414,7 @@ function ExtCodeDialog({ ext, open, onOpenChange }: { ext: AiExt; open: boolean;
             type="button"
             variant="outline"
             onClick={downloadRaw}
-            className="h-8 gap-1.5 rounded-xl border-zinc-700 bg-zinc-900/60 px-3 text-[12.5px] font-medium text-zinc-300 hover:border-violet-500/40 hover:text-violet-200"
+            className="veil-press h-8 gap-1.5 rounded-xl border-zinc-700 bg-zinc-900/60 px-3 text-[12.5px] font-medium text-zinc-300 hover:border-violet-500/40 hover:text-violet-200"
           >
             <Download aria-hidden className="h-3.5 w-3.5" />
             Save .html
@@ -453,7 +453,7 @@ function ExtCard({ ext }: { ext: AiExt }) {
   const [saved, setSaved] = React.useState(false);
   const kb = Math.round(ext.html.length / 1024);
   return (
-    <div className="mt-2 overflow-hidden rounded-2xl border border-violet-500/30 bg-zinc-950/80">
+    <div className="veil-pop-in mt-2 overflow-hidden rounded-2xl border border-violet-500/30 bg-zinc-950/80">
       <div className="flex items-center gap-3 border-b border-violet-500/20 bg-violet-500/[0.08] px-4 py-3">
         <span
           aria-hidden
@@ -476,7 +476,7 @@ function ExtCard({ ext }: { ext: AiExt }) {
             downloadExtPackage(ext);
             setSaved(true);
           }}
-          className="h-8 gap-1.5 rounded-xl bg-violet-500 px-3 text-[12.5px] font-medium text-white shadow-lg shadow-violet-500/20 hover:bg-violet-400"
+          className="veil-hover-glow veil-press h-8 gap-1.5 rounded-xl bg-violet-500 px-3 text-[12.5px] font-medium text-white shadow-lg shadow-violet-500/20 hover:bg-violet-400"
         >
           <Download aria-hidden className="h-3.5 w-3.5" />
           {saved ? "Downloaded — drop into the file" : "Download extension"}
@@ -486,7 +486,7 @@ function ExtCard({ ext }: { ext: AiExt }) {
           variant="outline"
           onClick={() => setShown((s) => !s)}
           aria-expanded={shown}
-          className="h-8 gap-1.5 rounded-xl border-zinc-700 bg-zinc-900/60 px-3 text-[12.5px] font-medium text-zinc-300 hover:border-violet-500/40 hover:text-violet-200"
+          className="veil-press h-8 gap-1.5 rounded-xl border-zinc-700 bg-zinc-900/60 px-3 text-[12.5px] font-medium text-zinc-300 hover:border-violet-500/40 hover:text-violet-200"
         >
           <Eye aria-hidden className="h-3.5 w-3.5" />
           {shown ? "Hide HTML" : "View HTML"}
@@ -522,7 +522,7 @@ function Bubble({
         transition={{ duration: 0.25 }}
         className="flex justify-end"
       >
-        <div className="max-w-[85%] rounded-2xl rounded-tr-md bg-emerald-500/15 px-4 py-2.5 text-[13.5px] leading-relaxed text-emerald-50 ring-1 ring-emerald-500/25">
+        <div className="veil-slide-up-pop max-w-[85%] rounded-2xl rounded-tr-md bg-emerald-500/15 px-4 py-2.5 text-[13.5px] leading-relaxed text-emerald-50 ring-1 ring-emerald-500/25">
           {msg.files && msg.files.length > 0 && (
             <div className="mb-2 flex flex-wrap gap-2">
               {msg.files.map((f, i) =>
@@ -574,11 +574,11 @@ function Bubble({
         transition={{ duration: 0.25 }}
         className="flex justify-start"
       >
-        <div className="max-w-[85%] rounded-2xl rounded-tl-md border border-zinc-800 bg-zinc-900 px-4 py-3 text-[13.5px] leading-relaxed">
+        <div className="veil-slide-up-pop max-w-[85%] rounded-2xl rounded-tl-md border border-zinc-800 bg-zinc-900 px-4 py-3 text-[13.5px] leading-relaxed">
           {msg.content.trim() === "" ? (
             <div className="flex items-center gap-2.5">
               <TypingDots />
-              <span className="text-[12.5px] text-zinc-500">Veil AI is thinking…</span>
+              <span className="veil-text-shine text-[12.5px] text-zinc-500">Veil AI is thinking…</span>
             </div>
           ) : live && live.building ? (
             <>
@@ -626,7 +626,7 @@ function Bubble({
         transition={{ duration: 0.25 }}
         className="flex justify-start"
       >
-        <div className="max-w-[85%] rounded-2xl rounded-tl-md border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-[13px] leading-relaxed text-amber-200">
+        <div className="veil-slide-up-pop max-w-[85%] rounded-2xl rounded-tl-md border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-[13px] leading-relaxed text-amber-200">
           <div className="flex items-start gap-2">
             <TriangleAlert aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
             <p className="break-words">{msg.content}</p>
@@ -635,7 +635,7 @@ function Bubble({
             type="button"
             onClick={onRetry}
             aria-label="Retry the last request"
-            className="mt-2.5 inline-flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-zinc-900/60 px-2.5 py-1 text-[12px] font-medium text-amber-200 transition hover:border-amber-400/50 hover:text-amber-100"
+            className="mt-2.5 veil-press inline-flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-zinc-900/60 px-2.5 py-1 text-[12px] font-medium text-amber-200 transition hover:border-amber-400/50 hover:text-amber-100"
           >
             <RotateCw aria-hidden className="h-3 w-3" />
             Retry
@@ -673,7 +673,7 @@ function Bubble({
               type="button"
               onClick={onRetry}
               aria-label="Retry the build"
-              className="mt-2.5 inline-flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-zinc-900/60 px-2.5 py-1 text-[12px] font-medium text-amber-200 transition hover:border-amber-400/50 hover:text-amber-100"
+              className="mt-2.5 veil-press inline-flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-zinc-900/60 px-2.5 py-1 text-[12px] font-medium text-amber-200 transition hover:border-amber-400/50 hover:text-amber-100"
             >
               <RotateCw aria-hidden className="h-3 w-3" />
               Retry
@@ -701,7 +701,7 @@ function Bubble({
                   type="button"
                   onClick={onRetry}
                   aria-label="Retry the build"
-                  className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-zinc-900/60 px-2.5 py-1 text-[12px] font-medium text-amber-200 transition hover:border-amber-400/50 hover:text-amber-100"
+                  className="mt-2 veil-press inline-flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-zinc-900/60 px-2.5 py-1 text-[12px] font-medium text-amber-200 transition hover:border-amber-400/50 hover:text-amber-100"
                 >
                   <RotateCw aria-hidden className="h-3 w-3" />
                   Retry
@@ -1204,11 +1204,11 @@ export function AiSection({
         </Button>
         <span
           aria-hidden
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 ring-1 ring-emerald-500/30"
+          className="veil-pulse-glow flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 ring-1 ring-emerald-500/30"
         >
           <Bot className="h-4 w-4 text-emerald-400" />
         </span>
-        <h1 className="truncate text-lg font-semibold tracking-tight">Veil AI</h1>
+        <h1 className="veil-text-shine truncate text-lg font-semibold tracking-tight">Veil AI</h1>
         <Badge className="shrink-0 rounded-full border-emerald-500/25 bg-emerald-500/10 px-2.5 text-[11px] font-medium text-emerald-300">
           AI assistant
         </Badge>
@@ -1222,7 +1222,7 @@ export function AiSection({
             aria-pressed={maker}
             title="Extension Maker — describe an app or game and Veil AI builds it as an installable Veil extension for the offline file"
             className={cn(
-              "inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-[12px] font-semibold transition",
+              "veil-press inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-[12px] font-semibold transition",
               maker
                 ? "border-violet-400/60 bg-violet-500/20 text-violet-200 shadow-lg shadow-violet-500/15"
                 : "border-zinc-700/80 bg-zinc-900/60 text-zinc-300 hover:border-violet-400/50 hover:text-violet-200"
@@ -1261,12 +1261,12 @@ export function AiSection({
                 </span>
                 <span
                   aria-hidden
-                  className="absolute -right-1 -top-1 flex h-7 w-7 items-center justify-center rounded-full border border-zinc-700 bg-zinc-900"
+                  className="veil-bounce-soft absolute -right-1 -top-1 flex h-7 w-7 items-center justify-center rounded-full border border-zinc-700 bg-zinc-900"
                 >
                   <Sparkles aria-hidden className="h-3.5 w-3.5 text-teal-300" />
                 </span>
               </div>
-              <h2 className="text-xl font-bold tracking-tight sm:text-2xl">
+              <h2 className="veil-text-shine text-xl font-bold tracking-tight sm:text-2xl">
                 Hey — I'm the Veil AI.
               </h2>
               <p className="mt-2.5 max-w-md text-[13.5px] leading-relaxed text-zinc-400">
@@ -1277,13 +1277,13 @@ export function AiSection({
 
               {/* Suggestion chips */}
               <div className="mt-6 grid w-full gap-2.5 sm:grid-cols-3">
-                {SUGGESTIONS.map((s) => (
+                {SUGGESTIONS.map((s, i) => (
                   <button
                     key={s.text}
                     type="button"
                     onClick={() => send(s.text)}
                     aria-label={s.text}
-                    className="group flex items-center gap-2.5 rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-3 text-left transition hover:-translate-y-0.5 hover:border-emerald-500/40 hover:bg-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+                    className={`veil-pop-in veil-stagger-${i + 1} veil-hover-lift veil-press group flex items-center gap-2.5 rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-3 text-left transition hover:-translate-y-0.5 hover:border-emerald-500/40 hover:bg-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50`}
                   >
                     <span
                       aria-hidden
@@ -1306,7 +1306,7 @@ export function AiSection({
                   setTimeout(() => taRef.current?.focus(), 60);
                 }}
                 aria-pressed={maker}
-                className="group mt-2.5 flex w-full items-center gap-3 rounded-2xl border border-violet-500/30 bg-violet-500/[0.07] p-3.5 text-left transition hover:-translate-y-0.5 hover:border-violet-400/60 hover:bg-violet-500/[0.12] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50"
+                className="veil-slide-up-pop veil-stagger-4 group mt-2.5 flex w-full items-center gap-3 rounded-2xl border border-violet-500/30 bg-violet-500/[0.07] p-3.5 text-left transition hover:-translate-y-0.5 hover:border-violet-400/60 hover:bg-violet-500/[0.12] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50"
               >
                 <span
                   aria-hidden
@@ -1353,7 +1353,7 @@ export function AiSection({
               type="button"
               onClick={() => setMaker(false)}
               aria-label="Leave Extension Maker mode"
-              className="shrink-0 rounded-full border border-violet-500/30 px-2 py-0.5 text-[10.5px] font-medium text-violet-200/80 transition hover:border-violet-300/60 hover:text-violet-100"
+              className="veil-press shrink-0 rounded-full border border-violet-500/30 px-2 py-0.5 text-[10.5px] font-medium text-violet-200/80 transition hover:border-violet-300/60 hover:text-violet-100"
             >
               off
             </button>
@@ -1435,7 +1435,7 @@ export function AiSection({
             title="Attach images or files — images are seen by the assistant, text files are read, anything up to 100 MB is stored"
             onClick={() => attachInputRef.current?.click()}
             disabled={pending.length >= MAX_ATTACH}
-            className="h-11 w-11 shrink-0 rounded-2xl border border-zinc-800 bg-zinc-900/90 text-zinc-400 shadow-xl shadow-black/30 transition hover:text-zinc-100 disabled:opacity-40"
+            className="veil-hover-wobble h-11 w-11 shrink-0 rounded-2xl border border-zinc-800 bg-zinc-900/90 text-zinc-400 shadow-xl shadow-black/30 transition hover:text-zinc-100 disabled:opacity-40"
           >
             <Paperclip aria-hidden className="h-4 w-4" />
           </Button>
@@ -1458,7 +1458,7 @@ export function AiSection({
             rows={1}
             spellCheck={false}
             className={cn(
-              "veil-scroll-slim min-h-11 max-h-44 flex-1 resize-none rounded-2xl border-zinc-800 bg-zinc-900/90 px-4 py-2.5 text-[14px] text-zinc-100 shadow-xl shadow-black/30 placeholder:text-zinc-500 focus-visible:border-emerald-500/60 focus-visible:ring-emerald-500/25",
+              "veil-focus-bloom veil-scroll-slim min-h-11 max-h-44 flex-1 resize-none rounded-2xl border-zinc-800 bg-zinc-900/90 px-4 py-2.5 text-[14px] text-zinc-100 shadow-xl shadow-black/30 placeholder:text-zinc-500 focus-visible:border-emerald-500/60 focus-visible:ring-emerald-500/25",
               maker && "border-violet-500/40 focus-visible:border-violet-400/70 focus-visible:ring-violet-500/25"
             )}
           />
@@ -1470,7 +1470,7 @@ export function AiSection({
             onClick={loading ? stop : undefined}
             title={loading ? "Stop — the request is taking too long" : undefined}
             className={cn(
-              "h-11 w-11 shrink-0 rounded-2xl shadow-lg transition disabled:opacity-40",
+              "veil-hover-glow veil-press h-11 w-11 shrink-0 rounded-2xl shadow-lg transition disabled:opacity-40",
               loading
                 ? "bg-zinc-700 text-zinc-100 shadow-zinc-900/40 hover:bg-zinc-600 active:scale-95"
                 : maker

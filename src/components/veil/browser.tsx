@@ -542,7 +542,7 @@ export function BrowserView({
             <div className="flex flex-col items-center gap-3">
               <span className="relative flex size-10 items-center justify-center">
                 <span className="absolute inset-0 animate-ping rounded-full bg-emerald-400/20" />
-                <span className="size-4 rounded-full bg-emerald-400/80 shadow-[0_0_18px_rgba(52,211,153,0.7)]" />
+                <span className="veil-pulse-glow size-4 rounded-full bg-emerald-400/80 shadow-[0_0_18px_rgba(52,211,153,0.7)]" />
               </span>
               <p className="text-[12.5px] font-medium text-zinc-400">
                 Spinning up the container lane…
@@ -612,7 +612,7 @@ export function BrowserView({
                 initial={{ x: "-160%" }}
                 animate={{ x: "-15%" }}
                 transition={{ duration: 0.85, repeat: Infinity, ease: "easeInOut", delay: 0.12 }}
-                className="absolute inset-y-0 w-1/6 rounded-full bg-emerald-300/60 blur-[2px]"
+                className="veil-stripes-drift absolute inset-y-0 w-1/6 rounded-full bg-emerald-300/60 blur-[2px]"
               />
             )}
           </motion.div>
@@ -666,13 +666,13 @@ export function BrowserView({
             {/* Left cluster */}
             <div className="flex items-center gap-0.5">
               <IconBtn label="Back (Alt+←)" onClick={onBack} disabled={!canBack}>
-                <ArrowLeft aria-hidden />
+                <ArrowLeft aria-hidden className="veil-hover-bounce veil-press" />
               </IconBtn>
               <IconBtn label="Forward (Alt+→)" onClick={onForward} disabled={!canForward}>
-                <ArrowRight aria-hidden />
+                <ArrowRight aria-hidden className="veil-hover-bounce veil-press" />
               </IconBtn>
               <IconBtn label="Reload" onClick={onReload} disabled={!target}>
-                <RotateCw aria-hidden className={loading ? "animate-spin" : undefined} />
+                <RotateCw aria-hidden className={loading ? "animate-spin" : "veil-hover-spin"} />
               </IconBtn>
             </div>
 
@@ -723,7 +723,7 @@ export function BrowserView({
                   spellCheck={false}
                   autoCapitalize="none"
                   autoComplete="off"
-                  className="h-full min-w-0 flex-1 bg-transparent text-[13.5px] text-zinc-100 placeholder:text-zinc-500 focus:outline-none"
+                  className="veil-focus-bloom h-full min-w-0 flex-1 bg-transparent text-[13.5px] text-zinc-100 placeholder:text-zinc-500 focus:outline-none"
                 />
                 <span className="hidden max-w-[180px] shrink-0 truncate text-[11px] text-zinc-500 lg:block">
                   {host}
@@ -734,13 +734,13 @@ export function BrowserView({
             {/* Right cluster */}
             <div className="flex items-center gap-0.5">
               <IconBtn label="New tab (Ctrl+T)" onClick={onNewTab}>
-                <Plus aria-hidden />
+                <Plus aria-hidden className="veil-hover-bounce" />
               </IconBtn>
               <IconBtn
                 label={activeTabMuted ? "Unmute tab" : "Mute tab"}
                 onClick={() => activeId && onTabAction(activeId, { type: "toggle-mute" })}
               >
-                {activeTabMuted ? <VolumeX aria-hidden className="text-amber-300" /> : <Volume2 aria-hidden />}
+                {activeTabMuted ? <VolumeX aria-hidden className="veil-hover-bounce text-amber-300" /> : <Volume2 aria-hidden className="veil-hover-bounce" />}
               </IconBtn>
               <IconBtn
                 label="Find in page (Ctrl+F)"
@@ -750,13 +750,13 @@ export function BrowserView({
                 }}
                 disabled={!target || isFt}
               >
-                <Search aria-hidden />
+                <Search aria-hidden className="veil-hover-bounce" />
               </IconBtn>
               <IconBtn
                 label="Quasar engine debug"
                 onClick={() => setDebugOpen((v) => !v)}
               >
-                <Bug aria-hidden />
+                <Bug aria-hidden className="veil-hover-bounce" />
               </IconBtn>
               <KeyboardHelp
                 trigger={
@@ -774,14 +774,14 @@ export function BrowserView({
                 label={isFullscreen ? "Exit fullscreen (F)" : "Fullscreen (F)"}
                 onClick={() => void toggleFullscreen()}
               >
-                {isFullscreen ? <Minimize aria-hidden /> : <Maximize aria-hidden />}
+                {isFullscreen ? <Minimize aria-hidden className="veil-hover-bounce" /> : <Maximize aria-hidden className="veil-hover-bounce" />}
               </IconBtn>
               <IconBtn
                 label="Open this page in a new tab"
                 onClick={() => target && window.open(frameSrc, "_blank", "noopener")}
                 disabled={!target}
               >
-                <ExternalLink aria-hidden />
+                <ExternalLink aria-hidden className="veil-hover-bounce" />
               </IconBtn>
               <div className="mx-1 hidden h-6 w-px bg-zinc-700 sm:block" aria-hidden />
               {/* Exit veil — the one filled accent in the chrome; with More
@@ -794,8 +794,8 @@ export function BrowserView({
                 transition={{ type: "spring", stiffness: 480, damping: 24 }}
                 className="flex h-9 items-center rounded-lg bg-emerald-500/15 px-3 text-[13px] font-semibold text-emerald-300 ring-1 ring-emerald-500/30 transition hover:bg-emerald-500/25"
               >
-                <Home aria-hidden className="sm:hidden" />
-                <span className="hidden sm:inline">Exit veil</span>
+                <Home aria-hidden className="veil-hover-bounce veil-press sm:hidden" />
+                <span className="veil-hover-bounce hidden sm:inline">Exit veil</span>
               </motion.button>
               {/* Hide the controls — the chev-down corner button (top-left)
                   brings them back. Ports the offline file's veilHideBar. */}
@@ -803,7 +803,7 @@ export function BrowserView({
                 label="Hide controls — the arrow in the top-left corner brings them back"
                 onClick={hideBarManually}
               >
-                <ChevronUp aria-hidden />
+                <ChevronUp aria-hidden className="veil-hover-bounce" />
               </IconBtn>
             </div>
           </div>

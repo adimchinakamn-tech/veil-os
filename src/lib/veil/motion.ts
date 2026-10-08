@@ -32,6 +32,21 @@ export function moreAnimationsOn(): boolean {
   }
 }
 
+/** Mirror the preference onto <html data-veil-fancy="on">.
+ *
+ * The MEGA motion tier in globals.css is entirely gated behind the
+ * `html[data-veil-fancy="on"]` selector — components sprinkle the veil-*
+ * classes unconditionally and the CSS decides whether they animate.
+ * One attribute, one toggle, every effect on the site. */
+export function syncFancyDomAttr(): void {
+  if (typeof document === "undefined") return;
+  if (moreAnimationsOn()) {
+    document.documentElement.setAttribute("data-veil-fancy", "on");
+  } else {
+    document.documentElement.removeAttribute("data-veil-fancy");
+  }
+}
+
 /** Live "More animations" state (listens for Settings changes).
  *
  * SSR-safe: starts false and reads the real preference in an effect —
@@ -41,7 +56,10 @@ export function moreAnimationsOn(): boolean {
 export function useMoreAnimations(): boolean {
   const [on, setOn] = React.useState(false);
   React.useEffect(() => {
-    const sync = () => setOn(moreAnimationsOn());
+    const sync = () => {
+      setOn(moreAnimationsOn());
+      syncFancyDomAttr();
+    };
     sync();
     window.addEventListener(CHANGE_EVENT, sync);
     return () => window.removeEventListener(CHANGE_EVENT, sync);

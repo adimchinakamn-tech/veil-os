@@ -38,7 +38,7 @@ export function FindBar({ query, count, index, found, onQueryChange, onNext, onP
     <div
       role="search"
       aria-label="Find in page"
-      className="absolute right-2 top-2 z-40 flex items-center gap-1 rounded-lg border border-zinc-700/80 bg-zinc-900/95 px-1.5 py-1 shadow-xl backdrop-blur"
+      className="veil-drop-bounce absolute right-2 top-2 z-40 flex items-center gap-1 rounded-lg border border-zinc-700/80 bg-zinc-900/95 px-1.5 py-1 shadow-xl backdrop-blur"
     >
       <Input
         ref={inputRef}
@@ -58,7 +58,7 @@ export function FindBar({ query, count, index, found, onQueryChange, onNext, onP
         aria-label="Find in page"
         autoComplete="off"
         spellCheck={false}
-        className={`h-8 w-40 border-zinc-700 bg-zinc-950 text-xs text-zinc-100 placeholder:text-zinc-600 focus-visible:ring-emerald-500/50 sm:w-52 ${
+        className={`veil-focus-bloom h-8 w-40 border-zinc-700 bg-zinc-950 text-xs text-zinc-100 placeholder:text-zinc-600 focus-visible:ring-emerald-500/50 sm:w-52 ${
           query && !found ? "border-rose-500/60" : ""
         }`}
       />

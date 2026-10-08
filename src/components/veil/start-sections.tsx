@@ -134,7 +134,7 @@ export function SectionShell({
             size="icon"
             onClick={onBack}
             aria-label="Back to the start page"
-            className="size-9 shrink-0 text-zinc-400 hover:bg-zinc-800/70 hover:text-zinc-100"
+            className="veil-hover-bounce size-9 shrink-0 text-zinc-400 hover:bg-zinc-800/70 hover:text-zinc-100"
           >
             <ArrowLeft className="size-4" aria-hidden />
           </Button>
@@ -143,7 +143,7 @@ export function SectionShell({
               {icon}
             </div>
             <div className="min-w-0">
-              <h1 className="truncate text-base font-semibold tracking-tight text-zinc-50 sm:text-lg">
+              <h1 className="veil-text-shine truncate text-base font-semibold tracking-tight text-zinc-50 sm:text-lg">
                 {title}
               </h1>
               <p className="truncate text-[12px] text-zinc-500">{subtitle}</p>

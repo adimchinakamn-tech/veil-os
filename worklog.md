@@ -623,3 +623,47 @@ memory constraints, keeper self-heal awareness).
    detail, more functionality (per the standing dev-review loop).
 6. If jsDelivr throttle ever hits again (stale mirrors after a push), wait the
    throttle window out rather than hammering purge.jsdelivr.net.
+
+---
+Task ID: anim-foundation
+Agent: main (Z.ai Code)
+Task: Build the MEGA motion foundation — user wants lots of amazing/unique animations everywhere, visible ONLY when the "More animations" setting is ON. Also confirmed sign-in (username/password) works — DB intact (16 accounts), login API verified.
+
+Work Log:
+- Verified DB + auth: 16 accounts in db/custom.db matching backup latest.json, login endpoint returns proper errors, register/reclaim flow intact. Sign-in works as normal.
+- src/lib/veil/motion.ts: added syncFancyDomAttr() — mirrors the "More animations" localStorage setting onto <html data-veil-fancy="on">. Called inside useMoreAnimations() sync (mounted by browser.tsx, start-page.tsx, new-tab.tsx, quasar-tab-strip.tsx, page.tsx) AND directly in the Settings toggle handler (settings-section.tsx line ~621).
+- src/app/globals.css: appended the VEIL MEGA MOTION LIBRARY (~470 lines, 50+ unique effects), EVERY utility class gated behind html[data-veil-fancy="on"] so the new animations only appear when the setting is ON:
+  * Entrances: veil-pop-in, veil-flip-in, veil-swing-in, veil-drop-bounce, veil-zoom-burst, veil-swirl-in, veil-roll-in, veil-slide-up-pop, veil-slide-right-pop, veil-slide-left-pop + stagger helpers veil-stagger-1..8
+  * Text magic: veil-text-rainbow, veil-text-breathe, veil-text-shine, veil-jelly, veil-glitch, veil-letter (per-letter wave), veil-type-reveal, veil-flip-letter
+  * Ambient: veil-aurora, veil-grid-pan, veil-twinkle, veil-scanline, veil-blob-morph, veil-flicker, veil-stripes-drift, veil-pulse-glow
+  * Micro-interactions: veil-hover-lift, veil-hover-glow, veil-hover-spin, veil-hover-bounce, veil-hover-tilt, veil-hover-wobble, veil-bounce-soft, veil-press, veil-focus-bloom
+  * Chat celebrations: veil-heart-float, veil-coin-flip, veil-burst, veil-ring-spin, veil-level-flash
+  * Decorative: veil-border-dance, veil-ripple, veil-ants, veil-gradient-shift, veil-orbit, veil-skeleton
+  * Full prefers-reduced-motion catch-all at the bottom.
+
+Stage Summary:
+- Foundation complete: one Settings toggle now drives the entire mega tier via the html[data-veil-fancy] attribute. CSS classes are self-gating — components can sprinkle them unconditionally.
+- Next: subagents apply the classes across chat-app, start-page/new-tab/tab-strip/browser, and settings/music/ai/wallpapers/arcade/updates sections (tasks 3-a, 3-b, 3-c).
+
+---
+Task ID: 3-c
+Agent: general-purpose (section animations)
+Task: Sprinkle the VEIL MEGA MOTION LIBRARY classes across the seven section components (settings, music, ai, wallpapers, arcade, updates, stream-light-touch).
+
+Work Log:
+- Read worklog anim-foundation section + the mega library in globals.css (all classes gated behind html[data-veil-fancy="on"], self-gating → added unconditionally).
+- settings-section.tsx: h2 "Settings." → veil-text-shine; every SwitchRow outer div → veil-hover-lift (+ new optional `className` prop, one-line extension); the "More animations" row passes veil-border-dance (fitting!); toggle segments, tabs, wipe/try-again/key-capture/cloak-preset cards → veil-press; TextRow/panic-URL/cloak-title rows → veil-hover-glow (rows with inputs don't move under the cursor); all text inputs → veil-focus-bloom; export/import/cloak-it buttons → veil-hover-glow + veil-press; back button → veil-hover-bounce; "Fixed" pill → veil-text-breathe; stats tiles + site rows → veil-hover-glow.
+- music-section.tsx: card art containers → veil-hover-lift + veil-hover-tilt (the motion.button roots are framer-transformed, so transform classes go on the safe inner node); play circles → veil-hover-bounce + veil-press; Live badge → veil-pulse-glow with veil-bounce-soft Music2 icon; search section → veil-slide-left-pop; search input → veil-focus-bloom; submit → veil-hover-glow + veil-press; h2 → veil-text-shine; back → veil-hover-bounce; Clear chip → veil-press.
+- veil-player.tsx (the "now-playing panel" the music spec targets; light touches): panel div → veil-pulse-glow (breathing), play/pause buttons → veil-hover-bounce + veil-press, all icon buttons → veil-press. Volume icon + eq bars skipped: no volume control exists, and vm-eq bars already run their own animation (no modification rule).
+- ai-section.tsx: header bot chip → veil-pulse-glow; h1 + empty-state h2 → veil-text-shine; Sparkles badge → veil-bounce-soft; all four bubble variants' inner div → veil-slide-up-pop (framer animates the parent, CSS pops the child); "Veil AI is thinking…" → veil-text-shine; suggestion chips → veil-pop-in + veil-stagger-1..3 + veil-hover-lift + veil-press (map gains an index); Extension-Maker entry card → veil-slide-up-pop + veil-stagger-4; ExtCard → veil-pop-in, its buttons → hover-glow/press; link chips + retry buttons → veil-press; composer Textarea → veil-focus-bloom; send/stop button → veil-hover-glow + veil-press; attach paperclip → veil-hover-wobble; streaming caret untouched.
+- wallpapers-section.tsx: PackCard/LiveCard buttons → veil-hover-tilt base + veil-border-dance when `applied` (selected only, per the always-on warning); CatalogCard → veil-hover-tilt; ♥ favorite toggles → veil-hover-bounce + veil-press; delete → veil-press; play circle → veil-hover-bounce + veil-press; all three lightbox preview heroes → veil-zoom-burst with key={wp.id/item.id} remount; Apply buttons → veil-hover-glow + veil-press; Save/Download/Try-again/Load-more/Shuffle/Add-yours/password-gate buttons → press (+glow on primaries); all search + owner-pw inputs → veil-focus-bloom; filter/category chips (3 rails) + source tabs → veil-press + veil-hover-glow; h1 → veil-text-shine; back → veil-hover-bounce; notice toast → veil-slide-up-pop; drag-over drop zone → veil-ants (marching dashes — its intended use).
+- arcade-section.tsx: big "veil arcade" h1 → veil-text-rainbow; card cover spans → veil-hover-tilt (motion.button roots stay framer-only); play circles (Title+App) → veil-press + veil-hover-glow; hot flame + "veil ai" badges → veil-bounce-soft; app icon plates → veil-hover-wobble; launch-count chip → veil-coin-flip with key={app.plays} (flips on every launch bump — the key trick); Playing badge + "recently played first" chip → veil-text-breathe; tabs/sort/tag/reset/selects/player controls/create-app/icon-picker → veil-press; search + composer inputs → veil-focus-bloom; composer card → veil-slide-up-pop; savedName chip + CatalogErrorCard → veil-pop-in; back → veil-hover-bounce. Grid-item pop-in stagger skipped: cards are motion.buttons whose framer whileInView already staggers entrances (CSS transform would fight framer).
+- updates-section.tsx: feed cards → veil-slide-up-pop + veil-stagger-1..8 (map gains index); icon plates + timestamps → veil-hover-glow; kind tags → veil-hover-wobble; composer → veil-slide-up-pop; every input/textarea → veil-focus-bloom; publish/unlock/change-pw/open-in-arcade → hover-glow + press; tabs/buttons → veil-press; suggestion chips → veil-hover-lift + veil-press; chat bubbles + streaming bubble → veil-slide-up-pop; new-app card + status pills → veil-pop-in; attach paperclip → veil-hover-wobble; send → veil-hover-glow + veil-press.
+- start-sections.tsx (SectionShell — shared header for updates/links/history): h1 → veil-text-shine, back button → veil-hover-bounce (fulfills "updates section header" since updates renders through this shell).
+- stream-section.tsx (LIGHT TOUCH, 6 grep-targeted edits only): h2 "Veil Stream." → veil-text-shine; back → veil-hover-bounce; search input → veil-focus-bloom; For-You filter chips → veil-press + veil-hover-glow; VideoCard thumb box → veil-hover-lift; play overlay circle → veil-press. Card roots are framer motion.divs so the lift rides the inner thumb node.
+- Verification: `bunx eslint` on all 9 edited files → clean (next lint has no --file flag in Next 16, used eslint directly); dev.log → no compile errors, GET / 200.
+
+Stage Summary:
+- ~240 mega-class applications across 9 files, all hover/ambient on always-mounted chrome and entrances only on conditionally-mounted items (search results, composers, toasts, dialogs, feed lists with stagger). No existing animation code touched; no framer-motion node carries a CSS transform class (transform effects ride child/sibling nodes); max ~2 animation classes per element (spec-listed chips carry pop-in + stagger + lift + press as explicitly requested).
+- Skipped + why: veil-bounce-soft on veil-player eq bars (existing vm-eq animation would be overridden — "do not modify existing" rule); volume-icon wobble (no volume control in the player); arcade grid-item CSS pop-in (framer whileInView already staggers those exact nodes).
+- ESLint clean on settings/music/ai/wallpapers/arcade/updates/stream + veil-player + start-sections; dev server compiles and serves 200 with no errors in dev.log.

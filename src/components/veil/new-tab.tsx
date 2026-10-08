@@ -82,6 +82,15 @@ function greetingFor(d: Date): string {
   return "Good evening";
 }
 
+/* Mega-motion ambient stars for the procedural wallpaper — tiny twinkling
+   dots with staggered rhythm (only animate under data-veil-fancy="on"). */
+const TWINKLE_STARS: { pos: string; delay: string; dur: string }[] = [
+  { pos: "left-[16%] top-[24%]", delay: "0.5s", dur: "3.6s" },
+  { pos: "left-[70%] top-[18%]", delay: "1.4s", dur: "4.0s" },
+  { pos: "left-[58%] top-[70%]", delay: "2.2s", dur: "3.2s" },
+  { pos: "left-[28%] top-[68%]", delay: "0.9s", dur: "4.4s" },
+];
+
 /* ── the page ───────────────────────────────────────────────────────── */
 
 export function NewTab({
@@ -148,6 +157,15 @@ export function NewTab({
           <div className={`absolute inset-0 bg-gradient-to-br ${THEME_GRADIENTS[wpTheme] ?? THEME_GRADIENTS.emerald}`}>
             <div className={`absolute -top-40 left-[25%] h-[26rem] w-[40rem] rounded-full bg-white/10 blur-3xl ${reduceMotion ? "" : "veil-orb-a"}`} />
             <div className={`absolute -bottom-32 right-[8%] h-80 w-80 rounded-full bg-black/10 blur-3xl ${reduceMotion ? "" : "veil-orb-b"}`} />
+            {/* mega-motion: an aurora haze + twinkling stars over the live theme */}
+            <div className="veil-aurora absolute -inset-32" />
+            {TWINKLE_STARS.map((s, si) => (
+              <span
+                key={si}
+                className={`veil-twinkle absolute size-1 rounded-full bg-white/70 ${s.pos}`}
+                style={{ "--twinkle-delay": s.delay, "--twinkle-dur": s.dur } as React.CSSProperties}
+              />
+            ))}
           </div>
         )}
         {/* readability scrim + vignette over any wallpaper */}
@@ -192,7 +210,7 @@ export function NewTab({
           <p className="text-6xl font-extralight tracking-tight text-white drop-shadow-[0_2px_18px_rgba(0,0,0,0.45)] sm:text-7xl">
             <span className="tabular-nums">{clock}</span>
           </p>
-          <p className="mt-2.5 text-[14.5px] font-medium text-white/75 drop-shadow sm:text-[15.5px]">
+          <p className="veil-text-shine mt-2.5 text-[14.5px] font-medium text-white/75 drop-shadow sm:text-[15.5px]">
             {dateLine} · {greetingFor(now)}
           </p>
         </motion.div>
@@ -214,7 +232,7 @@ export function NewTab({
           className="mx-auto mt-9 flex w-full max-w-2xl items-center gap-2.5"
           role="search"
         >
-          <div className="group relative flex-1">
+          <div className="veil-border-dance group relative flex-1 rounded-2xl">
             <Search
               aria-hidden
               className="pointer-events-none absolute left-4 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-white/50 transition group-focus-within:text-emerald-300"
@@ -228,7 +246,7 @@ export function NewTab({
               spellCheck={false}
               autoCapitalize="none"
               autoComplete="off"
-              className="h-13 w-full rounded-2xl border border-white/15 bg-zinc-950/55 pl-11 pr-4 text-[15px] text-white shadow-2xl shadow-black/50 outline-none backdrop-blur-xl transition placeholder:text-white/40 hover:border-white/25 focus:border-emerald-300/60 focus:bg-zinc-950/70 focus:shadow-[0_0_0_4px_rgba(52,211,153,0.18)]"
+              className="veil-focus-bloom h-13 w-full rounded-2xl border border-white/15 bg-zinc-950/55 pl-11 pr-4 text-[15px] text-white shadow-2xl shadow-black/50 outline-none backdrop-blur-xl transition placeholder:text-white/40 hover:border-white/25 focus:border-emerald-300/60 focus:bg-zinc-950/70 focus:shadow-[0_0_0_4px_rgba(52,211,153,0.18)]"
             />
           </div>
           <motion.button
@@ -238,7 +256,7 @@ export function NewTab({
             type="submit"
             className="flex h-13 shrink-0 items-center gap-1.5 rounded-2xl bg-emerald-400 px-5 text-[15px] font-semibold text-emerald-950 shadow-xl shadow-emerald-500/25 transition hover:bg-emerald-300"
           >
-            <Maximize2 aria-hidden className="h-4 w-4" />
+            <Maximize2 aria-hidden className="veil-hover-bounce h-4 w-4" />
             <span className="hidden sm:inline">Browse</span>
           </motion.button>
         </motion.form>
@@ -269,7 +287,7 @@ export function NewTab({
                 onClick={() => onNavigate(s.url)}
                 className="group flex items-center gap-3 rounded-2xl border border-white/12 bg-zinc-950/45 p-3 text-left shadow-lg shadow-black/25 backdrop-blur-md transition-colors hover:border-emerald-300/40 hover:bg-zinc-950/65"
               >
-                <FaviconImg host={s.host} name={s.name} className="h-9 w-9 shrink-0" />
+                <FaviconImg host={s.host} name={s.name} className={`veil-pop-in veil-stagger-${(i % 8) + 1} h-9 w-9 shrink-0`} />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[13px] font-semibold text-white">{s.name}</span>
                   <span className="block truncate text-[11px] text-white/55">{s.desc}</span>
@@ -311,7 +329,7 @@ export function NewTab({
                       onClick={() => onNavigate(v.url)}
                       className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-zinc-950/35 p-2.5 text-left backdrop-blur-md transition hover:border-emerald-300/35 hover:bg-zinc-950/60"
                     >
-                      <FaviconImg host={v.host} name={v.host} className="h-8 w-8 shrink-0" />
+                      <FaviconImg host={v.host} name={v.host} className="veil-hover-bounce h-8 w-8 shrink-0" />
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-[13px] font-medium text-white/90">{title}</span>
                         <span className="block truncate text-[11px] text-white/50">
@@ -346,7 +364,7 @@ export function NewTab({
             onClick={onHome}
             className="flex items-center gap-2 rounded-full border border-white/15 bg-zinc-950/45 px-5 py-2.5 text-[12.5px] font-medium text-white/70 shadow-lg shadow-black/25 backdrop-blur-md transition hover:border-white/30 hover:bg-zinc-950/65 hover:text-white"
           >
-            <LogOut aria-hidden className="h-3.5 w-3.5" />
+            <LogOut aria-hidden className="veil-hover-wobble h-3.5 w-3.5" />
             Close all tabs and return to the start page
           </motion.button>
         </motion.div>

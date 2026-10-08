@@ -184,7 +184,7 @@ export function VeilMusicPlayer() {
         >
           <div
             className={cn(
-              "overflow-hidden rounded-2xl border border-zinc-800/90 bg-zinc-950/95 text-zinc-100 shadow-2xl shadow-black/60 backdrop-blur-xl",
+              "veil-pulse-glow overflow-hidden rounded-2xl border border-zinc-800/90 bg-zinc-950/95 text-zinc-100 shadow-2xl shadow-black/60 backdrop-blur-xl",
               attached ? "" : "rounded-full border-zinc-800/80 bg-zinc-950/90"
             )}
           >
@@ -279,7 +279,7 @@ export function VeilMusicPlayer() {
                     aria-label={playing ? "Pause" : "Play"}
                     title={playing ? "Pause" : "Play"}
                     onClick={toggle}
-                    className="flex size-8 items-center justify-center rounded-full text-zinc-400 transition hover:bg-zinc-800/70 hover:text-fuchsia-300"
+                    className="veil-hover-bounce veil-press flex size-8 items-center justify-center rounded-full text-zinc-400 transition hover:bg-zinc-800/70 hover:text-fuchsia-300"
                   >
                     {playing ? (
                       <Pause aria-hidden className="size-4" />
@@ -294,7 +294,7 @@ export function VeilMusicPlayer() {
                     aria-label="Expand the music player"
                     title="Expand player"
                     onClick={() => setAttached(true)}
-                    className="flex size-8 items-center justify-center rounded-full text-zinc-400 transition hover:bg-zinc-800/70 hover:text-fuchsia-300"
+                    className="veil-press flex size-8 items-center justify-center rounded-full text-zinc-400 transition hover:bg-zinc-800/70 hover:text-fuchsia-300"
                   >
                     <PanelTopOpen aria-hidden className="size-4" />
                   </button>
@@ -305,7 +305,7 @@ export function VeilMusicPlayer() {
                     aria-label="Collapse the music player to a pill"
                     title="Collapse to pill"
                     onClick={() => setAttached(false)}
-                    className="flex size-8 items-center justify-center rounded-full text-zinc-400 transition hover:bg-zinc-800/70 hover:text-fuchsia-300"
+                    className="veil-press flex size-8 items-center justify-center rounded-full text-zinc-400 transition hover:bg-zinc-800/70 hover:text-fuchsia-300"
                   >
                     <PanelTopClose aria-hidden className="size-4" />
                   </button>
@@ -328,7 +328,7 @@ export function VeilMusicPlayer() {
                         : "Open on SoundCloud"
                       : "Open in Spotify"
                   }
-                  className="flex size-8 items-center justify-center rounded-full text-zinc-400 transition hover:bg-zinc-800/70 hover:text-emerald-300"
+                  className="veil-press flex size-8 items-center justify-center rounded-full text-zinc-400 transition hover:bg-zinc-800/70 hover:text-emerald-300"
                 >
                   <ExternalLink aria-hidden className="size-4" />
                 </a>
@@ -337,7 +337,7 @@ export function VeilMusicPlayer() {
                   aria-label="Stop the music"
                   title="Stop"
                   onClick={stop}
-                  className="flex size-8 items-center justify-center rounded-full text-zinc-400 transition hover:bg-zinc-800/70 hover:text-rose-300"
+                  className="veil-press flex size-8 items-center justify-center rounded-full text-zinc-400 transition hover:bg-zinc-800/70 hover:text-rose-300"
                 >
                   <X aria-hidden className="size-4" />
                 </button>
@@ -409,7 +409,7 @@ export function VeilMusicPlayer() {
                     type="button"
                     onClick={toggle}
                     aria-label={playing ? "Pause" : "Play"}
-                    className="flex size-10 shrink-0 items-center justify-center rounded-full bg-fuchsia-500 text-fuchsia-950 shadow-lg shadow-fuchsia-500/30 transition hover:bg-fuchsia-400"
+                    className="veil-hover-bounce veil-press flex size-10 shrink-0 items-center justify-center rounded-full bg-fuchsia-500 text-fuchsia-950 shadow-lg shadow-fuchsia-500/30 transition hover:bg-fuchsia-400"
                   >
                     {playing ? (
                       <Pause aria-hidden className="size-4.5" />

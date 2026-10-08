@@ -341,7 +341,10 @@ function PackCard({
         onFocus={startPreview}
         onBlur={stopPreview}
         aria-label={`Preview ${wp.name}${wp.kind === "video" ? " (live wallpaper)" : ""}`}
-        className="group relative block w-full overflow-hidden rounded-2xl border border-zinc-800/80 bg-zinc-900 text-left outline-none transition-all duration-200 hover:-translate-y-1 hover:border-emerald-500/60 hover:shadow-[0_18px_42px_-14px_rgba(16,185,129,0.45)] focus-visible:ring-2 focus-visible:ring-emerald-500/70"
+        className={cn(
+          "veil-hover-tilt group relative block w-full overflow-hidden rounded-2xl border border-zinc-800/80 bg-zinc-900 text-left outline-none transition-all duration-200 hover:-translate-y-1 hover:border-emerald-500/60 hover:shadow-[0_18px_42px_-14px_rgba(16,185,129,0.45)] focus-visible:ring-2 focus-visible:ring-emerald-500/70",
+          applied && "veil-border-dance"
+        )}
       >
         <div className="relative aspect-video w-full overflow-hidden">
           {wp.kind === "animated" ? (
@@ -442,7 +445,7 @@ function PackCard({
               }
             }}
             className={cn(
-              "absolute right-2.5 top-2.5 z-20 flex size-8 items-center justify-center rounded-full border backdrop-blur-md transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400/70",
+              "veil-hover-bounce veil-press absolute right-2.5 top-2.5 z-20 flex size-8 items-center justify-center rounded-full border backdrop-blur-md transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400/70",
               favorite
                 ? "border-rose-400/50 bg-rose-500/25 text-rose-300 opacity-100"
                 : "border-zinc-700/60 bg-zinc-950/60 text-zinc-300 opacity-70 hover:border-rose-400/40 hover:text-rose-300 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
@@ -472,7 +475,7 @@ function PackCard({
                   onDelete(wp.id);
                 }
               }}
-              className="absolute right-2.5 top-12 z-20 flex size-8 items-center justify-center rounded-full border border-zinc-700/60 bg-zinc-950/60 text-zinc-300 backdrop-blur-md transition-all duration-200 hover:border-red-400/50 hover:text-red-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400/70 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
+              className="veil-press absolute right-2.5 top-12 z-20 flex size-8 items-center justify-center rounded-full border border-zinc-700/60 bg-zinc-950/60 text-zinc-300 backdrop-blur-md transition-all duration-200 hover:border-red-400/50 hover:text-red-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400/70 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
             >
               <Trash2 aria-hidden className="size-4" />
             </span>
@@ -617,7 +620,7 @@ function PackLightbox({
             {/* The preview — the poster paints instantly; the live video
                 fades in on top once it can play (muted loop, no native
                 controls — same light pipeline as the hover preview). */}
-            <div className="relative mx-5 aspect-video max-h-[52vh] w-[calc(100%-2.5rem)] shrink-0 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900">
+            <div key={wp.id} className="veil-zoom-burst relative mx-5 aspect-video max-h-[52vh] w-[calc(100%-2.5rem)] shrink-0 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900">
               {wp.kind === "animated" ? (
                 <div className={`size-full bg-gradient-to-br ${MINI_THEMES[wp.theme ?? "emerald"] ?? MINI_THEMES.emerald}`}>
                   <div className="veil-orb-a size-full rounded-none bg-white/10 blur-2xl" />
@@ -662,7 +665,7 @@ function PackLightbox({
                         variant="outline"
                         size="sm"
                         onClick={handleRetry}
-                        className="h-7 shrink-0 border-zinc-700 bg-zinc-900 px-2.5 text-[12px] text-zinc-200 hover:border-emerald-500/50 hover:bg-zinc-800 hover:text-emerald-300"
+                        className="veil-press h-7 shrink-0 border-zinc-700 bg-zinc-900 px-2.5 text-[12px] text-zinc-200 hover:border-emerald-500/50 hover:bg-zinc-800 hover:text-emerald-300"
                       >
                         Try again
                       </Button>
@@ -683,7 +686,7 @@ function PackLightbox({
                   size="sm"
                   aria-label={`Download ${wp.name}`}
                   onClick={() => downloadWallpaper(assetSrc(wp.src), wp.name)}
-                  className="h-8 gap-1.5 rounded-full px-3 text-[13px] text-zinc-400 transition hover:bg-zinc-800/70 hover:text-emerald-300"
+                  className="veil-press h-8 gap-1.5 rounded-full px-3 text-[13px] text-zinc-400 transition hover:bg-zinc-800/70 hover:text-emerald-300"
                 >
                   <Download aria-hidden className="size-3.5" />
                   Download
@@ -692,7 +695,7 @@ function PackLightbox({
               <Button
                 size="sm"
                 onClick={handleApply}
-                className="h-8 shrink-0 gap-1.5 rounded-full bg-emerald-500 px-4 text-[13px] font-medium text-zinc-950 shadow-lg shadow-emerald-500/25 hover:bg-emerald-400"
+                className="veil-hover-glow veil-press h-8 shrink-0 gap-1.5 rounded-full bg-emerald-500 px-4 text-[13px] font-medium text-zinc-950 shadow-lg shadow-emerald-500/25 hover:bg-emerald-400"
               >
                 {saved || applied ? (
                   <>
@@ -818,7 +821,10 @@ function LiveCard({
         onFocus={startPreview}
         onBlur={stopPreview}
         aria-label={`Preview ${item.name} live wallpaper`}
-        className="group relative block w-full overflow-hidden rounded-2xl border border-zinc-800/80 bg-zinc-900 text-left outline-none transition-all duration-200 hover:-translate-y-1 hover:border-emerald-500/60 hover:shadow-[0_18px_42px_-14px_rgba(16,185,129,0.45)] focus-visible:ring-2 focus-visible:ring-emerald-500/70"
+        className={cn(
+          "veil-hover-tilt group relative block w-full overflow-hidden rounded-2xl border border-zinc-800/80 bg-zinc-900 text-left outline-none transition-all duration-200 hover:-translate-y-1 hover:border-emerald-500/60 hover:shadow-[0_18px_42px_-14px_rgba(16,185,129,0.45)] focus-visible:ring-2 focus-visible:ring-emerald-500/70",
+          applied && "veil-border-dance"
+        )}
       >
         <div className="relative aspect-video w-full overflow-hidden">
           {failed ? (
@@ -899,7 +905,7 @@ function LiveCard({
             aria-hidden
             className="absolute inset-0 flex items-center justify-center bg-zinc-950/0 opacity-0 transition-all duration-200 group-hover:bg-zinc-950/30 group-hover:opacity-100"
           >
-            <span className="flex size-12 items-center justify-center rounded-full bg-emerald-500 text-zinc-950 shadow-xl shadow-emerald-500/40 transition-transform duration-200 scale-75 group-hover:scale-100">
+            <span className="veil-hover-bounce veil-press flex size-12 items-center justify-center rounded-full bg-emerald-500 text-zinc-950 shadow-xl shadow-emerald-500/40 transition-transform duration-200 scale-75 group-hover:scale-100">
               <Play className="size-5" aria-hidden />
             </span>
           </div>
@@ -1006,7 +1012,7 @@ function LiveLightbox({
               Looping video wallpaper from motionbgs.com.
             </DialogDescription>
 
-            <div className="relative mx-5 aspect-video max-h-[52vh] w-[calc(100%-2.5rem)] shrink-0 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900">
+            <div key={item.id} className="veil-zoom-burst relative mx-5 aspect-video max-h-[52vh] w-[calc(100%-2.5rem)] shrink-0 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900">
               {/* Poster first — the grid card already loaded this exact
                   thumb URL, so the popup paints instantly from cache. */}
               <img src={routeUrl(item.thumb)} alt="" className="size-full object-cover" />
@@ -1048,7 +1054,7 @@ function LiveLightbox({
                     variant="outline"
                     size="sm"
                     onClick={handleRetry}
-                    className="h-7 shrink-0 border-zinc-700 bg-zinc-900 px-2.5 text-[12px] text-zinc-200 hover:border-emerald-500/50 hover:bg-zinc-800 hover:text-emerald-300"
+                    className="veil-press h-7 shrink-0 border-zinc-700 bg-zinc-900 px-2.5 text-[12px] text-zinc-200 hover:border-emerald-500/50 hover:bg-zinc-800 hover:text-emerald-300"
                   >
                     Try again
                   </Button>
@@ -1065,7 +1071,7 @@ function LiveLightbox({
                 aria-label={saved ? `Remove ${item.name} from My pack` : `Save ${item.name} to My pack`}
                 onClick={() => onToggleSave(selection())}
                 className={cn(
-                  "h-8 gap-1.5 rounded-full px-3 text-[13px] transition",
+                  "veil-hover-bounce veil-press h-8 gap-1.5 rounded-full px-3 text-[13px] transition",
                   saved
                     ? "bg-rose-500/15 text-rose-300 hover:bg-rose-500/25"
                     : "text-zinc-400 hover:bg-zinc-800/70 hover:text-rose-300"
@@ -1090,7 +1096,7 @@ function LiveLightbox({
               <Button
                 size="sm"
                 onClick={handleApply}
-                className="h-8 shrink-0 gap-1.5 rounded-full bg-emerald-500 px-4 text-[13px] font-medium text-zinc-950 shadow-lg shadow-emerald-500/25 hover:bg-emerald-400"
+                className="veil-hover-glow veil-press h-8 shrink-0 gap-1.5 rounded-full bg-emerald-500 px-4 text-[13px] font-medium text-zinc-950 shadow-lg shadow-emerald-500/25 hover:bg-emerald-400"
               >
                 {justApplied || applied ? (
                   <>
@@ -1159,7 +1165,7 @@ function CatalogCard({
         type="button"
         onClick={() => onOpen(item)}
         aria-label={`Preview ${item.name} wallpaper`}
-        className="group relative block w-full overflow-hidden rounded-2xl border border-zinc-800/80 bg-zinc-900 text-left outline-none transition-all duration-200 hover:-translate-y-1 hover:border-teal-500/60 hover:shadow-[0_18px_42px_-14px_rgba(20,184,166,0.45)] focus-visible:ring-2 focus-visible:ring-teal-500/70"
+        className="veil-hover-tilt group relative block w-full overflow-hidden rounded-2xl border border-zinc-800/80 bg-zinc-900 text-left outline-none transition-all duration-200 hover:-translate-y-1 hover:border-teal-500/60 hover:shadow-[0_18px_42px_-14px_rgba(20,184,166,0.45)] focus-visible:ring-2 focus-visible:ring-teal-500/70"
       >
         <div className="relative aspect-video w-full overflow-hidden">
           {failed ? (
@@ -1301,7 +1307,7 @@ function CatalogLightbox({
               background at its best resolution.
             </DialogDescription>
 
-            <div className="relative mx-5 aspect-video max-h-[52vh] w-[calc(100%-2.5rem)] shrink-0 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900">
+            <div key={item.id} className="veil-zoom-burst relative mx-5 aspect-video max-h-[52vh] w-[calc(100%-2.5rem)] shrink-0 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900">
               {/* The card already loaded this exact thumb, so the popup
                   paints instantly from the browser cache. */}
               <img src={routeUrl(item.thumb)} alt={item.name} className="size-full object-cover" />
@@ -1333,7 +1339,7 @@ function CatalogLightbox({
                   if (sel) onToggleSave(sel);
                 }}
                 className={cn(
-                  "h-8 gap-1.5 rounded-full px-3 text-[13px] transition",
+                  "veil-hover-bounce veil-press h-8 gap-1.5 rounded-full px-3 text-[13px] transition",
                   saved
                     ? "bg-rose-500/15 text-rose-300 hover:bg-rose-500/25"
                     : "text-zinc-400 hover:bg-zinc-800/70 hover:text-rose-300"
@@ -1355,7 +1361,7 @@ function CatalogLightbox({
                   detail?.best &&
                   downloadWallpaper(routeUrl(detail.best.url), detail.name || item.name)
                 }
-                className="h-8 gap-1.5 rounded-full px-3 text-[13px] text-zinc-400 transition hover:bg-zinc-800/70 hover:text-emerald-300 disabled:opacity-40"
+                className="veil-press h-8 gap-1.5 rounded-full px-3 text-[13px] text-zinc-400 transition hover:bg-zinc-800/70 hover:text-emerald-300 disabled:opacity-40"
               >
                 <Download aria-hidden className="size-3.5" />
                 Download
@@ -1364,7 +1370,7 @@ function CatalogLightbox({
                 size="sm"
                 onClick={handleApply}
                 disabled={!detail?.best || loading}
-                className="h-8 shrink-0 gap-1.5 rounded-full bg-teal-500 px-4 text-[13px] font-medium text-zinc-950 shadow-lg shadow-teal-500/25 hover:bg-teal-400 disabled:opacity-50"
+                className="veil-hover-glow veil-press h-8 shrink-0 gap-1.5 rounded-full bg-teal-500 px-4 text-[13px] font-medium text-zinc-950 shadow-lg shadow-teal-500/25 hover:bg-teal-400 disabled:opacity-50"
               >
                 {justApplied ? (
                   <>
@@ -2048,7 +2054,7 @@ export function WallpapersSection({ onBack }: { onBack: () => void }) {
             size="icon"
             onClick={onBack}
             aria-label="Back to the start page"
-            className="size-9 shrink-0 text-zinc-400 hover:bg-zinc-800/70 hover:text-zinc-100"
+            className="veil-hover-bounce size-9 shrink-0 text-zinc-400 hover:bg-zinc-800/70 hover:text-zinc-100"
           >
             <ArrowLeft className="size-4" aria-hidden />
           </Button>
@@ -2057,7 +2063,7 @@ export function WallpapersSection({ onBack }: { onBack: () => void }) {
               <ImageIcon className="size-5" aria-hidden />
             </div>
             <div className="flex min-w-0 items-center gap-2">
-              <h1 className="truncate text-base font-semibold tracking-tight text-zinc-50 sm:text-lg">
+              <h1 className="veil-text-shine truncate text-base font-semibold tracking-tight text-zinc-50 sm:text-lg">
                 Veil Wallpapers
               </h1>
               <Badge
@@ -2075,7 +2081,7 @@ export function WallpapersSection({ onBack }: { onBack: () => void }) {
                 size="sm"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={!!upload}
-                className="h-9 gap-1.5 rounded-full border-violet-500/40 bg-violet-500/10 text-[12.5px] font-medium text-violet-200 transition hover:border-violet-400/70 hover:bg-violet-500/20 hover:text-violet-100 disabled:opacity-50"
+                className="veil-press h-9 gap-1.5 rounded-full border-violet-500/40 bg-violet-500/10 text-[12.5px] font-medium text-violet-200 transition hover:border-violet-400/70 hover:bg-violet-500/20 hover:text-violet-100 disabled:opacity-50"
               >
                 <Upload className="size-3.5" aria-hidden />
                 <span className="hidden sm:inline">Add yours</span>
@@ -2108,7 +2114,7 @@ export function WallpapersSection({ onBack }: { onBack: () => void }) {
               aria-selected={source === "pack"}
               onClick={() => setSource("pack")}
               className={cn(
-                "flex h-8 flex-1 items-center justify-center gap-1.5 rounded-xl px-3 text-[12.5px] font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70",
+                "veil-press flex h-8 flex-1 items-center justify-center gap-1.5 rounded-xl px-3 text-[12.5px] font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70",
                 source === "pack"
                   ? "bg-emerald-500/15 text-emerald-300 shadow-[0_0_16px_-6px_rgba(16,185,129,0.8)] ring-1 ring-emerald-500/40"
                   : "text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200"
@@ -2126,7 +2132,7 @@ export function WallpapersSection({ onBack }: { onBack: () => void }) {
               aria-selected={source === "live"}
               onClick={() => setSource("live")}
               className={cn(
-                "flex h-8 flex-1 items-center justify-center gap-1.5 rounded-xl px-3 text-[12.5px] font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70",
+                "veil-press flex h-8 flex-1 items-center justify-center gap-1.5 rounded-xl px-3 text-[12.5px] font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70",
                 source === "live"
                   ? "bg-emerald-500/15 text-emerald-300 shadow-[0_0_16px_-6px_rgba(16,185,129,0.8)] ring-1 ring-emerald-500/40"
                   : "text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200"
@@ -2144,7 +2150,7 @@ export function WallpapersSection({ onBack }: { onBack: () => void }) {
               aria-selected={source === "themes"}
               onClick={() => setSource("themes")}
               className={cn(
-                "flex h-8 flex-1 items-center justify-center gap-1.5 rounded-xl px-3 text-[12.5px] font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70",
+                "veil-press flex h-8 flex-1 items-center justify-center gap-1.5 rounded-xl px-3 text-[12.5px] font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70",
                 source === "themes"
                   ? "bg-emerald-500/15 text-emerald-300 shadow-[0_0_16px_-6px_rgba(16,185,129,0.8)] ring-1 ring-emerald-500/40"
                   : "text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200"
@@ -2159,7 +2165,7 @@ export function WallpapersSection({ onBack }: { onBack: () => void }) {
               aria-selected={source === "catalog"}
               onClick={() => setSource("catalog")}
               className={cn(
-                "flex h-8 flex-1 items-center justify-center gap-1.5 rounded-xl px-3 text-[12.5px] font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70",
+                "veil-press flex h-8 flex-1 items-center justify-center gap-1.5 rounded-xl px-3 text-[12.5px] font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70",
                 source === "catalog"
                   ? "bg-emerald-500/15 text-emerald-300 shadow-[0_0_16px_-6px_rgba(16,185,129,0.8)] ring-1 ring-emerald-500/40"
                   : "text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200"
@@ -2192,7 +2198,7 @@ export function WallpapersSection({ onBack }: { onBack: () => void }) {
                     aria-selected={active}
                     onClick={() => setFilter(f.id)}
                     className={cn(
-                      "h-8 shrink-0 rounded-full border px-4 text-[13px] font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70",
+                      "veil-press veil-hover-glow h-8 shrink-0 rounded-full border px-4 text-[13px] font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70",
                       active
                         ? "border-emerald-500/60 bg-emerald-500/15 text-emerald-300 shadow-[0_0_16px_-6px_rgba(16,185,129,0.8)]"
                         : "border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200"
@@ -2214,7 +2220,7 @@ export function WallpapersSection({ onBack }: { onBack: () => void }) {
                 placeholder="Search wallpapers — your pack, the 4K catalog, live walls…"
                 aria-label="Search wallpapers"
                 inputMode="search"
-                className="h-11 rounded-2xl border-zinc-800 bg-zinc-900/70 pl-10 pr-4 text-sm text-zinc-100 placeholder:text-zinc-600 focus-visible:border-emerald-500/60 focus-visible:ring-emerald-500/25"
+                className="veil-focus-bloom h-11 rounded-2xl border-zinc-800 bg-zinc-900/70 pl-10 pr-4 text-sm text-zinc-100 placeholder:text-zinc-600 focus-visible:border-emerald-500/60 focus-visible:ring-emerald-500/25"
               />
               {q && (
                 <button
@@ -2274,7 +2280,7 @@ export function WallpapersSection({ onBack }: { onBack: () => void }) {
                 {notice && (
                   <div
                     className={cn(
-                      "pointer-events-auto flex w-full max-w-md items-center gap-2.5 rounded-2xl border px-4 py-2.5 shadow-lg backdrop-blur-xl",
+                      "veil-slide-up-pop pointer-events-auto flex w-full max-w-md items-center gap-2.5 rounded-2xl border px-4 py-2.5 shadow-lg backdrop-blur-xl",
                       notice.kind === "ok"
                         ? "border-emerald-500/40 bg-zinc-950/90 shadow-emerald-500/10"
                         : "border-red-500/40 bg-zinc-950/90 shadow-red-500/10",
@@ -2299,7 +2305,7 @@ export function WallpapersSection({ onBack }: { onBack: () => void }) {
               </div>
             )}
             {dragOver && (
-              <div className="pointer-events-none absolute inset-2 z-20 flex items-center justify-center rounded-3xl border-2 border-dashed border-violet-400/70 bg-violet-500/10 backdrop-blur-sm">
+              <div className="veil-ants pointer-events-none absolute inset-2 z-20 flex items-center justify-center rounded-3xl border-2 border-dashed border-violet-400/70 bg-violet-500/10 backdrop-blur-sm">
                 <div className="flex flex-col items-center gap-2 text-violet-200">
                   <Upload className="size-8" aria-hidden />
                   <p className="text-sm font-semibold">Drop it — it lands in My pack</p>
@@ -2472,7 +2478,7 @@ export function WallpapersSection({ onBack }: { onBack: () => void }) {
                       setLiveCat(c.id);
                     }}
                     className={cn(
-                      "h-8 shrink-0 rounded-full border px-4 text-[13px] font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70",
+                      "veil-press veil-hover-glow h-8 shrink-0 rounded-full border px-4 text-[13px] font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70",
                       active
                         ? "border-emerald-500/60 bg-emerald-500/15 text-emerald-300 shadow-[0_0_16px_-6px_rgba(16,185,129,0.8)]"
                         : "border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200"
@@ -2495,7 +2501,7 @@ export function WallpapersSection({ onBack }: { onBack: () => void }) {
                   placeholder="Search motionbgs — try “spider-man”, “rainy”, “sunset”…"
                   aria-label="Search live wallpapers"
                   inputMode="search"
-                  className="h-11 rounded-2xl border-zinc-800 bg-zinc-900/70 pl-10 pr-4 text-sm text-zinc-100 placeholder:text-zinc-600 focus-visible:border-emerald-500/60 focus-visible:ring-emerald-500/25"
+                  className="veil-focus-bloom h-11 rounded-2xl border-zinc-800 bg-zinc-900/70 pl-10 pr-4 text-sm text-zinc-100 placeholder:text-zinc-600 focus-visible:border-emerald-500/60 focus-visible:ring-emerald-500/25"
                 />
                 {liveSearchQ && (
                   <button
@@ -2515,7 +2521,7 @@ export function WallpapersSection({ onBack }: { onBack: () => void }) {
                 disabled={shuffling || liveItems.length === 0}
                 title="Apply a random live wallpaper from a random category"
                 aria-label="Shuffle a random live wallpaper"
-                className="h-11 shrink-0 gap-2 rounded-2xl border-zinc-800 bg-zinc-900/70 px-4 text-[13px] font-medium text-zinc-300 transition hover:border-emerald-500/50 hover:bg-emerald-500/10 hover:text-emerald-300 disabled:opacity-60"
+                className="veil-hover-glow veil-press h-11 shrink-0 gap-2 rounded-2xl border-zinc-800 bg-zinc-900/70 px-4 text-[13px] font-medium text-zinc-300 transition hover:border-emerald-500/50 hover:bg-emerald-500/10 hover:text-emerald-300 disabled:opacity-60"
               >
                 {shuffling ? (
                   <Loader2 className="size-4 animate-spin text-emerald-400" aria-hidden />
@@ -2558,7 +2564,7 @@ export function WallpapersSection({ onBack }: { onBack: () => void }) {
                       size="sm"
                       onClick={liveLoadMore}
                       disabled={liveMoreLoading}
-                      className="h-10 rounded-full border-zinc-700 bg-zinc-900/70 px-6 text-[13px] text-zinc-300 transition hover:border-emerald-500/50 hover:bg-emerald-500/10 hover:text-emerald-300"
+                      className="veil-press h-10 rounded-full border-zinc-700 bg-zinc-900/70 px-6 text-[13px] text-zinc-300 transition hover:border-emerald-500/50 hover:bg-emerald-500/10 hover:text-emerald-300"
                     >
                       {liveMoreLoading ? (
                         <>
@@ -2584,7 +2590,7 @@ export function WallpapersSection({ onBack }: { onBack: () => void }) {
                     setLiveCat("recent");
                     setLiveDebouncedQ("");
                   }}
-                  className="mt-1 h-8 border-zinc-700 text-zinc-300 hover:border-emerald-500/50 hover:bg-emerald-500/10 hover:text-emerald-300"
+                  className="veil-press mt-1 h-8 border-zinc-700 text-zinc-300 hover:border-emerald-500/50 hover:bg-emerald-500/10 hover:text-emerald-300"
                 >
                   Try again
                 </Button>
@@ -2614,7 +2620,7 @@ export function WallpapersSection({ onBack }: { onBack: () => void }) {
                       setCat(c.id);
                     }}
                     className={cn(
-                      "h-8 shrink-0 rounded-full border px-4 text-[13px] font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70",
+                      "veil-press veil-hover-glow h-8 shrink-0 rounded-full border px-4 text-[13px] font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70",
                       active
                         ? "border-teal-500/60 bg-teal-500/15 text-teal-300 shadow-[0_0_16px_-6px_rgba(20,184,166,0.8)]"
                         : "border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200"
@@ -2636,7 +2642,7 @@ export function WallpapersSection({ onBack }: { onBack: () => void }) {
                 placeholder="Search 4K wallpapers — try “spider-man”, “goku”, “batman”…"
                 aria-label="Search the 4K catalog"
                 inputMode="search"
-                className="h-11 rounded-2xl border-zinc-800 bg-zinc-900/70 pl-10 pr-4 text-sm text-zinc-100 placeholder:text-zinc-600 focus-visible:border-teal-500/60 focus-visible:ring-teal-500/25"
+                className="veil-focus-bloom h-11 rounded-2xl border-zinc-800 bg-zinc-900/70 pl-10 pr-4 text-sm text-zinc-100 placeholder:text-zinc-600 focus-visible:border-teal-500/60 focus-visible:ring-teal-500/25"
               />
               {searchQ && (
                 <button
@@ -2676,7 +2682,7 @@ export function WallpapersSection({ onBack }: { onBack: () => void }) {
                       size="sm"
                       onClick={loadMore}
                       disabled={moreLoading}
-                      className="h-10 rounded-full border-zinc-700 bg-zinc-900/70 px-6 text-[13px] text-zinc-300 transition hover:border-teal-500/50 hover:bg-teal-500/10 hover:text-teal-300"
+                      className="veil-press h-10 rounded-full border-zinc-700 bg-zinc-900/70 px-6 text-[13px] text-zinc-300 transition hover:border-teal-500/50 hover:bg-teal-500/10 hover:text-teal-300"
                     >
                       {moreLoading ? (
                         <>
@@ -2702,7 +2708,7 @@ export function WallpapersSection({ onBack }: { onBack: () => void }) {
                     setCat("recent");
                     setDebouncedQ("");
                   }}
-                  className="mt-1 h-8 border-zinc-700 text-zinc-300 hover:border-teal-500/50 hover:bg-teal-500/10 hover:text-teal-300"
+                  className="veil-press mt-1 h-8 border-zinc-700 text-zinc-300 hover:border-teal-500/50 hover:bg-teal-500/10 hover:text-teal-300"
                 >
                   Try again
                 </Button>
@@ -2806,7 +2812,7 @@ export function WallpapersSection({ onBack }: { onBack: () => void }) {
               }}
               placeholder="The owner password"
               aria-label="Owner password"
-              className="h-11 rounded-xl border-zinc-800 bg-zinc-900/70 text-sm text-zinc-100 placeholder:text-zinc-600 focus-visible:border-violet-500/60 focus-visible:ring-violet-500/25"
+              className="veil-focus-bloom h-11 rounded-xl border-zinc-800 bg-zinc-900/70 text-sm text-zinc-100 placeholder:text-zinc-600 focus-visible:border-violet-500/60 focus-visible:ring-violet-500/25"
             />
             {pwErr && (
               <p className="text-[12px] font-medium text-red-400" role="alert">
@@ -2818,7 +2824,7 @@ export function WallpapersSection({ onBack }: { onBack: () => void }) {
                 variant="ghost"
                 size="sm"
                 onClick={() => setPwOpen(false)}
-                className="h-9 rounded-full px-4 text-[13px] text-zinc-400 hover:bg-zinc-800/70 hover:text-zinc-100"
+                className="veil-press h-9 rounded-full px-4 text-[13px] text-zinc-400 hover:bg-zinc-800/70 hover:text-zinc-100"
               >
                 Cancel
               </Button>
@@ -2826,7 +2832,7 @@ export function WallpapersSection({ onBack }: { onBack: () => void }) {
                 size="sm"
                 onClick={confirmPw}
                 disabled={!pwDraft}
-                className="h-9 rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 px-5 text-[13px] font-semibold text-white shadow-lg shadow-violet-500/25 transition hover:from-violet-400 hover:to-fuchsia-400 disabled:opacity-50"
+                className="veil-hover-glow veil-press h-9 rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 px-5 text-[13px] font-semibold text-white shadow-lg shadow-violet-500/25 transition hover:from-violet-400 hover:to-fuchsia-400 disabled:opacity-50"
               >
                 Unlock &amp; upload
               </Button>

@@ -426,6 +426,16 @@ function presenceLabel(total: number): string {
   return `${total} online`;
 }
 
+/* Mega-motion ambient stars for the procedural wallpaper — tiny twinkling
+   dots with staggered rhythm (only animate under data-veil-fancy="on"). */
+const TWINKLE_STARS: { pos: string; delay: string; dur: string }[] = [
+  { pos: "left-[12%] top-[18%]", delay: "0.3s", dur: "3.4s" },
+  { pos: "left-[76%] top-[14%]", delay: "1.1s", dur: "4.2s" },
+  { pos: "left-[64%] top-[66%]", delay: "1.9s", dur: "3.0s" },
+  { pos: "left-[22%] top-[74%]", delay: "2.6s", dur: "4.6s" },
+  { pos: "left-[46%] top-[40%]", delay: "0.8s", dur: "3.8s" },
+];
+
 /** Owns the 1-second tick so StartPage's whole tree does NOT re-render
  * every second (the old top-level setNow re-rendered the entire home
  * screen — every widget, every card — 60×/minute: a silent CPU tax that
@@ -459,7 +469,7 @@ function StartClock({ clock24 }: { clock24: boolean }) {
       <p className={`veil-rise text-5xl font-light tabular-nums tracking-tight text-zinc-50 [text-shadow:0_2px_18px_rgba(0,0,0,0.55)] sm:text-6xl ${fancy ? "veil-clock-glow" : ""}`}>
         {timeLabel}
       </p>
-      <p className="veil-rise mt-1.5 text-[11px] font-semibold uppercase tracking-[0.3em] text-zinc-300 [text-shadow:0_1px_12px_rgba(0,0,0,0.6)]">
+      <p className="veil-rise veil-type-reveal mt-1.5 text-[11px] font-semibold uppercase tracking-[0.3em] text-zinc-300 [text-shadow:0_1px_12px_rgba(0,0,0,0.6)]">
         {now
           ? now.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })
           : "\u00A0"}
@@ -478,7 +488,7 @@ function GreetingLabel({ name }: { name: string }) {
     const t = setInterval(() => setHour(new Date().getHours()), 60_000);
     return () => clearInterval(t);
   }, []);
-  return <span className="shrink-0 truncate text-zinc-400">{hour === null ? "Hello" : greetingFor(hour, name)}</span>;
+  return <span className="veil-text-shine shrink-0 truncate text-zinc-400">{hour === null ? "Hello" : greetingFor(hour, name)}</span>;
 }
 
 export function StartPage({
@@ -1021,7 +1031,7 @@ export function StartPage({
     ),
     weather: (
       <div {...rise(0.06)} className={`${fancy ? "veil-rise-fancy" : "veil-rise"} flex justify-center`}>
-        <div className="flex max-w-full items-center gap-2 overflow-visible rounded-full border border-white/10 bg-black/40 px-3.5 py-1.5 text-[12.5px] text-zinc-300 backdrop-blur-md">
+        <div className="veil-hover-lift flex max-w-full items-center gap-2 overflow-visible rounded-full border border-white/10 bg-black/40 px-3.5 py-1.5 text-[12.5px] text-zinc-300 backdrop-blur-md">
           {wx ? (
             <>
               <WxGlyph code={wxCode} desc={wx.desc} isDay={wx.isDay} className="size-3.5 shrink-0 text-emerald-300" />
@@ -1047,7 +1057,7 @@ export function StartPage({
               {wx.desc ? (
                 <>
                   <span aria-hidden className="size-0.5 shrink-0 rounded-full bg-zinc-500" />
-                  <span className="truncate">{wx.desc}</span>
+                  <span className="veil-text-breathe truncate">{wx.desc}</span>
                 </>
               ) : null}
               <span aria-hidden className="size-0.5 shrink-0 rounded-full bg-zinc-500" />
@@ -1070,7 +1080,7 @@ export function StartPage({
                   pin ? "text-emerald-300" : "text-zinc-500 hover:text-zinc-300"
                 )}
               >
-                <MapPin aria-hidden className="size-3.5" />
+                <MapPin aria-hidden className="veil-hover-spin size-3.5" />
               </button>
             </PopoverTrigger>
             <PopoverContent align="center" className="w-72 rounded-2xl border-zinc-800 bg-zinc-950/95 p-3.5 backdrop-blur-xl">
@@ -1134,11 +1144,12 @@ export function StartPage({
           aria-live="polite"
           aria-label={`Who's online — ${presence.total} ${presence.total === 1 ? "person" : "people"} on the site`}
           title="How many people are on the website right now"
-          className="flex items-center gap-2 rounded-full border border-white/10 bg-black/40 px-3.5 py-1.5 text-[12.5px] text-zinc-300 backdrop-blur-md transition hover:border-emerald-400/25"
+          className="veil-pulse-glow flex items-center gap-2 rounded-full border border-white/10 bg-black/40 px-3.5 py-1.5 text-[12.5px] text-zinc-300 backdrop-blur-md transition hover:border-emerald-400/25"
         >
           {/* the live dot — a soft ping behind a solid emerald core */}
           <span aria-hidden className="relative flex size-2 shrink-0">
             <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-60 [animation-duration:2.2s]" />
+            <span className="veil-ripple absolute inline-flex size-full rounded-full bg-teal-300/60" />
             <span className="relative inline-flex size-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]" />
           </span>
           <span className="shrink-0 font-medium tabular-nums text-zinc-100">
@@ -1150,8 +1161,8 @@ export function StartPage({
     brand: (
       <div {...rise(0.12)} className={`${fancy ? "veil-rise-fancy" : "veil-rise"} flex flex-col items-center`}>
         <div className="flex items-center gap-3">
-          <VeilMark className="size-8 text-emerald-300 drop-shadow-[0_4px_14px_rgba(16,185,129,0.45)]" />
-          <span className="text-xl font-semibold tracking-tight text-zinc-50">Veil</span>
+          <VeilMark className="veil-bounce-soft size-8 text-emerald-300 drop-shadow-[0_4px_14px_rgba(16,185,129,0.45)]" />
+          <span className="veil-text-shine text-xl font-semibold tracking-tight text-zinc-50">Veil</span>
         </div>
         <h2
           key={tagline}
@@ -1198,7 +1209,7 @@ export function StartPage({
           submit();
         }}
       >
-        <div className="relative min-w-0 flex-1">
+        <div className="veil-border-dance relative min-w-0 flex-1 rounded-2xl">
           <Search
             aria-hidden
             className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-zinc-500 transition-colors peer-focus:text-emerald-300"
@@ -1253,7 +1264,7 @@ export function StartPage({
                 >
                   <span
                     aria-hidden
-                    className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${
+                    className={`veil-hover-wobble flex size-8 shrink-0 items-center justify-center rounded-lg ${
                       s.kind === "visit"
                         ? "bg-zinc-800 text-zinc-400"
                         : s.kind === "link"
@@ -1289,13 +1300,13 @@ export function StartPage({
           className="flex h-[52px] shrink-0 items-center gap-2 rounded-2xl bg-emerald-500 px-5 text-[15px] font-semibold text-emerald-950 shadow-[0_12px_24px_rgba(16,185,129,0.25)] transition hover:bg-emerald-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300"
         >
           <span className="hidden sm:inline">Launch</span>
-          <ArrowRight aria-hidden className="size-4" />
+          <ArrowRight aria-hidden className="veil-hover-bounce size-4" />
         </motion.button>
       </form>
     ),
     hints: (
       <div {...rise(0.18)} className={fancy ? "veil-rise-fancy" : "veil-rise"}>
-        <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 rounded-full border border-white/10 bg-black/40 px-3.5 py-1.5 text-[11.5px] text-zinc-400 backdrop-blur-md">
+        <p className="veil-scanline flex flex-wrap items-center justify-center gap-x-2 gap-y-1 rounded-full border border-white/10 bg-black/40 px-3.5 py-1.5 text-[11.5px] text-zinc-400 backdrop-blur-md">
           <HintKbd>Enter</HintKbd> launches ·
           <HintKbd>↑↓</HintKbd> picks ·
           <HintKbd>F</HintKbd> fullscreen ·
@@ -1305,7 +1316,7 @@ export function StartPage({
     ),
     dock: (
       <nav {...rise(0.24)} aria-label="Veil pages" className={`${fancy ? "veil-rise-fancy" : "veil-rise"} flex max-w-[36rem] flex-wrap items-center justify-center gap-2`}>
-        {dock.map((d) => {
+        {dock.map((d, i) => {
           const Icon = d.icon;
           const active = section === d.id;
           return (
@@ -1324,8 +1335,8 @@ export function StartPage({
                   : "border-white/10 bg-black/45 text-zinc-100 hover:border-white/25 hover:bg-black/60 hover:text-white"
               } ${fancy ? "veil-dock-sheen" : ""}`}
             >
-              <Icon aria-hidden className={`size-4 shrink-0 ${DOCK_ICON_COLORS[d.id]}`} />
-              <span>{d.label}</span>
+              <Icon aria-hidden className={`veil-pop-in veil-stagger-${(i % 8) + 1} size-4 shrink-0 ${DOCK_ICON_COLORS[d.id]}`} />
+              <span className={i % 2 === 0 ? "veil-hover-bounce" : "veil-hover-wobble"}>{d.label}</span>
             </motion.button>
           );
         })}
@@ -1394,7 +1405,7 @@ export function StartPage({
         onClick={() => setUiHidden((v) => !v)}
         className="fixed left-4 top-4 z-[70] flex h-7 items-center gap-1.5 rounded-full border border-white/10 bg-black/35 px-2.5 text-[11px] font-medium tracking-wide text-zinc-300/70 backdrop-blur-md transition hover:border-white/25 hover:text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
       >
-        {uiHidden ? <Eye aria-hidden className="size-3" /> : <EyeOff aria-hidden className="size-3" />}
+        {uiHidden ? <Eye aria-hidden className="veil-hover-wobble size-3" /> : <EyeOff aria-hidden className="veil-hover-wobble size-3" />}
         <span>{uiHidden ? "show UI" : "hide UI"}</span>
       </button>
       {/* layout — open the start page's bento editor */}
@@ -1405,7 +1416,7 @@ export function StartPage({
         onClick={() => (editing ? finishEditing() : setEditing(true))}
         className="fixed left-4 top-14 z-[70] flex h-7 items-center gap-1.5 rounded-full border border-white/10 bg-black/35 px-2.5 text-[11px] font-medium tracking-wide text-zinc-300/70 backdrop-blur-md transition hover:border-white/25 hover:text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
       >
-        <LayoutGrid aria-hidden className={cn("size-3", editing && "text-emerald-300")} />
+        <LayoutGrid aria-hidden className={cn("veil-hover-wobble size-3", editing && "text-emerald-300")} />
         <span>{editing ? "done" : "layout"}</span>
       </button>
       {/* ── wallpaper backdrop ── */}
@@ -1420,6 +1431,15 @@ export function StartPage({
           <div className={`absolute inset-0 bg-gradient-to-br ${THEME_GRADIENTS[wpTheme] ?? THEME_GRADIENTS.emerald}`}>
             <div className={`absolute -top-40 left-[25%] h-[26rem] w-[40rem] rounded-full bg-white/10 blur-3xl ${reduceMotion ? "" : "veil-orb-a"}`} />
             <div className={`absolute -bottom-32 right-[8%] h-80 w-80 rounded-full bg-black/10 blur-3xl ${reduceMotion ? "" : "veil-orb-b"}`} />
+            {/* mega-motion: an aurora haze + twinkling stars over the live theme */}
+            <div className="veil-aurora absolute -inset-32" />
+            {TWINKLE_STARS.map((s, si) => (
+              <span
+                key={si}
+                className={`veil-twinkle absolute size-1 rounded-full bg-white/70 ${s.pos}`}
+                style={{ "--twinkle-delay": s.delay, "--twinkle-dur": s.dur } as React.CSSProperties}
+              />
+            ))}
           </div>
         )}
         {dimClass ? <div className={`absolute inset-0 ${dimClass}`} /> : null}
@@ -1595,7 +1615,7 @@ function SuggestionCard({
           : "border-white/10 hover:border-emerald-500/40",
       )}
     >
-      <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-zinc-800">
+      <span className={`veil-pop-in veil-stagger-${(index % 8) + 1} flex size-8 shrink-0 items-center justify-center rounded-lg bg-zinc-800`}>
         {idx < urls.length ? (
           <img
             src={urls[idx]}
@@ -1614,7 +1634,7 @@ function SuggestionCard({
         <span className="flex items-center gap-1.5">
           <span className="truncate text-[12.5px] font-medium text-zinc-200 group-hover:text-zinc-100">{link.name}</span>
           {link.tag ? (
-            <span className="shrink-0 rounded-full border border-emerald-400/25 bg-emerald-400/10 px-1.5 py-px text-[9px] font-semibold uppercase tracking-wide text-emerald-300">
+            <span className="veil-bounce-soft shrink-0 rounded-full border border-emerald-400/25 bg-emerald-400/10 px-1.5 py-px text-[9px] font-semibold uppercase tracking-wide text-emerald-300">
               {link.tag}
             </span>
           ) : null}
@@ -1656,7 +1676,7 @@ function RecentCard({
       whileTap={fancy ? { scale: 0.97 } : undefined}
       className="group flex items-center gap-2.5 rounded-2xl border border-white/10 bg-black/35 p-3 text-left backdrop-blur-md transition-colors hover:border-emerald-500/40 hover:bg-black/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300"
     >
-      <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-zinc-800">
+      <span className={`veil-pop-in veil-stagger-${(index % 8) + 1} flex size-8 shrink-0 items-center justify-center rounded-lg bg-zinc-800`}>
         {idx < urls.length ? (
           <img
             src={urls[idx]}

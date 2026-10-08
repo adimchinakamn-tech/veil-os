@@ -308,7 +308,7 @@ function TitleCard({
         className
       )}
     >
-      <span className="relative block aspect-video w-full overflow-hidden bg-[#0a100d]">
+      <span className="veil-hover-tilt relative block aspect-video w-full overflow-hidden bg-[#0a100d]">
         {src && !failed ? (
           <img
             src={src}
@@ -334,7 +334,7 @@ function TitleCard({
           aria-hidden
           className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 backdrop-blur-[0px] transition-opacity duration-200 group-hover:opacity-100 group-hover:bg-black/40"
         >
-          <span className="flex size-11 scale-75 items-center justify-center rounded-full bg-[#3f7f63] shadow-[0_8px_24px_rgba(0,0,0,0.55)] ring-1 ring-white/25 transition-transform duration-200 group-hover:scale-100">
+          <span className="veil-press veil-hover-glow flex size-11 scale-75 items-center justify-center rounded-full bg-[#3f7f63] shadow-[0_8px_24px_rgba(0,0,0,0.55)] ring-1 ring-white/25 transition-transform duration-200 group-hover:scale-100">
             <Play aria-hidden className="size-4 translate-x-[1px] fill-white text-white" />
           </span>
         </span>
@@ -344,7 +344,7 @@ function TitleCard({
           <span
             aria-hidden
             title="Hot right now"
-            className="pointer-events-none absolute left-1.5 top-1.5 flex items-center gap-1 rounded-full border border-orange-400/25 bg-black/55 px-1.5 py-[3px] text-[9px] font-bold uppercase tracking-wider text-orange-300 backdrop-blur-md"
+            className="veil-bounce-soft pointer-events-none absolute left-1.5 top-1.5 flex items-center gap-1 rounded-full border border-orange-400/25 bg-black/55 px-1.5 py-[3px] text-[9px] font-bold uppercase tracking-wider text-orange-300 backdrop-blur-md"
           >
             <Flame aria-hidden className="size-2.5 fill-orange-400/60" />
             hot
@@ -375,7 +375,7 @@ function TitleCard({
               }
             }}
             className={cn(
-              "absolute right-1.5 top-1.5 z-10 flex size-7 items-center justify-center rounded-full border backdrop-blur-md transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70",
+              "veil-press absolute right-1.5 top-1.5 z-10 flex size-7 items-center justify-center rounded-full border backdrop-blur-md transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70",
               favorite
                 ? "border-amber-400/50 bg-amber-500/25 text-amber-300 opacity-100"
                 : "border-white/15 bg-black/45 text-zinc-300 opacity-0 hover:border-amber-400/40 hover:text-amber-300 group-hover:opacity-100 group-focus-within:opacity-100"
@@ -450,7 +450,7 @@ function CatalogGrid({
 
 function CatalogErrorCard({ onRetry }: { onRetry: () => void }) {
   return (
-    <div className="rounded-2xl border border-amber-500/25 bg-amber-500/10 p-8 text-center sm:p-10">
+    <div className="veil-pop-in rounded-2xl border border-amber-500/25 bg-amber-500/10 p-8 text-center sm:p-10">
       <WifiOff aria-hidden className="mx-auto h-6 w-6 text-amber-400" />
       <p className="mt-3 text-[13.5px] font-medium text-amber-200">Couldn't reach the arcade catalog.</p>
       <p className="mt-1 text-[12.5px] text-amber-200/70">
@@ -459,7 +459,7 @@ function CatalogErrorCard({ onRetry }: { onRetry: () => void }) {
       <Button
         variant="outline"
         onClick={onRetry}
-        className="mt-4 h-9 gap-1.5 rounded-xl border-amber-500/30 bg-zinc-900/60 px-4 text-[13px] text-amber-200 hover:border-amber-400/50 hover:bg-zinc-900"
+        className="veil-press mt-4 h-9 gap-1.5 rounded-xl border-amber-500/30 bg-zinc-900/60 px-4 text-[13px] text-amber-200 hover:border-amber-400/50 hover:bg-zinc-900"
       >
         <RotateCw aria-hidden className="h-3.5 w-3.5" />
         Try again
@@ -673,7 +673,7 @@ function AppCard({
       >
         {/* icon plate — the app's glyph sits on a gradient cover like a thumbnail */}
         <span className="relative flex aspect-video w-full items-center justify-center overflow-hidden bg-gradient-to-br from-[#1c3327] via-[#0d1612] to-[#15251d]">
-          <span className="flex size-12 items-center justify-center rounded-2xl border border-[#3f7f63]/40 bg-[#0d1612]/70 text-[#5fae87] shadow-[0_10px_28px_rgba(0,0,0,0.45)] backdrop-blur-sm transition-transform duration-200 group-hover:scale-110 sm:size-14">
+          <span className="veil-hover-wobble flex size-12 items-center justify-center rounded-2xl border border-[#3f7f63]/40 bg-[#0d1612]/70 text-[#5fae87] shadow-[0_10px_28px_rgba(0,0,0,0.45)] backdrop-blur-sm transition-transform duration-200 group-hover:scale-110 sm:size-14">
             {deleting ? (
               <Loader2 aria-hidden className="size-5 animate-spin text-[#88a49a]" />
             ) : (
@@ -685,7 +685,7 @@ function AppCard({
           {app.createdBy === "ai" ? (
             <span
               aria-hidden
-              className="pointer-events-none absolute left-1.5 top-1.5 flex items-center gap-1 rounded-full border border-violet-400/25 bg-black/55 px-1.5 py-[3px] text-[9px] font-bold uppercase tracking-wider text-violet-300 backdrop-blur-md"
+              className="veil-bounce-soft pointer-events-none absolute left-1.5 top-1.5 flex items-center gap-1 rounded-full border border-violet-400/25 bg-black/55 px-1.5 py-[3px] text-[9px] font-bold uppercase tracking-wider text-violet-300 backdrop-blur-md"
             >
               <Sparkles aria-hidden className="size-2.5" />
               veil ai
@@ -713,7 +713,7 @@ function AppCard({
             aria-hidden
             className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-hover:bg-black/40"
           >
-            <span className="flex size-11 scale-75 items-center justify-center rounded-full bg-[#3f7f63] shadow-[0_8px_24px_rgba(0,0,0,0.55)] ring-1 ring-white/25 transition-transform duration-200 group-hover:scale-100">
+            <span className="veil-press veil-hover-glow flex size-11 scale-75 items-center justify-center rounded-full bg-[#3f7f63] shadow-[0_8px_24px_rgba(0,0,0,0.55)] ring-1 ring-white/25 transition-transform duration-200 group-hover:scale-100">
               {opening ? (
                 <Loader2 aria-hidden className="size-4 animate-spin text-white" />
               ) : (
@@ -734,9 +734,10 @@ function AppCard({
           </span>
           {(app.plays ?? 0) > 0 && (
             <span
+              key={app.plays}
               aria-label={`${app.plays} ${app.plays === 1 ? "launch" : "launches"}`}
               title={`${app.plays} ${app.plays === 1 ? "launch" : "launches"}`}
-              className="flex shrink-0 items-center gap-0.5 rounded-full border border-[#3f7f63]/30 bg-[#1c3327]/60 px-1.5 py-px text-[9px] font-semibold tabular-nums text-[#5fae87]"
+              className="veil-coin-flip flex shrink-0 items-center gap-0.5 rounded-full border border-[#3f7f63]/30 bg-[#1c3327]/60 px-1.5 py-px text-[9px] font-semibold tabular-nums text-[#5fae87]"
             >
               <Play aria-hidden className="size-2 fill-current" />
               <span className="lowercase">{app.plays! > 999 ? "999+" : app.plays}</span>
@@ -764,7 +765,7 @@ function AppCard({
           aria-label={`Delete app: ${app.name}`}
           title="Delete this app"
           className={cn(
-            "absolute right-1.5 top-1.5 z-10 flex size-7 items-center justify-center rounded-full border backdrop-blur-md transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400/70",
+            "veil-press absolute right-1.5 top-1.5 z-10 flex size-7 items-center justify-center rounded-full border backdrop-blur-md transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400/70",
             deleting
               ? "border-red-400/50 bg-black/60 text-red-300 opacity-100"
               : "border-white/15 bg-black/45 text-zinc-300 opacity-0 hover:border-red-400/40 hover:text-red-300 group-hover:opacity-100 group-focus-within:opacity-100"
@@ -974,13 +975,13 @@ function AppsTab({ onLaunchApp }: { onLaunchApp: (app: SiteAppCard) => Promise<v
             setCreating((c) => !c);
             setFormError("");
           }}
-          className="flex h-9 items-center gap-1.5 rounded-xl border border-[#2b4a3a] bg-[#0d1612]/90 px-3 text-[12.5px] font-medium text-[#7fd0a8] shadow-sm shadow-black/30 backdrop-blur-md transition hover:border-[#3f7f63] hover:text-[#a3ecc9] focus-visible:outline-none focus-visible:border-[#3f7f63]"
+          className="veil-press flex h-9 items-center gap-1.5 rounded-xl border border-[#2b4a3a] bg-[#0d1612]/90 px-3 text-[12.5px] font-medium text-[#7fd0a8] shadow-sm shadow-black/30 backdrop-blur-md transition hover:border-[#3f7f63] hover:text-[#a3ecc9] focus-visible:outline-none focus-visible:border-[#3f7f63]"
         >
           <Plus aria-hidden className="h-3.5 w-3.5" />
           create app
         </button>
         {savedName && !creating && (
-          <span className="flex items-center gap-1.5 rounded-full border border-emerald-400/25 bg-emerald-500/10 px-2.5 py-1 text-[11px] text-emerald-300">
+          <span className="veil-pop-in flex items-center gap-1.5 rounded-full border border-emerald-400/25 bg-emerald-500/10 px-2.5 py-1 text-[11px] text-emerald-300">
             <Sparkles aria-hidden className="size-3" />
             “{savedName}” installed — no password needed
           </span>
@@ -989,7 +990,7 @@ function AppsTab({ onLaunchApp }: { onLaunchApp: (app: SiteAppCard) => Promise<v
         <button
           type="button"
           onClick={() => (manageMode ? setManageMode(false) : void unlockManage())}
-          className="flex h-9 items-center gap-1.5 rounded-xl border border-[#253830] bg-[#0d1612]/90 px-3 text-[12.5px] font-medium text-[#88a49a] shadow-sm shadow-black/30 backdrop-blur-md transition hover:border-[#3f7f63] hover:text-[#5fae87] focus-visible:outline-none focus-visible:border-[#3f7f63]"
+          className="veil-press flex h-9 items-center gap-1.5 rounded-xl border border-[#253830] bg-[#0d1612]/90 px-3 text-[12.5px] font-medium text-[#88a49a] shadow-sm shadow-black/30 backdrop-blur-md transition hover:border-[#3f7f63] hover:text-[#5fae87] focus-visible:outline-none focus-visible:border-[#3f7f63]"
         >
           {manageMode ? (
             <>
@@ -1013,7 +1014,7 @@ function AppsTab({ onLaunchApp }: { onLaunchApp: (app: SiteAppCard) => Promise<v
             }}
             placeholder="owner password"
             aria-label="Owner password"
-            className="h-9 w-40 rounded-xl border border-[#253830] bg-[#0d1612]/90 px-3 text-[12.5px] text-zinc-100 shadow-sm shadow-black/30 outline-none backdrop-blur-md transition placeholder:text-[#526a60] focus-visible:border-[#3f7f63]"
+            className="veil-focus-bloom h-9 w-40 rounded-xl border border-[#253830] bg-[#0d1612]/90 px-3 text-[12.5px] text-zinc-100 shadow-sm shadow-black/30 outline-none backdrop-blur-md transition placeholder:text-[#526a60] focus-visible:border-[#3f7f63]"
           />
         )}
         {manageMode && (
@@ -1034,7 +1035,7 @@ function AppsTab({ onLaunchApp }: { onLaunchApp: (app: SiteAppCard) => Promise<v
             transition={{ duration: 0.25 }}
             className="mb-6 overflow-hidden"
           >
-            <div className="rounded-2xl border border-[#1a2822] bg-[#0d1612]/80 p-4 shadow-lg shadow-black/30 backdrop-blur-md sm:p-5">
+            <div className="veil-slide-up-pop rounded-2xl border border-[#1a2822] bg-[#0d1612]/80 p-4 shadow-lg shadow-black/30 backdrop-blur-md sm:p-5">
               <div className="mb-3 flex items-center gap-2">
                 <FileCode2 aria-hidden className="size-4 text-[#5fae87]" />
                 <h3 className="text-[13.5px] font-bold lowercase tracking-tight text-[#e8f2ee]">
@@ -1044,7 +1045,7 @@ function AppsTab({ onLaunchApp }: { onLaunchApp: (app: SiteAppCard) => Promise<v
                   type="button"
                   onClick={() => setCreating(false)}
                   aria-label="Close app composer"
-                  className="ml-auto flex size-7 items-center justify-center rounded-lg border border-[#253830] text-[#88a49a] transition hover:border-[#3f7f63] hover:text-[#5fae87]"
+                  className="veil-press ml-auto flex size-7 items-center justify-center rounded-lg border border-[#253830] text-[#88a49a] transition hover:border-[#3f7f63] hover:text-[#5fae87]"
                 >
                   <X aria-hidden className="size-3.5" />
                 </button>
@@ -1059,7 +1060,7 @@ function AppsTab({ onLaunchApp }: { onLaunchApp: (app: SiteAppCard) => Promise<v
                     onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                     placeholder="my app"
                     maxLength={60}
-                    className="h-9 w-full rounded-xl border border-[#253830] bg-[#0d1612]/90 px-3 text-[12.5px] text-zinc-100 outline-none transition placeholder:text-[#526a60] focus-visible:border-[#3f7f63]"
+                    className="veil-focus-bloom h-9 w-full rounded-xl border border-[#253830] bg-[#0d1612]/90 px-3 text-[12.5px] text-zinc-100 outline-none transition placeholder:text-[#526a60] focus-visible:border-[#3f7f63]"
                   />
                 </label>
                 <label className="block">
@@ -1071,7 +1072,7 @@ function AppsTab({ onLaunchApp }: { onLaunchApp: (app: SiteAppCard) => Promise<v
                     onChange={(e) => setForm((f) => ({ ...f, desc: e.target.value }))}
                     placeholder="one line about it"
                     maxLength={140}
-                    className="h-9 w-full rounded-xl border border-[#253830] bg-[#0d1612]/90 px-3 text-[12.5px] text-zinc-100 outline-none transition placeholder:text-[#526a60] focus-visible:border-[#3f7f63]"
+                    className="veil-focus-bloom h-9 w-full rounded-xl border border-[#253830] bg-[#0d1612]/90 px-3 text-[12.5px] text-zinc-100 outline-none transition placeholder:text-[#526a60] focus-visible:border-[#3f7f63]"
                   />
                 </label>
               </div>
@@ -1091,7 +1092,7 @@ function AppsTab({ onLaunchApp }: { onLaunchApp: (app: SiteAppCard) => Promise<v
                         aria-label={`Icon: ${key}`}
                         aria-pressed={active}
                         className={cn(
-                          "flex size-8 items-center justify-center rounded-lg border transition",
+                          "veil-press flex size-8 items-center justify-center rounded-lg border transition",
                           active
                             ? "border-[#3f7f63] bg-[#1c3327] text-[#7fd0a8]"
                             : "border-[#253830] bg-[#0d1612]/80 text-[#88a49a] hover:border-[#3f7f63]/60 hover:text-[#5fae87]",
@@ -1113,7 +1114,7 @@ function AppsTab({ onLaunchApp }: { onLaunchApp: (app: SiteAppCard) => Promise<v
                   placeholder="<!doctype html>\n<html lang=“en”>\n…"
                   rows={9}
                   spellCheck={false}
-                  className="veil-scroll-slim w-full resize-y rounded-xl border border-[#253830] bg-[#0a120e]/90 p-3 font-mono text-[11.5px] leading-relaxed text-zinc-100 outline-none transition placeholder:text-[#526a60] focus-visible:border-[#3f7f63]"
+                  className="veil-focus-bloom veil-scroll-slim w-full resize-y rounded-xl border border-[#253830] bg-[#0a120e]/90 p-3 font-mono text-[11.5px] leading-relaxed text-zinc-100 outline-none transition placeholder:text-[#526a60] focus-visible:border-[#3f7f63]"
                 />
               </label>
               <div className="mt-3 flex flex-wrap items-center gap-2.5">
@@ -1121,7 +1122,7 @@ function AppsTab({ onLaunchApp }: { onLaunchApp: (app: SiteAppCard) => Promise<v
                   type="button"
                   onClick={() => void submitCreate()}
                   disabled={saving}
-                  className="flex h-9 items-center gap-1.5 rounded-xl border border-[#2b4a3a] bg-[#1c3327] px-4 text-[12.5px] font-semibold lowercase text-[#a3ecc9] shadow-sm shadow-black/30 transition hover:border-[#3f7f63] disabled:opacity-50"
+                  className="veil-hover-glow veil-press flex h-9 items-center gap-1.5 rounded-xl border border-[#2b4a3a] bg-[#1c3327] px-4 text-[12.5px] font-semibold lowercase text-[#a3ecc9] shadow-sm shadow-black/30 transition hover:border-[#3f7f63] disabled:opacity-50"
                 >
                   {saving ? (
                     <Loader2 aria-hidden className="size-3.5 animate-spin" />
@@ -1136,7 +1137,7 @@ function AppsTab({ onLaunchApp }: { onLaunchApp: (app: SiteAppCard) => Promise<v
                   onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
                   placeholder="owner password (optional — owner badge)"
                   aria-label="Owner password, optional"
-                  className="h-9 w-56 rounded-xl border border-[#253830] bg-[#0d1612]/90 px-3 text-[12.5px] text-zinc-100 outline-none transition placeholder:text-[#526a60] focus-visible:border-[#3f7f63]"
+                  className="veil-focus-bloom h-9 w-56 rounded-xl border border-[#253830] bg-[#0d1612]/90 px-3 text-[12.5px] text-zinc-100 outline-none transition placeholder:text-[#526a60] focus-visible:border-[#3f7f63]"
                 />
                 <span className="text-[11px] lowercase tracking-wide text-[#526a60]">
                   no password needed — apps run sandboxed in-frame
@@ -1164,7 +1165,7 @@ function AppsTab({ onLaunchApp }: { onLaunchApp: (app: SiteAppCard) => Promise<v
           <button
             type="button"
             onClick={() => void load()}
-            className="ml-auto shrink-0 text-[11px] font-semibold lowercase text-amber-300 hover:text-amber-200"
+            className="veil-press ml-auto shrink-0 text-[11px] font-semibold lowercase text-amber-300 hover:text-amber-200"
           >
             retry
           </button>
@@ -1191,7 +1192,7 @@ function AppsTab({ onLaunchApp }: { onLaunchApp: (app: SiteAppCard) => Promise<v
             {apps.some((a) => a.lastPlayedAt) && (
               <span
                 title="Apps you launched recently move to the front"
-                className="flex shrink-0 items-center gap-1 rounded-full border border-[#3f7f63]/30 bg-[#15251d]/60 px-2 py-0.5 text-[9.5px] font-medium lowercase tracking-wide text-[#5fae87]"
+                className="veil-text-breathe flex shrink-0 items-center gap-1 rounded-full border border-[#3f7f63]/30 bg-[#15251d]/60 px-2 py-0.5 text-[9.5px] font-medium lowercase tracking-wide text-[#5fae87]"
               >
                 <Play aria-hidden className="size-2.5 fill-current" />
                 recently played first
@@ -1202,7 +1203,7 @@ function AppsTab({ onLaunchApp }: { onLaunchApp: (app: SiteAppCard) => Promise<v
                 type="button"
                 onClick={downloadPack}
                 title={`The “Veil AI Apps” offline pack — ${pack.apps} of these apps bundled for the offline version (built ${pack.built ?? "today"}). One click downloads it; drop it into veil-offline.html → Arcade → AI Lab.`}
-                className="flex shrink-0 items-center gap-1 rounded-full border border-[#6d5bb5]/35 bg-[#1d1830]/60 px-2 py-0.5 text-[9.5px] font-medium lowercase tracking-wide text-[#a99ae0] transition-colors hover:border-[#8b79d6]/50 hover:text-[#c4b8f0]"
+                className="veil-press flex shrink-0 items-center gap-1 rounded-full border border-[#6d5bb5]/35 bg-[#1d1830]/60 px-2 py-0.5 text-[9.5px] font-medium lowercase tracking-wide text-[#a99ae0] transition-colors hover:border-[#8b79d6]/50 hover:text-[#c4b8f0]"
               >
                 <Package aria-hidden className="size-2.5" />
                 offline pack · {pack.apps} app{pack.apps === 1 ? "" : "s"}
@@ -1755,13 +1756,13 @@ export function ArcadeSection({
             size="sm"
             onClick={onBack}
             aria-label="Close the arcade"
-            className="absolute left-4 top-5 h-8 gap-1.5 rounded-xl border-[#253830]/80 bg-[#0d1612]/70 px-2.5 text-[#88a49a] backdrop-blur-md hover:border-[#3f7f63] hover:bg-[#12231b] hover:text-[#5fae87] sm:px-3"
+            className="veil-hover-bounce absolute left-4 top-5 h-8 gap-1.5 rounded-xl border-[#253830]/80 bg-[#0d1612]/70 px-2.5 text-[#88a49a] backdrop-blur-md hover:border-[#3f7f63] hover:bg-[#12231b] hover:text-[#5fae87] sm:px-3"
           >
             <ArrowLeft aria-hidden className="h-4 w-4" />
             <span className="hidden sm:inline">Back</span>
           </Button>
           <div className="select-none text-center">
-            <h1 className="text-[30px] font-bold lowercase leading-none tracking-[-1px] text-[#e8f2ee] [text-shadow:0_2px_24px_rgba(0,0,0,0.6)] sm:text-[38px]">
+            <h1 className="veil-text-rainbow text-[30px] font-bold lowercase leading-none tracking-[-1px] text-[#e8f2ee] [text-shadow:0_2px_24px_rgba(0,0,0,0.6)] sm:text-[38px]">
               veil <em className="not-italic text-[#5fae87]">arcade</em>
             </h1>
             <p className="mt-2 text-[11px] lowercase tracking-[0.1em] text-[#88a49a] [text-shadow:0_1px_10px_rgba(0,0,0,0.6)]">
@@ -1774,7 +1775,7 @@ export function ArcadeSection({
                 <button
                   type="button"
                   aria-label="Keyboard shortcuts"
-                  className="flex h-8 w-8 items-center justify-center rounded-xl border border-[#253830]/80 bg-[#0d1612]/70 text-[13px] font-semibold text-[#88a49a] backdrop-blur-md transition hover:border-[#3f7f63] hover:text-[#5fae87] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5fae87]/50"
+                  className="veil-press flex h-8 w-8 items-center justify-center rounded-xl border border-[#253830]/80 bg-[#0d1612]/70 text-[13px] font-semibold text-[#88a49a] backdrop-blur-md transition hover:border-[#3f7f63] hover:text-[#5fae87] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5fae87]/50"
                 >
                   ?
                 </button>
@@ -1801,7 +1802,7 @@ export function ArcadeSection({
                 aria-controls={`arcade-panel-${t.id}`}
                 onClick={() => selectTab(t.id)}
                 className={cn(
-                  "flex items-center gap-2 rounded-xl border px-4 py-2.5 text-[13px] font-semibold lowercase transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5fae87]/50 active:scale-[0.97] sm:px-[22px] sm:py-3",
+                  "veil-press flex items-center gap-2 rounded-xl border px-4 py-2.5 text-[13px] font-semibold lowercase transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5fae87]/50 active:scale-[0.97] sm:px-[22px] sm:py-3",
                   tab === t.id
                     ? "border-[#3f7f63] bg-[#3f7f63] text-white shadow-[0_4px_20px_rgba(63,127,99,0.35)]"
                     : "border-[#253830] bg-[#0d1612]/90 text-[#88a49a] hover:border-[#3f7f63] hover:bg-[#3f7f63]/[0.08] hover:text-[#5fae87]"
@@ -1827,7 +1828,7 @@ export function ArcadeSection({
                 spellCheck={false}
                 autoCapitalize="none"
                 autoComplete="off"
-                className="h-[46px] rounded-xl border-[#253830] bg-[#0d1612]/90 pl-11 pr-10 text-[14px] lowercase text-zinc-100 shadow-xl shadow-black/30 placeholder:text-[#526a60] focus-visible:border-[#3f7f63] focus-visible:ring-[3px] focus-visible:ring-[rgba(63,127,99,0.18)]"
+                className="veil-focus-bloom h-[46px] rounded-xl border-[#253830] bg-[#0d1612]/90 pl-11 pr-10 text-[14px] lowercase text-zinc-100 shadow-xl shadow-black/30 placeholder:text-[#526a60] focus-visible:border-[#3f7f63] focus-visible:ring-[3px] focus-visible:ring-[rgba(63,127,99,0.18)]"
               />
               {query && (
                 <button
@@ -1934,7 +1935,7 @@ export function ArcadeSection({
                     id="arcade-sort"
                     value={sort}
                     onChange={(e) => setSort(e.target.value === "name" ? "name" : "id")}
-                    className="h-9 cursor-pointer rounded-xl border border-[#253830] bg-[#0d1612]/90 px-3 text-[12.5px] font-medium text-[#88a49a] shadow-sm shadow-black/30 outline-none backdrop-blur-md transition hover:border-[#3f7f63] hover:text-[#5fae87] focus-visible:border-[#3f7f63]"
+                    className="veil-press h-9 cursor-pointer rounded-xl border border-[#253830] bg-[#0d1612]/90 px-3 text-[12.5px] font-medium text-[#88a49a] shadow-sm shadow-black/30 outline-none backdrop-blur-md transition hover:border-[#3f7f63] hover:text-[#5fae87] focus-visible:border-[#3f7f63]"
                   >
                     <option value="id">ID (Date)</option>
                     <option value="name">Name</option>
@@ -1950,7 +1951,7 @@ export function ArcadeSection({
                     id="arcade-tag"
                     value={tag}
                     onChange={(e) => setTag(e.target.value)}
-                    className="h-9 cursor-pointer rounded-xl border border-[#253830] bg-[#0d1612]/90 px-3 text-[12.5px] font-medium text-[#88a49a] shadow-sm shadow-black/30 outline-none backdrop-blur-md transition hover:border-[#3f7f63] hover:text-[#5fae87] focus-visible:border-[#3f7f63]"
+                    className="veil-press h-9 cursor-pointer rounded-xl border border-[#253830] bg-[#0d1612]/90 px-3 text-[12.5px] font-medium text-[#88a49a] shadow-sm shadow-black/30 outline-none backdrop-blur-md transition hover:border-[#3f7f63] hover:text-[#5fae87] focus-visible:border-[#3f7f63]"
                   >
                     <option value="">all</option>
                     {tagList.map((t) => (
@@ -1969,7 +1970,7 @@ export function ArcadeSection({
                         setTag("");
                         setSort("id");
                       }}
-                      className="flex h-9 items-center gap-1.5 rounded-xl border border-[#253830] bg-[#0d1612]/90 px-3 text-[12px] font-medium text-[#88a49a] shadow-sm shadow-black/30 backdrop-blur-md transition hover:border-[#3f7f63] hover:text-[#5fae87]"
+                      className="veil-press flex h-9 items-center gap-1.5 rounded-xl border border-[#253830] bg-[#0d1612]/90 px-3 text-[12px] font-medium text-[#88a49a] shadow-sm shadow-black/30 backdrop-blur-md transition hover:border-[#3f7f63] hover:text-[#5fae87]"
                     >
                       <RotateCw aria-hidden className="h-3 w-3" />
                       reset
@@ -2109,7 +2110,7 @@ export function ArcadeSection({
                 </span>
                 <Badge
                   className={cn(
-                    "shrink-0 rounded-full px-2 text-[10.5px] font-medium uppercase tracking-wider",
+                    "veil-text-breathe shrink-0 rounded-full px-2 text-[10.5px] font-medium uppercase tracking-wider",
                     title.html
                       ? "border-violet-500/30 bg-violet-500/15 text-violet-300"
                       : "border-emerald-500/30 bg-emerald-500/15 text-emerald-300"
@@ -2122,7 +2123,7 @@ export function ArcadeSection({
                     size="sm"
                     onClick={() => setArcadeVisible(false)}
                     aria-label="Back to arcade — the title keeps running"
-                    className="h-8 gap-1.5 rounded-lg border-zinc-800 bg-zinc-900/70 px-2.5 text-[12px] font-medium text-zinc-300 hover:border-emerald-500/40 hover:bg-zinc-900 hover:text-emerald-200 sm:px-3"
+                    className="veil-press h-8 gap-1.5 rounded-lg border-zinc-800 bg-zinc-900/70 px-2.5 text-[12px] font-medium text-zinc-300 hover:border-emerald-500/40 hover:bg-zinc-900 hover:text-emerald-200 sm:px-3"
                   >
                     <LayoutGrid aria-hidden className="h-3.5 w-3.5" />
                     Back to arcade
@@ -2131,7 +2132,7 @@ export function ArcadeSection({
                     size="sm"
                     onClick={reloadTitle}
                     aria-label={`Reload ${title.name}`}
-                    className="h-8 gap-1.5 rounded-lg border-zinc-800 bg-zinc-900/70 px-2.5 text-[12px] font-medium text-zinc-300 hover:border-emerald-500/40 hover:bg-zinc-900 hover:text-emerald-200 sm:px-3"
+                    className="veil-press h-8 gap-1.5 rounded-lg border-zinc-800 bg-zinc-900/70 px-2.5 text-[12px] font-medium text-zinc-300 hover:border-emerald-500/40 hover:bg-zinc-900 hover:text-emerald-200 sm:px-3"
                   >
                     <RotateCw aria-hidden className="h-3.5 w-3.5" />
                     Reload
@@ -2142,7 +2143,7 @@ export function ArcadeSection({
                     aria-label={
                       isArcadeFullscreen ? "Exit fullscreen for the title" : "Fullscreen for the title"
                     }
-                    className="h-8 gap-1.5 rounded-lg border-zinc-800 bg-zinc-900/70 px-2.5 text-[12px] font-medium text-zinc-300 hover:border-emerald-500/40 hover:bg-zinc-900 hover:text-emerald-200 sm:px-3"
+                    className="veil-press h-8 gap-1.5 rounded-lg border-zinc-800 bg-zinc-900/70 px-2.5 text-[12px] font-medium text-zinc-300 hover:border-emerald-500/40 hover:bg-zinc-900 hover:text-emerald-200 sm:px-3"
                   >
                     {isArcadeFullscreen ? (
                       <Minimize aria-hidden className="h-3.5 w-3.5" />
@@ -2158,7 +2159,7 @@ export function ArcadeSection({
                       size="sm"
                       onClick={() => onLaunch(title.url, title.name)}
                       aria-label="Open in a full browser tab"
-                      className="h-8 gap-1.5 rounded-lg border-zinc-800 bg-zinc-900/70 px-2.5 text-[12px] font-medium text-zinc-300 hover:border-emerald-500/40 hover:bg-zinc-900 hover:text-emerald-200 sm:px-3"
+                      className="veil-press h-8 gap-1.5 rounded-lg border-zinc-800 bg-zinc-900/70 px-2.5 text-[12px] font-medium text-zinc-300 hover:border-emerald-500/40 hover:bg-zinc-900 hover:text-emerald-200 sm:px-3"
                     >
                       <ExternalLink aria-hidden className="h-3.5 w-3.5" />
                       <span className="hidden md:inline">Open in a full browser tab</span>
@@ -2169,7 +2170,7 @@ export function ArcadeSection({
                     size="sm"
                     onClick={stopTitle}
                     aria-label={`Stop ${title.name}`}
-                    className="h-8 gap-1.5 rounded-lg border border-red-500/25 bg-red-500/10 px-2.5 text-[12px] font-medium text-red-300 hover:border-red-400/40 hover:bg-red-500/20 hover:text-red-200 sm:px-3"
+                    className="veil-press h-8 gap-1.5 rounded-lg border border-red-500/25 bg-red-500/10 px-2.5 text-[12px] font-medium text-red-300 hover:border-red-400/40 hover:bg-red-500/20 hover:text-red-200 sm:px-3"
                   >
                     <Square aria-hidden className="h-3.5 w-3.5" />
                     Stop
@@ -2240,7 +2241,7 @@ export function ArcadeSection({
               type="button"
               onClick={stopTitle}
               aria-label={`Stop ${title.name}`}
-              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-zinc-500 transition hover:bg-red-500/15 hover:text-red-300"
+              className="veil-press flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-zinc-500 transition hover:bg-red-500/15 hover:text-red-300"
             >
               <X aria-hidden className="h-4 w-4" />
             </button>

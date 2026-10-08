@@ -302,7 +302,7 @@ export function QuasarTabStrip({
                 setMenu({ tabId: t.id, x: e.clientX, y: e.clientY });
               }}
               title={tTarget || "New Tab"}
-              className={`group relative flex shrink-0 cursor-pointer select-none items-center gap-2 rounded-t-lg border-t border-x text-xs transition-colors ${
+              className={`veil-hover-glow group relative flex shrink-0 cursor-pointer select-none items-center gap-2 rounded-t-lg border-t border-x text-xs transition-colors ${
                 isPinned
                   ? "w-11 justify-center px-0 py-2"
                   : "min-w-[140px] max-w-[220px] px-3 py-2"
@@ -316,7 +316,7 @@ export function QuasarTabStrip({
               {active ? (
                 <span
                   aria-hidden="true"
-                  className="absolute inset-x-1 top-0 h-[2px] rounded-full bg-gradient-to-r from-emerald-400/0 via-emerald-400 to-emerald-400/0"
+                  className="veil-pulse-glow absolute inset-x-1 top-0 h-[2px] rounded-full bg-gradient-to-r from-emerald-400/0 via-emerald-400 to-emerald-400/0"
                 />
               ) : null}
               {/* Drop indicator lines */}
@@ -348,11 +348,11 @@ export function QuasarTabStrip({
                   aria-hidden="true"
                 />
               ) : tTarget ? (
-                <span className={`flex shrink-0 items-center justify-center overflow-hidden ${isPinned ? "size-4" : "size-4"}`}>
+                <span className={`veil-hover-wobble flex shrink-0 items-center justify-center overflow-hidden ${isPinned ? "size-4" : "size-4"}`}>
                   {renderFavicon(tTarget, t.title)}
                 </span>
               ) : (
-                <Sparkles aria-hidden className="shrink-0 size-3.5 text-zinc-500" />
+                <Sparkles aria-hidden className="veil-hover-wobble shrink-0 size-3.5 text-zinc-500" />
               )}
               {!isPinned ? (
                 <>
@@ -365,9 +365,9 @@ export function QuasarTabStrip({
                     }}
                     aria-label="Close tab"
                     title="Close tab (Ctrl+W)"
-                    className="rounded p-0.5 text-zinc-500 opacity-0 transition-opacity hover:bg-zinc-700 hover:text-zinc-200 group-hover:opacity-100 focus-visible:opacity-100"
+                    className="veil-hover-bounce rounded p-0.5 text-zinc-500 opacity-0 transition-opacity hover:bg-zinc-700 hover:text-zinc-200 group-hover:opacity-100 focus-visible:opacity-100"
                   >
-                    <X className="size-3" aria-hidden="true" />
+                    <X className="veil-press size-3" aria-hidden="true" />
                   </button>
                 </>
               ) : null}
@@ -382,9 +382,9 @@ export function QuasarTabStrip({
           onClick={onNewTab}
           aria-label="New tab (Ctrl+T)"
           title="New tab (Ctrl+T)"
-          className="mb-0.5 ml-1 shrink-0 rounded-lg p-2 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-emerald-300"
+          className="veil-hover-glow mb-0.5 ml-1 shrink-0 rounded-lg p-2 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-emerald-300"
         >
-          <Plus className="size-4" aria-hidden="true" />
+          <Plus className="veil-hover-spin veil-press size-4" aria-hidden="true" />
         </motion.button>
       </div>
 

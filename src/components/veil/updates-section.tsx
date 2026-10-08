@@ -660,7 +660,7 @@ export function UpdatesSection({ onBack }: { onBack: () => void }) {
             role="tab"
             aria-selected={tab === t.id}
             onClick={() => setTab(t.id)}
-            className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-[13px] font-medium transition ${
+            className={`veil-press inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-[13px] font-medium transition ${
               tab === t.id
                 ? "bg-gradient-to-br from-emerald-400 to-teal-600 text-zinc-950 shadow"
                 : "text-zinc-400 hover:text-zinc-200"
@@ -682,7 +682,7 @@ export function UpdatesSection({ onBack }: { onBack: () => void }) {
                 setComposing((c) => !c)
                 setPostError("")
               }}
-              className="bg-gradient-to-br from-emerald-400 to-teal-600 font-semibold text-zinc-950 hover:from-emerald-300 hover:to-teal-500"
+              className="veil-hover-glow veil-press bg-gradient-to-br from-emerald-400 to-teal-600 font-semibold text-zinc-950 hover:from-emerald-300 hover:to-teal-500"
             >
               {composing ? <Loader2 className="mr-1.5 size-3.5" aria-hidden /> : <Plus className="mr-1.5 size-3.5" aria-hidden />}
               {composing ? "Close composer" : "Post an update"}
@@ -691,7 +691,7 @@ export function UpdatesSection({ onBack }: { onBack: () => void }) {
               size="sm"
               variant="outline"
               onClick={() => (manageMode ? setManageMode(false) : void unlockManage())}
-              className="gap-1.5 border-zinc-700 bg-zinc-900/60 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
+              className="veil-press gap-1.5 border-zinc-700 bg-zinc-900/60 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
             >
               {manageMode ? (
                 <>
@@ -710,11 +710,11 @@ export function UpdatesSection({ onBack }: { onBack: () => void }) {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Owner password"
                 aria-label="Owner password"
-                className="max-w-48 border-zinc-700 bg-zinc-950/60 text-zinc-100 placeholder:text-zinc-600"
+                className="veil-focus-bloom max-w-48 border-zinc-700 bg-zinc-950/60 text-zinc-100 placeholder:text-zinc-600"
               />
             )}
             {posted && !composing && (
-              <span className="rounded-full bg-emerald-500/15 px-2.5 py-1 text-[11px] font-medium text-emerald-300 ring-1 ring-emerald-400/30">
+              <span className="veil-pop-in rounded-full bg-emerald-500/15 px-2.5 py-1 text-[11px] font-medium text-emerald-300 ring-1 ring-emerald-400/30">
                 Update posted ✓
               </span>
             )}
@@ -728,7 +728,7 @@ export function UpdatesSection({ onBack }: { onBack: () => void }) {
                   setPwDone(false)
                 }}
                 aria-expanded={pwOpen}
-                className={pwOpen ? "gap-1.5 border-amber-500/40 bg-amber-500/10 text-amber-200 hover:bg-amber-500/15" : "gap-1.5 border-zinc-700 bg-zinc-900/60 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"}
+                className={pwOpen ? "veil-press gap-1.5 border-amber-500/40 bg-amber-500/10 text-amber-200 hover:bg-amber-500/15" : "veil-press gap-1.5 border-zinc-700 bg-zinc-900/60 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"}
               >
                 <KeyRound className="size-3.5" aria-hidden />
                 {pwOpen ? "Close password" : "Password"}
@@ -757,13 +757,13 @@ export function UpdatesSection({ onBack }: { onBack: () => void }) {
                     maxLength={100}
                     autoComplete="new-password"
                     aria-label="New owner password"
-                    className="border-zinc-700 bg-zinc-950/60 pr-10 text-zinc-100 placeholder:text-zinc-600"
+                    className="veil-focus-bloom border-zinc-700 bg-zinc-950/60 pr-10 text-zinc-100 placeholder:text-zinc-600"
                   />
                   <button
                     type="button"
                     onClick={() => setPwShow((v) => !v)}
                     aria-label={pwShow ? "Hide the password" : "Show the password"}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-zinc-500 transition hover:text-zinc-200"
+                    className="veil-press absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-zinc-500 transition hover:text-zinc-200"
                   >
                     {pwShow ? <EyeOff className="size-4" aria-hidden /> : <Eye className="size-4" aria-hidden />}
                   </button>
@@ -776,7 +776,7 @@ export function UpdatesSection({ onBack }: { onBack: () => void }) {
                   maxLength={100}
                   autoComplete="new-password"
                   aria-label="Repeat the new owner password"
-                  className="border-zinc-700 bg-zinc-950/60 text-zinc-100 placeholder:text-zinc-600"
+                  className="veil-focus-bloom border-zinc-700 bg-zinc-950/60 text-zinc-100 placeholder:text-zinc-600"
                 />
               </div>
               {pwErr && (
@@ -785,7 +785,7 @@ export function UpdatesSection({ onBack }: { onBack: () => void }) {
                 </p>
               )}
               {pwDone && (
-                <p role="status" className="mt-2.5 inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2.5 py-1 text-[12px] font-medium text-emerald-300 ring-1 ring-emerald-400/30">
+                <p role="status" className="veil-pop-in mt-2.5 inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2.5 py-1 text-[12px] font-medium text-emerald-300 ring-1 ring-emerald-400/30">
                   <Check className="size-3.5" aria-hidden /> Password changed — every gate takes it now
                 </p>
               )}
@@ -794,7 +794,7 @@ export function UpdatesSection({ onBack }: { onBack: () => void }) {
                   type="submit"
                   size="sm"
                   disabled={pwBusy || !pwNext.trim() || !pwConfirm.trim()}
-                  className="bg-gradient-to-br from-amber-400 to-orange-500 font-semibold text-zinc-950 hover:from-amber-300 hover:to-orange-400"
+                  className="veil-hover-glow veil-press bg-gradient-to-br from-amber-400 to-orange-500 font-semibold text-zinc-950 hover:from-amber-300 hover:to-orange-400"
                 >
                   {pwBusy ? <Loader2 className="mr-1.5 size-3.5 animate-spin" aria-hidden /> : <Check className="mr-1.5 size-3.5" aria-hidden />}
                   {pwBusy ? "Changing…" : "Change password"}
@@ -810,7 +810,7 @@ export function UpdatesSection({ onBack }: { onBack: () => void }) {
           {composing && (
             <form
               onSubmit={submit}
-              className="mb-6 rounded-2xl border border-zinc-800/80 bg-zinc-900/70 p-4 backdrop-blur-xl sm:p-5"
+              className="veil-slide-up-pop mb-6 rounded-2xl border border-zinc-800/80 bg-zinc-900/70 p-4 backdrop-blur-xl sm:p-5"
             >
               <div className="mb-3 flex items-center gap-2 text-[12px] font-semibold uppercase tracking-wider text-zinc-400">
                 <Megaphone className="size-4 text-emerald-400" aria-hidden />
@@ -824,12 +824,12 @@ export function UpdatesSection({ onBack }: { onBack: () => void }) {
                     placeholder="Title — e.g. Real-time chat is here"
                     maxLength={140}
                     aria-label="Update title"
-                    className="border-zinc-700 bg-zinc-950/60 text-zinc-100 placeholder:text-zinc-600"
+                    className="veil-focus-bloom border-zinc-700 bg-zinc-950/60 text-zinc-100 placeholder:text-zinc-600"
                   />
                   <Select value={kind} onValueChange={setKind}>
                     <SelectTrigger
                       aria-label="Update kind"
-                      className="w-full border-zinc-700 bg-zinc-950/60 text-zinc-200 sm:w-32"
+                      className="veil-press w-full border-zinc-700 bg-zinc-950/60 text-zinc-200 sm:w-32"
                     >
                       <SelectValue />
                     </SelectTrigger>
@@ -847,7 +847,7 @@ export function UpdatesSection({ onBack }: { onBack: () => void }) {
                   rows={4}
                   maxLength={4000}
                   aria-label="Update body"
-                  className="resize-y border-zinc-700 bg-zinc-950/60 text-zinc-100 placeholder:text-zinc-600"
+                  className="veil-focus-bloom resize-y border-zinc-700 bg-zinc-950/60 text-zinc-100 placeholder:text-zinc-600"
                 />
                 <div className="flex items-center gap-2">
                   <Input
@@ -861,7 +861,7 @@ export function UpdatesSection({ onBack }: { onBack: () => void }) {
                   <Button
                     type="submit"
                     disabled={posting || !title.trim() || !body.trim() || !password.trim()}
-                    className="bg-emerald-500 font-semibold text-zinc-950 hover:bg-emerald-400"
+                    className="veil-hover-glow veil-press bg-emerald-500 font-semibold text-zinc-950 hover:bg-emerald-400"
                   >
                     {posting ? (
                       <>
@@ -908,17 +908,17 @@ export function UpdatesSection({ onBack }: { onBack: () => void }) {
             </div>
           ) : (
             <ol className="space-y-3">
-              {updates.map((u) => {
+              {updates.map((u, i) => {
                 const meta = kindMeta(u.kind)
                 const Icon = meta.icon
                 return (
                   <li
                     key={u.id}
-                    className="group relative rounded-2xl border border-zinc-800/80 bg-zinc-900/60 p-4 backdrop-blur-md transition hover:border-zinc-700 sm:p-5"
+                    className={`veil-slide-up-pop veil-stagger-${(i % 8) + 1} group relative rounded-2xl border border-zinc-800/80 bg-zinc-900/60 p-4 backdrop-blur-md transition hover:border-zinc-700 sm:p-5`}
                   >
                     <div className="flex items-start gap-3">
                       <div
-                        className={`flex size-9 shrink-0 items-center justify-center rounded-xl ring-1 ${meta.chip}`}
+                        className={`veil-hover-glow flex size-9 shrink-0 items-center justify-center rounded-xl ring-1 ${meta.chip}`}
                         aria-hidden
                       >
                         <Icon className="size-4" />
@@ -926,12 +926,12 @@ export function UpdatesSection({ onBack }: { onBack: () => void }) {
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
                           <span
-                            className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ring-1 ${meta.chip}`}
+                            className={`veil-hover-wobble rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ring-1 ${meta.chip}`}
                           >
                             {meta.label}
                           </span>
                           <time
-                            className="text-[11px] text-zinc-500"
+                            className="veil-hover-glow text-[11px] text-zinc-500"
                             dateTime={new Date(u.createdAt).toISOString()}
                           >
                             {timeAgo(u.createdAt)}
@@ -951,7 +951,7 @@ export function UpdatesSection({ onBack }: { onBack: () => void }) {
                           onClick={() => void remove(u.id)}
                           disabled={deletingId === u.id}
                           aria-label={`Delete update: ${u.title}`}
-                          className="size-8 shrink-0 text-zinc-600 hover:bg-rose-500/10 hover:text-rose-400"
+                          className="veil-press size-8 shrink-0 text-zinc-600 hover:bg-rose-500/10 hover:text-rose-400"
                         >
                           {deletingId === u.id ? (
                             <Loader2 className="size-4 animate-spin" aria-hidden />
@@ -971,7 +971,7 @@ export function UpdatesSection({ onBack }: { onBack: () => void }) {
         /* ================= VEIL AI TAB ================= */
         <div className="flex min-h-[60vh] flex-col">
           {!manageMode ? (
-            <div className="mx-auto mt-8 w-full max-w-md rounded-2xl border border-zinc-800/80 bg-zinc-900/70 p-6 backdrop-blur-xl">
+            <div className="veil-pop-in mx-auto mt-8 w-full max-w-md rounded-2xl border border-zinc-800/80 bg-zinc-900/70 p-6 backdrop-blur-xl">
               <div className="mb-4 flex items-center gap-3">
                 <div className="flex size-11 items-center justify-center rounded-xl bg-gradient-to-br from-violet-400/25 to-purple-600/25 text-violet-300 ring-1 ring-violet-400/30">
                   <Bot className="size-5" aria-hidden />
@@ -991,11 +991,11 @@ export function UpdatesSection({ onBack }: { onBack: () => void }) {
                   }}
                   placeholder="Owner password"
                   aria-label="Owner password"
-                  className="border-zinc-700 bg-zinc-950/60 text-zinc-100 placeholder:text-zinc-600"
+                  className="veil-focus-bloom border-zinc-700 bg-zinc-950/60 text-zinc-100 placeholder:text-zinc-600"
                 />
                 <Button
                   onClick={() => void unlockManage()}
-                  className="bg-gradient-to-br from-violet-400 to-purple-600 font-semibold text-zinc-950 hover:from-violet-300 hover:to-purple-500"
+                  className="veil-hover-glow veil-press bg-gradient-to-br from-violet-400 to-purple-600 font-semibold text-zinc-950 hover:from-violet-300 hover:to-purple-500"
                 >
                   <Unlock className="mr-1.5 size-3.5" aria-hidden /> Unlock
                 </Button>
@@ -1036,7 +1036,7 @@ export function UpdatesSection({ onBack }: { onBack: () => void }) {
                           key={s}
                           type="button"
                           onClick={() => void send(s)}
-                          className="rounded-full border border-zinc-700/80 bg-zinc-900/70 px-3.5 py-1.5 text-[12.5px] text-zinc-300 transition hover:border-violet-400/50 hover:text-zinc-100"
+                          className="veil-hover-lift veil-press rounded-full border border-zinc-700/80 bg-zinc-900/70 px-3.5 py-1.5 text-[12.5px] text-zinc-300 transition hover:border-violet-400/50 hover:text-zinc-100"
                         >
                           {s}
                         </button>
@@ -1051,7 +1051,7 @@ export function UpdatesSection({ onBack }: { onBack: () => void }) {
                     className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
                   >
                     <div
-                      className={`max-w-[86%] rounded-2xl px-4 py-3 backdrop-blur-md ${
+                      className={`veil-slide-up-pop max-w-[86%] rounded-2xl px-4 py-3 backdrop-blur-md ${
                         m.role === "user"
                           ? "bg-gradient-to-br from-emerald-400 to-teal-600 text-zinc-950"
                           : "border border-zinc-800/80 bg-zinc-900/70 text-zinc-200"
@@ -1155,7 +1155,7 @@ export function UpdatesSection({ onBack }: { onBack: () => void }) {
                             </div>
                           )}
                           {m.app && (
-                            <div className="mt-2.5 flex flex-wrap items-center gap-2 rounded-xl border border-violet-400/30 bg-violet-500/10 px-3 py-2">
+                            <div className="veil-pop-in mt-2.5 flex flex-wrap items-center gap-2 rounded-xl border border-violet-400/30 bg-violet-500/10 px-3 py-2">
                               <Package className="size-4 shrink-0 text-violet-300" aria-hidden />
                               <p className="min-w-0 flex-1 text-[12px] text-violet-200">
                                 <span className="font-semibold">{m.app.name}</span>{" "}
@@ -1165,7 +1165,7 @@ export function UpdatesSection({ onBack }: { onBack: () => void }) {
                               <Button
                                 size="sm"
                                 onClick={openInArcade}
-                                className="h-7 shrink-0 gap-1.5 rounded-lg bg-violet-500/20 px-2.5 text-[11px] font-semibold text-violet-200 ring-1 ring-violet-400/40 transition hover:bg-violet-500/30 hover:text-violet-100"
+                                className="veil-hover-glow veil-press h-7 shrink-0 gap-1.5 rounded-lg bg-violet-500/20 px-2.5 text-[11px] font-semibold text-violet-200 ring-1 ring-violet-400/40 transition hover:bg-violet-500/30 hover:text-violet-100"
                               >
                                 <Joystick className="size-3.5" aria-hidden /> Open in Arcade
                               </Button>
@@ -1180,7 +1180,7 @@ export function UpdatesSection({ onBack }: { onBack: () => void }) {
                 {/* streaming bubble */}
                 {streaming && (
                   <div className="flex justify-start">
-                    <div className="max-w-[86%] rounded-2xl border border-zinc-800/80 bg-zinc-900/70 px-4 py-3 text-zinc-200 backdrop-blur-md">
+                    <div className="veil-slide-up-pop max-w-[86%] rounded-2xl border border-zinc-800/80 bg-zinc-900/70 px-4 py-3 text-zinc-200 backdrop-blur-md">
                       {streamProse ? (
                         <MarkdownText text={streamProse} />
                       ) : (
@@ -1203,7 +1203,7 @@ export function UpdatesSection({ onBack }: { onBack: () => void }) {
                 )}
 
                 {appJustAdded && (
-                  <p className="text-center text-[11px] text-emerald-400/80" role="status">
+                  <p className="veil-pop-in text-center text-[11px] text-emerald-400/80" role="status">
                     {appJustAdded} is live in Arcade › Apps
                   </p>
                 )}
@@ -1255,7 +1255,7 @@ export function UpdatesSection({ onBack }: { onBack: () => void }) {
                             type="button"
                             aria-label={"Remove " + a.file.name}
                             onClick={() => setPending((pp) => pp.filter((x) => x.id !== a.id))}
-                            className="ml-0.5 rounded-full p-0.5 text-zinc-500 transition hover:bg-white/10 hover:text-zinc-200"
+                            className="veil-press ml-0.5 rounded-full p-0.5 text-zinc-500 transition hover:bg-white/10 hover:text-zinc-200"
                           >
                             <X className="h-3.5 w-3.5" aria-hidden />
                           </button>
@@ -1288,7 +1288,7 @@ export function UpdatesSection({ onBack }: { onBack: () => void }) {
                     title="Attach images or files — they ride with your ask (and any dev request)"
                     onClick={() => attachInputRef.current?.click()}
                     disabled={pending.length >= MAX_ATTACH}
-                    className="size-9 shrink-0 border border-zinc-700/60 bg-zinc-950/40 p-0 text-zinc-400 hover:text-zinc-100"
+                    className="veil-hover-wobble size-9 shrink-0 border border-zinc-700/60 bg-zinc-950/40 p-0 text-zinc-400 hover:text-zinc-100"
                   >
                     <Paperclip className="size-4" aria-hidden />
                   </Button>
@@ -1304,13 +1304,13 @@ export function UpdatesSection({ onBack }: { onBack: () => void }) {
                     rows={1}
                     placeholder="Ask for changes — “add a new engine to chat”, “add a snake app”, “post an update about the new wallpapers”…"
                     aria-label="Message the AI operator"
-                    className="max-h-32 min-h-9 flex-1 resize-none border-0 bg-transparent px-2 py-1.5 text-[13.5px] text-zinc-100 placeholder:text-zinc-600 focus-visible:ring-0"
+                    className="veil-focus-bloom max-h-32 min-h-9 flex-1 resize-none border-0 bg-transparent px-2 py-1.5 text-[13.5px] text-zinc-100 placeholder:text-zinc-600 focus-visible:ring-0"
                   />
                   <Button
                     type="submit"
                     disabled={streaming || (!draft.trim() && pending.length === 0)}
                     aria-label="Send"
-                    className="size-9 shrink-0 bg-gradient-to-br from-violet-400 to-purple-600 text-zinc-950 hover:from-violet-300 hover:to-purple-500"
+                    className="veil-hover-glow veil-press size-9 shrink-0 bg-gradient-to-br from-violet-400 to-purple-600 text-zinc-950 hover:from-violet-300 hover:to-purple-500"
                   >
                     {streaming ? (
                       <Loader2 className="size-4 animate-spin" aria-hidden />
