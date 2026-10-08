@@ -1,9 +1,9 @@
 {
   "veil": "chat-backup",
   "version": 1,
-  "exportedAt": "2026-10-07T23:01:39.550Z",
+  "exportedAt": "2026-10-08T00:20:32.283Z",
   "counts": {
-    "accounts": 20,
+    "accounts": 21,
     "messages": 15,
     "dms": 5
   },
@@ -367,6 +367,24 @@
       "legacy": false,
       "createdAt": "2026-10-07T22:26:18.410Z",
       "passwordHash": "$2b$10$Y6f/blPbg9sNOQevX1yio.CyZv2v0YohmUNxkVoXkdQ.jRH1ODUoO"
+    },
+    {
+      "id": "cmuysio370000oq76ctbcrs7y",
+      "username": "rtyu",
+      "displayName": "rtyu",
+      "avatarColor": "#c0392b",
+      "avatarImage": null,
+      "bio": "",
+      "role": "member",
+      "muted": false,
+      "banned": false,
+      "coins": 100,
+      "tag": null,
+      "tagColor": null,
+      "pfpAccessory": null,
+      "legacy": false,
+      "createdAt": "2026-10-08T00:20:30.451Z",
+      "passwordHash": "$2b$10$diitSuOS2DLtVrmzDcYdQOefd.PLM/xJJOASwLxGo8bnUXXmquQa."
     }
   ],
   "messages": [
