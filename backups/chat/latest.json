@@ -1,10 +1,10 @@
 {
   "veil": "chat-backup",
   "version": 1,
-  "exportedAt": "2026-10-08T22:35:45.331Z",
+  "exportedAt": "2026-10-08T22:38:50.680Z",
   "counts": {
     "accounts": 17,
-    "messages": 32,
+    "messages": 31,
     "dms": 0
   },
   "accounts": [
@@ -655,17 +655,6 @@
       "replyToContent": null,
       "replyToUsername": null,
       "createdAt": "2026-10-08T18:46:32.139Z",
-      "editedAt": null
-    },
-    {
-      "id": "cmv0477w40001pphz2vs25fkq",
-      "channelId": "main",
-      "accountId": "cmv042w8t0000pph4ubewywes",
-      "content": "front system QA — beacon + backup round",
-      "replyTo": null,
-      "replyToContent": null,
-      "replyToUsername": null,
-      "createdAt": "2026-10-08T22:35:17.811Z",
       "editedAt": null
     }
   ],
