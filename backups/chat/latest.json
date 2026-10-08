@@ -1,10 +1,10 @@
 {
   "veil": "chat-backup",
   "version": 1,
-  "exportedAt": "2026-10-08T02:03:15.511Z",
+  "exportedAt": "2026-10-08T02:05:20.501Z",
   "counts": {
     "accounts": 22,
-    "messages": 20,
+    "messages": 19,
     "dms": 5
   },
   "accounts": [
@@ -614,17 +614,6 @@
       "replyToUsername": null,
       "createdAt": "2026-10-08T01:58:42.170Z",
       "editedAt": null
-    },
-    {
-      "id": "cmuyw6fjw0002oq8yx6o3yf3r",
-      "channelId": "main",
-      "accountId": "cmuyw612g0000oq8yg3f9nxoi",
-      "content": "animation test — hello from QA!",
-      "replyTo": null,
-      "replyToContent": null,
-      "replyToUsername": null,
-      "createdAt": "2026-10-08T02:02:57.980Z",
-      "editedAt": null
     }
   ],
   "dms": [
@@ -660,7 +649,7 @@
       "id": "cmuyoh3l9000yoqzk11m69qkz",
       "name": null,
       "isGroup": false,
-      "ownerId": "cmuu20ppm0005jkxecvmo7qpu",
+      "ownerId": "cmuyoft0p000qoqzkaikxem5z",
       "createdAt": "2026-10-07T22:27:18.765Z"
     }
   ],
@@ -720,10 +709,6 @@
     {
       "dmId": "cmux8jv3i000qq34lhts07uo6",
       "accountId": "cmux8grhv0001q314zumx5ox6"
-    },
-    {
-      "dmId": "cmuyoh3l9000yoqzk11m69qkz",
-      "accountId": "cmuu20ppm0005jkxecvmo7qpu"
     },
     {
       "dmId": "cmuyoh3l9000yoqzk11m69qkz",
