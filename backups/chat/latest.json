@@ -1,9 +1,9 @@
 {
   "veil": "chat-backup",
   "version": 1,
-  "exportedAt": "2026-10-08T20:53:27.784Z",
+  "exportedAt": "2026-10-08T20:56:16.189Z",
   "counts": {
-    "accounts": 15,
+    "accounts": 16,
     "messages": 32,
     "dms": 0
   },
@@ -108,7 +108,7 @@
       "role": "member",
       "muted": false,
       "banned": false,
-      "coins": 113,
+      "coins": 123,
       "tag": null,
       "tagColor": null,
       "pfpAccessory": null,
@@ -277,6 +277,24 @@
       "legacy": false,
       "createdAt": "2026-10-08T19:29:37.293Z",
       "passwordHash": "$2b$10$D7eCKpypal84K6pj5.7TO.FPVGl0Z7gt4G1Mq3wBzWjdrGcgCJsS2"
+    },
+    {
+      "id": "cmv00ndd30002pp9ifls5p837",
+      "username": "qarecovery1",
+      "displayName": "qarecovery1",
+      "avatarColor": "#f97316",
+      "avatarImage": null,
+      "bio": "",
+      "role": "member",
+      "muted": false,
+      "banned": false,
+      "coins": 100,
+      "tag": null,
+      "tagColor": null,
+      "pfpAccessory": null,
+      "legacy": false,
+      "createdAt": "2026-10-08T20:55:52.935Z",
+      "passwordHash": "$2b$10$G5F97AG85cbVU49K3J/cCeuOlPoPFdZ7V2VORPDH0o23za5yy0KPG"
     }
   ],
   "messages": [
