@@ -32,9 +32,14 @@ export function moreAnimationsOn(): boolean {
   }
 }
 
-/** Live "More animations" state (listens for Settings changes). */
+/** Live "More animations" state (listens for Settings changes).
+ *
+ * SSR-safe: starts false and reads the real preference in an effect —
+ * the start page is server-rendered and its first client render must
+ * match that HTML (the same pattern the clock/weather settings use).
+ * One frame of calm, then the fancy tier kicks in. */
 export function useMoreAnimations(): boolean {
-  const [on, setOn] = React.useState(moreAnimationsOn);
+  const [on, setOn] = React.useState(false);
   React.useEffect(() => {
     const sync = () => setOn(moreAnimationsOn());
     sync();

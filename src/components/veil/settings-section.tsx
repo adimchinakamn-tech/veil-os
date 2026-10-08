@@ -600,7 +600,7 @@ function AppearanceTab() {
       <SwitchRow
         icon={Sparkles}
         label="More animations"
-        hint="Beautiful motion everywhere in the veiled browser — pages glide in behind a soft blur, a light-sweep follows every navigation, tabs spring, buttons breathe. Off is calmer and leaner."
+        hint="Beautiful motion across the whole site — pages glide in behind a soft blur, a light-sweep follows every navigation, the start page rises and cascades, tabs spring, buttons breathe. Off is calmer and leaner."
         value={moreAnim ? "on" : "off"}
         options={[
           { id: "on", label: "On" },

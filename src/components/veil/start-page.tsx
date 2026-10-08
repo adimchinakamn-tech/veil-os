@@ -10,7 +10,8 @@
  */
 
 import * as React from "react";
-import { useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
+import { useFancyMotion } from "@/lib/veil/motion";
 import {
   ArrowRight,
   Bot,
@@ -433,6 +434,8 @@ function presenceLabel(total: number): string {
  * client tick (no hydration mismatch, no layout shift). */
 function StartClock({ clock24 }: { clock24: boolean }) {
   const [now, setNow] = React.useState<Date | null>(null);
+  /* More animations — the big time breathes a soft emerald halo. */
+  const fancy = useFancyMotion();
   React.useEffect(() => {
     setNow(new Date());
     const t = setInterval(() => setNow(new Date()), 1000);
@@ -453,7 +456,7 @@ function StartClock({ clock24 }: { clock24: boolean }) {
           .padStart(2, "0")} ${now.getHours() < 12 ? "AM" : "PM"}`;
   return (
     <div aria-hidden className="select-none text-center">
-      <p className="veil-rise text-5xl font-light tabular-nums tracking-tight text-zinc-50 [text-shadow:0_2px_18px_rgba(0,0,0,0.55)] sm:text-6xl">
+      <p className={`veil-rise text-5xl font-light tabular-nums tracking-tight text-zinc-50 [text-shadow:0_2px_18px_rgba(0,0,0,0.55)] sm:text-6xl ${fancy ? "veil-clock-glow" : ""}`}>
         {timeLabel}
       </p>
       <p className="veil-rise mt-1.5 text-[11px] font-semibold uppercase tracking-[0.3em] text-zinc-300 [text-shadow:0_1px_12px_rgba(0,0,0,0.6)]">
@@ -488,6 +491,9 @@ export function StartPage({
   onAutoSearchConsumed,
 }: StartPageProps) {
   const reduceMotion = useReducedMotion();
+  /* Settings › Appearance — "More animations" (default ON): amplified
+     rises, springy dock, card staggers across the whole start page. */
+  const fancy = useFancyMotion();
 
   // ----- pending search handed over from a veiled page -----
   // The bot-wall page's “Search this site's content” button asks the shell
@@ -1003,7 +1009,7 @@ export function StartPage({
       ? {}
       : {
           style: { animationDelay: `${d}s` },
-          className: "veil-rise",
+          className: fancy ? "veil-rise-fancy" : "veil-rise",
         };
 
   /* ---- the arrangeable widget bodies ----
@@ -1014,7 +1020,7 @@ export function StartPage({
       <StartClock clock24={clock24} />
     ),
     weather: (
-      <div {...rise(0.06)} className="veil-rise flex justify-center">
+      <div {...rise(0.06)} className={`${fancy ? "veil-rise-fancy" : "veil-rise"} flex justify-center`}>
         <div className="flex max-w-full items-center gap-2 overflow-visible rounded-full border border-white/10 bg-black/40 px-3.5 py-1.5 text-[12.5px] text-zinc-300 backdrop-blur-md">
           {wx ? (
             <>
@@ -1122,7 +1128,7 @@ export function StartPage({
       </div>
     ),
     presence: (
-      <div {...rise(0.08)} className="veil-rise flex justify-center">
+      <div {...rise(0.08)} className={`${fancy ? "veil-rise-fancy" : "veil-rise"} flex justify-center`}>
         <div
           role="status"
           aria-live="polite"
@@ -1142,7 +1148,7 @@ export function StartPage({
       </div>
     ),
     brand: (
-      <div {...rise(0.12)} className="veil-rise flex flex-col items-center">
+      <div {...rise(0.12)} className={`${fancy ? "veil-rise-fancy" : "veil-rise"} flex flex-col items-center`}>
         <div className="flex items-center gap-3">
           <VeilMark className="size-8 text-emerald-300 drop-shadow-[0_4px_14px_rgba(16,185,129,0.45)]" />
           <span className="text-xl font-semibold tracking-tight text-zinc-50">Veil</span>
@@ -1173,7 +1179,7 @@ export function StartPage({
               : {}),
           }}
           className={
-            (reduceMotion ? "" : "veil-rise ") +
+            (reduceMotion ? "" : fancy ? "veil-rise-fancy " : "veil-rise ") +
             "mt-3 max-w-xl text-center text-2xl font-semibold tracking-tight sm:text-3xl " +
             (isSplashLine ? "" : "text-zinc-50 [text-shadow:0_2px_20px_rgba(0,0,0,0.6)]")
           }
@@ -1186,7 +1192,7 @@ export function StartPage({
       <form
         {...rise(0.18)}
         role="search"
-        className="veil-rise relative flex w-full max-w-[42rem] items-stretch gap-2"
+        className={`${fancy ? "veil-rise-fancy" : "veil-rise"} relative flex w-full max-w-[42rem] items-stretch gap-2`}
         onSubmit={(e) => {
           e.preventDefault();
           submit();
@@ -1223,9 +1229,12 @@ export function StartPage({
           )}
           {/* suggestions */}
           {focused && suggestions.length > 0 && (
-            <div
+            <motion.div
               role="listbox"
               aria-label="Suggestions"
+              initial={fancy ? { opacity: 0, y: -8, scale: 0.985 } : false}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ type: "spring", stiffness: 420, damping: 30 }}
               className="absolute left-0 right-0 top-[calc(100%+8px)] z-40 overflow-y-auto rounded-2xl border border-white/10 bg-zinc-950/95 p-1.5 shadow-[0_32px_64px_rgba(0,0,0,0.6)] backdrop-blur-xl veil-scroll-slim"
               style={{ maxHeight: "18.5rem" }}
             >
@@ -1269,20 +1278,23 @@ export function StartPage({
                   {i === sel ? <ArrowRight aria-hidden className="mr-1 size-3.5 shrink-0 text-emerald-400" /> : null}
                 </button>
               ))}
-            </div>
+            </motion.div>
           )}
         </div>
-        <button
+        <motion.button
           type="submit"
-          className="flex h-[52px] shrink-0 items-center gap-2 rounded-2xl bg-emerald-500 px-5 text-[15px] font-semibold text-emerald-950 shadow-[0_12px_24px_rgba(16,185,129,0.25)] transition hover:bg-emerald-400 active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300"
+          whileHover={fancy ? { scale: 1.04, boxShadow: "0 16px 40px rgba(16,185,129,0.4)" } : undefined}
+          whileTap={{ scale: 0.97 }}
+          transition={{ type: "spring", stiffness: 460, damping: 24 }}
+          className="flex h-[52px] shrink-0 items-center gap-2 rounded-2xl bg-emerald-500 px-5 text-[15px] font-semibold text-emerald-950 shadow-[0_12px_24px_rgba(16,185,129,0.25)] transition hover:bg-emerald-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300"
         >
           <span className="hidden sm:inline">Launch</span>
           <ArrowRight aria-hidden className="size-4" />
-        </button>
+        </motion.button>
       </form>
     ),
     hints: (
-      <div {...rise(0.18)} className="veil-rise">
+      <div {...rise(0.18)} className={fancy ? "veil-rise-fancy" : "veil-rise"}>
         <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 rounded-full border border-white/10 bg-black/40 px-3.5 py-1.5 text-[11.5px] text-zinc-400 backdrop-blur-md">
           <HintKbd>Enter</HintKbd> launches ·
           <HintKbd>↑↓</HintKbd> picks ·
@@ -1292,39 +1304,42 @@ export function StartPage({
       </div>
     ),
     dock: (
-      <nav {...rise(0.24)} aria-label="Veil pages" className="veil-rise flex max-w-[36rem] flex-wrap items-center justify-center gap-2">
+      <nav {...rise(0.24)} aria-label="Veil pages" className={`${fancy ? "veil-rise-fancy" : "veil-rise"} flex max-w-[36rem] flex-wrap items-center justify-center gap-2`}>
         {dock.map((d) => {
           const Icon = d.icon;
           const active = section === d.id;
           return (
-            <button
+            <motion.button
               key={d.id}
               type="button"
               onClick={() => onOpenSection(d.id)}
               aria-label={d.label}
               aria-pressed={active}
-              className={`flex h-9 items-center gap-2 rounded-xl border px-3.5 text-[13px] font-medium backdrop-blur-md transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60 active:scale-[0.97] ${
+              whileHover={fancy ? { y: -3, scale: 1.05 } : undefined}
+              whileTap={fancy ? { scale: 0.93 } : undefined}
+              transition={{ type: "spring", stiffness: 480, damping: 21 }}
+              className={`flex h-9 items-center gap-2 rounded-xl border px-3.5 text-[13px] font-medium backdrop-blur-md transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60 ${
                 active
                   ? "border-white/30 bg-white/12 text-white shadow-[0_0_22px_-6px_rgba(255,255,255,0.4)]"
                   : "border-white/10 bg-black/45 text-zinc-100 hover:border-white/25 hover:bg-black/60 hover:text-white"
-              }`}
+              } ${fancy ? "veil-dock-sheen" : ""}`}
             >
               <Icon aria-hidden className={`size-4 shrink-0 ${DOCK_ICON_COLORS[d.id]}`} />
               <span>{d.label}</span>
-            </button>
+            </motion.button>
           );
         })}
       </nav>
     ),
     suggestions: (
-      <section {...rise(0.27)} aria-label="Suggestions" className="veil-rise w-full">
+      <section {...rise(0.27)} aria-label="Suggestions" className={`${fancy ? "veil-rise-fancy" : "veil-rise"} w-full`}>
         <div className="mb-3 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
           <Sparkles aria-hidden className="size-3.5 text-emerald-300/80" />
           Suggestions
         </div>
         <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-          {QUICK_LINKS.map((s) => (
-            <SuggestionCard key={s.url} link={s} onNavigate={onNavigate} />
+          {QUICK_LINKS.map((s, i) => (
+            <SuggestionCard key={s.url} link={s} index={i} onNavigate={onNavigate} />
           ))}
         </div>
         <p className="mt-2.5 text-[11px] text-zinc-600">Picked to read well through the veil.</p>
@@ -1332,14 +1347,14 @@ export function StartPage({
     ),
     recent:
       recent.length > 0 ? (
-        <section {...rise(0.3)} aria-label="Recently viewed" className="veil-rise w-full">
+        <section {...rise(0.3)} aria-label="Recently viewed" className={`${fancy ? "veil-rise-fancy" : "veil-rise"} w-full`}>
           <div className="mb-3 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
             <HistoryIcon aria-hidden className="size-3.5" />
             Recently viewed
           </div>
           <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-4">
-            {recent.map((v) => (
-              <RecentCard key={v.id} visit={v} onNavigate={onNavigate} />
+            {recent.map((v, i) => (
+              <RecentCard key={v.id} visit={v} index={i} onNavigate={onNavigate} />
             ))}
           </div>
           <button
@@ -1352,7 +1367,7 @@ export function StartPage({
         </section>
       ) : null,
     stats: (
-      <p {...rise(0.3)} className="veil-rise text-center text-[11.5px] text-zinc-500">
+      <p {...rise(0.3)} className={`${fancy ? "veil-rise-fancy" : "veil-rise"} text-center text-[11.5px] text-zinc-500`}>
         {history
           ? `${history.stats.sites} site${history.stats.sites === 1 ? "" : "s"} visited · ${history.stats.pageVisits} page load${history.stats.pageVisits === 1 ? "" : "s"}`
           : "Your visits appear here as you browse."}
@@ -1548,20 +1563,33 @@ function SuggestionFavicon({ host }: { host: string }) {
  * glass look so the two grids read as siblings. */
 function SuggestionCard({
   link,
+  index = 0,
   onNavigate,
 }: {
   link: (typeof QUICK_LINKS)[number];
+  index?: number;
   onNavigate: (url: string) => void;
 }) {
   const urls = React.useMemo(() => faviconUrls(link.host), [link.host]);
   const [idx, setIdx] = React.useState(0);
+  /* More animations — cards cascade in and lift on hover. */
+  const fancy = useFancyMotion();
   return (
-    <button
+    <motion.button
       type="button"
       onClick={() => onNavigate(link.url)}
       aria-label={`Open ${link.name}`}
+      initial={fancy ? { opacity: 0, y: 16, scale: 0.96 } : false}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={
+        fancy
+          ? { type: "spring", stiffness: 320, damping: 24, delay: 0.3 + index * 0.05 }
+          : { duration: 0 }
+      }
+      whileHover={fancy ? { y: -4, scale: 1.03 } : undefined}
+      whileTap={fancy ? { scale: 0.97 } : undefined}
       className={cn(
-        "group flex items-center gap-2.5 rounded-2xl border bg-black/35 p-3 text-left backdrop-blur-md transition-all hover:-translate-y-0.5 hover:bg-black/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300",
+        "group flex items-center gap-2.5 rounded-2xl border bg-black/35 p-3 text-left backdrop-blur-md transition-colors hover:bg-black/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300",
         link.featured
           ? "border-emerald-500/30 hover:border-emerald-400/50"
           : "border-white/10 hover:border-emerald-500/40",
@@ -1594,20 +1622,39 @@ function SuggestionCard({
         <span className="block truncate text-[10.5px] text-zinc-500">{link.desc}</span>
       </span>
       <ArrowRight aria-hidden className="size-3.5 shrink-0 text-zinc-600 transition group-hover:translate-x-0.5 group-hover:text-emerald-300" />
-    </button>
+    </motion.button>
   );
 }
 
-function RecentCard({ visit, onNavigate }: { visit: Visit; onNavigate: (url: string) => void }) {
+function RecentCard({
+  visit,
+  index = 0,
+  onNavigate,
+}: {
+  visit: Visit;
+  index?: number;
+  onNavigate: (url: string) => void;
+}) {
   const urls = React.useMemo(() => faviconUrls(visit.host), [visit.host]);
   const [idx, setIdx] = React.useState(0);
   const label = (visit.title || visit.host).slice(0, 42);
+  /* More animations — same cascade language as the Suggestions grid. */
+  const fancy = useFancyMotion();
   return (
-    <button
+    <motion.button
       type="button"
       onClick={() => onNavigate(visit.url)}
       aria-label={`Revisit ${visit.host}`}
-      className="group flex items-center gap-2.5 rounded-2xl border border-white/10 bg-black/35 p-3 text-left backdrop-blur-md transition-all hover:-translate-y-0.5 hover:border-emerald-500/40 hover:bg-black/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300"
+      initial={fancy ? { opacity: 0, x: -14 } : false}
+      animate={fancy ? { opacity: 1, x: 0 } : { opacity: 1 }}
+      transition={
+        fancy
+          ? { type: "spring", stiffness: 340, damping: 26, delay: 0.32 + index * 0.045 }
+          : { duration: 0 }
+      }
+      whileHover={fancy ? { x: 5, scale: 1.02 } : undefined}
+      whileTap={fancy ? { scale: 0.97 } : undefined}
+      className="group flex items-center gap-2.5 rounded-2xl border border-white/10 bg-black/35 p-3 text-left backdrop-blur-md transition-colors hover:border-emerald-500/40 hover:bg-black/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300"
     >
       <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-zinc-800">
         {idx < urls.length ? (
@@ -1630,6 +1677,6 @@ function RecentCard({ visit, onNavigate }: { visit: Visit; onNavigate: (url: str
           {visit.host} · {timeAgo(visit.updatedAt)}
         </span>
       </span>
-    </button>
+    </motion.button>
   );
 }

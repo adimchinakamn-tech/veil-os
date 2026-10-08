@@ -15,7 +15,7 @@
  */
 
 import * as React from "react";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { StartPage, type SectionId } from "@/components/veil/start-page";
 import { BrowserView, type Tab } from "@/components/veil/browser";
 import type { TabMenuAction } from "@/components/veil/quasar-tab-strip";
@@ -41,6 +41,7 @@ import {
 } from "@/lib/veil/shared";
 import { loadSettings } from "@/lib/veil/settings";
 import { purgeFatCookiesOnBoot } from "@/lib/veil/cookie-hygiene";
+import { useFancyMotion } from "@/lib/veil/motion";
 
 /* 431 firewall — sweep fat cookies (the legacy session mirror carried the
  * whole account incl. the base64 PFP; proxied pages used to drop their
@@ -104,6 +105,22 @@ export default function Home() {
   // Query a veiled page (bot-wall “search this site”) asked the start page
   // to run on its next mount — consumed once by StartPage.
   const [pendingSearch, setPendingSearch] = React.useState("");
+
+  /* Settings › Appearance — "More animations" (default On): amplified
+     motion across the WHOLE site — start page, overlays, browser. */
+  const fancy = useFancyMotion();
+
+  // Hydration handshake — pairs with the inline watchdog in layout.tsx:
+  // mark the window hydrated as soon as React takes over, and clear the
+  // watchdog's one-shot retry flag so the NEXT stall can still self-heal.
+  React.useEffect(() => {
+    (window as unknown as { __veilHydrated?: boolean }).__veilHydrated = true;
+    try {
+      sessionStorage.removeItem("veil:hydra-retry");
+    } catch {
+      /* private mode */
+    }
+  }, []);
 
   // ----- panic key + about:blank cloak (capture-phase, every mode) -----
   usePanicKeys();
@@ -276,6 +293,17 @@ export default function Home() {
   React.useEffect(() => {
     void refreshHistory();
   }, [refreshHistory]);
+
+  // ----- loading safety valve -----
+  // The loading bar clears on the iframe's load event — but an interrupted
+  // navigation or a page that dies mid-handshake can leave it sweeping
+  // forever (reads as "frozen"). After 45s, give up gracefully: the page
+  // is either there or it isn't.
+  React.useEffect(() => {
+    if (!loading) return;
+    const t = setTimeout(() => setLoading(false), 45_000);
+    return () => clearTimeout(t);
+  }, [loading]);
 
   // ----- navigation helpers -----
   const openUrl = React.useCallback((url: string, opts?: { newTab?: boolean }) => {
@@ -527,7 +555,13 @@ export default function Home() {
       if (d.type === "home-request" || d.type === "esc") {
         // "esc" — Escape pressed inside the veiled page (capture-phase
         // relay from the injected control script; the iframe owns focus so
-        // the parent's own listener never sees it).
+        // the parent's own listener never sees it). The engine filters
+        // fullscreen/dialog Escapes, but a race can still land one here
+        // while an iframe-fullscreen exit is in flight — if the document
+        // is fullscreen at all, stand down. (This was the "Veil randomly
+        // dumped me on the start page" report: exiting a fullscreen video
+        // must never kill the whole session.)
+        if (d.type === "esc" && document.fullscreenElement) return;
         home();
         return;
       }
@@ -621,6 +655,10 @@ export default function Home() {
         return;
       }
       if (e.key === "Escape") {
+        // A page/video inside the veil exiting fullscreen owns this
+        // Escape — never the session. (Race guard alongside the engine's
+        // own filter in rewrite.ts.)
+        if (document.fullscreenElement) return;
         if (section) {
           // A section handles its own Esc first (arcade tuck, dialogs) —
           // only the un-handled remainder bubbles here, closing the overlay.
@@ -795,7 +833,24 @@ export default function Home() {
       </AnimatePresence>
 
       {/* Section overlays — mounted on first open, kept alive (hidden) so
-          arcade games and the music player survive closing the section. */}
+          arcade games and the music player survive closing the section.
+          With More animations, an animated backdrop layer breathes in
+          behind whichever section is open (a per-open fade + drift, kept
+          SEPARATE from the wrappers so the sections themselves never
+          remount and lose state). */}
+      <AnimatePresence>
+        {fancy && section && mode === "home" && section !== "chat" && (
+          <motion.div
+            key="veil-section-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="pointer-events-none fixed inset-0 z-40 bg-zinc-950/80 backdrop-blur-sm"
+            aria-hidden
+          />
+        )}
+      </AnimatePresence>
       {SECTIONS.filter((id) => opened.has(id)).map((id) => {
         const open = section === id && mode === "home";
         return (
@@ -805,9 +860,12 @@ export default function Home() {
               open
                 ? // Chat paints its own frosted-wallpaper backdrop — no
                   // extra dim/blur on the wrapper (would double the GPU cost).
+                  // (Fancy mode adds the animated backdrop above instead.)
                   id === "chat"
                   ? "fixed inset-0 z-50"
-                  : "fixed inset-0 z-50 bg-zinc-950/80 backdrop-blur-sm"
+                  : fancy
+                    ? "fixed inset-0 z-50"
+                    : "fixed inset-0 z-50 bg-zinc-950/80 backdrop-blur-sm"
                 : "hidden"
             }
             aria-hidden={!open}
