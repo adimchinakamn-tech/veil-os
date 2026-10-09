@@ -699,3 +699,22 @@ Unresolved / risks:
 - The platform's UUID snapshot commits can still stack stale trees mid-session (while work is uncommitted) — the heals deliberately no-op then (dirty-tree guard). Always commit+push promptly after feature work; the 15-min cron reviewer should too.
 - If a future rollback happens, expect: 90s keeper divergence heal (clean tree) OR manual `git merge -X theirs origin/main` if dirty.
 - agent-browser CDP can wedge after a 30s timeout on busy pages — use disk/DB polling during heavy QA.
+
+---
+Task ID: chat-m10-link-plain
+Agent: main (Z.ai Code)
+Task: User ask: "remove the open in new tab cdn on m10 jsdelivr link" — chat messages contained the veil-os jsDelivr CDN front URLs (m1..m10), which rendered as target=_blank anchors.
+
+Work Log:
+- Located the single message-text link renderer in chat-app.tsx (MessageContent plain-text branch: split on https?://, anchors with target=_blank rel=noopener).
+- Added isVeilCdnFrontLink() helper: URL-parser based, matches any *.jsdelivr.net host + /gh/ok5678765s/veil-os@<ref>/ path that is the root index.html/.xhtml or any *.html/*.xhtml directly inside m1..m10/, site/, cdn/ (all the front stub pages — m10/index.xhtml, m10/chat.html, site/arcade.html, ...).
+- Front links now render as <span class="break-all text-white/55"> plain text — no anchor, no new-tab. All other URLs keep the orange open-in-new-tab anchor.
+- Tested the matcher standalone: 15/15 cases pass (fronts PLAIN; backups/latest.json, png assets, other repos, lookalike evil.com paths, b-cdn.net all stay ANCHOR).
+- bunx eslint chat-app.tsx clean. agent-browser live QA (logged in as Veil): the "chats bugging slow you can use m1..m10" message renders 10 plain-text spans, 0 anchors for jsdelivr; zite.so links still anchors.
+- Committed + pushed to origin/main.
+
+Stage Summary:
+- m10 (and the whole m1..m10/site/cdn front family) jsDelivr links in chat are now plain text — they no longer open in a new tab. Verified in-browser.
+
+Unresolved / risks:
+- The chat DB messages still CONTAIN the URLs (text unchanged) — only rendering changed, as asked. If the user wants the messages edited/deleted outright, that's a DB edit (say so next round).

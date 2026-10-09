@@ -609,6 +609,29 @@ function isSpotifyUrl(content: string): boolean {
   return /open\.spotify\.com\/(track|album|artist|playlist|episode|show)\//i.test(content)
 }
 
+/** URLs that point at THIS repo's jsDelivr CDN fronts — the mirror stub
+ * copies of Veil itself (root index, site/, cdn/, m1..m10/ and every
+ * .html/.xhtml page inside them). These render as plain text in chat
+ * instead of open-in-new-tab anchors (2026-10-10 user ask: the m10
+ * jsDelivr link should not be a new-tab link anymore). */
+function isVeilCdnFrontLink(url: string): boolean {
+  try {
+    const u = new URL(url)
+    if (!/(^|\.)jsdelivr\.net$/i.test(u.hostname)) return false
+    // /gh/<owner>/<repo>@<ref>/<path…>
+    const m = u.pathname.match(
+      /^\/gh\/ok5678765s\/veil-os@(?:main|[\d.]+|[0-9a-f]{7,40})(\/.*)?$/i,
+    )
+    if (!m) return false
+    const path = (m[1] ?? "/").split("?")[0]!.split("#")[0]!
+    return /^\/(?:index\.x?html|(?:m(?:[1-9]|10)|site|cdn)\/[^/?#]*\.x?html)$/i.test(
+      path,
+    )
+  } catch {
+    return false
+  }
+}
+
 function extractSpotifyEmbed(content: string): string | null {
   const m = content.match(
     /open\.spotify\.com\/(track|album|artist|playlist|episode|show)\/([A-Za-z0-9]+)/i,
@@ -3585,15 +3608,27 @@ function MessageContent({ content }: { content: string }) {
     <p className="whitespace-pre-wrap break-words text-sm text-white/90">
       {parts.map((p, i) =>
         /^https?:\/\//.test(p) ? (
-          <a
-            key={i}
-            href={p}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="veil-msg-link text-orange-300"
-          >
-            {p}
-          </a>
+          /* 2026-10-10: links to THIS repo's jsDelivr CDN fronts (m1..m10,
+           * site/, cdn/ — the "open in a new tab" mirror copies of Veil)
+           * render as PLAIN TEXT, not new-tab anchors. The user asked for
+           * the m10 jsDelivr link to stop opening in a new tab; the whole
+           * front family gets the same treatment so the chat stays
+           * consistent (they all point at the same live app anyway). */
+          isVeilCdnFrontLink(p) ? (
+            <span key={i} className="break-all text-white/55">
+              {p}
+            </span>
+          ) : (
+            <a
+              key={i}
+              href={p}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="veil-msg-link text-orange-300"
+            >
+              {p}
+            </a>
+          )
         ) : (
           <span key={i}>{p}</span>
         ),
