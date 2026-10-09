@@ -718,3 +718,25 @@ Stage Summary:
 
 Unresolved / risks:
 - The chat DB messages still CONTAIN the URLs (text unchanged) — only rendering changed, as asked. If the user wants the messages edited/deleted outright, that's a DB edit (say so next round).
+
+---
+Task ID: cdn-pill-purge-1010
+Agent: main (Z.ai Code)
+Task: User ask (with screenshot): "make sure to update git bundles the https://cdn.jsdelivr.net/gh/ok5678765s/veil-os@main/m10/index.xhtml and the open cdn in new tab" — screenshot showed a 'veil-cdn · open direct ↗' pill in the bottom-right of the start page.
+
+Work Log:
+- VLM-read the screenshot: floating pill 'veil-cdn' + green dot + 'open direct ↗' over the live start page (CHIKEN JOCKEY splash visible).
+- Hunt: 'veil-cdn' text exists NOWHERE in the current tree (src/, stubs, shells). Git history: OLD stub versions (before 83a126a, Oct 7 'strip Open direct from all 266 stubs') carried `<a id="pill" ...>veil-cdn · open direct ↗</a>`. Current stubs all clean (verified grep across index/site/cdn/m1..m10 = 0 hits).
+- Root cause of the user still seeing it: jsDelivr serves the stubs with cache-control: public, max-age=604800 (7-day browser cache). The user's browser still holds the pre-Oct-7 stub HTML. All three jsDelivr edges (cdn/gcore/fastly) ALREADY served the clean version — only the browser cache was stale.
+- One-time full purge sweep: purged all 266 front stub paths via purge.jsdelivr.net (264 + root index.html/index.xhtml re-purged after a list glitch) — all returned status finished. Sub-pages included (old m10/chat.html + site/index.html also carried the pill — verified in git at e447355).
+- Post-purge verification: cdn/gcore/fastly m10/index.xhtml + cdn site/chat.html all serve 0 veil-cdn refs.
+- Git bundles: verified newest bundle HEAD == repo HEAD (0b184e5), then forced a fresh snapshot+bundle run (veil-20261009-213943.tar.gz + veil-git-20261009-213943.bundle). Bundles auto-refresh via the 5-min backup loop whenever content changes; rotation keeps 3.
+- Working tree clean; nothing to commit for the stubs (they were already correct in git).
+
+Stage Summary:
+- The 'veil-cdn · open direct' pill is GONE from every jsDelivr edge — user just needs ONE hard refresh (Ctrl+Shift+R) on the m10 link to drop their browser's 7-day cached copy of the old stub.
+- Git bundles confirmed current with HEAD and refreshed on demand.
+- No code changes needed — the repo has been pill-free since 83a126a; this was purely a cache purge + bundle refresh operation.
+
+Unresolved / risks:
+- If the user reports STILL seeing the pill after a hard refresh, check for a browser extension overlaying badges; the repo serves no such element.
