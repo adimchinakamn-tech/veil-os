@@ -336,7 +336,10 @@ interface HistoryEntry {
   at: number;
 }
 const HISTORY_KEY = "veil.stream.history.v1";
-const HISTORY_CAP = 300;
+/* Effectively unlimited: a full YouTube Takeout history (even 100k+ rows)
+ * imports whole. The real bound is localStorage quota — writeHistory()
+ * trims to the newest rows that fit instead of silently dropping all. */
+const HISTORY_CAP = 1_000_000;
 const HISTORY_PAUSED_KEY = "veil.stream.history.paused.v1";
 
 /** Paused watch history (YouTube's "pause watch history"): while on,
@@ -379,14 +382,38 @@ function readHistory(): HistoryEntry[] {
   }
 }
 
-function writeHistory(entries: HistoryEntry[]): void {
+function writeHistory(entries: HistoryEntry[]): number {
+  let persisted = entries.length;
   try {
     window.localStorage.setItem(HISTORY_KEY, JSON.stringify(entries));
   } catch {
-    /* storage full or unavailable — history is best-effort */
+    /* Quota exceeded (a huge import can outrun localStorage's ~5MB).
+     * Don't silently drop EVERYTHING — keep as many NEWEST rows as fit
+     * (entries are newest-first at every call site). Estimate from a
+     * sample, then step down until the write lands. */
+    persisted = 0;
+    try {
+      const sample = entries.slice(0, 100);
+      const sampleLen = JSON.stringify(sample).length + 2;
+      const avg = Math.max(64, sampleLen / Math.max(1, sample.length));
+      const budget = 4.5 * 1024 * 1024; /* stay under the typical 5MB cap */
+      let keep = Math.min(entries.length, Math.floor(budget / avg));
+      while (keep > 0) {
+        try {
+          window.localStorage.setItem(HISTORY_KEY, JSON.stringify(entries.slice(0, keep)));
+          persisted = keep;
+          break;
+        } catch {
+          keep = Math.floor(keep * 0.85);
+        }
+      }
+    } catch {
+      /* storage unavailable entirely — history stays best-effort */
+    }
   }
   _watchedIds = null; /* drop the watched-id cache */
   window.dispatchEvent(new Event("veil-stream-history"));
+  return persisted;
 }
 
 /** The channels this device watches most (by watch count) — sent up with
@@ -6963,10 +6990,10 @@ function importWatchHistory(rows: TakeoutHistoryRow[]): number {
   if (fresh.length === 0) return 0;
   /* newest first, capped like the native store */
   const merged = [...existing, ...fresh].sort((a, b) => b.at - a.at).slice(0, HISTORY_CAP);
-  writeHistory(merged);
-  /* honest count: only what actually landed after the cap */
+  const persisted = writeHistory(merged);
+  /* honest count: only what actually landed (post-cap AND post-quota) */
   const freshIds = new Set(fresh.map((f) => f.card.id));
-  return merged.filter((m) => freshIds.has(m.card.id)).length;
+  return merged.slice(0, persisted).filter((m) => freshIds.has(m.card.id)).length;
 }
 
 /** The full "Import from YouTube" flow — shared by the Subscriptions

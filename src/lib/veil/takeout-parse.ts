@@ -29,10 +29,12 @@ export interface TakeoutHistoryRow {
   at?: number;
 }
 
-/** how many rows an import keeps (newest first — the client's history
- * store caps at 300 anyway, but 1200 gives the feed's watched-filter
- * full coverage). */
-export const MAX_HISTORY_ROWS = 1200;
+/** how many rows an import keeps (newest first). Effectively unlimited —
+ * a full YouTube Takeout history imports whole; the client's history
+ * store trims to what localStorage can hold (writeHistory keeps the
+ * newest rows that fit). Byte caps in the extract layer bound the
+ * input size, so this is just the row-level paranoia ceiling. */
+export const MAX_HISTORY_ROWS = 1_000_000;
 
 /* ------------------------------------------------------------------ */
 /* file-name matchers                                                  */

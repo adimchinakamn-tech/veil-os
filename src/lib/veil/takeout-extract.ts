@@ -65,8 +65,9 @@ export async function sniffFileKind(file: File): Promise<"gzip" | "zip" | "tar" 
 
 /** per-file cap for collected text candidates (subs/veil json). */
 const LOCAL_TEXT_CAP = 4 * 1024 * 1024;
-/** watch-history.json allowance (heavy watchers carry years). */
-const LOCAL_HISTORY_JSON_CAP = 12 * 1024 * 1024;
+/** watch-history.json allowance — a decade of heavy watching runs 30MB+;
+ * the row cap is what bounds the final store, not this byte ceiling. */
+const LOCAL_HISTORY_JSON_CAP = 96 * 1024 * 1024;
 /** watch-history.html allowance — the real thing runs 50MB+; it's
  * stream-REDUCED to rows, so memory stays bounded regardless. */
 const LOCAL_HISTORY_HTML_CAP = 320 * 1024 * 1024;

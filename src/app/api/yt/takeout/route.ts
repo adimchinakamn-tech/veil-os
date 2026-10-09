@@ -45,8 +45,10 @@ const MAX_BYTES = 64 * 1024 * 1024;
  * entry can't make us materialize a giant string). */
 const MAX_FILE_BYTES = 4 * 1024 * 1024;
 /** watch-history.json gets a bigger allowance — heavy watchers carry
- * years of activity in one file (still bounded by the archive cap). */
-const MAX_HISTORY_BYTES = 12 * 1024 * 1024;
+ * years of activity in one file (still bounded by the archive cap;
+ * this route is only the fallback for browsers without
+ * DecompressionStream — the client-side path allows even more). */
+const MAX_HISTORY_BYTES = 48 * 1024 * 1024;
 /** cap on scanned archive entries (a zip/tar bomb stops here). */
 const MAX_ENTRIES = 5000;
 interface ArchiveEntry {
