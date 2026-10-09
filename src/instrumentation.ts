@@ -84,13 +84,25 @@ export async function register(): Promise<void> {
           const limit = hs.heap_size_limit;
           const ratio = limit > 0 ? used / limit : 0;
           const rss = process.memoryUsage().rss;
-          if (ratio > 0.72) {
-            // Danger zone (still 8% under Next's own 80% restart line):
-            // compact twice and leave a durable trace.
+          // Box-pressure awareness (2026-10-09 postmortem: the 21:12
+          // emergency restart fired when MemAvailable hit 304MB — the OTHER
+          // processes on this 3.9GB no-swap box matter too). When the BOX
+          // gets tight we compact aggressively regardless of our own heap
+          // ratio, freeing garbage pages back to the kernel before the
+          // watchdog's emergency path is ever reached.
+          let memAvailKb = Infinity;
+          try {
+            const mi = fsmod.readFileSync("/proc/meminfo", "utf8");
+            const m = /^MemAvailable:\s+(\d+) kB/m.exec(mi);
+            if (m) memAvailKb = Number(m[1]);
+          } catch { /* keep Infinity */ }
+          if (ratio > 0.72 || memAvailKb < 600 * 1024) {
+            // Danger zone (heap 8% under Next's own 80% restart line, or
+            // box under real pressure): compact twice, leave a durable trace.
             maybeGc();
             maybeGc();
-            beat(`WARN compact-hard heapUsed=${Math.round(used / 1048576)}MB limit=${Math.round(limit / 1048576)}MB rss=${Math.round(rss / 1048576)}MB`);
-          } else if (ratio > 0.55 || rss > 1.45 * 1024 * 1024 * 1024) {
+            beat(`WARN compact-hard heapUsed=${Math.round(used / 1048576)}MB limit=${Math.round(limit / 1048576)}MB rss=${Math.round(rss / 1048576)}MB memAvail=${Math.round(memAvailKb / 1024)}MB`);
+          } else if (ratio > 0.55 || rss > 1.45 * 1024 * 1024 * 1024 || memAvailKb < 900 * 1024) {
             maybeGc();
           }
           const now = Date.now();
