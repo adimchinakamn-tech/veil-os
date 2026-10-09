@@ -294,7 +294,7 @@ const SPLASH_LINES = [
   "1+1=11",
   "woah",
   "better than the rest",
-  "Technoblade Never dies",
+  "CHIKEN JOCKEY!!!",
   "battle royale",
   "If your enemy's know your next move dont move",
   "fire hurts- Trust me",

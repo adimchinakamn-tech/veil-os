@@ -1238,7 +1238,7 @@ setTimeout(function () { try { ntInput.focus(); } catch (e) {} }, 120);
    Runs at script parse (shell JS sits at the body end, h2 exists)
    and the boot cover hides the swap from first paint. */
 (function veilSplash() {
-    var LINES = ["Your Back", "I know its the best", "happy?", "1+1=11", "woah", "better than the rest", "Technoblade Never dies", "battle royale", "If your enemy's know your next move dont move", "fire hurts- Trust me", "Why did I pick the name veil IDK", "WORDS", "gravity hurts", "verified by me"];
+    var LINES = ["Your Back", "I know its the best", "happy?", "1+1=11", "woah", "better than the rest", "CHIKEN JOCKEY!!!", "battle royale", "If your enemy's know your next move dont move", "fire hurts- Trust me", "Why did I pick the name veil IDK", "WORDS", "gravity hurts", "verified by me"];
     var SPECIAL = "passwords 5rew21";
     var h2 = document.querySelector("#veilShell .veil-nt-h2") || document.querySelector(".veil-nt-h2");
     if (!h2) return;
@@ -5923,7 +5923,7 @@ function veilOfflineBrain(text) {
         return "It's **" + d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) + "** on " + d.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric", year: "numeric" }) + " — device clock, no network needed.";
     }
     if (/splash|quote|motivat|inspire|mantra/.test(t)) {
-        var pool = ["Your Back", "I know its the best", "happy?", "1+1=11", "woah", "better than the rest", "Technoblade Never dies", "battle royale", "If your enemy's know your next move dont move", "fire hurts- Trust me", "Why did I pick the name veil IDK", "WORDS", "gravity hurts", "verified by me"];
+        var pool = ["Your Back", "I know its the best", "happy?", "1+1=11", "woah", "better than the rest", "CHIKEN JOCKEY!!!", "battle royale", "If your enemy's know your next move dont move", "fire hurts- Trust me", "Why did I pick the name veil IDK", "WORDS", "gravity hurts", "verified by me"];
         return '"' + pool[Math.floor(Math.random() * pool.length)] + '"\n\n— straight from this file\'s own splash pool.';
     }
     if (/arcade|game|play|bored|something fun/.test(t)) {
