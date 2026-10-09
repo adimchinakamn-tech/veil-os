@@ -2363,7 +2363,7 @@ function VideoCard({
        * box or it gets clipped */}
       <div className="relative">
         <div
-          className="relative aspect-video w-full overflow-hidden rounded-xl bg-zinc-800/80 ring-1 ring-zinc-800/60 transition duration-300 group-hover:shadow-2xl group-hover:shadow-black/60 group-hover:ring-zinc-700/80"
+          className="veil-hover-lift relative aspect-video w-full overflow-hidden rounded-xl bg-zinc-800/80 ring-1 ring-zinc-800/60 transition duration-300 group-hover:shadow-2xl group-hover:shadow-black/60 group-hover:ring-zinc-700/80"
           onMouseEnter={startPreview}
           onMouseLeave={stopPreview}
         >
@@ -2379,7 +2379,7 @@ function VideoCard({
           )}
           {/* play overlay */}
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all duration-200 group-hover:bg-black/30 group-hover:opacity-100">
-            <span className="flex size-12 items-center justify-center rounded-full bg-rose-500/95 shadow-xl shadow-rose-500/30 transition-transform duration-200 group-hover:scale-105">
+            <span className="veil-press flex size-12 items-center justify-center rounded-full bg-rose-500/95 shadow-xl shadow-rose-500/30 transition-transform duration-200 group-hover:scale-105">
               <Play aria-hidden className="size-5 translate-x-0.5 text-white fill-white" />
             </span>
           </div>
@@ -8976,7 +8976,7 @@ export function StreamSection({ onBack }: { onBack: () => void }) {
             size="sm"
             onClick={watchId ? () => setWatchId(null) : channelView ? closeChannel : onBack}
             aria-label={watchId ? "Back to browsing" : channelView ? "Back from the channel" : "Back to the start page"}
-            className="h-9 shrink-0 gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900/60 px-3 text-zinc-300 hover:border-zinc-700 hover:bg-zinc-800 hover:text-zinc-100"
+            className="veil-hover-bounce h-9 shrink-0 gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900/60 px-3 text-zinc-300 hover:border-zinc-700 hover:bg-zinc-800 hover:text-zinc-100"
           >
             <ArrowLeft aria-hidden className="size-4" />
             <span className="hidden sm:inline">{watchId ? "Browse" : "Back"}</span>
@@ -8985,7 +8985,7 @@ export function StreamSection({ onBack }: { onBack: () => void }) {
             <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-rose-500/15 ring-1 ring-rose-500/30">
               <MonitorPlay aria-hidden className="size-4.5 text-rose-400" />
             </span>
-            <h2 className="truncate text-[17px] font-semibold tracking-tight">
+            <h2 className="veil-text-shine truncate text-[17px] font-semibold tracking-tight">
               Veil Stream<span className="text-rose-400">.</span>
             </h2>
           </div>
@@ -9008,7 +9008,7 @@ export function StreamSection({ onBack }: { onBack: () => void }) {
                 spellCheck={false}
                 autoCapitalize="none"
                 autoComplete="off"
-                className="h-10 rounded-full border-zinc-800 bg-zinc-900/70 pl-10 pr-4 text-[14px] text-zinc-100 placeholder:text-zinc-500 focus-visible:border-rose-500/60 focus-visible:ring-rose-500/25"
+                className="veil-focus-bloom h-10 rounded-full border-zinc-800 bg-zinc-900/70 pl-10 pr-4 text-[14px] text-zinc-100 placeholder:text-zinc-500 focus-visible:border-rose-500/60 focus-visible:ring-rose-500/25"
               />
             </div>
             <button
@@ -9428,7 +9428,7 @@ export function StreamSection({ onBack }: { onBack: () => void }) {
                                 aria-pressed={active}
                                 title={count > 0 ? `${chip.label} — ${count} ${chip.key === "watched" ? "in your history" : "on screen"}` : chip.label}
                                 className={cn(
-                                  "flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[12.5px] font-medium transition active:scale-[0.97]",
+                                  "veil-press veil-hover-glow flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[12.5px] font-medium transition active:scale-[0.97]",
                                   active
                                     ? "bg-zinc-100 text-zinc-900"
                                     : "bg-zinc-800/70 text-zinc-300 ring-1 ring-zinc-700/50 hover:bg-zinc-800 hover:text-zinc-100",

@@ -6,11 +6,23 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   reactStrictMode: false,
-  // Quasar v1.3.8: the proxy engine imports undici/acorn directly from
+  // Quasar v2.1.0: the proxy engine imports undici/acorn directly from
   // route handlers. They must stay external (never bundled) — the raw
   // undici fetch bypasses Next's dev fetch instrumentation (which corrupts
   // large streamed bodies), and bundling it would reintroduce that wrapper.
-  serverExternalPackages: ["undici", "acorn", "acorn-walk"],
+  // bgutils-js + jsdom power the server-side YouTube poToken module;
+  // playwright-core/playwright are OPTIONAL peers for the real-browser
+  // poToken farm (QUASAR_POTOKEN_BROWSER=1) — externalizing keeps the
+  // dynamic import a runtime require that fails gracefully when absent.
+  serverExternalPackages: [
+    "undici",
+    "acorn",
+    "acorn-walk",
+    "bgutils-js",
+    "jsdom",
+    "playwright-core",
+    "playwright",
+  ],
   // Hide the floating Next.js dev-tools badge (the little circular "N"
   // pinned bottom-left in dev mode) — it reads as part of the site and
   // there is nothing to debug from the preview panel.
@@ -40,6 +52,14 @@ const nextConfig: NextConfig = {
   experimental: {
     turbopackMemoryLimit: 2 * 1024 * 1024 * 1024,
     turbopackFileSystemCacheForDev: true,
+    // 2026-10-07 "can't log into chat" round: the webpack dev plateau sat at
+    // ~1.95GB RSS — 100MB under the watchdog's 2.05GB line — so any compile
+    // spike (QA sweep, multiple cold routes) tripped a forced restart, and
+    // every restart window (15-60s of cold compiles) is exactly when logins
+    // time out from the user's perspective. This flag switches webpack to
+    // its memory-efficient cache/snapshot mode and shaves a few hundred MB
+    // off the plateau, widening the headroom to survive compile bursts.
+    webpackMemoryOptimizations: true,
   },
   // Dev-only: the sandbox preview panel serves this app on a per-session
   // subdomain (preview-chat-*.space-z.ai). Without this list Next 16 flags
@@ -82,6 +102,9 @@ const nextConfig: NextConfig = {
         ignored:
           /(^|[\\/])(node_modules|\.git|\.next|backups|upload|download|db|mini-services|scripts|tmp|tool-results|tests)([\\/]|$)|dev\.log$/,
       };
+      // NOTE: do NOT set config.devtool here — Next 16 detects it, reverts
+      // to 'false' and warns on every boot ("improper-devtool"). Its own
+      // revert already skips source-map generation (the memory win).
     }
     return config;
   },

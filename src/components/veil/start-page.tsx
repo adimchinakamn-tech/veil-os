@@ -10,7 +10,8 @@
  */
 
 import * as React from "react";
-import { useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
+import { useFancyMotion } from "@/lib/veil/motion";
 import {
   ArrowRight,
   Bot,
@@ -47,6 +48,7 @@ import {
   Search,
   Settings,
   Snowflake,
+  Sparkles,
   Sun,
   WifiOff,
 } from "lucide-react";
@@ -321,16 +323,38 @@ function randomSplashLine(): string {
 /* ------------------------------------------------------------------ */
 
 /** Every arrangeable block of the start page. */
-type WidgetId = "clock" | "weather" | "presence" | "brand" | "search" | "hints" | "dock" | "recent" | "stats";
+type WidgetId =
+  | "clock"
+  | "weather"
+  | "presence"
+  | "brand"
+  | "search"
+  | "hints"
+  | "dock"
+  | "suggestions"
+  | "recent"
+  | "stats";
 
 /** The ONLY thing the layout editor controls: the order the apps render
- * in. No resizing, no hiding — the user's call. */
+ * in. No resizing, no hiding, no redesign — the page keeps its classic
+ * column look no matter how things are arranged. */
 interface StartLayout {
   order: WidgetId[];
   customized: boolean;
 }
 
-const DEFAULT_ORDER: WidgetId[] = ["clock", "weather", "presence", "brand", "search", "hints", "dock", "recent", "stats"];
+const DEFAULT_ORDER: WidgetId[] = [
+  "clock",
+  "weather",
+  "presence",
+  "brand",
+  "search",
+  "hints",
+  "dock",
+  "suggestions",
+  "recent",
+  "stats",
+];
 const LAYOUT_KEY = "veil.start.layout.v1";
 
 const WIDGET_LABELS: Record<WidgetId, string> = {
@@ -341,28 +365,25 @@ const WIDGET_LABELS: Record<WidgetId, string> = {
   search: "Search bar",
   hints: "Keyboard hints",
   dock: "Section dock",
+  suggestions: "Suggestions",
   recent: "Recently viewed",
   stats: "Stats line",
 };
 
-const SPAN_CLASS: Record<number, string> = {
-  1: "col-span-1",
-  2: "col-span-2",
-  3: "col-span-2 md:col-span-3",
-  4: "col-span-2 md:col-span-4",
-};
-/** Each widget's resting width in the bento grid (clock + weather share
- * a row, search and the dock run full width) — fixed, not editable. */
-const GRID_DEFAULT_SIZES: Record<WidgetId, number> = {
-  clock: 2,
-  weather: 2,
-  presence: 1,
-  brand: 2,
-  search: 4,
-  hints: 2,
-  dock: 4,
-  recent: 4,
-  stats: 2,
+/** How each block sits in the classic column: its top margin (the
+ * hand-tuned default rhythm) and whether it centers or runs wide.
+ * Reordering never changes these — the editor is move-only. */
+const COLUMN_ITEM: Record<WidgetId, string> = {
+  clock: "flex w-full justify-center",
+  weather: "mt-3.5 flex w-full justify-center",
+  presence: "mt-3.5 flex w-full justify-center",
+  brand: "mt-9 w-full",
+  search: "mt-7 w-full",
+  hints: "mt-3.5 flex w-full justify-center",
+  dock: "mt-8 flex w-full justify-center",
+  suggestions: "mt-10 w-full",
+  recent: "mt-10 w-full",
+  stats: "mt-10 w-full",
 };
 
 function readStartLayout(): StartLayout {
@@ -405,6 +426,16 @@ function presenceLabel(total: number): string {
   return `${total} online`;
 }
 
+/* Mega-motion ambient stars for the procedural wallpaper — tiny twinkling
+   dots with staggered rhythm (only animate under data-veil-fancy="on"). */
+const TWINKLE_STARS: { pos: string; delay: string; dur: string }[] = [
+  { pos: "left-[12%] top-[18%]", delay: "0.3s", dur: "3.4s" },
+  { pos: "left-[76%] top-[14%]", delay: "1.1s", dur: "4.2s" },
+  { pos: "left-[64%] top-[66%]", delay: "1.9s", dur: "3.0s" },
+  { pos: "left-[22%] top-[74%]", delay: "2.6s", dur: "4.6s" },
+  { pos: "left-[46%] top-[40%]", delay: "0.8s", dur: "3.8s" },
+];
+
 /** Owns the 1-second tick so StartPage's whole tree does NOT re-render
  * every second (the old top-level setNow re-rendered the entire home
  * screen — every widget, every card — 60×/minute: a silent CPU tax that
@@ -413,6 +444,8 @@ function presenceLabel(total: number): string {
  * client tick (no hydration mismatch, no layout shift). */
 function StartClock({ clock24 }: { clock24: boolean }) {
   const [now, setNow] = React.useState<Date | null>(null);
+  /* More animations — the big time breathes a soft emerald halo. */
+  const fancy = useFancyMotion();
   React.useEffect(() => {
     setNow(new Date());
     const t = setInterval(() => setNow(new Date()), 1000);
@@ -433,10 +466,10 @@ function StartClock({ clock24 }: { clock24: boolean }) {
           .padStart(2, "0")} ${now.getHours() < 12 ? "AM" : "PM"}`;
   return (
     <div aria-hidden className="select-none text-center">
-      <p className="veil-rise text-5xl font-light tabular-nums tracking-tight text-zinc-50 [text-shadow:0_2px_18px_rgba(0,0,0,0.55)] sm:text-6xl">
+      <p className={`veil-rise text-5xl font-light tabular-nums tracking-tight text-zinc-50 [text-shadow:0_2px_18px_rgba(0,0,0,0.55)] sm:text-6xl ${fancy ? "veil-clock-glow" : ""}`}>
         {timeLabel}
       </p>
-      <p className="veil-rise mt-1.5 text-[11px] font-semibold uppercase tracking-[0.3em] text-zinc-300 [text-shadow:0_1px_12px_rgba(0,0,0,0.6)]">
+      <p className="veil-rise veil-type-reveal mt-1.5 text-[11px] font-semibold uppercase tracking-[0.3em] text-zinc-300 [text-shadow:0_1px_12px_rgba(0,0,0,0.6)]">
         {now
           ? now.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })
           : "\u00A0"}
@@ -455,7 +488,7 @@ function GreetingLabel({ name }: { name: string }) {
     const t = setInterval(() => setHour(new Date().getHours()), 60_000);
     return () => clearInterval(t);
   }, []);
-  return <span className="shrink-0 truncate text-zinc-400">{hour === null ? "Hello" : greetingFor(hour, name)}</span>;
+  return <span className="veil-text-shine shrink-0 truncate text-zinc-400">{hour === null ? "Hello" : greetingFor(hour, name)}</span>;
 }
 
 export function StartPage({
@@ -468,6 +501,9 @@ export function StartPage({
   onAutoSearchConsumed,
 }: StartPageProps) {
   const reduceMotion = useReducedMotion();
+  /* Settings › Appearance — "More animations" (default ON): amplified
+     rises, springy dock, card staggers across the whole start page. */
+  const fancy = useFancyMotion();
 
   // ----- pending search handed over from a veiled page -----
   // The bot-wall page's “Search this site's content” button asks the shell
@@ -831,9 +867,30 @@ export function StartPage({
         out.push({ kind: "visit", title: (v.title || v.host).slice(0, 60), sub: v.host, url: v.url, host: v.host });
       }
     }
-    // Local video search — the FreeTube library answers every query, on
-    // every proxy engine (the program never proxied, searches stay local).
-    if (q) {
+    // Always offer the web search row. For plain queries it sits at the TOP
+    // (index 0) so pressing Enter searches the web — the expected default.
+    // It only sinks to the end when a URL intent or quick link owns slot 0.
+    const engineLabel = { bing: "Bing", duckduckgo: "DuckDuckGo", brave: "Brave", google: "Google", ecosia: "Ecosia" }[searchEngineId()] ?? "the web";
+    const webRow: Suggestion = {
+      kind: "search",
+      title: `Search ${engineLabel} for “${input.trim().slice(0, 40)}”`,
+      sub: "",
+      url: "",
+      host: "",
+    };
+    if (urlIntent) {
+      out.push(
+        {
+          kind: "search",
+          title: `Search videos for “${input.trim().slice(0, 40)}”`,
+          sub: "FreeTube — the local library",
+          url: `https://freetube.veil.local/#/search/${encodeURIComponent(input.trim())}`,
+          host: "freetube.veil.local",
+        },
+        webRow
+      );
+    } else {
+      out.unshift(webRow);
       out.push({
         kind: "search",
         title: `Search videos for “${input.trim().slice(0, 40)}”`,
@@ -842,15 +899,6 @@ export function StartPage({
         host: "freetube.veil.local",
       });
     }
-    // Always offer the web search row at the end (or top for plain queries).
-    const engineLabel = { bing: "Bing", duckduckgo: "DuckDuckGo", brave: "Brave", google: "Google", ecosia: "Ecosia" }[searchEngineId()] ?? "the web";
-    out.push({
-      kind: "search",
-      title: `Search ${engineLabel} for “${input.trim().slice(0, 40)}”`,
-      sub: "",
-      url: "",
-      host: "",
-    });
     return out;
   }, [input, history]);
 
@@ -971,20 +1019,19 @@ export function StartPage({
       ? {}
       : {
           style: { animationDelay: `${d}s` },
-          className: "veil-rise",
+          className: fancy ? "veil-rise-fancy" : "veil-rise",
         };
 
   /* ---- the arrangeable widget bodies ----
-   * Shared by the classic column (default) and the bento grid (the
-   * layout editor). Margins live on the WRAPPERS, not the nodes, so the
-   * grid's gap can do the spacing. */
+   * The classic column renders them in the saved order — the layout
+   * editor only reorders; margins live on the wrappers (COLUMN_ITEM). */
   const widgetNodes: Record<WidgetId, React.ReactNode> = {
     clock: (
       <StartClock clock24={clock24} />
     ),
     weather: (
-      <div {...rise(0.06)} className="veil-rise flex justify-center">
-        <div className="flex max-w-full items-center gap-2 overflow-visible rounded-full border border-white/10 bg-black/40 px-3.5 py-1.5 text-[12.5px] text-zinc-300 backdrop-blur-md">
+      <div {...rise(0.06)} className={`${fancy ? "veil-rise-fancy" : "veil-rise"} flex justify-center`}>
+        <div className="veil-hover-lift flex max-w-full items-center gap-2 overflow-visible rounded-full border border-white/10 bg-black/40 px-3.5 py-1.5 text-[12.5px] text-zinc-300 backdrop-blur-md">
           {wx ? (
             <>
               <WxGlyph code={wxCode} desc={wx.desc} isDay={wx.isDay} className="size-3.5 shrink-0 text-emerald-300" />
@@ -1010,7 +1057,7 @@ export function StartPage({
               {wx.desc ? (
                 <>
                   <span aria-hidden className="size-0.5 shrink-0 rounded-full bg-zinc-500" />
-                  <span className="truncate">{wx.desc}</span>
+                  <span className="veil-text-breathe truncate">{wx.desc}</span>
                 </>
               ) : null}
               <span aria-hidden className="size-0.5 shrink-0 rounded-full bg-zinc-500" />
@@ -1033,7 +1080,7 @@ export function StartPage({
                   pin ? "text-emerald-300" : "text-zinc-500 hover:text-zinc-300"
                 )}
               >
-                <MapPin aria-hidden className="size-3.5" />
+                <MapPin aria-hidden className="veil-hover-spin size-3.5" />
               </button>
             </PopoverTrigger>
             <PopoverContent align="center" className="w-72 rounded-2xl border-zinc-800 bg-zinc-950/95 p-3.5 backdrop-blur-xl">
@@ -1091,17 +1138,18 @@ export function StartPage({
       </div>
     ),
     presence: (
-      <div {...rise(0.08)} className="veil-rise flex justify-center">
+      <div {...rise(0.08)} className={`${fancy ? "veil-rise-fancy" : "veil-rise"} flex justify-center`}>
         <div
           role="status"
           aria-live="polite"
           aria-label={`Who's online — ${presence.total} ${presence.total === 1 ? "person" : "people"} on the site`}
           title="How many people are on the website right now"
-          className="flex items-center gap-2 rounded-full border border-white/10 bg-black/40 px-3.5 py-1.5 text-[12.5px] text-zinc-300 backdrop-blur-md transition hover:border-emerald-400/25"
+          className="veil-pulse-glow flex items-center gap-2 rounded-full border border-white/10 bg-black/40 px-3.5 py-1.5 text-[12.5px] text-zinc-300 backdrop-blur-md transition hover:border-emerald-400/25"
         >
           {/* the live dot — a soft ping behind a solid emerald core */}
           <span aria-hidden className="relative flex size-2 shrink-0">
             <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-60 [animation-duration:2.2s]" />
+            <span className="veil-ripple absolute inline-flex size-full rounded-full bg-teal-300/60" />
             <span className="relative inline-flex size-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]" />
           </span>
           <span className="shrink-0 font-medium tabular-nums text-zinc-100">
@@ -1111,10 +1159,10 @@ export function StartPage({
       </div>
     ),
     brand: (
-      <div {...rise(0.12)} className="veil-rise flex flex-col items-center">
+      <div {...rise(0.12)} className={`${fancy ? "veil-rise-fancy" : "veil-rise"} flex flex-col items-center`}>
         <div className="flex items-center gap-3">
-          <VeilMark className="size-8 text-emerald-300 drop-shadow-[0_4px_14px_rgba(16,185,129,0.45)]" />
-          <span className="text-xl font-semibold tracking-tight text-zinc-50">Veil</span>
+          <VeilMark className="veil-bounce-soft size-8 text-emerald-300 drop-shadow-[0_4px_14px_rgba(16,185,129,0.45)]" />
+          <span className="veil-text-shine text-xl font-semibold tracking-tight text-zinc-50">Veil</span>
         </div>
         <h2
           key={tagline}
@@ -1142,7 +1190,7 @@ export function StartPage({
               : {}),
           }}
           className={
-            (reduceMotion ? "" : "veil-rise ") +
+            (reduceMotion ? "" : fancy ? "veil-rise-fancy " : "veil-rise ") +
             "mt-3 max-w-xl text-center text-2xl font-semibold tracking-tight sm:text-3xl " +
             (isSplashLine ? "" : "text-zinc-50 [text-shadow:0_2px_20px_rgba(0,0,0,0.6)]")
           }
@@ -1155,13 +1203,13 @@ export function StartPage({
       <form
         {...rise(0.18)}
         role="search"
-        className="veil-rise relative flex w-full max-w-[42rem] items-stretch gap-2"
+        className={`${fancy ? "veil-rise-fancy" : "veil-rise"} relative flex w-full max-w-[42rem] items-stretch gap-2`}
         onSubmit={(e) => {
           e.preventDefault();
           submit();
         }}
       >
-        <div className="relative min-w-0 flex-1">
+        <div className="veil-border-dance relative min-w-0 flex-1 rounded-2xl">
           <Search
             aria-hidden
             className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-zinc-500 transition-colors peer-focus:text-emerald-300"
@@ -1192,9 +1240,12 @@ export function StartPage({
           )}
           {/* suggestions */}
           {focused && suggestions.length > 0 && (
-            <div
+            <motion.div
               role="listbox"
               aria-label="Suggestions"
+              initial={fancy ? { opacity: 0, y: -8, scale: 0.985 } : false}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ type: "spring", stiffness: 420, damping: 30 }}
               className="absolute left-0 right-0 top-[calc(100%+8px)] z-40 overflow-y-auto rounded-2xl border border-white/10 bg-zinc-950/95 p-1.5 shadow-[0_32px_64px_rgba(0,0,0,0.6)] backdrop-blur-xl veil-scroll-slim"
               style={{ maxHeight: "18.5rem" }}
             >
@@ -1213,7 +1264,7 @@ export function StartPage({
                 >
                   <span
                     aria-hidden
-                    className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${
+                    className={`veil-hover-wobble flex size-8 shrink-0 items-center justify-center rounded-lg ${
                       s.kind === "visit"
                         ? "bg-zinc-800 text-zinc-400"
                         : s.kind === "link"
@@ -1238,21 +1289,24 @@ export function StartPage({
                   {i === sel ? <ArrowRight aria-hidden className="mr-1 size-3.5 shrink-0 text-emerald-400" /> : null}
                 </button>
               ))}
-            </div>
+            </motion.div>
           )}
         </div>
-        <button
+        <motion.button
           type="submit"
-          className="flex h-[52px] shrink-0 items-center gap-2 rounded-2xl bg-emerald-500 px-5 text-[15px] font-semibold text-emerald-950 shadow-[0_12px_24px_rgba(16,185,129,0.25)] transition hover:bg-emerald-400 active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300"
+          whileHover={fancy ? { scale: 1.04, boxShadow: "0 16px 40px rgba(16,185,129,0.4)" } : undefined}
+          whileTap={{ scale: 0.97 }}
+          transition={{ type: "spring", stiffness: 460, damping: 24 }}
+          className="flex h-[52px] shrink-0 items-center gap-2 rounded-2xl bg-emerald-500 px-5 text-[15px] font-semibold text-emerald-950 shadow-[0_12px_24px_rgba(16,185,129,0.25)] transition hover:bg-emerald-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300"
         >
           <span className="hidden sm:inline">Launch</span>
-          <ArrowRight aria-hidden className="size-4" />
-        </button>
+          <ArrowRight aria-hidden className="veil-hover-bounce size-4" />
+        </motion.button>
       </form>
     ),
     hints: (
-      <div {...rise(0.18)} className="veil-rise">
-        <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 rounded-full border border-white/10 bg-black/40 px-3.5 py-1.5 text-[11.5px] text-zinc-400 backdrop-blur-md">
+      <div {...rise(0.18)} className={fancy ? "veil-rise-fancy" : "veil-rise"}>
+        <p className="veil-scanline flex flex-wrap items-center justify-center gap-x-2 gap-y-1 rounded-full border border-white/10 bg-black/40 px-3.5 py-1.5 text-[11.5px] text-zinc-400 backdrop-blur-md">
           <HintKbd>Enter</HintKbd> launches ·
           <HintKbd>↑↓</HintKbd> picks ·
           <HintKbd>F</HintKbd> fullscreen ·
@@ -1261,40 +1315,57 @@ export function StartPage({
       </div>
     ),
     dock: (
-      <nav {...rise(0.24)} aria-label="Veil pages" className="veil-rise flex max-w-[36rem] flex-wrap items-center justify-center gap-2">
-        {dock.map((d) => {
+      <nav {...rise(0.24)} aria-label="Veil pages" className={`${fancy ? "veil-rise-fancy" : "veil-rise"} flex max-w-[36rem] flex-wrap items-center justify-center gap-2`}>
+        {dock.map((d, i) => {
           const Icon = d.icon;
           const active = section === d.id;
           return (
-            <button
+            <motion.button
               key={d.id}
               type="button"
               onClick={() => onOpenSection(d.id)}
               aria-label={d.label}
               aria-pressed={active}
-              className={`flex h-9 items-center gap-2 rounded-xl border px-3.5 text-[13px] font-medium backdrop-blur-md transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60 active:scale-[0.97] ${
+              whileHover={fancy ? { y: -3, scale: 1.05 } : undefined}
+              whileTap={fancy ? { scale: 0.93 } : undefined}
+              transition={{ type: "spring", stiffness: 480, damping: 21 }}
+              className={`flex h-9 items-center gap-2 rounded-xl border px-3.5 text-[13px] font-medium backdrop-blur-md transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60 ${
                 active
                   ? "border-white/30 bg-white/12 text-white shadow-[0_0_22px_-6px_rgba(255,255,255,0.4)]"
                   : "border-white/10 bg-black/45 text-zinc-100 hover:border-white/25 hover:bg-black/60 hover:text-white"
-              }`}
+              } ${fancy ? "veil-dock-sheen" : ""}`}
             >
-              <Icon aria-hidden className={`size-4 shrink-0 ${DOCK_ICON_COLORS[d.id]}`} />
-              <span>{d.label}</span>
-            </button>
+              <Icon aria-hidden className={`veil-pop-in veil-stagger-${(i % 8) + 1} size-4 shrink-0 ${DOCK_ICON_COLORS[d.id]}`} />
+              <span className={i % 2 === 0 ? "veil-hover-bounce" : "veil-hover-wobble"}>{d.label}</span>
+            </motion.button>
           );
         })}
       </nav>
     ),
+    suggestions: (
+      <section {...rise(0.27)} aria-label="Suggestions" className={`${fancy ? "veil-rise-fancy" : "veil-rise"} w-full`}>
+        <div className="mb-3 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
+          <Sparkles aria-hidden className="size-3.5 text-emerald-300/80" />
+          Suggestions
+        </div>
+        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+          {QUICK_LINKS.map((s, i) => (
+            <SuggestionCard key={s.url} link={s} index={i} onNavigate={onNavigate} />
+          ))}
+        </div>
+        <p className="mt-2.5 text-[11px] text-zinc-600">Picked to read well through the veil.</p>
+      </section>
+    ),
     recent:
       recent.length > 0 ? (
-        <section {...rise(0.3)} aria-label="Recently viewed" className="veil-rise w-full">
+        <section {...rise(0.3)} aria-label="Recently viewed" className={`${fancy ? "veil-rise-fancy" : "veil-rise"} w-full`}>
           <div className="mb-3 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
             <HistoryIcon aria-hidden className="size-3.5" />
             Recently viewed
           </div>
           <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-4">
-            {recent.map((v) => (
-              <RecentCard key={v.id} visit={v} onNavigate={onNavigate} />
+            {recent.map((v, i) => (
+              <RecentCard key={v.id} visit={v} index={i} onNavigate={onNavigate} />
             ))}
           </div>
           <button
@@ -1307,7 +1378,7 @@ export function StartPage({
         </section>
       ) : null,
     stats: (
-      <p {...rise(0.3)} className="veil-rise text-center text-[11.5px] text-zinc-500">
+      <p {...rise(0.3)} className={`${fancy ? "veil-rise-fancy" : "veil-rise"} text-center text-[11.5px] text-zinc-500`}>
         {history
           ? `${history.stats.sites} site${history.stats.sites === 1 ? "" : "s"} visited · ${history.stats.pageVisits} page load${history.stats.pageVisits === 1 ? "" : "s"}`
           : "Your visits appear here as you browse."}
@@ -1322,7 +1393,6 @@ export function StartPage({
       </p>
     ),
   };
-  const gridMode = editing || layout.customized;
 
   return (
     <div className="fixed inset-0 overflow-y-auto veil-scroll-slim bg-zinc-950 text-zinc-100">
@@ -1335,7 +1405,7 @@ export function StartPage({
         onClick={() => setUiHidden((v) => !v)}
         className="fixed left-4 top-4 z-[70] flex h-7 items-center gap-1.5 rounded-full border border-white/10 bg-black/35 px-2.5 text-[11px] font-medium tracking-wide text-zinc-300/70 backdrop-blur-md transition hover:border-white/25 hover:text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
       >
-        {uiHidden ? <Eye aria-hidden className="size-3" /> : <EyeOff aria-hidden className="size-3" />}
+        {uiHidden ? <Eye aria-hidden className="veil-hover-wobble size-3" /> : <EyeOff aria-hidden className="veil-hover-wobble size-3" />}
         <span>{uiHidden ? "show UI" : "hide UI"}</span>
       </button>
       {/* layout — open the start page's bento editor */}
@@ -1346,7 +1416,7 @@ export function StartPage({
         onClick={() => (editing ? finishEditing() : setEditing(true))}
         className="fixed left-4 top-14 z-[70] flex h-7 items-center gap-1.5 rounded-full border border-white/10 bg-black/35 px-2.5 text-[11px] font-medium tracking-wide text-zinc-300/70 backdrop-blur-md transition hover:border-white/25 hover:text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
       >
-        <LayoutGrid aria-hidden className={cn("size-3", editing && "text-emerald-300")} />
+        <LayoutGrid aria-hidden className={cn("veil-hover-wobble size-3", editing && "text-emerald-300")} />
         <span>{editing ? "done" : "layout"}</span>
       </button>
       {/* ── wallpaper backdrop ── */}
@@ -1361,6 +1431,15 @@ export function StartPage({
           <div className={`absolute inset-0 bg-gradient-to-br ${THEME_GRADIENTS[wpTheme] ?? THEME_GRADIENTS.emerald}`}>
             <div className={`absolute -top-40 left-[25%] h-[26rem] w-[40rem] rounded-full bg-white/10 blur-3xl ${reduceMotion ? "" : "veil-orb-a"}`} />
             <div className={`absolute -bottom-32 right-[8%] h-80 w-80 rounded-full bg-black/10 blur-3xl ${reduceMotion ? "" : "veil-orb-b"}`} />
+            {/* mega-motion: an aurora haze + twinkling stars over the live theme */}
+            <div className="veil-aurora absolute -inset-32" />
+            {TWINKLE_STARS.map((s, si) => (
+              <span
+                key={si}
+                className={`veil-twinkle absolute size-1 rounded-full bg-white/70 ${s.pos}`}
+                style={{ "--twinkle-delay": s.delay, "--twinkle-dur": s.dur } as React.CSSProperties}
+              />
+            ))}
           </div>
         )}
         {dimClass ? <div className={`absolute inset-0 ${dimClass}`} /> : null}
@@ -1371,99 +1450,82 @@ export function StartPage({
       {/* ── start content ── */}
       <div
         className={cn(
-          "relative mx-auto flex min-h-full w-full flex-col items-center px-4 py-10 transition-opacity duration-500 sm:px-6 sm:py-16",
-          gridMode ? "max-w-5xl" : "max-w-3xl",
+          "relative mx-auto flex min-h-full w-full max-w-3xl flex-col items-center px-4 py-10 transition-opacity duration-500 sm:px-6 sm:py-16",
           editing && "pb-24",
-          uiHidden && "pointer-events-none opacity-0"
+          uiHidden && "pointer-events-none opacity-0",
         )}
       >
-        {gridMode ? (
-          /* ── the bento grid — the customized / editing layout ── */
-          <div className="grid w-full grid-cols-2 gap-4 pt-3 md:grid-cols-4 md:gap-5">
-            {layout.order
-              .filter((w) => widgetNodes[w] != null)
-              .map((w) => {
-                const size = GRID_DEFAULT_SIZES[w];
-                return (
-                  <section
-                    key={w}
-                    aria-label={WIDGET_LABELS[w]}
-                    draggable={editing}
-                    onDragStart={editing ? () => setDragId(w) : undefined}
-                    onDragEnd={editing ? () => { setDragId(null); setDropTarget(null); } : undefined}
-                    onDragOver={
-                      editing && dragId && dragId !== w
-                        ? (e: React.DragEvent) => {
-                            e.preventDefault();
-                            setDropTarget(w);
-                          }
-                        : undefined
-                    }
-                    onDragLeave={editing ? () => setDropTarget((t) => (t === w ? null : t)) : undefined}
-                    onDrop={editing ? () => dropWidgetOn(w) : undefined}
-                    className={cn(
-                      "relative rounded-2xl border border-white/10 bg-black/35 p-4 backdrop-blur-md",
-                      SPAN_CLASS[size],
-                      editing && "outline-dashed outline-2 outline-white/25",
-                      editing && dragId === w && "opacity-40",
-                      editing && dropTarget === w && dragId !== w && "outline-2 outline-emerald-300/80"
-                    )}
-                  >
-                    {editing && (
-                      <div className="absolute -top-3.5 left-3 right-3 z-20 flex items-center justify-between gap-1 rounded-full border border-white/15 bg-zinc-950/90 py-1 pl-2.5 pr-1.5 text-zinc-300 shadow-lg backdrop-blur-md">
-                        <span className="flex min-w-0 items-center gap-1 text-[10px] font-semibold">
-                          <GripVertical aria-hidden className="size-3 shrink-0 text-zinc-500" />
-                          <span className="truncate">{WIDGET_LABELS[w]}</span>
-                        </span>
-                        <span className="flex shrink-0 items-center gap-0.5">
-                          <button
-                            type="button"
-                            onClick={() => moveWidget(w, -1)}
-                            aria-label={`Move ${WIDGET_LABELS[w]} earlier`}
-                            className="flex size-5.5 items-center justify-center rounded-full transition hover:bg-white/10 hover:text-white"
-                          >
-                            <ChevronUp aria-hidden className="size-3" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => moveWidget(w, 1)}
-                            aria-label={`Move ${WIDGET_LABELS[w]} later`}
-                            className="flex size-5.5 items-center justify-center rounded-full transition hover:bg-white/10 hover:text-white"
-                          >
-                            <ChevronDown aria-hidden className="size-3" />
-                          </button>
-                        </span>
-                      </div>
-                    )}
-                    {widgetNodes[w]}
-                  </section>
-                );
-              })}
-          </div>
-        ) : (
-          /* ── the classic column — the untouched default look ── */
-          <div className="flex w-full flex-col items-center">
-            {widgetNodes.clock}
-            <div className="mt-3.5 flex w-full justify-center">{widgetNodes.weather}</div>
-            <div className="mt-3.5 flex w-full justify-center">{widgetNodes.presence}</div>
-            <div className="mt-9 w-full">{widgetNodes.brand}</div>
-            <div className="mt-7 w-full">{widgetNodes.search}</div>
-            <div className="mt-3.5 flex w-full justify-center">{widgetNodes.hints}</div>
-            <div className="mt-8 flex w-full justify-center">{widgetNodes.dock}</div>
-            {widgetNodes.recent ? <div className="mt-10 w-full">{widgetNodes.recent}</div> : null}
-            <div className="mt-10 w-full">{widgetNodes.stats}</div>
-          </div>
-        )}
+        {/* ── the classic column, rendered from the saved order — the
+            layout editor only moves these blocks around, the page's look
+            never changes (no grid redesign: move-only, that's the deal) ── */}
+        <div className="flex w-full flex-col items-center">
+          {layout.order
+            .filter((w) => widgetNodes[w] != null)
+            .map((w) => (
+              <section
+                key={w}
+                {...(editing ? { "aria-label": WIDGET_LABELS[w] } : {})}
+                draggable={editing}
+                onDragStart={editing ? () => setDragId(w) : undefined}
+                onDragEnd={editing ? () => { setDragId(null); setDropTarget(null); } : undefined}
+                onDragOver={
+                  editing && dragId && dragId !== w
+                    ? (e: React.DragEvent) => {
+                        e.preventDefault();
+                        setDropTarget(w);
+                      }
+                    : undefined
+                }
+                onDragLeave={editing ? () => setDropTarget((t) => (t === w ? null : t)) : undefined}
+                onDrop={editing ? () => dropWidgetOn(w) : undefined}
+                className={cn(
+                  COLUMN_ITEM[w],
+                  editing &&
+                    "relative rounded-2xl px-3 py-2.5 outline-dashed outline-2 outline-white/25",
+                  editing && dragId === w && "opacity-40",
+                  editing && dropTarget === w && dragId !== w && "outline-2 outline-emerald-300/80",
+                )}
+              >
+                {editing && (
+                  <div className="absolute -top-3.5 left-3 right-3 z-20 flex items-center justify-between gap-1 rounded-full border border-white/15 bg-zinc-950/90 py-1 pl-2.5 pr-1.5 text-zinc-300 shadow-lg backdrop-blur-md">
+                    <span className="flex min-w-0 items-center gap-1 text-[10px] font-semibold">
+                      <GripVertical aria-hidden className="size-3 shrink-0 text-zinc-500" />
+                      <span className="truncate">{WIDGET_LABELS[w]}</span>
+                    </span>
+                    <span className="flex shrink-0 items-center gap-0.5">
+                      <button
+                        type="button"
+                        onClick={() => moveWidget(w, -1)}
+                        aria-label={`Move ${WIDGET_LABELS[w]} earlier`}
+                        className="flex size-5.5 items-center justify-center rounded-full transition hover:bg-white/10 hover:text-white"
+                      >
+                        <ChevronUp aria-hidden className="size-3" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => moveWidget(w, 1)}
+                        aria-label={`Move ${WIDGET_LABELS[w]} later`}
+                        className="flex size-5.5 items-center justify-center rounded-full transition hover:bg-white/10 hover:text-white"
+                      >
+                        <ChevronDown aria-hidden className="size-3" />
+                      </button>
+                    </span>
+                  </div>
+                )}
+                {widgetNodes[w]}
+              </section>
+            ))}
+        </div>
       </div>
 
       {/* ── the layout editor's action bar ── */}
       {editing && (
         <div className="fixed inset-x-0 bottom-0 z-[70] border-t border-white/10 bg-zinc-950/90 backdrop-blur-xl">
-          <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2.5">
+          <div className="mx-auto flex max-w-3xl flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2.5">
             <span className="flex items-center gap-2 text-[12.5px] font-semibold text-zinc-100">
               <LayoutGrid aria-hidden className="size-4 text-emerald-300" /> Arrange the start page
             </span>
-            <span className="hidden text-[11px] text-zinc-500 sm:inline">drag a card (or the arrows) to move it — that's all the editor does</span>
+            <span className="hidden text-[11px] text-zinc-500 sm:inline">drag a block (or the arrows) to move it — that's all the editor does</span>
             <span className="flex-1" />
             <button
               type="button"
@@ -1517,18 +1579,104 @@ function SuggestionFavicon({ host }: { host: string }) {
   return <Globe aria-hidden className="size-4 text-zinc-400" />;
 }
 
-function RecentCard({ visit, onNavigate }: { visit: Visit; onNavigate: (url: string) => void }) {
+/* A suggested site — the Suggestions block's card. Mirrors RecentCard's
+ * glass look so the two grids read as siblings. */
+function SuggestionCard({
+  link,
+  index = 0,
+  onNavigate,
+}: {
+  link: (typeof QUICK_LINKS)[number];
+  index?: number;
+  onNavigate: (url: string) => void;
+}) {
+  const urls = React.useMemo(() => faviconUrls(link.host), [link.host]);
+  const [idx, setIdx] = React.useState(0);
+  /* More animations — cards cascade in and lift on hover. */
+  const fancy = useFancyMotion();
+  return (
+    <motion.button
+      type="button"
+      onClick={() => onNavigate(link.url)}
+      aria-label={`Open ${link.name}`}
+      initial={fancy ? { opacity: 0, y: 16, scale: 0.96 } : false}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={
+        fancy
+          ? { type: "spring", stiffness: 320, damping: 24, delay: 0.3 + index * 0.05 }
+          : { duration: 0 }
+      }
+      whileHover={fancy ? { y: -4, scale: 1.03 } : undefined}
+      whileTap={fancy ? { scale: 0.97 } : undefined}
+      className={cn(
+        "group flex items-center gap-2.5 rounded-2xl border bg-black/35 p-3 text-left backdrop-blur-md transition-colors hover:bg-black/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300",
+        link.featured
+          ? "border-emerald-500/30 hover:border-emerald-400/50"
+          : "border-white/10 hover:border-emerald-500/40",
+      )}
+    >
+      <span className={`veil-pop-in veil-stagger-${(index % 8) + 1} flex size-8 shrink-0 items-center justify-center rounded-lg bg-zinc-800`}>
+        {idx < urls.length ? (
+          <img
+            src={urls[idx]}
+            alt=""
+            width={18}
+            height={18}
+            loading="lazy"
+            onError={() => setIdx((i) => i + 1)}
+            className="size-[18px] rounded-sm object-contain"
+          />
+        ) : (
+          <Globe aria-hidden className="size-4 text-zinc-500" />
+        )}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="flex items-center gap-1.5">
+          <span className="truncate text-[12.5px] font-medium text-zinc-200 group-hover:text-zinc-100">{link.name}</span>
+          {link.tag ? (
+            <span className="veil-bounce-soft shrink-0 rounded-full border border-emerald-400/25 bg-emerald-400/10 px-1.5 py-px text-[9px] font-semibold uppercase tracking-wide text-emerald-300">
+              {link.tag}
+            </span>
+          ) : null}
+        </span>
+        <span className="block truncate text-[10.5px] text-zinc-500">{link.desc}</span>
+      </span>
+      <ArrowRight aria-hidden className="size-3.5 shrink-0 text-zinc-600 transition group-hover:translate-x-0.5 group-hover:text-emerald-300" />
+    </motion.button>
+  );
+}
+
+function RecentCard({
+  visit,
+  index = 0,
+  onNavigate,
+}: {
+  visit: Visit;
+  index?: number;
+  onNavigate: (url: string) => void;
+}) {
   const urls = React.useMemo(() => faviconUrls(visit.host), [visit.host]);
   const [idx, setIdx] = React.useState(0);
   const label = (visit.title || visit.host).slice(0, 42);
+  /* More animations — same cascade language as the Suggestions grid. */
+  const fancy = useFancyMotion();
   return (
-    <button
+    <motion.button
       type="button"
       onClick={() => onNavigate(visit.url)}
       aria-label={`Revisit ${visit.host}`}
-      className="group flex items-center gap-2.5 rounded-2xl border border-white/10 bg-black/35 p-3 text-left backdrop-blur-md transition-all hover:-translate-y-0.5 hover:border-emerald-500/40 hover:bg-black/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300"
+      initial={fancy ? { opacity: 0, x: -14 } : false}
+      animate={fancy ? { opacity: 1, x: 0 } : { opacity: 1 }}
+      transition={
+        fancy
+          ? { type: "spring", stiffness: 340, damping: 26, delay: 0.32 + index * 0.045 }
+          : { duration: 0 }
+      }
+      whileHover={fancy ? { x: 5, scale: 1.02 } : undefined}
+      whileTap={fancy ? { scale: 0.97 } : undefined}
+      className="group flex items-center gap-2.5 rounded-2xl border border-white/10 bg-black/35 p-3 text-left backdrop-blur-md transition-colors hover:border-emerald-500/40 hover:bg-black/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300"
     >
-      <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-zinc-800">
+      <span className={`veil-pop-in veil-stagger-${(index % 8) + 1} flex size-8 shrink-0 items-center justify-center rounded-lg bg-zinc-800`}>
         {idx < urls.length ? (
           <img
             src={urls[idx]}
@@ -1549,6 +1697,6 @@ function RecentCard({ visit, onNavigate }: { visit: Visit; onNavigate: (url: str
           {visit.host} · {timeAgo(visit.updatedAt)}
         </span>
       </span>
-    </button>
+    </motion.button>
   );
 }

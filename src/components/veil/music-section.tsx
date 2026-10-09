@@ -108,7 +108,7 @@ function MusicCard({
           : "border-zinc-800/80 bg-zinc-900/60 hover:-translate-y-1 hover:border-fuchsia-500/50 hover:bg-zinc-900"
       )}
     >
-      <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-zinc-800">
+      <div className="veil-hover-lift veil-hover-tilt relative aspect-square w-full overflow-hidden rounded-xl bg-zinc-800">
         {art ? (
           <img
             src={art}
@@ -137,7 +137,7 @@ function MusicCard({
             active ? "bg-zinc-950/0" : "opacity-0 group-hover:opacity-100"
           )}
         >
-          <span className="flex size-11 items-center justify-center rounded-full bg-fuchsia-500 text-zinc-950 shadow-xl shadow-fuchsia-500/40 transition-transform duration-200 scale-75 group-hover:scale-100">
+          <span className="veil-hover-bounce veil-press flex size-11 items-center justify-center rounded-full bg-fuchsia-500 text-zinc-950 shadow-xl shadow-fuchsia-500/40 transition-transform duration-200 scale-75 group-hover:scale-100">
             {active ? (
               <PauseCircle className="size-5" aria-hidden />
             ) : (
@@ -146,8 +146,8 @@ function MusicCard({
           </span>
         </span>
         {active && (
-          <span className="absolute right-2 top-2 flex items-center gap-1 rounded-full border border-fuchsia-400/40 bg-zinc-950/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-fuchsia-300 backdrop-blur-sm">
-            <Music2 aria-hidden className="size-2.5" />
+          <span className="veil-pulse-glow absolute right-2 top-2 flex items-center gap-1 rounded-full border border-fuchsia-400/40 bg-zinc-950/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-fuchsia-300 backdrop-blur-sm">
+            <Music2 aria-hidden className="veil-bounce-soft size-2.5" />
             Live
           </span>
         )}
@@ -203,7 +203,7 @@ function SongCard({
           : "border-zinc-800/80 bg-zinc-900/60 hover:-translate-y-1 hover:border-fuchsia-500/50 hover:bg-zinc-900"
       )}
     >
-      <div className="relative size-14 shrink-0 overflow-hidden rounded-xl bg-zinc-800">
+      <div className="veil-hover-lift veil-hover-tilt relative size-14 shrink-0 overflow-hidden rounded-xl bg-zinc-800">
         {song.art && artOk ? (
           <img
             src={routeUrl(song.art)}
@@ -362,7 +362,7 @@ export function MusicSection({ onBack, open = true }: { onBack: () => void; open
             size="sm"
             onClick={onBack}
             aria-label="Back to the start page"
-            className="h-9 gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900/60 px-3 text-zinc-300 hover:border-zinc-700 hover:bg-zinc-800 hover:text-zinc-100"
+            className="veil-hover-bounce h-9 gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900/60 px-3 text-zinc-300 hover:border-zinc-700 hover:bg-zinc-800 hover:text-zinc-100"
           >
             <ArrowLeft aria-hidden className="size-4" />
             <span className="hidden sm:inline">Back</span>
@@ -372,7 +372,7 @@ export function MusicSection({ onBack, open = true }: { onBack: () => void; open
               <Music2 aria-hidden className="size-4.5 text-fuchsia-300" />
             </span>
             <div className="min-w-0">
-              <h2 className="truncate text-[17px] font-semibold tracking-tight">
+              <h2 className="veil-text-shine truncate text-[17px] font-semibold tracking-tight">
                 Veil Music<span className="text-fuchsia-400">.</span>
               </h2>
               <p className="truncate text-[11.5px] text-zinc-400">
@@ -406,13 +406,13 @@ export function MusicSection({ onBack, open = true }: { onBack: () => void; open
               spellCheck={false}
               autoCapitalize="none"
               autoComplete="off"
-              className="h-11 rounded-2xl border-zinc-800 bg-zinc-900/70 pl-10 pr-4 text-[14px] text-zinc-100 placeholder:text-zinc-500 focus-visible:border-fuchsia-500/60 focus-visible:ring-fuchsia-500/25"
+              className="veil-focus-bloom h-11 rounded-2xl border-zinc-800 bg-zinc-900/70 pl-10 pr-4 text-[14px] text-zinc-100 placeholder:text-zinc-500 focus-visible:border-fuchsia-500/60 focus-visible:ring-fuchsia-500/25"
             />
           </div>
           <button
             type="submit"
             disabled={resolving || searching || !input.trim()}
-            className="flex h-11 items-center gap-1.5 rounded-2xl bg-fuchsia-500 px-4 text-[14px] font-semibold text-fuchsia-950 shadow-lg shadow-fuchsia-500/25 transition hover:bg-fuchsia-400 disabled:opacity-50"
+            className="veil-hover-glow veil-press flex h-11 items-center gap-1.5 rounded-2xl bg-fuchsia-500 px-4 text-[14px] font-semibold text-fuchsia-950 shadow-lg shadow-fuchsia-500/25 transition hover:bg-fuchsia-400 disabled:opacity-50"
           >
             {resolving || searching ? (
               <Loader2 aria-hidden className="size-4 animate-spin" />
@@ -440,7 +440,7 @@ export function MusicSection({ onBack, open = true }: { onBack: () => void; open
           {/* Song-search results — sits above the curated shelves while a
               query is live. */}
           {(results !== null || searching) && (
-            <section aria-label="Search results">
+            <section aria-label="Search results" className="veil-slide-left-pop">
               <div className="mb-3 flex items-center gap-2">
                 <h3 className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
                   {searching ? "Searching…" : `Results for “${searchQuery}”`}
@@ -454,7 +454,7 @@ export function MusicSection({ onBack, open = true }: { onBack: () => void; open
                       setSearchError(null);
                       setSearchQuery("");
                     }}
-                    className="rounded-full border border-zinc-800 bg-zinc-900/70 px-2.5 py-0.5 text-[10.5px] font-medium text-zinc-400 transition hover:border-zinc-700 hover:text-zinc-200"
+                    className="veil-press rounded-full border border-zinc-800 bg-zinc-900/70 px-2.5 py-0.5 text-[10.5px] font-medium text-zinc-400 transition hover:border-zinc-700 hover:text-zinc-200"
                   >
                     Clear
                   </button>

@@ -19,15 +19,30 @@ import { Server, Socket } from "socket.io"
  *
  * Events handled:
  *   - identify         { token }  (identity comes FROM the token)
- *   - subscribe        { channel } | { channelId }
+ *   - subscribe        { channel } | { channelId }   (presence ON — legacy/git clients)
  *   - unsubscribe      { channel } | { channelId }
+ *   - watch            { channel } | { channelId }   (silent — messages only, NO presence)
+ *   - unwatch          { channel } | { channelId }
  *   - message          { channel | channelId, content, id?, replyTo?, ... }
  *   - typing           { channel | channelId }
  *   - stop_typing      { channel | channelId }
  *   - message_deleted  { channel | channelId, messageId }
+ *   - message_edited   { channel | channelId, messageId, content, editedAt }
+ *   - reaction         { channel | channelId, messageId, emoji, added }
  *
  * Events emitted back to clients:
- *   - message, typing, stop_typing, message_deleted, presence, presence_diff
+ *   - message, typing, stop_typing, message_deleted, message_edited,
+ *     reaction, presence, presence_diff, dm_added, dm_updated, dm_removed
+ *
+ * "watch" powers the website client's cross-channel unread badges: it
+ * joins every channel/DM room WITHOUT registering presence, so the user
+ * receives messages everywhere but only appears "present" in the channel
+ * they are actually looking at. Legacy clients (git-version copies) keep
+ * using subscribe/unsubscribe exactly as before.
+ *
+ * On identify the socket also joins its private "user:<accountId>" room —
+ * the Next.js APIs reach specific users through it (group invites, group
+ * updates) via the localhost /emit endpoint below.
  *
  * Persisted messages live in the Next.js Prisma DB (POST /api/chat-data).
  * This service only relays real-time events — but never anonymously.
@@ -182,6 +197,19 @@ function joinChannel(socket: Socket, channelId: string, account?: AccountSession
   broadcastPresence(channelId)
 }
 
+/* Silent join — the socket receives the room's messages/reactions but is
+ * NOT counted as present (no presence broadcast). Used by the website
+ * client to watch every channel + DM for unread badges + live DM rows. */
+function watchChannel(socket: Socket, channelId: string) {
+  socket.join(channelId)
+  let set = socketChannels.get(socket.id)
+  if (!set) {
+    set = new Set()
+    socketChannels.set(socket.id, set)
+  }
+  set.add(channelId)
+}
+
 function leaveChannel(socket: Socket, channelId: string) {
   socket.leave(channelId)
   const set = socketChannels.get(socket.id)
@@ -230,6 +258,11 @@ io.on("connection", (socket: Socket) => {
           typeof payload.avatarImage === "string" ? payload.avatarImage : null,
         role: typeof payload.role === "string" ? payload.role : "member",
       }
+      // Private per-user room — lets the API layer (group invites, group
+      // updates, kicks) address THIS user on every socket/tab at once.
+      if (account) {
+        socket.join("user:" + account.accountId)
+      }
       // Update presence for every channel this socket is already in.
       for (const cid of socketChannels.get(socket.id) ?? []) {
         const map = channelPresence.get(cid) ?? {}
@@ -271,6 +304,39 @@ io.on("connection", (socket: Socket) => {
       socket.emit("unsubscribed", { channelId })
     } catch (err) {
       console.error("[veil-chat] unsubscribe error", err)
+    }
+  })
+
+  // Silent watch — receive the room's traffic without presence.
+  socket.on("watch", (data: { channel?: string; channelId?: string }) => {
+    try {
+      if (!account) {
+        socket.emit("error", { message: "not identified — cannot watch" })
+        return
+      }
+      const channelId = resolveChannel(data || {})
+      if (!channelId) {
+        socket.emit("error", { message: "watch requires a channel" })
+        return
+      }
+      watchChannel(socket, channelId)
+    } catch (err) {
+      console.error("[veil-chat] watch error", err)
+    }
+  })
+
+  socket.on("unwatch", (data: { channel?: string; channelId?: string }) => {
+    try {
+      if (!account) return
+      const channelId = resolveChannel(data || {})
+      if (!channelId) return
+      // Only leave if the socket isn't PRESENT there (presence implies
+      // membership anyway; leaving would break presence-based online lists).
+      const map = channelPresence.get(channelId)
+      if (map && map[socket.id]) return
+      leaveChannel(socket, channelId)
+    } catch (err) {
+      console.error("[veil-chat] unwatch error", err)
     }
   })
 
@@ -391,6 +457,41 @@ io.on("connection", (socket: Socket) => {
     }
   })
 
+  // A viewer toggled an emoji reaction on a message — relay the change to
+  // everyone in the channel so reaction chips update live. The DB write
+  // already happened (POST /api/chat-reactions); this is transport only.
+  socket.on("reaction", (data: {
+    channel?: string
+    channelId?: string
+    messageId?: string
+    emoji?: string
+    added?: boolean
+  }) => {
+    try {
+      if (!account) {
+        socket.emit("error", { message: "not identified — cannot react" })
+        return
+      }
+      const channelId = resolveChannel(data)
+      if (!channelId || !data.messageId || typeof data.emoji !== "string") return
+      const set = socketChannels.get(socket.id)
+      if (!set || !set.has(channelId)) return
+      io.to(channelId).emit("reaction", {
+        channelId,
+        messageId: data.messageId,
+        emoji: data.emoji,
+        added: data.added !== false,
+        account: {
+          accountId: account.accountId,
+          username: account.username,
+          displayName: account.displayName,
+        },
+      })
+    } catch (err) {
+      console.error("[veil-chat] reaction error", err)
+    }
+  })
+
   socket.on("message_deleted", (data: {
     channel?: string
     channelId?: string
@@ -484,7 +585,12 @@ function socketsForUsername(username: string): Socket[] {
 }
 
 const kickServer = createServer((req, res) => {
-  if (req.method !== "POST" || !req.url?.startsWith("/kick")) {
+  // Two endpoints:
+  //   POST /kick  — disconnect a user's sockets (+ optional message purge)
+  //   POST /emit  — broadcast an arbitrary event to room(s) from the API
+  //                 layer (group invites/updates). Same localhost + secret
+  //                 protection as /kick.
+  if (req.method !== "POST" || !(req.url?.startsWith("/kick") || req.url?.startsWith("/emit"))) {
     res.statusCode = 404
     res.end()
     return
@@ -508,7 +614,40 @@ const kickServer = createServer((req, res) => {
   })
   req.on("end", () => {
     try {
-      // Two payloads:
+      // /emit — broadcast an event to room(s) on behalf of the API layer.
+      // Payload: { rooms: string[], event: string, payload: object }
+      // Used by /api/chat-dm (group invites/renames/leaves) so every online
+      // member's client refreshes its DM list + the invited user gets a
+      // live "you were added" toast. Event names are validated (word chars
+      // only) so nothing arbitrary can be smuggled through.
+      if (req.url?.startsWith("/emit")) {
+        const { rooms, event, payload } = JSON.parse(body || "{}") as {
+          rooms?: string[]
+          event?: string
+          payload?: unknown
+        }
+        if (
+          !Array.isArray(rooms) ||
+          rooms.length === 0 ||
+          rooms.length > 200 ||
+          typeof event !== "string" ||
+          !/^[a-z_]{2,32}$/.test(event)
+        ) {
+          res.statusCode = 400
+          res.end(JSON.stringify({ ok: false, error: "rooms[] + event required" }))
+          return
+        }
+        let sent = 0
+        for (const room of rooms) {
+          if (typeof room !== "string" || !room || room.length > 120) continue
+          io.to(room).emit(event, payload ?? {})
+          sent++
+        }
+        console.log(`[veil-chat] emit "${event}" → ${sent} room(s)`)
+        res.end(JSON.stringify({ ok: true, sent }))
+        return
+      }
+      // /kick payloads:
       //   { username }                         → kick their sockets
       //   { username, purge: [{channelId, messageId}] }
       //                                       → kick AND broadcast per-message

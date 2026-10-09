@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { noteRequestOrigin } from "@/lib/veil/live-origin";
 
 /**
  * Zone-prefix shim: origin discovery.
@@ -13,7 +14,8 @@ import { NextResponse } from "next/server";
  *
  * The response is immutable and safe to cache hard.
  */
-export async function GET() {
+export async function GET(req: Request): Promise<Response> {
+  noteRequestOrigin(req);
   return NextResponse.json(
     {
       origin:

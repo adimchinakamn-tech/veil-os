@@ -211,6 +211,26 @@ if(OA){var A=function(src){return new OA(typeof src==="string"?route(src,"GET"):
           }}
         />
         {children}
+        {/* Hydration watchdog — a dev-server restart (or a stuck chunk
+            load) can leave the SSR shell painted but React never attached:
+            the page LOOKS fine yet every click is dead until a manual
+            reload. This inline script waits 15s for the app to raise its
+            hydrated flag (set in page.tsx's first effect); if it never
+            comes, it reloads ONCE per session — the fresh load lands on
+            the healthy server. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{
+setTimeout(function(){
+if(window.__veilHydrated)return;
+var k="veil:hydra-retry";
+if(sessionStorage.getItem(k))return;
+sessionStorage.setItem(k,"1");
+location.reload();
+},15000);
+}catch(e){}})();`,
+          }}
+        />
         <Toaster />
         {/* Sonner toasts — Veil Chat (and other dynamic imports) fire these
             via `import("sonner").toast(...)`. Without this mount every one

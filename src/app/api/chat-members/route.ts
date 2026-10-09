@@ -22,12 +22,6 @@ export async function GET(req: NextRequest) {
   try {
     const token = req.nextUrl.searchParams.get("token") || ""
     const account = await getAccountFromToken(token)
-    if (!account) {
-      return NextResponse.json(
-        { ok: false, error: "Invalid or expired token." },
-        { status: 401 },
-      )
-    }
 
     const accounts = await db.chatAccount.findMany({
       where: { banned: false, ipBanned: false },
@@ -35,6 +29,24 @@ export async function GET(req: NextRequest) {
     })
 
     const visible = accounts.filter((a) => !isTestAccount(a.username))
+
+    /* Tokenless/stale-token callers are read-only roster consumers — the
+     * players panel on the offline single-file build and the older static
+     * shells poll this route with no session. They get the public roster
+     * (usernames / avatars / roles — no secrets), minus the heavy fields
+     * (base64 PFPs, bios) so a 30s panel poll stays a few KB.
+     * Authenticated callers get the full public rows. */
+    if (!account) {
+      return cors(
+        NextResponse.json({
+          ok: true,
+          members: visible.map((a) => {
+            const p = toPublicAccount(a)
+            return { ...p, avatarImage: null, bio: "" }
+          }),
+        }),
+      )
+    }
 
     // CORS-open: the offline single-file build (Origin: null) lists the
     // roster for its players panel through this route.

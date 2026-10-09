@@ -2,11 +2,12 @@
  * test-bridge.ts — end-to-end check for the Quasar ws-bridge (NOT part of the
  * service; run manually with `bun test-bridge.ts`).
  *
- * It encodes the target with the same XOR + base64url codec the injected page
- * hooks use (secret: "quasar-v1"), connects to the local bridge as if it were
- * a proxied page, performs the __QUASAR_READY__ handshake, sends
- * `hello-quasar`, and prints whatever comes back (the echo server sends a
- * banner first, then echoes every message — either counts as a pass).
+ * It encodes the target with the shared session codec (encodeOriginSession —
+ * the 0x02-prefixed per-deployment session-XOR blob the injected page hooks
+ * produce; the key is shared via .quasar-key), connects to the local bridge
+ * as if it were a proxied page, performs the __QUASAR_READY__ handshake,
+ * sends `hello-quasar`, and prints whatever comes back (the echo server sends
+ * a banner first, then echoes every message — either counts as a pass).
  *
  * Usage:
  *   bun test-bridge.ts                            # default target below
@@ -15,26 +16,16 @@
  *   bun test-bridge.ts wss://ws.postman-echo.com/raw
  */
 
+import { encodeOriginSession } from "../../src/lib/proxy/codec-server";
+
 const PORT = 3310;
-const CODEC_SECRET = "quasar-v1";
 const READY_MAGIC = "__QUASAR_READY__";
 // echo.websocket.events is unreachable from this environment (TLS/network);
 // ws.postman-echo.com/raw echoes text messages and works. Override via argv.
 const TARGET: string = process.argv[2] ?? "wss://ws.postman-echo.com/raw";
 
-/** Matching ENCODE side of the bridge codec (XOR with rotating key + base64url). */
-function encodeTarget(target: string): string {
-  const bytes = new TextEncoder().encode(target);
-  const key = new TextEncoder().encode(CODEC_SECRET);
-  const xored = new Uint8Array(bytes.length);
-  for (let i = 0; i < bytes.length; i++) xored[i] = bytes[i] ^ key[i % key.length];
-  let s = "";
-  for (let i = 0; i < xored.length; i++) s += String.fromCharCode(xored[i]);
-  return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-}
-
 function main(): void {
-  const blob = encodeTarget(TARGET);
+  const blob = encodeOriginSession(TARGET);
   console.log(`[test-bridge] target:   ${TARGET}`);
   console.log(`[test-bridge] encoded:  ${blob}`);
 

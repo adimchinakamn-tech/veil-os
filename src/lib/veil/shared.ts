@@ -194,6 +194,66 @@ function quasarOriginBlob(url: string): string | null {
   }
 }
 
+/* ── Quasar v2.1.0 — per-tab context encoding ─────────────────────────
+ *
+ * The 2.1.0 engine bakes the tab's context (cookie container, egress mode,
+ * UA override) into the AES-encrypted proxied-path blob at encode time, so
+ * isolation survives navigations, SPA routing and SW-relayed subresources.
+ * Encoding happens server-side (/api/codec — the only holder of the key);
+ * this client helper just asks it, with a small memo cache because the
+ * browser re-derives frame sources on every render pass. */
+export type TabEgress = "auto" | "direct" | "upstream";
+
+export interface QuasarTabCtx {
+  container: string;
+  egress: TabEgress;
+  ua: string;
+}
+
+export const DEFAULT_TAB_CTX: QuasarTabCtx = { container: "default", egress: "auto", ua: "" };
+
+/** True when any 2.1.0 context lever is engaged (needs the async encoder). */
+export function quasarCtxActive(ctx: QuasarTabCtx): boolean {
+  return ctx.container !== "default" || ctx.egress !== "auto" || ctx.ua !== "";
+}
+
+const quasarPathCache = new Map<string, string>();
+
+/** Encode a real URL into a Quasar proxied path WITH the tab context.
+ * Resolves to null on any failure — callers fall back to the legacy
+ * context-less blob (engine still works, just without the ctx levers). */
+export async function encodeQuasarPath(url: string, ctx: QuasarTabCtx): Promise<string | null> {
+  if (typeof window === "undefined") return null;
+  const container = ctx.container !== "default" ? ctx.container : "";
+  const egress = ctx.egress === "direct" || ctx.egress === "upstream" ? ctx.egress : "";
+  const ua = ctx.ua || "";
+  const key = `${container}|${egress}|${ua}|${url}`;
+  const hit = quasarPathCache.get(key);
+  if (hit) return hit;
+  try {
+    const r = await fetch("/api/codec", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        op: "encode",
+        urls: [url],
+        ...(container ? { container } : {}),
+        ...(egress ? { egress } : {}),
+        ...(ua ? { ua } : {}),
+      }),
+    });
+    if (!r.ok) return null;
+    const data = (await r.json()) as { paths?: unknown };
+    const path = Array.isArray(data.paths) ? data.paths[0] : null;
+    if (typeof path !== "string" || !path.startsWith("/p/")) return null;
+    if (quasarPathCache.size > 400) quasarPathCache.clear();
+    quasarPathCache.set(key, path);
+    return path;
+  } catch {
+    return null;
+  }
+}
+
 /** The iframe source for the browsing overlay, honoring the engine choice.
  *
  *   veil      → the built-in /api/p/ route (as before)

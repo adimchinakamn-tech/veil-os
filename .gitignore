@@ -70,6 +70,9 @@ server.log
 # are committed to the public repo so they live at
 # cdn.jsdelivr.net/gh/adimchinakamn-tech/veil-os@main/backups/chat/latest.json
 !/backups/chat/
+# the live-origin beacon — the jsDelivr fronts follow it to self-heal
+# when the preview session moves (see scripts/retarget-fronts.mjs)
+!/backups/live-origin.json
 # local-only loop state (change fingerprint / last push result)
 /backups/chat/.state.json
 /backups/chat/loop.log
@@ -85,7 +88,12 @@ server.log
 *.key
 *.tar.gz
 *.zip
+# the served jsDelivr-front code download (user-facing asset, 135KB)
+!/public/veil-jsdelivr-front.zip
 
 scripts/veil-keeper.sh
 veil-keeper.sh
-worklog.md
+# the handover worklog MUST ride with the repo — it's how revert recovery
+# knows what was done (the keeper restores the tree from git too)
+!worklog.md
+.quasar-cache/

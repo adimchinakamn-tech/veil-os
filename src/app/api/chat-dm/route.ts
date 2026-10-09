@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { getAccountFromToken, toPublicAccount } from "@/lib/chat-auth"
+import { emitToRooms } from "@/lib/veil/chat-emit"
+import { cors, corsOptions } from "@/lib/veil/cors"
 
 export const runtime = "nodejs"
+
+export async function OPTIONS(): Promise<Response> {
+  return corsOptions()
+}
 
 // GET /api/chat-dm?token=...        — list DMs the current account is a member of.
 // Each DM is returned with its member accounts (projected through toPublicAccount).
@@ -173,6 +179,20 @@ export async function POST(req: NextRequest) {
       },
     })
 
+    /* Live heads-up for the OTHER members — their clients refetch the DM
+     * list and toast "@you opened a chat", instead of waiting for the
+     * 30s poll. Best effort (relay down never fails the create). */
+    void emitToRooms(
+      targetAccounts.map((t) => "user:" + t.id),
+      "dm_added",
+      {
+        dmId: created.id,
+        name: created.name,
+        invitedBy: account.username,
+        members: created.members.length,
+      },
+    )
+
     return NextResponse.json({
       ok: true,
       dm: {
@@ -188,6 +208,91 @@ export async function POST(req: NextRequest) {
     console.error("[chat-dm POST] error", err)
     return NextResponse.json(
       { ok: false, error: "Server error creating DM." },
+      { status: 500 },
+    )
+  }
+}
+
+/**
+ * PATCH /api/chat-dm — rename a group chat.
+ * Body: { token, dmId, name }
+ *
+ * Any member of the group can rename it (casual-chat policy). The new
+ * name (1–64 chars) is broadcast to the group's room as `dm_updated` so
+ * every online member's DM list + header retitle instantly.
+ */
+export async function PATCH(req: NextRequest): Promise<Response> {
+  return cors(await handlePatch(req))
+}
+
+async function handlePatch(req: NextRequest): Promise<Response> {
+  try {
+    const body = (await req.json()) as {
+      token?: string
+      dmId?: string
+      name?: string
+    }
+
+    const account = await getAccountFromToken(body.token)
+    if (!account) {
+      return NextResponse.json(
+        { ok: false, error: "Invalid or expired token." },
+        { status: 401 },
+      )
+    }
+
+    const dmId = (body.dmId || "").trim()
+    const name = (body.name || "").trim().slice(0, 64)
+    if (!dmId) {
+      return NextResponse.json(
+        { ok: false, error: "A dmId is required." },
+        { status: 400 },
+      )
+    }
+    if (!name) {
+      return NextResponse.json(
+        { ok: false, error: "A group name is required." },
+        { status: 400 },
+      )
+    }
+
+    const dm = await db.chatDM.findUnique({
+      where: { id: dmId },
+      include: { members: true },
+    })
+    if (!dm) {
+      return NextResponse.json(
+        { ok: false, error: "This conversation no longer exists." },
+        { status: 404 },
+      )
+    }
+    if (!dm.members.some((m) => m.accountId === account.id)) {
+      return NextResponse.json(
+        { ok: false, error: "You are not a member of this conversation." },
+        { status: 403 },
+      )
+    }
+    if (!dm.isGroup) {
+      return NextResponse.json(
+        { ok: false, error: "Only group chats can be renamed." },
+        { status: 400 },
+      )
+    }
+
+    await db.chatDM.update({ where: { id: dmId }, data: { name } })
+
+    void emitToRooms([dmId], "dm_updated", {
+      dmId,
+      reason: "rename",
+      name,
+      by: account.username,
+    })
+
+    return NextResponse.json({ ok: true, name })
+  } catch (err) {
+    console.error("[chat-dm PATCH] error", err)
+    return NextResponse.json(
+      { ok: false, error: "Server error renaming the group." },
       { status: 500 },
     )
   }

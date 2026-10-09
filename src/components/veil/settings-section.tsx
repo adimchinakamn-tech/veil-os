@@ -44,6 +44,7 @@ import {
   Settings2,
   ShieldCheck,
   Siren,
+  Sparkles,
   Thermometer,
   Timer,
   Trash2,
@@ -54,6 +55,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { openVeilInAboutBlank, readPanicConfig, sanitizeUrl } from "@/lib/veil/panic";
+import { syncFancyDomAttr } from "@/lib/veil/motion";
 import {
   CLOAK_PRESETS,
   applyTabCloak,
@@ -129,6 +131,7 @@ function SwitchRow({
   value,
   options,
   onChange,
+  className,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
@@ -136,9 +139,15 @@ function SwitchRow({
   value: string;
   options: { id: string; label: string }[];
   onChange: (id: string) => void;
+  className?: string;
 }) {
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-4 lg:flex-row lg:items-center">
+    <div
+      className={cn(
+        "veil-hover-lift flex flex-col gap-3 rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-4 lg:flex-row lg:items-center",
+        className,
+      )}
+    >
       <div className="flex min-w-0 flex-1 items-start gap-3">
         <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-zinc-800/80 text-zinc-300">
           <Icon aria-hidden className="size-4" />
@@ -161,7 +170,7 @@ function SwitchRow({
             aria-checked={value === o.id}
             onClick={() => onChange(o.id)}
             className={cn(
-              "flex h-8 items-center gap-1 rounded-lg px-3 text-[12.5px] font-medium transition",
+              "veil-press flex h-8 items-center gap-1 rounded-lg px-3 text-[12.5px] font-medium transition",
               value === o.id
                 ? "bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/40"
                 : "text-zinc-400 hover:bg-zinc-800/70 hover:text-zinc-200"
@@ -193,7 +202,7 @@ function TextRow({
   onChange: (v: string) => void;
 }) {
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-4 sm:flex-row sm:items-center">
+    <div className="veil-hover-glow flex flex-col gap-3 rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-4 sm:flex-row sm:items-center">
       <div className="flex min-w-0 flex-1 items-start gap-3">
         <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-zinc-800/80 text-zinc-300">
           <Icon aria-hidden className="size-4" />
@@ -209,7 +218,7 @@ function TextRow({
         placeholder={placeholder}
         aria-label={label}
         spellCheck={false}
-        className="h-9 w-full rounded-xl border-zinc-800 bg-zinc-950/70 text-[13px] text-zinc-100 placeholder:text-zinc-600 focus-visible:border-emerald-500/50 focus-visible:ring-emerald-500/20 sm:w-56"
+        className="veil-focus-bloom h-9 w-full rounded-xl border-zinc-800 bg-zinc-950/70 text-[13px] text-zinc-100 placeholder:text-zinc-600 focus-visible:border-emerald-500/50 focus-visible:ring-emerald-500/20 sm:w-56"
       />
     </div>
   );
@@ -234,7 +243,7 @@ function DangerRow({
     return () => window.clearTimeout(t);
   }, [armed]);
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-4 sm:flex-row sm:items-center">
+    <div className="veil-hover-lift flex flex-col gap-3 rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-4 sm:flex-row sm:items-center">
       <div className="flex min-w-0 flex-1 items-start gap-3">
         <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-rose-500/10 text-rose-300/90 ring-1 ring-rose-500/20">
           <Trash2 aria-hidden className="size-4" />
@@ -256,7 +265,7 @@ function DangerRow({
           }
         }}
         className={cn(
-          "h-9 shrink-0 rounded-xl px-4 text-[13px]",
+          "veil-press h-9 shrink-0 rounded-xl px-4 text-[13px]",
           armed
             ? "bg-rose-500 text-rose-950 hover:bg-rose-400"
             : "border-zinc-700 bg-zinc-900 text-zinc-300 hover:border-rose-500/50 hover:bg-zinc-800 hover:text-rose-300"
@@ -343,7 +352,7 @@ function PrivacyTab() {
             size="sm"
             disabled={loading || !data?.totals.cookies}
             onClick={() => wipeScope("cookies")}
-            className="h-8 rounded-xl border-zinc-700 bg-zinc-900 px-3 text-[12.5px] text-zinc-300 hover:border-emerald-500/50 hover:bg-zinc-800 hover:text-emerald-300 disabled:opacity-40"
+            className="veil-press h-8 rounded-xl border-zinc-700 bg-zinc-900 px-3 text-[12.5px] text-zinc-300 hover:border-emerald-500/50 hover:bg-zinc-800 hover:text-emerald-300 disabled:opacity-40"
           >
             {busyHost === "cookies" ? (
               <Loader2 aria-hidden className="size-3.5 animate-spin" />
@@ -357,7 +366,7 @@ function PrivacyTab() {
             size="sm"
             disabled={loading || !data?.totals.visits}
             onClick={() => wipeScope("history")}
-            className="h-8 rounded-xl border-zinc-700 bg-zinc-900 px-3 text-[12.5px] text-zinc-300 hover:border-emerald-500/50 hover:bg-zinc-800 hover:text-emerald-300 disabled:opacity-40"
+            className="veil-press h-8 rounded-xl border-zinc-700 bg-zinc-900 px-3 text-[12.5px] text-zinc-300 hover:border-emerald-500/50 hover:bg-zinc-800 hover:text-emerald-300 disabled:opacity-40"
           >
             {busyHost === "history" ? (
               <Loader2 aria-hidden className="size-3.5 animate-spin" />
@@ -376,7 +385,7 @@ function PrivacyTab() {
           onChange={(e) => setQ(e.target.value)}
           placeholder="Filter sites…"
           aria-label="Filter sites"
-          className="h-10 w-full rounded-xl border border-zinc-800 bg-zinc-900/70 pl-4 pr-4 text-[13.5px] text-zinc-100 placeholder:text-zinc-500 outline-none transition focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20"
+          className="veil-focus-bloom h-10 w-full rounded-xl border border-zinc-800 bg-zinc-900/70 pl-4 pr-4 text-[13.5px] text-zinc-100 placeholder:text-zinc-500 outline-none transition focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20"
         />
       </div>
 
@@ -393,7 +402,7 @@ function PrivacyTab() {
             variant="outline"
             size="sm"
             onClick={load}
-            className="h-8 rounded-xl border-zinc-700 bg-zinc-900 px-3 text-[12.5px] text-zinc-300 hover:border-emerald-500/50 hover:bg-zinc-800 hover:text-emerald-300"
+            className="veil-press h-8 rounded-xl border-zinc-700 bg-zinc-900 px-3 text-[12.5px] text-zinc-300 hover:border-emerald-500/50 hover:bg-zinc-800 hover:text-emerald-300"
           >
             <RotateCw aria-hidden className="size-3.5" />
             Try again
@@ -408,7 +417,7 @@ function PrivacyTab() {
           {filtered.map((s) => (
             <li
               key={s.host}
-              className="flex items-center gap-3 px-4 py-3 transition hover:bg-zinc-900/70"
+              className="veil-hover-glow flex items-center gap-3 px-4 py-3 transition hover:bg-zinc-900/70"
             >
               <Globe aria-hidden className="size-4 shrink-0 text-zinc-500" />
               <div className="min-w-0 flex-1">
@@ -426,7 +435,7 @@ function PrivacyTab() {
                 disabled={busyHost === s.host}
                 aria-label={`Wipe ${s.host} — cookies and history`}
                 onClick={() => wipeHost(s.host)}
-                className="h-8 shrink-0 rounded-xl px-3 text-[12.5px] text-zinc-400 transition hover:bg-rose-500/10 hover:text-rose-300 disabled:opacity-40"
+                className="veil-press h-8 shrink-0 rounded-xl px-3 text-[12.5px] text-zinc-400 transition hover:bg-rose-500/10 hover:text-rose-300 disabled:opacity-40"
               >
                 {busyHost === s.host ? (
                   <Loader2 aria-hidden className="size-3.5 animate-spin" />
@@ -454,6 +463,7 @@ function AppearanceTab() {
   const [proxyEngine, setProxyEngineState] = React.useState<ProxyEngineId>(DEFAULT_PROXY_ENGINE);
   const [hoverPreviews, setHoverPreviews] = React.useState(true);
   const [dim, setDim] = React.useState<"0" | "25" | "55">("0");
+  const [moreAnim, setMoreAnim] = React.useState(true);
   const [name, setName] = React.useState("");
 
   React.useEffect(() => {
@@ -466,6 +476,7 @@ function AppearanceTab() {
       setHoverPreviews(window.localStorage.getItem("veil:hover-previews") !== "0");
       const d = window.localStorage.getItem("veil:backdrop-dim");
       setDim(d === "25" || d === "55" ? d : "0");
+      setMoreAnim(window.localStorage.getItem("veil:more-animations") !== "0");
       setName((window.localStorage.getItem("veil:greeting-name") ?? "").slice(0, 24));
     } catch {
       /* private mode — defaults */
@@ -540,7 +551,7 @@ function AppearanceTab() {
       <SwitchRow
         icon={Globe}
         label="Proxy engine"
-        hint="Which machinery loads remote pages in the browser. Quasar (the default) rewrites server-side with runtime hooks, a service-worker safety net and WebSocket bridging; Veil is the classic built-in lane. Every site — youtube.com included — loads through the engine you pick; video searches still land on the local library."
+        hint="Which machinery loads remote pages in the browser. Quasar 2.1.0 (the default) rewrites server-side with runtime hooks, a service-worker safety net, WebSocket bridging, multi-account containers (right-click a tab), per-tab egress/UA, find-in-page (Ctrl+F) and a server-side static cache; Veil is the classic built-in lane. Every site — youtube.com included — loads through the engine you pick; video searches still land on the local library."
         value={proxyEngine}
         options={Object.entries(PROXY_ENGINES).map(([id, e]) => ({ id, label: e.label }))}
         onChange={(id) =>
@@ -592,6 +603,31 @@ function AppearanceTab() {
             } catch {
               /* ignore */
             }
+          })
+        }
+      />
+      <SwitchRow
+        icon={Sparkles}
+        label="More animations"
+        className="veil-border-dance"
+        hint="Beautiful motion across the whole site — pages glide in behind a soft blur, a light-sweep follows every navigation, the start page rises and cascades, tabs spring, buttons breathe. Off is calmer and leaner."
+        value={moreAnim ? "on" : "off"}
+        options={[
+          { id: "on", label: "On" },
+          { id: "off", label: "Off" },
+        ]}
+        onChange={(id) =>
+          save(() => {
+            setMoreAnim(id === "on");
+            try {
+              window.localStorage.setItem("veil:more-animations", id === "on" ? "1" : "0");
+            } catch {
+              /* ignore */
+            }
+            /* Flip the mega-tier CSS attribute immediately — the event
+             * below also re-syncs every mounted hook, but this guarantees
+             * the html[data-veil-fancy] toggle even with nothing mounted. */
+            syncFancyDomAttr();
           })
         }
       />
@@ -676,7 +712,7 @@ function BrowsingTab() {
             </p>
           </div>
         </div>
-        <span className="shrink-0 rounded-lg bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-300 ring-1 ring-emerald-500/25">
+        <span className="veil-text-breathe shrink-0 rounded-lg bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-300 ring-1 ring-emerald-500/25">
           Fixed
         </span>
       </div>
@@ -747,7 +783,7 @@ function KeyCaptureRow({
   }, [recording, onCommit]);
 
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-4 sm:flex-row sm:items-center">
+    <div className="veil-hover-lift flex flex-col gap-3 rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-4 sm:flex-row sm:items-center">
       <div className="flex min-w-0 flex-1 items-start gap-3">
         <span
           className={cn(
@@ -773,7 +809,7 @@ function KeyCaptureRow({
         }}
         aria-label={`Change the ${label} shortcut`}
         className={cn(
-          "flex h-9 shrink-0 items-center gap-2 rounded-xl border px-3.5 font-mono text-[12.5px] font-semibold transition",
+          "veil-press flex h-9 shrink-0 items-center gap-2 rounded-xl border px-3.5 font-mono text-[12.5px] font-semibold transition",
           recording
             ? "animate-pulse border-rose-500/50 bg-rose-500/10 text-rose-300"
             : accent === "amber"
@@ -926,7 +962,7 @@ function SecurityTab() {
             onCommit={commitPanicKey}
             accent="amber"
           />
-          <div className="flex flex-col gap-3 rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-4 sm:flex-row sm:items-center">
+          <div className="veil-hover-glow flex flex-col gap-3 rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-4 sm:flex-row sm:items-center">
             <div className="flex min-w-0 flex-1 items-start gap-3">
               <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-zinc-800/80 text-zinc-300">
                 <Globe aria-hidden className="size-4" />
@@ -958,7 +994,7 @@ function SecurityTab() {
               aria-label="Panic target URL"
               spellCheck={false}
               inputMode="url"
-              className="h-9 w-full rounded-xl border-zinc-800 bg-zinc-950/70 text-[13px] text-zinc-100 placeholder:text-zinc-600 focus-visible:border-rose-500/50 focus-visible:ring-rose-500/20 sm:w-64"
+              className="veil-focus-bloom h-9 w-full rounded-xl border-zinc-800 bg-zinc-950/70 text-[13px] text-zinc-100 placeholder:text-zinc-600 focus-visible:border-rose-500/50 focus-visible:ring-rose-500/20 sm:w-64"
             />
           </div>
         </div>
@@ -987,7 +1023,7 @@ function SecurityTab() {
             value={cfg.cloakKey}
             onCommit={commitCloakKey}
           />
-          <div className="flex flex-col gap-3 rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-4 sm:flex-row sm:items-center">
+          <div className="veil-hover-glow flex flex-col gap-3 rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-4 sm:flex-row sm:items-center">
             <div className="flex min-w-0 flex-1 items-start gap-3">
               <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-zinc-800/80 text-zinc-300">
                 <Timer aria-hidden className="size-4" />
@@ -1015,10 +1051,10 @@ function SecurityTab() {
               placeholder="Home"
               aria-label="Cloak tab title"
               spellCheck={false}
-              className="h-9 w-full rounded-xl border-zinc-800 bg-zinc-950/70 text-[13px] text-zinc-100 placeholder:text-zinc-600 focus-visible:border-emerald-500/50 focus-visible:ring-emerald-500/20 sm:w-48"
+              className="veil-focus-bloom h-9 w-full rounded-xl border-zinc-800 bg-zinc-950/70 text-[13px] text-zinc-100 placeholder:text-zinc-600 focus-visible:border-emerald-500/50 focus-visible:ring-emerald-500/20 sm:w-48"
             />
           </div>
-          <div className="flex flex-col gap-3 rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-4 sm:flex-row sm:items-center">
+          <div className="veil-hover-lift flex flex-col gap-3 rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-4 sm:flex-row sm:items-center">
             <div className="flex min-w-0 flex-1 items-start gap-3">
               <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-zinc-800/80 text-zinc-300">
                 <AppWindow aria-hidden className="size-4" />
@@ -1037,7 +1073,7 @@ function SecurityTab() {
                 const ok = openVeilInAboutBlank();
                 ping(ok ? "Cloaked — the veil is running in an about:blank window." : "The popup was blocked — allow popups for this site.");
               }}
-              className="h-9 shrink-0 rounded-xl bg-emerald-500/90 px-4 text-[13px] font-semibold text-emerald-950 hover:bg-emerald-400"
+              className="veil-hover-glow veil-press h-9 shrink-0 rounded-xl bg-emerald-500/90 px-4 text-[13px] font-semibold text-emerald-950 hover:bg-emerald-400"
             >
               <EyeOff aria-hidden className="size-3.5" />
               Cloak it
@@ -1116,7 +1152,7 @@ function CloakPresetCard(props: {
       onClick={props.onPick}
       title={props.title}
       className={cn(
-        "group flex flex-col items-start gap-2 rounded-2xl border p-3 text-left transition-all",
+        "veil-hover-lift veil-press group flex flex-col items-start gap-2 rounded-2xl border p-3 text-left transition-all",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40",
         props.active
           ? "border-emerald-500/60 bg-emerald-500/10"
@@ -1411,7 +1447,7 @@ function ChatDataCard({ ping }: { ping: (msg: string, bad?: boolean) => void }) 
         ).map((s) => (
           <div
             key={s.label}
-            className="rounded-xl border border-zinc-800 bg-zinc-950/70 px-3 py-2.5 text-center"
+            className="veil-hover-glow rounded-xl border border-zinc-800 bg-zinc-950/70 px-3 py-2.5 text-center"
           >
             <p className="text-[10px] uppercase tracking-wider text-zinc-500">{s.label}</p>
             <p className="mt-0.5 text-[15px] font-semibold text-zinc-100">
@@ -1432,7 +1468,7 @@ function ChatDataCard({ ping }: { ping: (msg: string, bad?: boolean) => void }) 
           size="sm"
           onClick={() => void doExport()}
           disabled={busy !== null}
-          className="gap-1.5 rounded-xl bg-emerald-500/90 text-black hover:bg-emerald-400"
+          className="veil-hover-glow veil-press gap-1.5 rounded-xl bg-emerald-500/90 text-black hover:bg-emerald-400"
         >
           {busy === "export" ? (
             <Loader2 aria-hidden className="size-3.5 animate-spin" />
@@ -1446,7 +1482,7 @@ function ChatDataCard({ ping }: { ping: (msg: string, bad?: boolean) => void }) 
           variant="outline"
           onClick={() => fileRef.current?.click()}
           disabled={busy !== null}
-          className="gap-1.5 rounded-xl border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+          className="veil-hover-glow veil-press gap-1.5 rounded-xl border-zinc-700 text-zinc-300 hover:bg-zinc-800"
         >
           {busy === "import" ? (
             <Loader2 aria-hidden className="size-3.5 animate-spin" />
@@ -1632,7 +1668,7 @@ function DataTab() {
           ).map((s) => (
             <div
               key={s.label}
-              className="rounded-xl border border-zinc-800 bg-zinc-950/70 px-3 py-2.5 text-center"
+              className="veil-hover-glow rounded-xl border border-zinc-800 bg-zinc-950/70 px-3 py-2.5 text-center"
             >
               <p className="text-[10px] uppercase tracking-wider text-zinc-500">{s.label}</p>
               <p className="mt-0.5 text-[15px] font-semibold text-zinc-100">
@@ -1652,7 +1688,7 @@ function DataTab() {
             variant="outline"
             onClick={() => fileRef.current?.click()}
             disabled={busy !== null}
-            className="gap-1.5 rounded-xl border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+            className="veil-hover-glow veil-press gap-1.5 rounded-xl border-zinc-700 text-zinc-300 hover:bg-zinc-800"
           >
             {busy === "import" ? <Loader2 aria-hidden className="size-3.5 animate-spin" /> : <Upload aria-hidden className="size-3.5" />}
             Import data
@@ -1735,7 +1771,7 @@ export function SettingsSection({ onBack }: { onBack: () => void }) {
             size="sm"
             onClick={onBack}
             aria-label="Back to the start page"
-            className="h-9 gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900/60 px-3 text-zinc-300 hover:border-zinc-700 hover:bg-zinc-800 hover:text-zinc-100"
+            className="veil-hover-bounce h-9 gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900/60 px-3 text-zinc-300 hover:border-zinc-700 hover:bg-zinc-800 hover:text-zinc-100"
           >
             <ArrowLeft aria-hidden className="size-4" />
             <span className="hidden sm:inline">Back</span>
@@ -1745,7 +1781,7 @@ export function SettingsSection({ onBack }: { onBack: () => void }) {
               <Settings2 aria-hidden className="size-4.5 text-emerald-300" />
             </span>
             <div className="min-w-0">
-              <h2 className="truncate text-[17px] font-semibold tracking-tight">
+              <h2 className="veil-text-shine truncate text-[17px] font-semibold tracking-tight">
                 Settings<span className="text-emerald-400">.</span>
               </h2>
             </div>
@@ -1769,7 +1805,7 @@ export function SettingsSection({ onBack }: { onBack: () => void }) {
                 aria-selected={active}
                 onClick={() => setTab(t.id)}
                 className={cn(
-                  "flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg px-3 text-[12.5px] font-medium transition",
+                  "veil-press flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg px-3 text-[12.5px] font-medium transition",
                   active
                     ? "bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/40"
                     : "text-zinc-400 hover:bg-zinc-800/70 hover:text-zinc-200"

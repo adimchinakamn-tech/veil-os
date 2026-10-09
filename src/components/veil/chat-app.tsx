@@ -84,6 +84,8 @@ import {
   RotateCcw,
   CloudOff,
   Pencil,
+  SmilePlus,
+  Heart,
 } from "lucide-react"
 
 import { BackdropVideo } from "@/components/veil/backdrop-video"
@@ -145,7 +147,15 @@ type ChatMessage = {
   /** set when the author edited the message (the live room carries it;
    * rendered as a small "(edited)" next to the content) */
   editedAt?: string | null
+  /** emoji reaction chips — { emoji, usernames } aggregated server-side */
+  reactions?: ReactionSummary[]
   account: ChatMessageAccount
+}
+
+type ReactionSummary = {
+  emoji: string
+  /** account ids of everyone who used this emoji — drives counts + "mine" */
+  usernames: string[]
 }
 
 type PresenceUser = {
@@ -162,6 +172,14 @@ type DM = {
   isGroup: boolean
   createdAt: string
   members: ChatAccount[]
+}
+
+/* A pending friend request — incoming (they asked us) or outgoing (we
+ * asked them). Friendships only form when the recipient accepts. */
+type FriendRequestRow = {
+  id: string
+  user: ChatAccount
+  createdAt: string
 }
 
 type ShopItem =
@@ -200,6 +218,7 @@ const SUPER_ADMIN_USERNAME = "Veil"
 const CHANNELS = [
   { id: "main", name: "general", label: "#general", desc: "General chat — say hi!", modOnly: false },
   { id: "sharelinks", name: "sharelinks", label: "#sharelinks", desc: "Drop links, sites, finds", modOnly: false },
+  { id: "suggestions", name: "suggestions", label: "#suggestions", desc: "Suggest sites, features & ideas", modOnly: false },
   { id: "links", name: "links", label: "#links", desc: "Curated links — mods & owner", modOnly: true },
   { id: "announcements", name: "announcements", label: "#announcements", desc: "Official news — mods & owner", modOnly: true },
 ] as const
@@ -235,6 +254,11 @@ const EMOJI_SET = [
   "♣️", "👑", "💎", "⚡",
 ]
 
+/* The quick-reaction bar — the SAME set the server accepts (chat-reactions
+ * route whitelists these, so a tampered client can't store arbitrary
+ * strings). Keep both lists in sync. */
+const QUICK_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🔥", "🎉", "👎"]
+
 const SPOTIFY_ARTIST_ID = "2e53aHBQdCMKWqHDuyJsjC"
 
 // ---------------------------------------------------------------------------
@@ -269,6 +293,49 @@ function displayName(account: { displayName: string; username: string }): string
   return account.displayName?.trim() || account.username
 }
 
+/** RegExp.escape for the mention matcher. */
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
+
+/** Does this message text @-mention the given username (or @everyone)? */
+function mentionsUser(content: string, username: string): boolean {
+  if (!content) return false
+  if (/(^|[^\w@])@everyone([^\w]|$)/i.test(content)) return true
+  try {
+    return new RegExp(
+      `(^|[^\\w@])@${escapeRegExp(username)}([^\\w]|$)`,
+      "i",
+    ).test(content)
+  } catch {
+    return false
+  }
+}
+
+/** Pure reaction-delta applier — shared by the optimistic toggle and the
+ * live socket handler so both compute identical state shapes. */
+function applyReactionDelta(
+  msg: ChatMessage,
+  emoji: string,
+  add: boolean,
+  accountId: string,
+): ChatMessage {
+  const list: ReactionSummary[] = (msg.reactions || []).map((r) => ({
+    emoji: r.emoji,
+    usernames: [...r.usernames],
+  }))
+  const idx = list.findIndex((r) => r.emoji === emoji)
+  if (add) {
+    if (idx === -1) list.push({ emoji, usernames: [accountId] })
+    else if (!list[idx].usernames.includes(accountId))
+      list[idx].usernames.push(accountId)
+  } else if (idx !== -1) {
+    list[idx].usernames = list[idx].usernames.filter((u) => u !== accountId)
+    if (list[idx].usernames.length === 0) list.splice(idx, 1)
+  }
+  return { ...msg, reactions: list }
+}
+
 function formatTime(iso: string | number | Date): string {
   const d = new Date(iso)
   return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
@@ -300,16 +367,32 @@ function dayLabelOf(iso: string | number | Date): string {
   )
 }
 
-/** Discord-style day divider with the day's message count. */
+/** Discord-style day divider with the day's message count — the rules
+ * grow outward from the label, which drops in right after. */
 function DayDivider({ label, count }: { label: string; count: number }) {
   return (
     <div className="mt-3 mb-1 flex items-center gap-3 px-3" role="separator" aria-label={label}>
-      <div className="h-px flex-1 bg-white/10" />
-      <span className="flex items-center gap-1.5 text-[10.5px] font-semibold uppercase tracking-wider text-white/45">
+      <motion.div
+        initial={{ scaleX: 0 }}
+        animate={{ scaleX: 1 }}
+        transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+        className="h-px flex-1 origin-right bg-gradient-to-l from-white/15 to-transparent"
+      />
+      <motion.span
+        initial={{ opacity: 0, y: -5 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.32, delay: 0.1, ease: "easeOut" }}
+        className="flex items-center gap-1.5 text-[10.5px] font-semibold uppercase tracking-wider text-white/45"
+      >
         {label}
         <span className="font-normal normal-case tracking-normal text-white/25">({count})</span>
-      </span>
-      <div className="h-px flex-1 bg-white/10" />
+      </motion.span>
+      <motion.div
+        initial={{ scaleX: 0 }}
+        animate={{ scaleX: 1 }}
+        transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+        className="h-px flex-1 origin-left bg-gradient-to-r from-white/15 to-transparent"
+      />
     </div>
   )
 }
@@ -340,6 +423,50 @@ function initials(name: string): string {
   if (parts.length === 0) return "?"
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
   return (parts[0][0] + parts[1][0]).toUpperCase()
+}
+
+/* ------------------------------------------------------------------ */
+/* Chat motion language — the spring + pop vocabulary every animated  */
+/* element in the chat shares, plus the typing-dots glyph.            */
+/* ------------------------------------------------------------------ */
+
+/** Snappy overshoot for chips, badges, buttons. */
+const CHAT_POP = { type: "spring", stiffness: 520, damping: 22 } as const
+
+/** Softer landing for panels and previews. */
+const CHAT_SOFT = { type: "spring", stiffness: 380, damping: 30 } as const
+
+/** Three lazy-wave dots — the "someone is typing" glyph. */
+function TypingDots({ className = "" }: { className?: string }) {
+  return (
+    <span className={`inline-flex items-end gap-[3px] ${className}`} aria-hidden>
+      {[0, 1, 2].map((i) => (
+        <span
+          key={i}
+          className="veil-typing-dot h-1.5 w-1.5 rounded-full bg-emerald-300"
+          style={{ animationDelay: `${i * 0.16}s` }}
+        />
+      ))}
+    </span>
+  )
+}
+
+/** Fold a message id into the fresh-set (module scope so it is never a
+ * reactive dependency). Sets iterate in insertion order, so pruning is
+ * just "drop the oldest" once the set grows past 30. */
+function freshWith(
+  prev: ReadonlySet<string>,
+  id: string,
+): ReadonlySet<string> {
+  if (prev.has(id)) return prev
+  const next = new Set(prev)
+  next.add(id)
+  while (next.size > 30) {
+    const oldest = next.values().next().value
+    if (oldest === undefined) break
+    next.delete(oldest)
+  }
+  return next
 }
 
 function isGifContent(content: string): boolean {
@@ -463,7 +590,7 @@ function FileBubble({ f }: { f: ChatFile }) {
       href={dl}
       target="_blank"
       rel="noopener noreferrer"
-      className="mt-1 flex max-w-sm items-center gap-3 rounded-lg border border-white/10 bg-black/30 p-3 transition hover:border-orange-400/40"
+      className="veil-hover-lift mt-1 flex max-w-sm items-center gap-3 rounded-lg border border-white/10 bg-black/30 p-3 transition hover:border-orange-400/40"
       title={`Download ${f.name}`}
     >
       <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-orange-400/15 text-orange-300">
@@ -793,7 +920,10 @@ function ChatWallpaperBackdrop() {
   const poster = wallpaper?.thumb ?? undefined
   const theme = wallpaper?.theme ?? "emerald"
 
-  return (
+  /* Memoized: ChatApp re-renders on every keystroke / socket event —
+   * without memo the wallpaper subtree (and its <video>) re-diffs each
+   * time, which measured as a visible chunk of the chat's input lag. */
+  return useMemo(() => (
     <div
       aria-hidden
       className="pointer-events-none absolute inset-0 overflow-hidden"
@@ -820,7 +950,7 @@ function ChatWallpaperBackdrop() {
       {/* readability scrim over the plain wallpaper */}
       <div className="absolute inset-0 bg-black/45" />
     </div>
-  )
+  ), [kind, src, poster, theme])
 }
 
 // ---------------------------------------------------------------------------
@@ -872,6 +1002,16 @@ function AuthScreen({
     try {
       const data = await attempt()
       saveStoredAccount(data.account, data.token)
+      /* Claimed a backup-restored account straight from the login form —
+       * celebrate it so the member KNOWS their history came back. */
+      if ((data as { reclaimed?: boolean }).reclaimed) {
+        try {
+          const s = await import("sonner")
+          s.toast.success("Welcome back! Your account was reclaimed from the backup — messages, coins and role are intact.")
+        } catch {
+          /* sonner not loaded — non-fatal */
+        }
+      }
       onAuthed(data.account, data.token)
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Authentication failed."
@@ -889,52 +1029,94 @@ function AuthScreen({
     <div className="relative flex min-h-screen items-center justify-center overflow-y-auto bg-black/30 px-4 py-10 text-white">
       <ChatWallpaperBackdrop />
       {onBack && (
-        <button
+        <motion.button
           onClick={onBack}
+          whileHover={{ x: -3 }}
+          whileTap={{ scale: 0.95 }}
+          transition={CHAT_POP}
           className="fixed left-4 top-4 z-30 flex h-9 items-center gap-1.5 rounded-xl border border-white/15 bg-black/45 px-3 text-[13px] font-medium text-zinc-200 backdrop-blur-md transition hover:border-white/30 hover:text-white"
           title="Back to Veil"
         >
           <ArrowLeft className="h-4 w-4" />
           <span className="hidden sm:inline">Veil</span>
-        </button>
+        </motion.button>
       )}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="relative w-full max-w-md rounded-3xl border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-xl"
-      >
+      {/* veil-drop-bounce wrapper — the card lands with a squash-stretch
+          bounce (mega tier); the inner framer entrance composes on top. */}
+      <div className="veil-drop-bounce w-full max-w-md">
+        <motion.div
+          initial={{ opacity: 0, y: 26, scale: 0.955, filter: "blur(10px)" }}
+          animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+          transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+          className="relative w-full max-w-md rounded-3xl border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-xl"
+        >
         <div className="mb-6 flex flex-col items-center text-center">
-          <div className="mb-3 grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 shadow-lg shadow-orange-500/30">
+          <motion.div
+            animate={{ y: [0, -5, 0] }}
+            transition={{ duration: 3.6, repeat: Infinity, ease: "easeInOut" }}
+            className="veil-pulse-glow mb-3 grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 shadow-lg shadow-orange-500/30"
+          >
             <MessageCircle className="h-7 w-7 text-white" />
-          </div>
-          <h1 className="text-2xl font-semibold tracking-tight">Veil Chat</h1>
-          <p className="mt-1 text-sm text-white/60">
+          </motion.div>
+          <motion.h1
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.18, duration: 0.35, ease: "easeOut" }}
+            className="veil-text-shine text-2xl font-semibold tracking-tight"
+          >
+            Veil Chat
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.26, duration: 0.35, ease: "easeOut" }}
+            className="veil-text-breathe mt-1 text-sm text-white/60"
+          >
             {mode === "login"
               ? "Welcome back"
               : "Create a new account to join the chat."}
-          </p>
+          </motion.p>
         </div>
 
-        <div className="mb-5 flex rounded-xl bg-black/30 p-1 text-sm">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.32, duration: 0.3, ease: "easeOut" }}
+          className="mb-5 flex rounded-xl bg-black/30 p-1 text-sm"
+        >
           <button
             type="button"
             onClick={() => setMode("login")}
-            className={`flex-1 rounded-lg px-3 py-1.5 transition-colors ${
-              mode === "login" ? "bg-white/15 text-white" : "text-white/60 hover:text-white"
+            className={`veil-hover-lift veil-press relative flex-1 rounded-lg px-3 py-1.5 transition-colors ${
+              mode === "login" ? "text-white" : "text-white/60 hover:text-white"
             }`}
           >
-            Login
+            {mode === "login" && (
+              <motion.span
+                layoutId="veil-auth-pill"
+                transition={{ type: "spring", stiffness: 420, damping: 32 }}
+                className="absolute inset-0 rounded-lg bg-white/15"
+              />
+            )}
+            <span className="relative z-10">Login</span>
           </button>
           <button
             type="button"
             onClick={() => setMode("register")}
-            className={`flex-1 rounded-lg px-3 py-1.5 transition-colors ${
-              mode === "register" ? "bg-white/15 text-white" : "text-white/60 hover:text-white"
+            className={`veil-hover-lift veil-press relative flex-1 rounded-lg px-3 py-1.5 transition-colors ${
+              mode === "register" ? "text-white" : "text-white/60 hover:text-white"
             }`}
           >
-            Register
+            {mode === "register" && (
+              <motion.span
+                layoutId="veil-auth-pill"
+                transition={{ type: "spring", stiffness: 420, damping: 32 }}
+                className="absolute inset-0 rounded-lg bg-white/15"
+              />
+            )}
+            <span className="relative z-10">Register</span>
           </button>
-        </div>
+        </motion.div>
 
         <form
           onSubmit={(e) => {
@@ -943,7 +1125,11 @@ function AuthScreen({
           }}
           className="space-y-3"
         >
-          <div>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.3, ease: "easeOut" }}
+          >
             <label className="mb-1 block text-xs font-medium text-white/70">Username</label>
             <input
               value={username}
@@ -951,36 +1137,58 @@ function AuthScreen({
               placeholder="3+ chars"
               autoCapitalize="none"
               autoCorrect="off"
-              className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm outline-none placeholder:text-white/30 focus:border-orange-400/50"
+              className="veil-focus-bloom w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm outline-none transition-[border-color,box-shadow] duration-300 placeholder:text-white/30 focus:border-orange-400/50 focus:shadow-[0_0_0_3px_rgba(251,146,60,0.12)]"
             />
-          </div>
-          <div>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.48, duration: 0.3, ease: "easeOut" }}
+          >
             <label className="mb-1 block text-xs font-medium text-white/70">Password</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="6+ characters"
-              className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm outline-none placeholder:text-white/30 focus:border-orange-400/50"
+              className="veil-focus-bloom w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm outline-none transition-[border-color,box-shadow] duration-300 placeholder:text-white/30 focus:border-orange-400/50 focus:shadow-[0_0_0_3px_rgba(251,146,60,0.12)]"
             />
+          </motion.div>
+
+          <AnimatePresence>
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0, x: [0, -7, 7, -4, 4, 0] }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.45, ease: "easeOut" }}
+                className="rounded-lg border border-red-400/30 bg-red-500/10 px-3 py-2 text-xs text-red-200"
+              >
+                {/* jelly wobble re-triggers per distinct error via key */}
+                <span key={error} className="veil-jelly inline-block">{error}</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* border-dance wrapper + press — the framer tap lives on the
+              button, the conic border and squeeze live here so the
+              transforms compose instead of fighting. */}
+          <div className="veil-border-dance veil-press rounded-lg">
+            <motion.button
+              type="submit"
+              disabled={loading || !username || !password}
+              whileHover={{ scale: 1.02, y: -1 }}
+              whileTap={{ scale: 0.97 }}
+              transition={CHAT_POP}
+              className="veil-hover-glow flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 bg-[length:200%_100%] bg-left px-4 py-2.5 text-sm font-semibold text-white transition-[background-position,opacity] duration-500 hover:bg-right disabled:opacity-50 disabled:hover:bg-left"
+            >
+              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+              {mode === "login" ? "Log In" : "Create account"}
+            </motion.button>
           </div>
-
-          {error && (
-            <div className="rounded-lg border border-red-400/30 bg-red-500/10 px-3 py-2 text-xs text-red-200">
-              {error}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading || !username || !password}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-orange-400 to-orange-600 px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
-          >
-            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-            {mode === "login" ? "Log In" : "Create account"}
-          </button>
         </form>
-      </motion.div>
+        </motion.div>
+      </div>
     </div>
   )
 }
@@ -1104,7 +1312,7 @@ function GifPicker({
               setQuery(s === "Trending" ? "" : s)
               void search(s === "Trending" ? "trending" : s)
             }}
-            className="rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-[11px] text-white/70 transition-colors hover:border-emerald-400/40 hover:bg-emerald-400/10 hover:text-emerald-200"
+            className="veil-hover-bounce veil-press rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-[11px] text-white/70 transition-colors hover:border-emerald-400/40 hover:bg-emerald-400/10 hover:text-emerald-200"
           >
             {s}
           </button>
@@ -1124,11 +1332,11 @@ function GifPicker({
         />
         <button
           onClick={() => query.trim() && void search(query.trim())}
-          className="rounded-md bg-white/10 px-2 py-1 text-xs text-white hover:bg-white/20"
+          className="veil-press rounded-md bg-white/10 px-2 py-1 text-xs text-white hover:bg-white/20"
         >
           Search
         </button>
-        <button onClick={onClose} className="text-white/50 hover:text-white">
+        <button onClick={onClose} className="veil-hover-wobble text-white/50 hover:text-white">
           <X className="h-4 w-4" />
         </button>
       </div>
@@ -1157,13 +1365,13 @@ function GifPicker({
             {searched ? "No GIFs found." : "Search for a GIF."}
           </div>
         ) : (
-          <div className="grid grid-cols-3 gap-2">
+          <div className="veil-slide-up-pop grid grid-cols-3 gap-2">
             {gifs.map((g) => (
               <button
                 key={g.id}
                 onClick={() => onPick(g.url)}
                 title={g.title || undefined}
-                className="group relative aspect-square overflow-hidden rounded-md bg-black/40 transition-transform hover:scale-105"
+                className="veil-hover-glow group relative aspect-square overflow-hidden rounded-md bg-black/40 transition-transform hover:scale-105"
               >
                 { }
                 <img
@@ -1184,7 +1392,7 @@ function GifPicker({
         {hasMore && !loading && gifs.length > 0 && !loadingMore && (
           <button
             onClick={() => void loadMore()}
-            className="mt-2 w-full rounded-md border border-white/10 bg-white/5 py-1.5 text-[11px] font-medium text-white/70 hover:bg-white/10 hover:text-white"
+            className="veil-hover-bounce mt-2 w-full rounded-md border border-white/10 bg-white/5 py-1.5 text-[11px] font-medium text-white/70 hover:bg-white/10 hover:text-white"
           >
             More GIFs ↓
           </button>
@@ -1221,16 +1429,16 @@ function EmojiPicker({
     >
       <div className="mb-2 flex items-center justify-between">
         <span className="text-xs font-medium text-white/70">Emoji</span>
-        <button onClick={onClose} className="text-white/50 hover:text-white">
+        <button onClick={onClose} className="veil-hover-wobble text-white/50 hover:text-white">
           <X className="h-4 w-4" />
         </button>
       </div>
-      <div className="grid max-h-60 grid-cols-8 gap-1 overflow-y-auto rounded-lg bg-black/30 p-2">
+      <div className="veil-slide-up-pop grid max-h-60 grid-cols-8 gap-1 overflow-y-auto rounded-lg bg-black/30 p-2">
         {EMOJI_SET.map((e) => (
           <button
             key={e}
             onClick={() => onPick(e)}
-            className="grid h-8 w-8 place-items-center rounded-md text-lg transition-colors hover:bg-white/10"
+            className="veil-hover-bounce veil-press grid h-8 w-8 place-items-center rounded-md text-lg transition-colors hover:bg-white/10"
           >
             {e}
           </button>
@@ -1275,11 +1483,11 @@ function ModalShell({
         <div className="flex items-center justify-between border-b border-white/10 px-5 py-3">
           <div className="flex items-center gap-2 text-white">
             {icon}
-            <h3 className="text-sm font-semibold">{title}</h3>
+            <h3 className="veil-text-shine text-sm font-semibold">{title}</h3>
           </div>
           <button
             onClick={onClose}
-            className="rounded-md p-1 text-white/50 hover:bg-white/10 hover:text-white"
+            className="veil-hover-wobble rounded-md p-1 text-white/50 hover:bg-white/10 hover:text-white"
           >
             <X className="h-4 w-4" />
           </button>
@@ -1362,9 +1570,11 @@ function ShopModal({
       onClose={onClose}
       maxWidth="max-w-2xl"
     >
-      <div className="mb-4 flex items-center justify-between rounded-xl border border-white/10 bg-black/30 px-4 py-3">
+      {/* key={coins} — the balance pill flashes (level-flash) and the
+          coin emoji 720°-flips every time the balance changes. */}
+      <div key={account.coins} className="veil-level-flash mb-4 flex items-center justify-between rounded-xl border border-white/10 bg-black/30 px-4 py-3">
         <span className="text-sm text-white/70">Your balance</span>
-        <span className="flex items-center gap-1.5 font-semibold text-orange-300">
+        <span key={account.coins} className="veil-coin-flip flex items-center gap-1.5 font-semibold text-orange-300">
           🪙 {account.coins} <span className="text-xs text-white/50">Veil Coins</span>
         </span>
       </div>
@@ -1376,7 +1586,7 @@ function ShopModal({
       ) : (
         <div className="space-y-6">
           <section>
-            <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-white/50">
+            <h4 className="veil-text-shine mb-2 text-xs font-semibold uppercase tracking-wide text-white/50">
               Name Tags
             </h4>
             <div className="grid gap-2 sm:grid-cols-2">
@@ -1386,7 +1596,7 @@ function ShopModal({
                 return (
                   <div
                     key={t.id}
-                    className="flex items-center justify-between rounded-xl border border-white/10 bg-black/20 p-3"
+                    className="veil-hover-lift veil-hover-tilt veil-border-dance flex items-center justify-between rounded-xl border border-white/10 bg-black/20 p-3"
                   >
                     <div className="flex flex-col gap-1">
                       <TagBadge tag={t.tagText} color={t.tagColor} />
@@ -1402,7 +1612,7 @@ function ShopModal({
                       <button
                         disabled={!afford || buying === t.id}
                         onClick={() => void buy(t)}
-                        className="rounded-md bg-orange-400 px-3 py-1 text-xs font-semibold text-black disabled:opacity-40"
+                        className="veil-press veil-hover-glow rounded-md bg-orange-400 px-3 py-1 text-xs font-semibold text-black disabled:opacity-40"
                       >
                         {buying === t.id ? "…" : "Buy"}
                       </button>
@@ -1414,7 +1624,7 @@ function ShopModal({
           </section>
 
           <section>
-            <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-white/50">
+            <h4 className="veil-text-shine mb-2 text-xs font-semibold uppercase tracking-wide text-white/50">
               PFP Accessories
             </h4>
             <div className="grid gap-2 sm:grid-cols-2">
@@ -1425,7 +1635,7 @@ function ShopModal({
                 return (
                   <div
                     key={a.id}
-                    className="flex items-center justify-between rounded-xl border border-white/10 bg-black/20 p-3"
+                    className="veil-hover-lift veil-hover-tilt veil-border-dance flex items-center justify-between rounded-xl border border-white/10 bg-black/20 p-3"
                   >
                     <div className="flex items-center gap-3">
                       <div className="grid h-9 w-9 place-items-center rounded-full bg-white/10 text-lg">
@@ -1446,7 +1656,7 @@ function ShopModal({
                       <button
                         disabled={!afford || buying === a.id}
                         onClick={() => void buy(a)}
-                        className="rounded-md bg-orange-400 px-3 py-1 text-xs font-semibold text-black disabled:opacity-40"
+                        className="veil-press veil-hover-glow rounded-md bg-orange-400 px-3 py-1 text-xs font-semibold text-black disabled:opacity-40"
                       >
                         {buying === a.id ? "…" : "Buy"}
                       </button>
@@ -1570,6 +1780,11 @@ function ProfileModal({
       <div className="flex flex-col gap-5">
         <div className="flex items-center gap-4">
           <div className="relative">
+            {/* mega tier: spinning dashed halo around the avatar */}
+            <span
+              aria-hidden
+              className="veil-ring-spin pointer-events-none absolute -inset-1 rounded-full border-2 border-dashed border-orange-400/50"
+            />
             <AvatarWithAccessory
               account={{
                 avatarColor: account.avatarColor,
@@ -1583,7 +1798,7 @@ function ProfileModal({
             <button
               onClick={() => fileRef.current?.click()}
               disabled={processing}
-              className="absolute -bottom-1 -right-1 grid h-7 w-7 place-items-center rounded-full border-2 border-black/60 bg-orange-400 text-black disabled:opacity-60"
+              className="veil-hover-bounce absolute -bottom-1 -right-1 grid h-7 w-7 place-items-center rounded-full border-2 border-black/60 bg-orange-400 text-black disabled:opacity-60"
               title="Upload new picture (auto-resized to 256×256)"
             >
               {processing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
@@ -1598,10 +1813,10 @@ function ProfileModal({
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <span className="text-lg font-semibold">{displayName({ displayName: displayNameInput, username: account.username })}</span>
+              <span className="veil-text-shine text-lg font-semibold">{displayName({ displayName: displayNameInput, username: account.username })}</span>
               {roleLabel(account) && (
                 <span
-                  className="rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase text-white"
+                  className="veil-pop-in veil-stagger-2 veil-hover-wobble rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase text-white"
                   style={{ backgroundColor: roleColor(account) }}
                 >
                   {roleLabel(account)}
@@ -1609,7 +1824,7 @@ function ProfileModal({
               )}
             </div>
             <span className="text-xs text-white/50">@{account.username}</span>
-            {account.tag && <div className="mt-1"><TagBadge tag={account.tag} color={account.tagColor} /></div>}
+            {account.tag && <div className="mt-1"><TagBadge tag={account.tag} color={account.tagColor} className="veil-pop-in veil-stagger-3 veil-hover-wobble" /></div>}
           </div>
         </div>
 
@@ -1620,20 +1835,20 @@ function ProfileModal({
             onChange={(e) => setBio(e.target.value)}
             rows={3}
             placeholder="Tell others about yourself…"
-            className="w-full resize-none rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm outline-none focus:border-orange-400/50"
+            className="veil-focus-bloom w-full resize-none rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm outline-none focus:border-orange-400/50"
           />
           <div className="mt-1 text-right text-[10px] text-white/40">{bio.length}/500</div>
         </div>
 
-        <div className="flex items-center justify-between rounded-xl border border-white/10 bg-black/20 px-4 py-2 text-sm">
+        <div key={account.coins} className="veil-level-flash flex items-center justify-between rounded-xl border border-white/10 bg-black/20 px-4 py-2 text-sm">
           <span className="text-white/70">Veil Coin balance</span>
-          <span className="font-semibold text-orange-300">🪙 {account.coins}</span>
+          <span key={account.coins} className="veil-coin-flip font-semibold text-orange-300">🪙 {account.coins}</span>
         </div>
 
         <button
           disabled={saving}
           onClick={() => void save()}
-          className="flex items-center justify-center gap-2 rounded-lg bg-orange-400 px-4 py-2 text-sm font-semibold text-black disabled:opacity-50"
+          className="veil-press veil-hover-glow flex items-center justify-center gap-2 rounded-lg bg-orange-400 px-4 py-2 text-sm font-semibold text-black disabled:opacity-50"
         >
           {saving && <Loader2 className="h-4 w-4 animate-spin" />}
           Save changes
@@ -1691,10 +1906,10 @@ function UserProfileModal({
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="truncate text-lg font-semibold">{displayName(who)}</span>
+              <span className="veil-text-shine truncate text-lg font-semibold">{displayName(who)}</span>
               {roleLabel(who) && (
                 <span
-                  className="rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase text-white"
+                  className="veil-pop-in veil-stagger-2 veil-hover-wobble rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase text-white"
                   style={{ backgroundColor: roleColor(who) }}
                 >
                   {roleLabel(who)}
@@ -1704,14 +1919,14 @@ function UserProfileModal({
             <div className="mt-0.5 text-xs text-white/50">@{who.username}</div>
             {who.tag && (
               <div className="mt-1.5">
-                <TagBadge tag={who.tag} color={who.tagColor} />
+                <TagBadge tag={who.tag} color={who.tagColor} className="veil-pop-in veil-stagger-3 veil-hover-wobble" />
               </div>
             )}
           </div>
         </div>
 
         {/* Bio — the point of the card */}
-        <div className="rounded-xl border border-white/10 bg-black/30 p-3.5">
+        <div className="veil-slide-up-pop veil-stagger-1 rounded-xl border border-white/10 bg-black/30 p-3.5">
           <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-white/40">
             Bio
           </p>
@@ -1728,27 +1943,27 @@ function UserProfileModal({
           <div className="flex items-start gap-2 rounded-xl border border-amber-300/25 bg-amber-400/5 p-3 text-xs leading-relaxed text-amber-100/80">
             <History className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-300" />
             <p>
-              Restored from a chat backup after the data wipe — messages and
-              coins are intact. Nobody has re-registered this username yet:
-              registering <span className="font-semibold">@{who.username}</span> claims
-              this profile and everything in it.
+              Restored from a chat backup — messages, coins and role are
+              intact. The owner just logs in as{" "}
+              <span className="font-semibold">@{who.username}</span> with any
+              password of 6+ characters to reclaim it.
             </p>
           </div>
         )}
 
         {/* Facts strip */}
         <div className="grid grid-cols-3 gap-2">
-          <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-center">
+          <div className="veil-slide-up-pop veil-stagger-2 rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-center">
             <p className="text-[10px] uppercase tracking-wider text-white/40">Coins</p>
             <p className="mt-0.5 text-sm font-semibold text-orange-300">🪙 {who.coins}</p>
           </div>
-          <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-center">
+          <div className="veil-slide-up-pop veil-stagger-3 rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-center">
             <p className="text-[10px] uppercase tracking-wider text-white/40">Status</p>
             <p className={`mt-0.5 text-sm font-semibold ${online ? "text-emerald-300" : "text-white/50"}`}>
               {online ? "Online" : "Offline"}
             </p>
           </div>
-          <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-center">
+          <div className="veil-slide-up-pop veil-stagger-4 rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-center">
             <p className="text-[10px] uppercase tracking-wider text-white/40">Joined</p>
             <p className="mt-0.5 text-sm font-semibold text-white/80">{joined}</p>
           </div>
@@ -1757,7 +1972,7 @@ function UserProfileModal({
         {isMe && (
           <button
             onClick={onEdit}
-            className="flex items-center justify-center gap-2 rounded-lg border border-orange-400/40 bg-orange-400/10 px-4 py-2 text-sm font-semibold text-orange-300 transition hover:bg-orange-400/20"
+            className="veil-press veil-hover-glow flex items-center justify-center gap-2 rounded-lg border border-orange-400/40 bg-orange-400/10 px-4 py-2 text-sm font-semibold text-orange-300 transition hover:bg-orange-400/20"
           >
             <Camera className="h-4 w-4" /> Edit your profile
           </button>
@@ -1856,15 +2071,15 @@ function ExtensionsModal({
       maxWidth="max-w-xl"
     >
       <div className="space-y-2">
-        {EXTENSION_DEFS.map((ext) => {
+        {EXTENSION_DEFS.map((ext, ei) => {
           const enabled = state[ext.id]
           return (
             <div
               key={ext.id}
-              className="flex items-center justify-between rounded-xl border border-white/10 bg-black/20 p-3"
+              className={`veil-slide-left-pop veil-stagger-${(ei % 8) + 1} veil-hover-lift flex items-center justify-between rounded-xl border border-white/10 bg-black/20 p-3`}
             >
               <div className="flex items-center gap-3">
-                <div className="grid h-9 w-9 place-items-center rounded-lg bg-white/10 text-orange-300">
+                <div className="veil-hover-spin grid h-9 w-9 place-items-center rounded-lg bg-white/10 text-orange-300">
                   {ext.icon}
                 </div>
                 <div className="flex flex-col">
@@ -1883,7 +2098,7 @@ function ExtensionsModal({
                 role="switch"
                 aria-checked={enabled}
                 onClick={() => onToggle(ext.id, !enabled)}
-                className={`relative h-6 w-11 rounded-full transition-colors ${
+                className={`veil-press relative h-6 w-11 rounded-full transition-colors ${
                   enabled ? "bg-orange-400" : "bg-white/15"
                 }`}
               >
@@ -1963,10 +2178,10 @@ function TransferModal({
       onClose={onClose}
     >
       <div className="space-y-4">
-        <div className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm">
+        <div key={account.coins} className="veil-level-flash rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm">
           <div className="flex justify-between">
             <span className="text-white/70">Your balance</span>
-            <span className="font-semibold text-orange-300">🪙 {account.coins}</span>
+            <span key={account.coins} className="veil-coin-flip font-semibold text-orange-300">🪙 {account.coins}</span>
           </div>
         </div>
 
@@ -1979,7 +2194,7 @@ function TransferModal({
             autoCapitalize="none"
             autoCorrect="off"
             list="member-usernames"
-            className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm outline-none focus:border-orange-400/50"
+            className="veil-focus-bloom w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm outline-none focus:border-orange-400/50"
           />
           <datalist id="member-usernames">
             {otherMembers.map((m) => (
@@ -1990,11 +2205,11 @@ function TransferModal({
           </datalist>
           {otherMembers.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-1.5">
-              {otherMembers.slice(0, 8).map((m) => (
+              {otherMembers.slice(0, 8).map((m, mi) => (
                 <button
                   key={m.id}
                   onClick={() => setToUsername(m.username)}
-                  className="flex items-center gap-1 rounded-full bg-white/5 px-2 py-1 text-xs hover:bg-white/10"
+                  className={`veil-pop-in veil-stagger-${(mi % 8) + 1} flex items-center gap-1 rounded-full bg-white/5 px-2 py-1 text-xs hover:bg-white/10`}
                 >
                   <AvatarWithAccessory
                     account={m}
@@ -2015,14 +2230,14 @@ function TransferModal({
             max={account.coins}
             value={amount}
             onChange={(e) => setAmount(Math.max(0, Math.floor(Number(e.target.value) || 0)))}
-            className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm outline-none focus:border-orange-400/50"
+            className="veil-focus-bloom w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm outline-none focus:border-orange-400/50"
           />
           <div className="mt-2 flex gap-1.5">
             {[10, 50, 100, 500].map((n) => (
               <button
                 key={n}
                 onClick={() => setAmount(n)}
-                className="rounded-md bg-white/5 px-2 py-1 text-xs hover:bg-white/10"
+                className="veil-hover-bounce veil-press rounded-md bg-white/5 px-2 py-1 text-xs hover:bg-white/10"
               >
                 🪙 {n}
               </button>
@@ -2033,11 +2248,190 @@ function TransferModal({
         <button
           disabled={sending || amount < 1 || !toUsername.trim()}
           onClick={() => void send()}
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-orange-400 px-4 py-2 text-sm font-semibold text-black disabled:opacity-50"
+          className="veil-press veil-hover-glow flex w-full items-center justify-center gap-2 rounded-lg bg-orange-400 px-4 py-2 text-sm font-semibold text-black disabled:opacity-50"
         >
           {sending && <Loader2 className="h-4 w-4 animate-spin" />}
           Send 🪙 {amount || 0}
         </button>
+      </div>
+    </ModalShell>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Invite people to a group chat — pick friends by checkbox and/or type
+// @usernames. Current members are shown as chips so it's obvious who's
+// already in (and that inviting a 3rd person into a plain DM turns it
+// into a group automatically).
+// ---------------------------------------------------------------------------
+
+function InviteModal({
+  dm,
+  friends,
+  me,
+  onInvite,
+  onClose,
+}: {
+  dm: DM
+  friends: ChatAccount[]
+  me: ChatAccount
+  onInvite: (dm: DM, targets: string[], done: () => void) => Promise<void>
+  onClose: () => void
+}) {
+  const [picked, setPicked] = useState<Record<string, boolean>>({})
+  const [userInput, setUserInput] = useState("")
+  const [busy, setBusy] = useState(false)
+
+  const memberNames = new Set(
+    dm.members.map((m) => m.username.toLowerCase()),
+  )
+  const candidates = friends.filter(
+    (f) => !memberNames.has(f.username.toLowerCase()),
+  )
+  const typed = userInput
+    .split(/[\s,]+/)
+    .map((s) => s.trim().replace(/^@/, ""))
+    .filter(Boolean)
+    .filter((s) => !memberNames.has(s.toLowerCase()))
+  const pickedNames = Object.keys(picked).filter((u) => picked[u])
+  const targets = [...new Set([...pickedNames, ...typed])]
+  const label =
+    dm.name ||
+    dm.members
+      .filter((m) => m.id !== me.id)
+      .map(displayName)
+      .join(", ") ||
+    "this conversation"
+
+  const invite = async () => {
+    if (targets.length === 0 || busy) return
+    setBusy(true)
+    await onInvite(dm, targets, () => {
+      setPicked({})
+      setUserInput("")
+    })
+    setBusy(false)
+  }
+
+  return (
+    <ModalShell
+      title={dm.isGroup ? `Invite to ${label}` : "Invite — make it a group"}
+      onClose={onClose}
+    >
+      <div className="space-y-3">
+        {/* Current members */}
+        <div>
+          <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-white/40">
+            In here now — {dm.members.length}
+          </p>
+          <div className="flex flex-wrap gap-1">
+            {dm.members.map((m, mi) => (
+              <span
+                key={m.id}
+                className={`veil-pop-in veil-stagger-${(mi % 8) + 1} flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[11px] ${
+                  m.id === me.id
+                    ? "border-orange-400/40 bg-orange-400/10 text-orange-200"
+                    : "border-white/10 bg-white/[0.04] text-white/70"
+                }`}
+              >
+                <span
+                  className="grid h-4 w-4 place-items-center rounded-full text-[8px] font-bold text-white"
+                  style={{ backgroundColor: m.avatarColor }}
+                >
+                  {m.username[0]?.toUpperCase()}
+                </span>
+                {m.id === me.id ? "you" : displayName(m)}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Friends picker */}
+        {candidates.length > 0 && (
+          <div>
+            <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-white/40">
+              Your friends
+            </p>
+            <div className="veil-scroll-slim max-h-40 space-y-0.5 overflow-y-auto rounded-lg border border-white/10">
+              {candidates.map((f, fi) => (
+                <label
+                  key={f.id}
+                  className={`veil-slide-right-pop veil-stagger-${(fi % 8) + 1} flex cursor-pointer items-center gap-2 px-2 py-1.5 text-xs hover:bg-white/5`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={!!picked[f.username]}
+                    onChange={(e) =>
+                      setPicked((prev) => ({
+                        ...prev,
+                        [f.username]: e.target.checked,
+                      }))
+                    }
+                    className="accent-orange-400"
+                  />
+                  <span
+                    className="grid h-5 w-5 shrink-0 place-items-center rounded-full text-[9px] font-bold text-white"
+                    style={{ backgroundColor: f.avatarColor }}
+                  >
+                    {f.username[0]?.toUpperCase()}
+                  </span>
+                  <span className="flex-1 truncate text-white/80">
+                    {displayName(f)}
+                  </span>
+                  <span className="text-[10px] text-white/30">@{f.username}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* @username entry */}
+        <div>
+          <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-white/40">
+            Or add by username
+          </p>
+          <input
+            value={userInput}
+            onChange={(e) => setUserInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault()
+                void invite()
+              }
+            }}
+            placeholder="@username, @username…"
+            autoCapitalize="none"
+            className="veil-focus-bloom w-full rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-sm outline-none focus:border-orange-400/50"
+          />
+        </div>
+
+        {targets.length > 0 && (
+          <p className="text-[11px] text-emerald-300/80">
+            {targets.length} person{targets.length === 1 ? "" : "s"} selected
+            {dm.isGroup ? "" : " — this DM becomes a group automatically"}.
+          </p>
+        )}
+
+        <div className="flex justify-end gap-2">
+          <button
+            onClick={onClose}
+            className="rounded-lg px-3 py-1.5 text-sm text-white/60 hover:bg-white/10"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => void invite()}
+            disabled={busy || targets.length === 0}
+            className="veil-press veil-hover-glow flex items-center gap-1.5 rounded-lg bg-orange-400 px-3 py-1.5 text-sm font-semibold text-black disabled:opacity-40"
+          >
+            {busy ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <UserPlus className="h-3.5 w-3.5" />
+            )}
+            Invite {targets.length > 0 ? `(${targets.length})` : ""}
+          </button>
+        </div>
       </div>
     </ModalShell>
   )
@@ -2065,7 +2459,7 @@ function PinnedPanel({
         <span className="flex items-center gap-1.5 text-sm font-semibold text-white">
           <Pin className="h-3.5 w-3.5 text-orange-400" /> Pinned messages
         </span>
-        <button onClick={onClose} className="text-white/50 hover:text-white">
+        <button onClick={onClose} className="veil-hover-wobble text-white/50 hover:text-white">
           <X className="h-4 w-4" />
         </button>
       </div>
@@ -2075,8 +2469,8 @@ function PinnedPanel({
             No pinned messages in this channel yet.
           </p>
         ) : (
-          messages.slice(0, 12).map((m) => (
-            <div key={m.id} className="rounded-lg border border-white/5 bg-black/30 p-2 text-xs">
+          messages.slice(0, 12).map((m, pi) => (
+            <div key={m.id} className={`veil-slide-right-pop veil-stagger-${(pi % 8) + 1} rounded-lg border border-white/5 bg-black/30 p-2 text-xs`}>
               <div className="flex items-center gap-1.5">
                 <AvatarWithAccessory
                   account={{
@@ -2104,21 +2498,28 @@ function PinnedPanel({
 
 type ChatNotification = {
   id: string
-  kind: "message" | "mention" | "coin" | "system"
+  kind: "message" | "mention" | "coin" | "system" | "friend_request" | "friend_accepted"
   title: string
   body: string
   ts: number
   read?: boolean
+  /** friend_request notifications carry the request id so the panel can
+   *  render live Accept/Decline buttons right inside the bell dropdown. */
+  requestId?: string
 }
 
 function NotificationsPanel({
   notifications,
   onClear,
   onClose,
+  onFriendAccept,
+  onFriendDecline,
 }: {
   notifications: ChatNotification[]
   onClear: () => void
   onClose: () => void
+  onFriendAccept?: (requestId: string) => void
+  onFriendDecline?: (requestId: string) => void
 }) {
   return (
     <motion.div
@@ -2134,11 +2535,11 @@ function NotificationsPanel({
         <div className="flex items-center gap-1">
           <button
             onClick={onClear}
-            className="rounded-md px-2 py-0.5 text-xs text-white/60 hover:bg-white/10"
+            className="veil-hover-wobble rounded-md px-2 py-0.5 text-xs text-white/60 hover:bg-white/10"
           >
             Clear
           </button>
-          <button onClick={onClose} className="text-white/50 hover:text-white">
+          <button onClick={onClose} className="veil-hover-wobble text-white/50 hover:text-white">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -2147,20 +2548,46 @@ function NotificationsPanel({
         {notifications.length === 0 ? (
           <p className="py-6 text-center text-xs text-white/40">All caught up.</p>
         ) : (
-          notifications.map((n) => (
+          notifications.map((n, ni) => (
             <div
               key={n.id}
-              className={`rounded-lg border p-2 text-xs ${
+              className={`veil-slide-right-pop veil-stagger-${(ni % 8) + 1} rounded-lg border p-2 text-xs ${
                 n.read
                   ? "border-white/5 bg-black/20"
-                  : "border-orange-400/20 bg-orange-400/5"
+                  : n.kind === "friend_request"
+                    ? "border-emerald-400/25 bg-emerald-400/5"
+                    : "border-orange-400/20 bg-orange-400/5"
               }`}
             >
               <div className="flex items-center justify-between">
-                <span className="font-medium text-white">{n.title}</span>
+                <span className="flex items-center gap-1 font-medium text-white">
+                  {n.kind === "friend_request" && (
+                    <UserPlus className="veil-bounce-soft h-3 w-3 text-emerald-300" />
+                  )}
+                  {n.kind === "friend_accepted" && (
+                    <Check className="h-3 w-3 text-emerald-300" />
+                  )}
+                  {n.title}
+                </span>
                 <span className="text-white/40">{formatTime(n.ts)}</span>
               </div>
               <p className="mt-0.5 text-white/70">{n.body}</p>
+              {n.kind === "friend_request" && n.requestId && !n.read && (
+                <div className="mt-1.5 flex gap-1.5">
+                  <button
+                    onClick={() => onFriendAccept?.(n.requestId!)}
+                    className="veil-hover-bounce veil-press flex flex-1 items-center justify-center gap-1 rounded-md bg-emerald-500/90 px-2 py-1 text-[11px] font-semibold text-black hover:bg-emerald-400"
+                  >
+                    <Check className="h-3 w-3" /> Accept
+                  </button>
+                  <button
+                    onClick={() => onFriendDecline?.(n.requestId!)}
+                    className="veil-hover-wobble veil-press flex-1 rounded-md border border-white/10 px-2 py-1 text-[11px] font-medium text-white/60 hover:bg-white/10 hover:text-white"
+                  >
+                    Decline
+                  </button>
+                </div>
+              )}
             </div>
           ))
         )}
@@ -2294,7 +2721,7 @@ function BackupPanel({
         <span className="flex items-center gap-1.5 text-sm font-semibold text-white">
           <DatabaseBackup className="h-3.5 w-3.5 text-emerald-400" /> Chat backups
         </span>
-        <button onClick={onClose} className="text-white/50 hover:text-white">
+        <button onClick={onClose} className="veil-hover-wobble text-white/50 hover:text-white">
           <X className="h-4 w-4" />
         </button>
       </div>
@@ -2328,15 +2755,15 @@ function BackupPanel({
 
           {/* Snapshot facts */}
           <div className="grid grid-cols-3 gap-2">
-            <div className="rounded-lg border border-white/5 bg-black/20 px-2 py-1.5 text-center">
+            <div className="veil-slide-up-pop veil-stagger-1 rounded-lg border border-white/5 bg-black/20 px-2 py-1.5 text-center">
               <p className="text-[9px] uppercase tracking-wide text-white/40">Messages</p>
               <p className="text-sm font-semibold text-white/90">{status.lastCounts?.messages ?? status.dbCounts.messages}</p>
             </div>
-            <div className="rounded-lg border border-white/5 bg-black/20 px-2 py-1.5 text-center">
+            <div className="veil-slide-up-pop veil-stagger-2 rounded-lg border border-white/5 bg-black/20 px-2 py-1.5 text-center">
               <p className="text-[9px] uppercase tracking-wide text-white/40">Accounts</p>
               <p className="text-sm font-semibold text-white/90">{status.lastCounts?.accounts ?? status.dbCounts.accounts}</p>
             </div>
-            <div className="rounded-lg border border-white/5 bg-black/20 px-2 py-1.5 text-center">
+            <div className="veil-slide-up-pop veil-stagger-3 rounded-lg border border-white/5 bg-black/20 px-2 py-1.5 text-center">
               <p className="text-[9px] uppercase tracking-wide text-white/40">Snapshots</p>
               <p className="text-sm font-semibold text-white/90">{status.historyCount}</p>
             </div>
@@ -2407,7 +2834,7 @@ function BackupPanel({
             <button
               onClick={() => void backupNow()}
               disabled={busy !== "none"}
-              className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-orange-400 px-3 py-2 text-xs font-semibold text-black transition hover:bg-orange-300 disabled:opacity-50"
+              className="veil-press veil-hover-glow flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-orange-400 px-3 py-2 text-xs font-semibold text-black transition hover:bg-orange-300 disabled:opacity-50"
             >
               {busy === "backup" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <DatabaseBackup className="h-3.5 w-3.5" />}
               Back up now
@@ -2416,7 +2843,7 @@ function BackupPanel({
               <button
                 onClick={() => setConfirming(true)}
                 disabled={busy !== "none"}
-                className="flex items-center justify-center gap-1.5 rounded-lg border border-white/15 px-3 py-2 text-xs font-semibold text-white/80 transition hover:border-white/30 hover:text-white disabled:opacity-50"
+                className="veil-press flex items-center justify-center gap-1.5 rounded-lg border border-white/15 px-3 py-2 text-xs font-semibold text-white/80 transition hover:border-white/30 hover:text-white disabled:opacity-50"
                 title="Pull the latest snapshot back from the jsDelivr CDN"
               >
                 <RotateCcw className="h-3.5 w-3.5" />
@@ -2426,7 +2853,7 @@ function BackupPanel({
               <button
                 onClick={() => void restoreNow()}
                 disabled={busy !== "none"}
-                className="flex items-center justify-center gap-1.5 rounded-lg border border-red-400/40 bg-red-500/15 px-3 py-2 text-xs font-semibold text-red-200 transition hover:bg-red-500/25 disabled:opacity-50"
+                className="veil-press veil-hover-glow flex items-center justify-center gap-1.5 rounded-lg border border-red-400/40 bg-red-500/15 px-3 py-2 text-xs font-semibold text-red-200 transition hover:bg-red-500/25 disabled:opacity-50"
               >
                 {busy === "restore" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RotateCcw className="h-3.5 w-3.5" />}
                 Sure?
@@ -2499,7 +2926,7 @@ function SearchPanel({
             <button
               key={m.id}
               onClick={() => onJump(m.id)}
-              className="block w-full rounded-lg border border-white/5 bg-black/30 p-2 text-left text-xs hover:bg-black/40"
+              className="veil-hover-glow block w-full rounded-lg border border-white/5 bg-black/30 p-2 text-left text-xs hover:bg-black/40"
             >
               <div className="flex items-center gap-1.5">
                 <span className="font-medium" style={{ color: roleColor(m.account) }}>
@@ -2650,7 +3077,7 @@ export function ModPanel({
               placeholder="@username"
               autoCapitalize="none"
               list="member-mod-usernames"
-              className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm outline-none focus:border-orange-400/50"
+              className="veil-focus-bloom w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm outline-none focus:border-orange-400/50"
             />
             <datalist id="member-mod-usernames">
               {members.map((m) => (
@@ -2666,7 +3093,7 @@ export function ModPanel({
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="Rule violation, spam, etc."
-              className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm outline-none focus:border-orange-400/50"
+              className="veil-focus-bloom w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm outline-none focus:border-orange-400/50"
             />
           </div>
         </div>
@@ -2679,7 +3106,7 @@ export function ModPanel({
                 key={a.id}
                 disabled={busy || disabled || !target.trim()}
                 onClick={a.onClick}
-                className="flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-white disabled:opacity-40"
+                className="veil-press veil-hover-glow flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-white disabled:opacity-40"
                 style={{ backgroundColor: a.color + "33", border: `1px solid ${a.color}` }}
               >
                 {a.icon}
@@ -2701,12 +3128,12 @@ export function ModPanel({
               value={messageId}
               onChange={(e) => setMessageId(e.target.value)}
               placeholder="Message ID"
-              className="flex-1 rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm outline-none focus:border-orange-400/50"
+              className="veil-focus-bloom flex-1 rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm outline-none focus:border-orange-400/50"
             />
             <button
               disabled={busy || !messageId.trim()}
               onClick={() => void call("delete_message", undefined, messageId)}
-              className="flex items-center gap-1.5 rounded-lg bg-red-500/80 px-3 py-2 text-xs font-semibold text-white disabled:opacity-40"
+              className="veil-press veil-hover-glow flex items-center gap-1.5 rounded-lg bg-red-500/80 px-3 py-2 text-xs font-semibold text-white disabled:opacity-40"
             >
               <Trash2 className="h-3.5 w-3.5" />
               Delete
@@ -2720,15 +3147,15 @@ export function ModPanel({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Filter members…"
-              className="flex-1 rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm outline-none focus:border-orange-400/50"
+              className="veil-focus-bloom flex-1 rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm outline-none focus:border-orange-400/50"
             />
             <span className="text-xs text-white/50">{filtered.length} shown</span>
           </div>
           <div className="max-h-60 space-y-1 overflow-y-auto rounded-lg border border-white/10 bg-black/20 p-2">
-            {filtered.map((m) => (
+            {filtered.map((m, mi) => (
               <div
                 key={m.id}
-                className={`flex items-center justify-between rounded-md px-2 py-1.5 text-xs ${
+                className={`veil-slide-left-pop veil-stagger-${(mi % 8) + 1} flex items-center justify-between rounded-md px-2 py-1.5 text-xs ${
                   m.banned || m.ipBanned
                     ? "bg-red-500/10 opacity-70"
                     : m.muted
@@ -2760,7 +3187,7 @@ export function ModPanel({
                   {m.ipBanned && <span className="text-[9px] text-red-400">IP-BAN</span>}
                   <button
                     onClick={() => setTarget(m.username)}
-                    className="rounded bg-white/10 px-1.5 py-0.5 text-[10px] hover:bg-white/20"
+                    className="veil-hover-bounce rounded bg-white/10 px-1.5 py-0.5 text-[10px] hover:bg-white/20"
                   >
                     select
                   </button>
@@ -2811,27 +3238,31 @@ function PlayerList({
     return { online, offline }
   }, [members, onlineIds])
 
-  const renderRow = (m: ChatAccount, online: boolean) => {
+  const renderRow = (m: ChatAccount, online: boolean, idx: number) => {
     const isMe = m.id === account.id
     return (
-      <button
+      <motion.button
         type="button"
         key={m.id}
+        initial={{ opacity: 0, x: 10 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: Math.min(idx * 0.03, 0.3), duration: 0.2, ease: "easeOut" }}
+        whileHover={{ x: 3 }}
         onClick={() => onOpenProfile(m.id)}
         title={`${displayName(m)} — view profile`}
-        className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left outline-none ring-orange-400/60 transition focus-visible:ring-2 ${
+        className={`veil-hover-glow flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left outline-none ring-orange-400/60 transition focus-visible:ring-2 ${
           isMe ? "bg-orange-400/10" : "hover:bg-white/5"
         }`}
       >
-        <div className="relative">
+        <div className={`veil-swirl-in veil-stagger-${(idx % 8) + 1} relative`}>
           <AvatarWithAccessory account={m} size={28} />
           <span
             className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-black/60 ${
-              online ? "bg-emerald-400" : "bg-white/30"
+              online ? "veil-online-pulse bg-emerald-400" : "bg-white/30"
             }`}
           />
         </div>
-        <div className="min-w-0 flex-1">
+        <div className={`veil-slide-left-pop veil-stagger-${(idx % 8) + 1} min-w-0 flex-1`}>
           <div className="flex items-center gap-1.5">
             <span
               className="truncate text-sm font-medium"
@@ -2851,7 +3282,7 @@ function PlayerList({
             {roleLabel(m)}
           </span>
         )}
-      </button>
+      </motion.button>
     )
   }
 
@@ -2869,7 +3300,7 @@ function PlayerList({
         </span>
         <button
           onClick={onClose}
-          className="rounded p-1 text-white/50 hover:bg-white/10 hover:text-white"
+          className="veil-hover-wobble rounded p-1 text-white/50 hover:bg-white/10 hover:text-white"
         >
           <X className="h-3.5 w-3.5" />
         </button>
@@ -2879,7 +3310,7 @@ function PlayerList({
         style={{ scrollbarWidth: "thin" }}
       >
         <section>
-          <h4 className="mb-1 px-1 text-[10px] font-semibold uppercase tracking-wide text-white/40">
+          <h4 className="veil-text-shine mb-1 px-1 text-[10px] font-semibold uppercase tracking-wide text-white/40">
             Online — {buckets.online.length}
           </h4>
           <div className="space-y-0.5">
@@ -2888,16 +3319,16 @@ function PlayerList({
                 No one online right now.
               </p>
             ) : (
-              buckets.online.map((m) => renderRow(m, true))
+              buckets.online.map((m, i) => renderRow(m, true, i))
             )}
           </div>
         </section>
         <section>
-          <h4 className="mb-1 px-1 text-[10px] font-semibold uppercase tracking-wide text-white/40">
+          <h4 className="veil-text-shine mb-1 px-1 text-[10px] font-semibold uppercase tracking-wide text-white/40">
             Offline — {buckets.offline.length}
           </h4>
           <div className="space-y-0.5">
-            {buckets.offline.slice(0, 30).map((m) => renderRow(m, false))}
+            {buckets.offline.slice(0, 30).map((m, i) => renderRow(m, false, i))}
           </div>
         </section>
       </div>
@@ -2919,7 +3350,7 @@ function MusicBar({ onClose }: { onClose: () => void }) {
       className="border-t border-white/10 bg-[#0d0d1f] text-white"
     >
       <div className="flex items-center gap-3 px-3 py-2">
-        <div className="grid h-9 w-9 place-items-center rounded-md bg-gradient-to-br from-emerald-500 to-emerald-700 text-white">
+        <div className="veil-pulse-glow grid h-9 w-9 place-items-center rounded-md bg-gradient-to-br from-emerald-500 to-emerald-700 text-white">
           <Music className="h-4 w-4" />
         </div>
         <div className="flex-1 min-w-0">
@@ -2930,14 +3361,14 @@ function MusicBar({ onClose }: { onClose: () => void }) {
         </div>
         <button
           onClick={() => setExpanded((e) => !e)}
-          className="rounded-md p-1.5 text-white/60 hover:bg-white/10 hover:text-white"
+          className="veil-hover-wobble rounded-md p-1.5 text-white/60 hover:bg-white/10 hover:text-white"
           title={expanded ? "Collapse" : "Expand"}
         >
           {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
         </button>
         <button
           onClick={onClose}
-          className="rounded-md p-1.5 text-white/60 hover:bg-white/10 hover:text-white"
+          className="veil-hover-wobble rounded-md p-1.5 text-white/60 hover:bg-white/10 hover:text-white"
           title="Hide player"
         >
           <X className="h-4 w-4" />
@@ -3087,28 +3518,35 @@ function MessageContent({ content }: { content: string }) {
     const text = trimmed.replace(/^\/fx\s+/, "")
     return (
       <div className="my-1 flex justify-center">
-        <span className="rounded-full border border-orange-400/25 bg-orange-400/10 px-3.5 py-1 text-[12.5px] font-medium tracking-wide text-orange-200">
+        <motion.span
+          initial={{ scale: 0.6, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={CHAT_POP}
+          className="rounded-full border border-orange-400/25 bg-orange-400/10 px-3.5 py-1 text-[12.5px] font-medium tracking-wide text-orange-200 shadow-[0_0_18px_-4px_rgba(251,146,60,0.35)]"
+        >
           {text}
-        </span>
+        </motion.span>
       </div>
     )
   }
   if (/^\/me\s+/.test(trimmed)) {
-    return <p className="text-sm italic text-white/70">{trimmed.replace(/^\/me\s+/, "")}</p>
+    return (
+      <motion.p
+        initial={{ opacity: 0, x: -6 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+        className="text-sm italic text-white/70"
+      >
+        {trimmed.replace(/^\/me\s+/, "")}
+      </motion.p>
+    )
   }
   const file = parseChatFileUrl(trimmed)
   if (file) {
     return <FileBubble f={file} />
   }
   if (isGifContent(trimmed) || isImageUrl(trimmed)) {
-    return (
-      <img
-        src={viaProxy(gifSrc(trimmed))}
-        alt="shared gif"
-        loading="lazy"
-        className="mt-1 max-h-64 max-w-xs rounded-lg border border-white/10 object-cover"
-      />
-    )
+    return <MediaImage src={viaProxy(gifSrc(trimmed))} alt="shared gif" />
   }
   const spotifyEmbed = extractSpotifyEmbed(trimmed)
   if (spotifyEmbed) {
@@ -3152,7 +3590,7 @@ function MessageContent({ content }: { content: string }) {
             href={p}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-orange-300 underline decoration-orange-300/40 hover:decoration-orange-300"
+            className="veil-msg-link text-orange-300"
           >
             {p}
           </a>
@@ -3164,6 +3602,26 @@ function MessageContent({ content }: { content: string }) {
   )
 }
 
+/** Shared image/GIF — fades + settles in once the bytes actually land
+ * (lazy images used to pop in harshly mid-scroll), with a gentle zoom
+ * on hover. */
+function MediaImage({ src, alt }: { src: string; alt: string }) {
+  const [loaded, setLoaded] = useState(false)
+  return (
+    <motion.img
+      src={src}
+      alt={alt}
+      loading="lazy"
+      onLoad={() => setLoaded(true)}
+      initial={false}
+      animate={loaded ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.96 }}
+      transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+      whileHover={{ scale: 1.025 }}
+      className="mt-1 max-h-64 max-w-xs rounded-lg border border-white/10 object-cover"
+    />
+  )
+}
+
 const MessageRow = memo(function MessageRow({
   msg,
   prev,
@@ -3172,6 +3630,8 @@ const MessageRow = memo(function MessageRow({
   editing,
   editDraft,
   editBusy,
+  fresh,
+  myId,
   onReply,
   onPin,
   onDelete,
@@ -3180,6 +3640,7 @@ const MessageRow = memo(function MessageRow({
   onEditSave,
   onEditCancel,
   onOpenProfile,
+  onReact,
 }: {
   msg: ChatMessage
   prev?: ChatMessage
@@ -3188,6 +3649,10 @@ const MessageRow = memo(function MessageRow({
   editing: boolean
   editDraft: string
   editBusy: boolean
+  /** Just arrived live (socket or own send) — plays the landing
+   * animation + the orange glow that burns off. History loads as false. */
+  fresh: boolean
+  myId: string
   onReply: (msg: ChatMessage) => void
   onPin: (msg: ChatMessage) => void
   onDelete: (msg: ChatMessage) => void
@@ -3196,8 +3661,10 @@ const MessageRow = memo(function MessageRow({
   onEditSave: () => void
   onEditCancel: () => void
   onOpenProfile: (accountId: string) => void
+  onReact: (msg: ChatMessage, emoji: string) => void
 }) {
   const editRef = useRef<HTMLTextAreaElement | null>(null)
+  const [showReactBar, setShowReactBar] = useState(false)
   // Group with previous message if same author within 5 minutes (and the
   // same day — the divider always starts a fresh group).
   const grouped =
@@ -3209,16 +3676,24 @@ const MessageRow = memo(function MessageRow({
 
   return (
     <div
-      className={`group relative flex gap-3 px-3 py-1 transition-colors hover:bg-white/[0.03] ${
+      className={`veil-msg-row group relative flex gap-3 px-3 py-1 transition-colors hover:bg-white/[0.03] ${
         grouped ? "py-0.5" : "mt-2"
+      } ${fresh ? "veil-msg-in veil-msg-fresh" : ""} ${
+        /* mega tier: directional entrance — others slide in from the left,
+         * own messages from the right (fancy-gated classes; they take the
+         * transform slot from veil-msg-in only while the setting is ON). */
+        isMe ? "veil-slide-right-pop" : "veil-slide-left-pop"
       }`}
     >
       <div className="w-10 shrink-0">
         {!grouped && (
-          <button
+          <motion.button
             type="button"
             onClick={() => onOpenProfile(msg.account.id)}
-            className="rounded-full outline-none ring-orange-400/60 transition focus-visible:ring-2"
+            whileHover={{ scale: 1.12 }}
+            whileTap={{ scale: 0.92 }}
+            transition={CHAT_POP}
+            className="rounded-full outline-none ring-orange-400/60 transition-colors focus-visible:ring-2"
             title={`${displayName(msg.account)} — view profile`}
           >
             <AvatarWithAccessory
@@ -3231,7 +3706,7 @@ const MessageRow = memo(function MessageRow({
               }}
               size={40}
             />
-          </button>
+          </motion.button>
         )}
       </div>
       <div className="min-w-0 flex-1">
@@ -3240,7 +3715,7 @@ const MessageRow = memo(function MessageRow({
             <button
               type="button"
               onClick={() => onOpenProfile(msg.account.id)}
-              className="rounded text-left text-sm font-semibold outline-none ring-orange-400/60 transition hover:underline focus-visible:ring-2"
+              className="veil-hover-glow rounded text-left text-sm font-semibold outline-none ring-orange-400/60 transition hover:underline focus-visible:ring-2"
               style={{ color: roleColor(msg.account) }}
             >
               {displayName(msg.account)}
@@ -3256,13 +3731,18 @@ const MessageRow = memo(function MessageRow({
                 {roleLabel(msg.account)}
               </span>
             )}
-            <span className="text-[10px] text-white/40">
+            <span className="veil-hover-glow text-[10px] text-white/40">
               {formatTime(msg.createdAt)}
             </span>
           </div>
         )}
         {msg.replyTo && (
-          <div className="mb-1 flex items-center gap-1.5 rounded-md border-l-2 border-orange-400/50 bg-white/[0.03] px-2 py-0.5 text-[11px] text-white/50">
+          <motion.div
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.28, ease: "easeOut" }}
+            className="mb-1 flex items-center gap-1.5 rounded-md border-l-2 border-orange-400/50 bg-white/[0.03] px-2 py-0.5 text-[11px] text-white/50"
+          >
             <Reply className="h-3 w-3" />
             <span className="font-medium text-white/70">
               @{msg.replyToUsername || "unknown"}
@@ -3270,7 +3750,7 @@ const MessageRow = memo(function MessageRow({
             <span className="truncate">
               {msg.replyToContent?.slice(0, 80) || "(message)"}
             </span>
-          </div>
+          </motion.div>
         )}
         <div className="flex min-w-0 flex-wrap items-baseline gap-x-1.5">
           {editing ? (
@@ -3301,7 +3781,7 @@ const MessageRow = memo(function MessageRow({
                   }
                 }}
                 rows={3}
-                className="w-full resize-none rounded-lg border border-white/15 bg-black/40 px-2.5 py-1.5 text-sm text-white outline-none focus:border-orange-400/50 disabled:opacity-60"
+                className="veil-focus-bloom w-full resize-none rounded-lg border border-white/15 bg-black/40 px-2.5 py-1.5 text-sm text-white outline-none focus:border-orange-400/50 disabled:opacity-60"
               />
               <div className="mt-1.5 flex items-center justify-end gap-1.5">
                 <span className="mr-auto text-[10px] text-white/35">
@@ -3311,7 +3791,7 @@ const MessageRow = memo(function MessageRow({
                   type="button"
                   onClick={onEditCancel}
                   disabled={editBusy}
-                  className="rounded-md px-2.5 py-1 text-xs font-medium text-white/60 hover:bg-white/10 hover:text-white disabled:opacity-40"
+                  className="veil-hover-wobble rounded-md px-2.5 py-1 text-xs font-medium text-white/60 hover:bg-white/10 hover:text-white disabled:opacity-40"
                 >
                   Cancel
                 </button>
@@ -3319,7 +3799,7 @@ const MessageRow = memo(function MessageRow({
                   type="button"
                   onClick={onEditSave}
                   disabled={editBusy || !editDraft.trim()}
-                  className="flex items-center gap-1 rounded-md bg-orange-400 px-2.5 py-1 text-xs font-semibold text-black hover:opacity-90 disabled:opacity-40"
+                  className="veil-press veil-hover-glow flex items-center gap-1 rounded-md bg-orange-400 px-2.5 py-1 text-xs font-semibold text-black hover:opacity-90 disabled:opacity-40"
                 >
                   {editBusy ? (
                     <Loader2 className="h-3 w-3 animate-spin" />
@@ -3344,39 +3824,139 @@ const MessageRow = memo(function MessageRow({
             </>
           )}
         </div>
+        {/* Reaction chips — click to toggle, orange ring when it's yours. */}
+        {(msg.reactions?.length ?? 0) > 0 && !editing && (
+          <div className="mt-1 flex flex-wrap gap-1">
+            {msg.reactions!.map((r) => {
+              const mine = r.usernames.includes(myId)
+              return (
+                <motion.button
+                  key={r.emoji}
+                  type="button"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={CHAT_POP}
+                  whileHover={{ scale: 1.14, y: -1 }}
+                  whileTap={{ scale: 0.82 }}
+                  onClick={() => onReact(msg, r.emoji)}
+                  title={
+                    mine
+                      ? `You reacted ${r.emoji} — click to remove`
+                      : `React ${r.emoji}`
+                  }
+                  aria-label={`${r.emoji} ${r.usernames.length} reaction${r.usernames.length === 1 ? "" : "s"}${mine ? ", including you" : ""}`}
+                  className={`flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[11px] leading-none transition-colors ${
+                    mine
+                      ? "border-orange-400/60 bg-orange-400/15 text-orange-200"
+                      : "border-white/10 bg-white/[0.05] text-white/60 hover:border-white/20 hover:bg-white/10"
+                  }`}
+                >
+                  <span className="veil-hover-bounce text-[12px] leading-none">{r.emoji}</span>
+                  <span
+                    key={r.usernames.length}
+                    className="veil-count-bump veil-hover-wobble font-semibold tabular-nums"
+                  >
+                    {r.usernames.length}
+                  </span>
+                </motion.button>
+              )
+            })}
+          </div>
+        )}
       </div>
-      <div className="absolute right-2 top-0 hidden items-center gap-0.5 rounded-md border border-white/10 bg-[#1c1c34] px-1 py-0.5 text-white/70 shadow-lg group-hover:flex">
-        <button
+      {/* Hover toolbar — glides down + fades in on row hover (the old
+          hidden/flex pair popped with no transition at all). focus-within
+          keeps it reachable for keyboard users (Tab into the actions). */}
+      <div className="absolute right-2 top-0 z-10 flex -translate-y-1 scale-95 items-center gap-0.5 rounded-md border border-white/10 bg-[#1c1c34] px-1 py-0.5 text-white/70 opacity-0 shadow-lg transition-all duration-150 ease-out pointer-events-none group-hover:translate-y-0 group-hover:scale-100 group-hover:opacity-100 group-hover:pointer-events-auto focus-within:translate-y-0 focus-within:scale-100 focus-within:opacity-100 focus-within:pointer-events-auto">
+        <div className="relative">
+          <motion.button
+            onClick={() => setShowReactBar((s) => !s)}
+            whileHover={{ scale: 1.2 }}
+            whileTap={{ scale: 0.85 }}
+            transition={CHAT_POP}
+            className="rounded p-1 hover:bg-white/10"
+            title="Add reaction"
+            aria-label="Add reaction"
+          >
+            <SmilePlus className="h-3.5 w-3.5" />
+          </motion.button>
+          <AnimatePresence>
+            {showReactBar && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.75, y: -6 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.8, y: -6 }}
+                transition={CHAT_POP}
+                style={{ transformOrigin: "top right" }}
+                className="absolute right-0 top-8 z-30 flex gap-0.5 rounded-lg border border-white/10 bg-[#1c1c34] p-1 shadow-xl"
+              >
+                {QUICK_REACTIONS.map((e) => (
+                  <motion.button
+                    key={e}
+                    type="button"
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ ...CHAT_POP, delay: 0.03 * QUICK_REACTIONS.indexOf(e) }}
+                    whileHover={{ scale: 1.4, rotate: 8 }}
+                    whileTap={{ scale: 0.75 }}
+                    onClick={() => {
+                      onReact(msg, e)
+                      setShowReactBar(false)
+                    }}
+                    className="grid h-7 w-7 place-items-center rounded-md text-base leading-none"
+                    title={`React ${e}`}
+                    aria-label={`React ${e}`}
+                  >
+                    {e}
+                  </motion.button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+        <motion.button
           onClick={() => onReply(msg)}
+          whileHover={{ scale: 1.2, y: -1 }}
+          whileTap={{ scale: 0.85 }}
+          transition={CHAT_POP}
           className="rounded p-1 hover:bg-white/10"
           title="Reply"
         >
           <Reply className="h-3.5 w-3.5" />
-        </button>
-        <button
+        </motion.button>
+        <motion.button
           onClick={() => onPin(msg)}
+          whileHover={{ scale: 1.2, y: -1 }}
+          whileTap={{ scale: 0.85 }}
+          transition={CHAT_POP}
           className="rounded p-1 hover:bg-white/10"
           title="Pin"
         >
           <Pin className="h-3.5 w-3.5" />
-        </button>
+        </motion.button>
         {canEdit && !editing && (
-          <button
+          <motion.button
             onClick={() => onEditStart(msg)}
+            whileHover={{ scale: 1.2, y: -1 }}
+            whileTap={{ scale: 0.85 }}
+            transition={CHAT_POP}
             className="rounded p-1 hover:bg-white/10"
             title="Edit"
           >
             <Pencil className="h-3.5 w-3.5" />
-          </button>
+          </motion.button>
         )}
         {isMe && (
-          <button
+          <motion.button
             onClick={() => onDelete(msg)}
-            className="rounded p-1 hover:bg-white/10"
+            whileHover={{ scale: 1.2, y: -1 }}
+            whileTap={{ scale: 0.85 }}
+            transition={CHAT_POP}
+            className="rounded p-1 hover:bg-red-500/20 hover:text-red-300"
             title="Delete"
           >
             <Trash2 className="h-3.5 w-3.5" />
-          </button>
+          </motion.button>
         )}
       </div>
     </div>
@@ -3402,6 +3982,11 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
   const [typingUsers, setTypingUsers] = useState<
     Record<string, { username: string; displayName: string; ts: number }[]>
   >({})
+  /* Fresh message ids — rows that just arrived (socket or own send) play
+   * the entrance spring + the landing glow. History loads render as false
+   * (no mass animation on channel switch), and the set is pruned to the
+   * newest 30 so it never grows unbounded. */
+  const [freshIds, setFreshIds] = useState<ReadonlySet<string>>(() => new Set())
   const [pinned, setPinned] = useState<ChatMessage[]>([])
   const [notifications, setNotifications] = useState<ChatNotification[]>([])
 
@@ -3423,6 +4008,12 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
     if (!account) return
     let stopped = false
     let timer: ReturnType<typeof setTimeout> | null = null
+    /* Change signature — the room is usually quiet, and re-setting the
+     * arrays every 6s re-rendered the ENTIRE message list (mergedMessages
+     * identity churn) even when nothing changed. Compare first, set only
+     * on a real difference. */
+    let lastMsgSig = ""
+    let lastUserSig = ""
     const tick = async () => {
       try {
         const res = await fetch("/api/chat-live", { cache: "no-store" })
@@ -3438,8 +4029,18 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
             })[]
           }
           if (!stopped && data.ok) {
-            setLiveMessages(Array.isArray(data.messages) ? data.messages : [])
-            setLiveMembers(Array.isArray(data.users) ? data.users : [])
+            const msgs = Array.isArray(data.messages) ? data.messages : []
+            const users = Array.isArray(data.users) ? data.users : []
+            const msgSig = msgs.map((m) => `${m.id}:${m.content.length}`).join("|")
+            const userSig = users.map((u) => `${u.accountId}:${u.online ? 1 : 0}:${u.muted ? 1 : 0}:${u.banned ? 1 : 0}`).join("|")
+            if (msgSig !== lastMsgSig) {
+              lastMsgSig = msgSig
+              setLiveMessages(msgs)
+            }
+            if (userSig !== lastUserSig) {
+              lastUserSig = userSig
+              setLiveMembers(users)
+            }
           }
         }
       } catch {
@@ -3480,6 +4081,12 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
         if (!stopped && data.messages) {
           const fresh = data.messages
           setMessages((prev) => {
+            /* EMPTY-RESPONSE GUARD: an API hiccup (restart window, DB
+             * rehydrate, proxy error page parsed as an empty list) must
+             * never wipe the visible chat — that was the "messages blink
+             * out of existence" bug. Only reconcile when the server sent
+             * a real, non-empty page. */
+            if (fresh.length === 0 && prev.length > 0) return prev
             const byId = new Map(prev.map((m) => [m.id, m]))
             let changed = false
             for (const m of fresh) {
@@ -3495,10 +4102,20 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                 changed = true
               }
             }
-            /* rows that vanished (deleted elsewhere) drop out too */
+            /* rows that vanished (deleted elsewhere) drop out too — EXCEPT
+             * rows older than the fetch window (a "load older" prepend):
+             * they're simply beyond the latest-100 page the refetch saw,
+             * not deleted. */
             const keep = new Set(fresh.map((m) => m.id))
+            const freshOldest =
+              fresh.length > 0
+                ? new Date(fresh[0].createdAt).getTime()
+                : Number.POSITIVE_INFINITY
             const merged = [...byId.values()].filter(
-              (m) => keep.has(m.id) || m.id.startsWith("lv-"),
+              (m) =>
+                keep.has(m.id) ||
+                m.id.startsWith("lv-") ||
+                new Date(m.createdAt).getTime() < freshOldest,
             )
             if (!changed && merged.length === prev.length) return prev
             merged.sort(
@@ -3633,7 +4250,35 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
   const [friends, setFriends] = useState<ChatAccount[]>([])
   const [showFriendMenu, setShowFriendMenu] = useState(false)
   const [friendTarget, setFriendTarget] = useState("")
+  /* Friend requests: incoming (waiting on US) + outgoing (waiting on
+   * THEM) + a busy flag so double-clicks can't double-send. */
+  const [friendRequestsIn, setFriendRequestsIn] = useState<FriendRequestRow[]>([])
+  const [friendRequestsOut, setFriendRequestsOut] = useState<FriendRequestRow[]>([])
+  const [friendBusy, setFriendBusy] = useState(false)
   const [dmTarget, setDmTarget] = useState("")
+  /* True while a channel switch's first fetch is in flight — drives the
+   * slim loading bar instead of wiping the message list to empty. */
+  const [channelLoading, setChannelLoading] = useState(false)
+
+  /* ---- Group chats: creation form (channel switcher), invite modal,
+   * rename modal + leave confirm (header). ---- */
+  const [showGroupMenu, setShowGroupMenu] = useState(false)
+  const [groupName, setGroupName] = useState("")
+  const [groupPicked, setGroupPicked] = useState<Record<string, boolean>>({})
+  const [groupUserInput, setGroupUserInput] = useState("")
+  const [creatingGroup, setCreatingGroup] = useState(false)
+  const [showInvite, setShowInvite] = useState(false)
+  const [showRename, setShowRename] = useState(false)
+  const [renameDraft, setRenameDraft] = useState("")
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false)
+
+  /* ---- Unread badges per channel/DM + mention pings. Keys are channel
+   * ids; cleared when the channel is opened. ---- */
+  const [unread, setUnread] = useState<Record<string, number>>({})
+
+  /* ---- "Load older" pagination state. ---- */
+  const [hasMoreOlder, setHasMoreOlder] = useState(false)
+  const [loadingOlder, setLoadingOlder] = useState(false)
 
   // Extensions
   const [extensions, setExtensions] = useState<ExtensionState>(DEFAULT_EXTENSIONS)
@@ -3647,6 +4292,19 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
   accountRef.current = account
   const messagesRef = useRef<ChatMessage[]>(messages)
   messagesRef.current = messages
+  /* Live DM list mirror — the socket handlers (unread badges, mention
+   * labels, dm_removed) need the CURRENT dms without re-subscribing. */
+  const dmsRef = useRef<DM[]>(dms)
+  dmsRef.current = dms
+  /* Rooms silently watched (unread badges) — replayed after a socket
+   * reconnect so cross-channel updates resume without a reload. */
+  const watchedRoomsRef = useRef<Set<string>>(new Set())
+  /* Late-bound refreshDms (defined below the socket effect) — dm_added /
+   * dm_updated handlers call it through this ref. */
+  const refreshDmsRef = useRef<() => void>(() => {})
+  /* Late-bound refreshFriends — the friend_request / friend_accepted
+   * socket handlers (defined above refreshFriends) call it via this ref. */
+  const refreshFriendsRef = useRef<() => void>(() => {})
 
   // Live mirror of the members list — socket messages resolve the author's
   // real role/tag from here (the relay payload carries no role).
@@ -3854,6 +4512,11 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
       // IGNORES the client-claimed fields (anti-impersonation).
       socket.emit("identify", { token })
       socket.emit("subscribe", { channelId: channelIdRef.current })
+      // Replay the silent watches (every channel + DM) — a reconnect drops
+      // room membership, and unread badges + live DM rows depend on them.
+      for (const room of watchedRoomsRef.current) {
+        socket.emit("watch", { channelId: room })
+      }
       // Backfill after a RE-connect: anything sent while the socket was
       // down arrives via a silent refetch + id-union merge, so the live
       // feed never shows gaps (previously needed a page reload).
@@ -3900,10 +4563,55 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
       } | null
       ts: number
     }) => {
-      if (!data.id || data.channelId !== channelIdRef.current) return
+      if (!data.id || !data.account) return
+      /* Not the active channel → unread badge (+ mention ping if the text
+       * @-mentions us). The row itself isn't loaded here — it appears when
+       * the channel is opened (the fetch runs then). */
+      if (data.channelId !== channelIdRef.current) {
+        if (data.account.accountId === accountRef.current?.id) return
+        setUnread((prev) => ({
+          ...prev,
+          [data.channelId!]: (prev[data.channelId!] || 0) + 1,
+        }))
+        const me = accountRef.current
+        if (me && mentionsUser(data.content || "", me.username)) {
+          const dm = dmsRef.current.find((d) => d.id === data.channelId)
+          const where =
+            dm?.name ||
+            dm?.members
+              .filter((m) => m.id !== me.id)
+              .map(displayName)
+              .join(", ") ||
+            `#${data.channelId}`
+          setNotifications((prev) =>
+            [
+              {
+                id: Math.random().toString(36).slice(2),
+                kind: "mention",
+                title: `${displayName(data.account!)} mentioned you`,
+                body: `in ${where}: ${(data.content || "").slice(0, 80)}`,
+                ts: Date.now(),
+                read: false,
+              } as ChatNotification,
+              ...prev,
+            ].slice(0, 30),
+          )
+          toast(`${displayName(data.account!)} mentioned you in ${where}`, "ok")
+          if (extensions.notification_sound) {
+            try {
+              const audio = new Audio(
+                "data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=",
+              )
+              void audio.play().catch(() => {})
+            } catch {
+              /* ignore */
+            }
+          }
+        }
+        return
+      }
       // Skip if already present (we add optimistically on send).
       if (messagesRef.current.some((m) => m.id === data.id)) return
-      if (!data.account) return
       // Resolve the author's live role/tag from the members list — the relay
       // payload carries none, so otherwise every live message would render as
       // a plain member and mods/owner would lose their badge until reload.
@@ -3931,7 +4639,13 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
           pfpAccessory: known?.pfpAccessory ?? null,
         },
       }
-      setMessages((prev) => [...prev, msg])
+      setMessages((prev) =>
+        // Dedup inside the updater too: messagesRef updates in an effect, so
+        // a poll merge that already landed this id can race the socket echo
+        // (observed as duplicate React keys in the message list).
+        prev.some((m) => m.id === msg.id) ? prev : [...prev, msg],
+      )
+      setFreshIds((prev) => freshWith(prev, msg.id))
       // Notification + sound.
       if (extensions.notification_sound) {
         try {
@@ -3960,8 +4674,10 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
       channelId: string
       account: { accountId: string; username: string; displayName: string } | null
     }) => {
-      if (!data.account || data.channelId !== channelIdRef.current) return
+      if (!data.account) return
       if (data.account.accountId === accountRef.current?.id) return
+      /* Store per-channel (not just the active one) — the DM/channel rows
+       * in the switcher show a live "typing…" hint too. */
       const acc = data.account
       setTypingUsers((prev) => {
         const list = prev[data.channelId] || []
@@ -3986,7 +4702,7 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
       channelId: string
       account: { username: string } | null
     }) => {
-      if (!data.account || data.channelId !== channelIdRef.current) return
+      if (!data.account) return
       setTypingUsers((prev) => {
         const list = prev[data.channelId] || []
         return {
@@ -4030,6 +4746,168 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
       if (data.channelId !== channelIdRef.current) return
       setPresence(data.users || [])
     })
+
+    /* Emoji reactions from other viewers — patch the loaded copy (active
+     * channel rows + pinned copies) with the same pure delta the local
+     * toggle uses, so chips land live without a refetch. */
+    socket.on("reaction", (data: {
+      channelId: string
+      messageId: string
+      emoji: string
+      added: boolean
+      account: { accountId: string; username: string; displayName: string }
+    }) => {
+      if (!data.messageId || !data.emoji || !data.account) return
+      if (data.account.accountId === accountRef.current?.id) return // own echo
+      const patch = (m: ChatMessage) =>
+        m.id === data.messageId
+          ? applyReactionDelta(m, data.emoji, data.added, data.account!.accountId)
+          : m
+      setMessages((prev) =>
+        prev.some((m) => m.id === data.messageId)
+          ? prev.map(patch)
+          : prev,
+      )
+      setPinned((prev) =>
+        prev.some((m) => m.id === data.messageId) ? prev.map(patch) : prev,
+      )
+    })
+
+    /* Group lifecycle — driven by the API layer through the relay's
+     * per-user rooms / group rooms. */
+    socket.on("dm_added", (data: {
+      dmId: string
+      name: string | null
+      invitedBy: string
+      members: number
+    }) => {
+      refreshDmsRef.current()
+      const label = data.name || `a group chat (${data.members} members)`
+      setNotifications((prev) =>
+        [
+          {
+            id: Math.random().toString(36).slice(2),
+            kind: "system" as const,
+            title: "Added to a group",
+            body: `@${data.invitedBy} added you to ${label}.`,
+            ts: Date.now(),
+            read: false,
+          },
+          ...prev,
+        ].slice(0, 30),
+      )
+      toast(`@${data.invitedBy} added you to ${label}!`, "ok")
+    })
+
+    socket.on("dm_updated", (data: {
+      dmId: string
+      reason: "invite" | "leave" | "rename"
+      invited?: string[]
+      invitedBy?: string
+      left?: string
+      name?: string
+      by?: string
+    }) => {
+      refreshDmsRef.current()
+      if (data.reason === "invite" && data.invited?.length) {
+        toast(`@${data.invited.join(", @")} joined the group.`, "ok")
+      } else if (data.reason === "leave" && data.left) {
+        toast(`@${data.left} left the group.`, "ok")
+      } else if (data.reason === "rename" && data.name) {
+        toast(`Group renamed to "${data.name}".`, "ok")
+      }
+    })
+
+    socket.on("dm_removed", (data: { dmId: string; reason: string }) => {
+      setDms((prev) => prev.filter((d) => d.id !== data.dmId))
+      if (channelIdRef.current === data.dmId) {
+        setChannelId("main")
+        toast("That conversation is gone — back to #general.", "ok")
+      }
+    })
+
+    /* Friend requests — someone wants to be our friend. Refresh the
+     * pending list, ring the bell (with live Accept/Decline buttons in
+     * the notification itself) and play the notification sound. */
+    socket.on(
+      "friend_request",
+      (data: {
+        requestId: string
+        from: {
+          id: string
+          username: string
+          displayName: string
+          avatarColor: string
+          avatarImage: string | null
+        }
+      }) => {
+        refreshFriendsRef.current()
+        const who = data.from?.displayName || data.from?.username || "Someone"
+        setNotifications((prev) =>
+          [
+            {
+              id: Math.random().toString(36).slice(2),
+              kind: "friend_request" as const,
+              title: "Friend request",
+              body: `@${data.from?.username || who} wants to be your friend.`,
+              ts: Date.now(),
+              read: false,
+              requestId: data.requestId,
+            } as ChatNotification,
+            ...prev,
+          ].slice(0, 30),
+        )
+        toast(`@${data.from?.username || who} sent you a friend request!`, "ok")
+        if (extensions.notification_sound) {
+          try {
+            const audio = new Audio(
+              "data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=",
+            )
+            void audio.play().catch(() => {})
+          } catch {
+            /* ignore */
+          }
+        }
+      },
+    )
+
+    /* Our request was accepted (or the mutual handshake fired) — we're
+     * friends now. Refresh the list so they appear instantly. */
+    socket.on(
+      "friend_accepted",
+      (data: {
+        by: string
+        friend: { id: string; username: string; displayName: string }
+        mutual?: boolean
+      }) => {
+        refreshFriendsRef.current()
+        const who = data.by || data.friend?.username || "someone"
+        setNotifications((prev) =>
+          [
+            {
+              id: Math.random().toString(36).slice(2),
+              kind: "friend_accepted" as const,
+              title: "You're friends now",
+              body: `@${who} accepted — you're friends.`,
+              ts: Date.now(),
+              read: false,
+            } as ChatNotification,
+            ...prev,
+          ].slice(0, 30),
+        )
+        toast(`You're now friends with @${who}!`, "ok")
+        if (extensions.notification_sound) {
+          try {
+            const audio = new Audio(
+              "data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=",
+            )
+            void audio.play().catch(() => {})
+          } catch {
+            /* ignore */
+          }
+        }
+      },
+    )
 
     // The relay rejected our session token — NEVER a blind logout. A
     // reconnecting socket, a restarted relay, or a proxy that reordered
@@ -4147,36 +5025,72 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
   // (the "#general messages appearing in #links" bug: the old channel's
   // list stayed rendered while the new fetch was in flight or failed).
   const channelLoadGenRef = useRef(0)
+  /* Pins survive a channel round-trip within the session (they used to be
+   * wiped on every switch — and worse, auto-populated with the channel's
+   * 3 OLDEST messages, which nobody ever asked for). pinnedForRef guards
+   * the sync effect: pins belong to the channel they were made in, so a
+   * switch must not smear the old channel's pins onto the new one. */
+  const pinnedByChannelRef = useRef<Map<string, ChatMessage[]>>(new Map())
+  const pinnedForRef = useRef<string>(channelId)
+  useEffect(() => {
+    if (pinnedForRef.current === channelId) {
+      pinnedByChannelRef.current.set(channelId, pinned)
+    }
+  }, [pinned, channelId])
   useEffect(() => {
     if (!socketRef.current || !account) return
     const socket = socketRef.current
     socket.emit("subscribe", { channelId })
+    /* Opening a channel clears its unread badge. */
+    setUnread((prev) =>
+      prev[channelId] ? { ...prev, [channelId]: 0 } : prev,
+    )
     setPresence([])
     setTypingUsers({})
-    // Drop the previous channel's messages IMMEDIATELY — never leave the
-    // old channel rendered under the new header while the fetch runs.
-    setMessages([])
-    setPinned([])
+    /* Restore this channel's pins from the session map. */
+    pinnedForRef.current = channelId
+    setPinned(pinnedByChannelRef.current.get(channelId) ?? [])
+    /* NO eager setMessages([]) — wiping the list on every switch made the
+     * whole chat "blink out of existence" for the fetch's duration. The
+     * old rows simply stay visible under a slim loading bar until the new
+     * channel's fetch lands (generation-guarded, with retries) and swaps
+     * them in one atomic replace. */
+    setChannelLoading(true)
+    setHasMoreOlder(false)
     const gen = ++channelLoadGenRef.current
-    // Fetch recent messages for this channel.
-    void (async () => {
+    // Fetch recent messages for this channel. Transient failures (dev
+    // recompile, gateway blip, mobile network switch) RETRY a few times
+    // before giving up — a single failed fetch used to blank the channel
+    // to "No messages here yet" until the next poll recovered it.
+    const load = async (attempt: number): Promise<void> => {
       try {
-        const data = await apiFetch<{ messages: ChatMessage[] }>(
+        const data = await apiFetch<{ messages: ChatMessage[]; hasMore?: boolean }>(
           `/api/chat-data?channel=${encodeURIComponent(channelId)}${
             !CHANNELS.some((c) => c.id === channelId) ? `&token=${encodeURIComponent(token)}` : ""
           }`,
         )
         if (gen !== channelLoadGenRef.current) return // stale — a newer switch won
         setMessages(data.messages || [])
-        setPinned((data.messages || []).slice(0, 3))
+        setHasMoreOlder(!!data.hasMore)
+        setChannelLoading(false)
       } catch (e) {
         if (gen !== channelLoadGenRef.current) return // stale — ignore
+        if (attempt < 3) {
+          setTimeout(() => void load(attempt + 1), 1200 * (attempt + 1))
+          return
+        }
         setMessages([])
+        setChannelLoading(false)
         console.error("Failed to load channel messages", e)
       }
-    })()
+    }
+    void load(0)
     return () => {
+      /* Presence off, watching stays: unsubscribe drops the socket from
+       * the room (and the presence map), then `watch` silently rejoins so
+       * unread badges + live DM rows keep working for this channel. */
       socket.emit("unsubscribe", { channelId })
+      socket.emit("watch", { channelId })
     }
      
   }, [channelId, account?.id, token])
@@ -4189,7 +5103,10 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
       const data = await apiFetch<{ members: ChatAccount[] }>(
         `/api/chat-members?token=${encodeURIComponent(token)}`,
       )
-      setMembers(data.members || [])
+      /* updateMembers (not raw setMembers) — it also re-syncs the
+       * role/tag snapshots embedded in already-rendered messages, so a
+       * freshly promoted mod's badge appears without a reload. */
+      updateMembers(data.members || [])
       /* rehydrate the local account snapshot — the session cookie mirror
        * is slim (identity only), so PFP/bio/coins/tag refresh here from
        * the authoritative row on every load; it also picks up profile
@@ -4204,7 +5121,7 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
        * console.error here used to pop the Next dev overlay open over the
        * chat — a backdrop the user couldn't click through. */
     }
-  }, [token, account?.id])
+  }, [token, account?.id, updateMembers])
 
   /* Re-fetch the CURRENT channel's messages (used after a backup restore
    * imports history behind the UI's back). Same generation guard as the
@@ -4218,8 +5135,11 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
         }`,
       )
       if (gen !== channelLoadGenRef.current) return
-      setMessages(data.messages || [])
-      setPinned((data.messages || []).slice(0, 3))
+      const fresh = data.messages || []
+      setMessages((prev) =>
+        /* Same empty-response guard — a hiccup must not blank the chat. */
+        fresh.length === 0 && prev.length > 0 ? prev : fresh,
+      )
     } catch {
       /* next channel switch / reconnect will re-sync */
     }
@@ -4229,19 +5149,24 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
   /* Open someone's profile card. Prefers the fresh members-list row
    * (role/tag/bio up to date); falls back to the account snapshot
    * embedded in a message so the card still works for departed
-   * members. Self-view offers the "Edit your profile" hand-off. */
+   * members. Self-view offers the "Edit your profile" hand-off.
+   *
+   * Refs, not closure state: a stable identity here is what lets the
+   * memoized MessageRow skip re-renders (it used to change on every
+   * message/member update, re-rendering the whole list). */
   const openProfile = useCallback(
     (accountId: string) => {
-      const fromMembers = members.find((m) => m.id === accountId)
+      const fromMembers = membersRef.current.find((m) => m.id === accountId)
       if (fromMembers) {
         setViewingProfile(fromMembers)
         return
       }
-      if (accountId === account?.id && account) {
-        setViewingProfile(account)
+      const me = accountRef.current
+      if (accountId === me?.id && me) {
+        setViewingProfile(me)
         return
       }
-      const fromMessage = messages.find((m) => m.account.id === accountId)
+      const fromMessage = messagesRef.current.find((m) => m.account.id === accountId)
       if (fromMessage) {
         setViewingProfile({
           id: fromMessage.account.id,
@@ -4263,7 +5188,7 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
         })
       }
     },
-    [members, messages, account],
+    [],
   )
 
   const refreshDms = useCallback(async () => {
@@ -4278,14 +5203,50 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
        * tick; surfacing it just opens the dev overlay and blocks clicks. */
     }
   }, [token])
+  /* Late binding for the socket effect's dm_added / dm_updated handlers
+   * (defined above, run later — the ref always holds the fresh callback). */
+  refreshDmsRef.current = refreshDms
 
   const refreshFriends = useCallback(async () => {
     if (!token) return
     try {
-      const data = await apiFetch<{ friends: ChatAccount[] }>("/api/chat-friends?token=" + encodeURIComponent(token))
+      const data = await apiFetch<{
+        friends: ChatAccount[]
+        incoming: FriendRequestRow[]
+        outgoing: FriendRequestRow[]
+      }>("/api/chat-friends?token=" + encodeURIComponent(token))
+      const rows = data.incoming || []
       setFriends(data.friends || [])
-    } catch { /* ignore */ }
+      setFriendRequestsIn(rows)
+      setFriendRequestsOut(data.outgoing || [])
+      /* Mirror any incoming request the bell doesn't know about yet into a
+       * notification — so the Accept/Decline buttons stay reachable after
+       * a reload (notifications are in-memory; requests are server-side).
+       * Deduped by requestId, so this is idempotent per refresh. */
+      for (const r of rows) {
+        setNotifications((prev) =>
+          prev.some((n) => n.requestId === r.id)
+            ? prev
+            : [
+                {
+                  id: "freq-" + r.id,
+                  kind: "friend_request" as const,
+                  title: "Friend request",
+                  body: `@${r.user.username} wants to be your friend.`,
+                  ts: new Date(r.createdAt).getTime() || Date.now(),
+                  read: false,
+                  requestId: r.id,
+                } as ChatNotification,
+                ...prev,
+              ].slice(0, 30),
+        )
+      }
+    } catch {
+      /* Silent — same policy as refreshMembers/refreshDms: self-heals on
+       * the next tick; surfacing it just opens the dev overlay. */
+    }
   }, [token])
+  refreshFriendsRef.current = () => void refreshFriends()
 
   useEffect(() => {
     if (!account || !token) return
@@ -4294,14 +5255,34 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
     void refreshFriends()
   }, [account, token, refreshMembers, refreshDms, refreshFriends])
 
-  // Re-fetch members every 30s.
+  /* Silently watch EVERY public channel + every DM/group — the socket
+   * relay keeps us in those rooms without presence, so unread badges,
+   * mention pings and live DM rows work even for channels we're not
+   * looking at. Re-runs when the DM list changes (new groups/invites);
+   * `watch` is idempotent server-side (a Set). */
+  useEffect(() => {
+    if (!account || !token) return
+    const socket = socketRef.current
+    const rooms = [...CHANNELS.map((c) => c.id), ...dms.map((d) => d.id)]
+    for (const r of rooms) watchedRoomsRef.current.add(r)
+    if (socket && socket.connected) {
+      for (const r of rooms) socket.emit("watch", { channelId: r })
+    }
+  }, [account?.id, token, dms])
+
+  // Re-fetch members + DMs + friend requests every 30s (DMs: catches
+  // anything a dropped socket event missed — new DMs, group membership
+  // changes; friends: pending requests / accepted friendships that a
+  // socketless host or a dropped event would otherwise miss).
   useEffect(() => {
     if (!account) return
     const t = setInterval(() => {
       void refreshMembers()
+      void refreshDms()
+      void refreshFriends()
     }, 30000)
     return () => clearInterval(t)
-  }, [account, refreshMembers])
+  }, [account, refreshMembers, refreshDms, refreshFriends])
 
   // Auto-scroll to bottom on new messages — only if user is already near the bottom.
   const scrollContainerRef = useRef<HTMLDivElement | null>(null)
@@ -4340,7 +5321,10 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
           method: "POST",
           body: JSON.stringify({ token, channelId, content: slash.content }),
         })
-        setMessages((prev) => [...prev, data.message])
+        setMessages((prev) =>
+          prev.some((m) => m.id === data.message.id) ? prev : [...prev, data.message]
+        )
+        setFreshIds((prev) => freshWith(prev, data.message.id))
         if (data.account) setAccount(data.account)
         socketRef.current?.emit("message", {
           channelId,
@@ -4372,7 +5356,10 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
           replyToUsername,
         }),
       })
-      setMessages((prev) => [...prev, data.message])
+      setMessages((prev) =>
+          prev.some((m) => m.id === data.message.id) ? prev : [...prev, data.message]
+        )
+      setFreshIds((prev) => freshWith(prev, data.message.id))
       if (data.account) setAccount(data.account)
       // Relay via socket.
       socketRef.current?.emit("message", {
@@ -4399,7 +5386,10 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
         method: "POST",
         body: JSON.stringify({ token, channelId, content }),
       })
-      setMessages((prev) => [...prev, data.message])
+      setMessages((prev) =>
+          prev.some((m) => m.id === data.message.id) ? prev : [...prev, data.message]
+        )
+      setFreshIds((prev) => freshWith(prev, data.message.id))
       if (data.account) setAccount(data.account)
       socketRef.current?.emit("message", {
         channelId,
@@ -4653,6 +5643,13 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
     setEditingId(null)
     setEditDraft("")
   }, [])
+  /* Stable wrapper — passing an inline arrow as onEditSave gave EVERY
+   * MessageRow a brand-new prop on every keystroke, defeating the memo
+   * and re-rendering the entire list while typing (the "chat is so
+   * laggy" report). */
+  const handleEditSave = useCallback(() => {
+    void saveEdit()
+  }, [saveEdit])
 
   /* Own-message edit rights: a DB message you authored, OR a live-room
    * (git version) message sent under your username — the PATCH routes
@@ -4693,25 +5690,316 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
     }
   }
 
-  // Add a friend
-  const addFriend = async () => {
-    const target = friendTarget.trim()
-    if (!target) return
+  // -------------------------------------------------------------------------
+  // Group chats — create / invite / rename / leave.
+  // -------------------------------------------------------------------------
+  const createGroup = async () => {
+    if (creatingGroup) return
+    const name = groupName.trim()
+    const picked = Object.keys(groupPicked).filter((u) => groupPicked[u])
+    const typed = groupUserInput
+      .split(/[\s,]+/)
+      .map((s) => s.trim().replace(/^@/, ""))
+      .filter(Boolean)
+    const targets = [...new Set([...picked, ...typed])]
+    if (targets.length === 0) {
+      toast("Pick at least one person — friends or @usernames.", "err")
+      return
+    }
+    setCreatingGroup(true)
     try {
-      const data = await apiFetch<{ friend: ChatAccount }>("/api/chat-friends", {
+      const data = await apiFetch<{ dm: DM }>("/api/chat-dm", {
         method: "POST",
-        body: JSON.stringify({ token, action: "add", targetUsername: target }),
+        body: JSON.stringify({
+          token,
+          targetUsernames: targets,
+          name: name || undefined,
+        }),
       })
-      setFriends((prev) => [data.friend, ...prev])
-      setFriendTarget("")
-      setShowFriendMenu(false)
-      toast(`Added @${data.friend.username} as a friend!`, "ok")
+      setDms((prev) => {
+        if (prev.some((d) => d.id === data.dm.id))
+          return prev.map((d) => (d.id === data.dm.id ? data.dm : d))
+        return [data.dm, ...prev]
+      })
+      setChannelId(data.dm.id)
+      setChannelSwitcher(false)
+      setGroupName("")
+      setGroupPicked({})
+      setGroupUserInput("")
+      setShowGroupMenu(false)
+      toast(
+        `Group ${name ? `"${name}"` : ""} created — you + ${targets.length} member${targets.length === 1 ? "" : "s"}.`,
+        "ok",
+      )
     } catch (e) {
-      toast(e instanceof Error ? e.message : "Failed to add friend.", "err")
+      toast(e instanceof Error ? e.message : "Failed to create the group.", "err")
+    } finally {
+      setCreatingGroup(false)
     }
   }
 
-  // Remove a friend
+  const inviteToGroup = async (
+    dm: DM,
+    targets: string[],
+    done: () => void,
+  ) => {
+    if (targets.length === 0) {
+      toast("Pick at least one person to invite.", "err")
+      return
+    }
+    try {
+      const data = await apiFetch<{
+        dm: DM
+        invited: string[]
+        becameGroup: boolean
+      }>("/api/chat-dm/invite", {
+        method: "POST",
+        body: JSON.stringify({ token, dmId: dm.id, targetUsernames: targets }),
+      })
+      setDms((prev) =>
+        prev.map((d) => (d.id === data.dm.id ? data.dm : d)),
+      )
+      done()
+      setShowInvite(false)
+      toast(
+        `Invited @${data.invited.join(", @")} — ${data.dm.members.length} members now.`,
+        "ok",
+      )
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "Failed to invite.", "err")
+    }
+  }
+
+  const renameGroup = async () => {
+    const dm = dms.find((d) => d.id === channelId)
+    if (!dm || !dm.isGroup) return
+    const name = renameDraft.trim()
+    if (!name) {
+      toast("A group needs a name.", "err")
+      return
+    }
+    try {
+      await apiFetch("/api/chat-dm", {
+        method: "PATCH",
+        body: JSON.stringify({ token, dmId: dm.id, name }),
+      })
+      setDms((prev) =>
+        prev.map((d) => (d.id === dm.id ? { ...d, name } : d)),
+      )
+      setShowRename(false)
+      toast(`Group renamed to "${name}".`, "ok")
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "Rename failed.", "err")
+    }
+  }
+
+  const leaveGroup = async () => {
+    const dm = dms.find((d) => d.id === channelId)
+    if (!dm) return
+    try {
+      await apiFetch("/api/chat-dm/leave", {
+        method: "POST",
+        body: JSON.stringify({ token, dmId: dm.id }),
+      })
+      // Drop the local watch too, so badges stop for this room.
+      watchedRoomsRef.current.delete(dm.id)
+      socketRef.current?.emit("unwatch", { channelId: dm.id })
+      setDms((prev) => prev.filter((d) => d.id !== dm.id))
+      setChannelId("main")
+      setShowLeaveConfirm(false)
+      toast(
+        dm.isGroup ? "You left the group." : "DM closed.",
+        "ok",
+      )
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "Failed to leave.", "err")
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Reactions — optimistic toggle, server truth, relay broadcast.
+  // -------------------------------------------------------------------------
+  const toggleReaction = useCallback(
+    async (msg: ChatMessage, emoji: string) => {
+      const me = accountRef.current
+      if (!me || !token) return
+      if (msg.id.startsWith("lv-")) {
+        toast(
+          "Reactions work on the website's messages — live-room (git version) messages can't have them yet.",
+          "err",
+        )
+        return
+      }
+      const has = (msg.reactions || []).some(
+        (r) => r.emoji === emoji && r.usernames.includes(me.id),
+      )
+      const patch = (m: ChatMessage) =>
+        m.id === msg.id ? applyReactionDelta(m, emoji, !has, me.id) : m
+      // Optimistic.
+      setMessages((prev) => prev.map(patch))
+      setPinned((prev) => prev.map(patch))
+      try {
+        const data = await apiFetch<{
+          removed: boolean
+          reactions: ReactionSummary[]
+        }>("/api/chat-reactions", {
+          method: "POST",
+          body: JSON.stringify({ token, messageId: msg.id, emoji }),
+        })
+        // Server truth wins.
+        setMessages((prev) =>
+          prev.map((m) => (m.id === msg.id ? { ...m, reactions: data.reactions } : m)),
+        )
+        socketRef.current?.emit("reaction", {
+          channelId: msg.channelId,
+          messageId: msg.id,
+          emoji,
+          added: !data.removed,
+        })
+      } catch (e) {
+        // Revert the optimistic chip.
+        const revert = (m: ChatMessage) =>
+          m.id === msg.id ? applyReactionDelta(m, emoji, has, me.id) : m
+        setMessages((prev) => prev.map(revert))
+        setPinned((prev) => prev.map(revert))
+        toast(e instanceof Error ? e.message : "Reaction failed.", "err")
+      }
+    },
+    [token, toast],
+  )
+
+  // -------------------------------------------------------------------------
+  // "Load older" — cursor pagination prepends the previous 100-message page.
+  // -------------------------------------------------------------------------
+  const loadOlder = useCallback(async () => {
+    if (loadingOlder) return
+    const oldest = messagesRef.current.find(() => true)
+    if (!oldest) return
+    setLoadingOlder(true)
+    try {
+      const cid = channelIdRef.current
+      const data = await apiFetch<{ messages: ChatMessage[]; hasMore?: boolean }>(
+        `/api/chat-data?channel=${encodeURIComponent(cid)}&before=${encodeURIComponent(
+          new Date(oldest.createdAt).toISOString(),
+        )}${
+          !CHANNELS.some((c) => c.id === cid) ? `&token=${encodeURIComponent(token)}` : ""
+        }`,
+      )
+      const fresh = data.messages || []
+      if (fresh.length > 0) {
+        setMessages((prev) => {
+          const seen = new Set(prev.map((m) => m.id))
+          const merged = [...fresh.filter((m) => !seen.has(m.id)), ...prev]
+          merged.sort(
+            (a, b) =>
+              new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+          )
+          return merged
+        })
+      }
+      setHasMoreOlder(!!data.hasMore && fresh.length > 0)
+    } catch {
+      /* keep the button — next click retries */
+    } finally {
+      setLoadingOlder(false)
+    }
+  }, [token, loadingOlder])
+
+  // Send a friend REQUEST — they get a notification, and only when THEY
+  // accept does the friendship form. Every outcome gets a friendly toast,
+  // never a raw error dump.
+  const addFriend = async () => {
+    const target = friendTarget.trim().replace(/^@/, "")
+    if (!target) {
+      toast("Type someone's @username first.", "err")
+      return
+    }
+    if (friendBusy) return
+    setFriendBusy(true)
+    try {
+      const data = await apiFetch<{
+        sent?: boolean
+        accepted?: boolean
+        already?: "friends" | "pending"
+        friend?: { username: string }
+      }>("/api/chat-friends", {
+        method: "POST",
+        body: JSON.stringify({ token, action: "request", targetUsername: target }),
+      })
+      const name = data.friend?.username || target
+      if (data.accepted) {
+        toast(`You're now friends with @${name}!`, "ok")
+      } else if (data.already === "friends") {
+        toast(`You and @${name} are already friends.`, "ok")
+      } else if (data.already === "pending") {
+        toast(`Request already sent — just waiting for @${name} to accept.`, "ok")
+      } else {
+        toast(`Request sent to @${name} — they'll appear in Friends once they accept.`, "ok")
+      }
+      setFriendTarget("")
+      setShowFriendMenu(false)
+      void refreshFriends()
+    } catch (e) {
+      toast(
+        e instanceof Error ? e.message : "Couldn't send that — try again in a moment.",
+        "err",
+      )
+    } finally {
+      setFriendBusy(false)
+    }
+  }
+
+  // Accept / decline an INCOMING request (from the sidebar or the bell).
+  const respondFriend = async (requestId: string, action: "accept" | "decline") => {
+    try {
+      const data = await apiFetch<{ friend?: ChatAccount }>("/api/chat-friends", {
+        method: "POST",
+        body: JSON.stringify({ token, action, requestId }),
+      })
+      setFriendRequestsIn((prev) => prev.filter((r) => r.id !== requestId))
+      // Mark the matching bell notification handled (hides its buttons).
+      setNotifications((prev) =>
+        prev.map((n) => (n.requestId === requestId ? { ...n, read: true } : n)),
+      )
+      if (action === "accept") {
+        if (data.friend) {
+          const newFriend = data.friend
+          setFriends((prev) =>
+            prev.some((f) => f.id === newFriend.id) ? prev : [newFriend, ...prev],
+          )
+          toast(`You're now friends with @${newFriend.username}!`, "ok")
+        } else {
+          toast("Made friends!", "ok")
+          void refreshFriends()
+        }
+      } else {
+        toast("Request declined — no hard feelings.", "ok")
+      }
+    } catch {
+      toast(
+        action === "accept"
+          ? "Couldn't accept just now — try again in a moment."
+          : "Couldn't decline just now — try again in a moment.",
+        "err",
+      )
+    }
+  }
+
+  // Take back an OUTGOING pending request.
+  const cancelFriendRequest = async (requestId: string) => {
+    try {
+      await apiFetch("/api/chat-friends", {
+        method: "POST",
+        body: JSON.stringify({ token, action: "cancel", requestId }),
+      })
+      setFriendRequestsOut((prev) => prev.filter((r) => r.id !== requestId))
+      toast("Request cancelled.", "ok")
+    } catch {
+      toast("Couldn't cancel just now — try again in a moment.", "err")
+    }
+  }
+
+  // Remove a friend (both directions — the API keeps friendship mutual).
   const removeFriend = async (username: string) => {
     try {
       await apiFetch("/api/chat-friends", {
@@ -4721,7 +6009,7 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
       setFriends((prev) => prev.filter((f) => f.username !== username))
       toast(`Removed @${username}.`, "ok")
     } catch (e) {
-      toast(e instanceof Error ? e.message : "Failed to remove friend.", "err")
+      toast(e instanceof Error ? e.message : "Couldn't remove that friend — try again in a moment.", "err")
     }
   }
 
@@ -4733,6 +6021,11 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
     setMessages([])
     setMembers([])
     setDms([])
+    setFriends([])
+    setFriendRequestsIn([])
+    setFriendRequestsOut([])
+    setNotifications([])
+    setUnread({})
     setChannelId("main")
     socketRef.current?.disconnect()
     socketRef.current = null
@@ -4759,6 +6052,24 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
 
   // Filtered typing indicators for the current channel.
   const activeTyping = typingUsers[channelId] || []
+
+  /* Total unread across every channel + DM — the little orange pill on
+   * the closed channel-switcher button. */
+  const totalUnread = useMemo(
+    () => Object.values(unread).reduce((sum, n) => sum + (n || 0), 0),
+    [unread],
+  )
+
+  /* The right-side player list is scoped to the conversation: public
+   * channels show every member + live-room users; DMs/groups show just
+   * the conversation's members. */
+  const dmPresence = useMemo(
+    () =>
+      dmMeta
+        ? presence.filter((p) => dmMeta.members.some((m) => m.id === p.accountId))
+        : [],
+    [dmMeta, presence],
+  )
 
   // ---------------------------------------------------------------------------
   // Auth gate.
@@ -4789,62 +6100,192 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
         <header className="relative z-40 flex items-center gap-2 border-b border-white/10 bg-black/50 px-3 py-2 backdrop-blur-xl">
           {/* Back to Veil */}
           {onBack && (
-            <button
+            <motion.button
               onClick={onBack}
+              whileHover={{ x: -3 }}
+              whileTap={{ scale: 0.94 }}
+              transition={CHAT_POP}
               className="flex items-center gap-1 rounded-md px-2 py-1 text-white/70 hover:bg-white/10 hover:text-white"
               title="Back to Veil (Esc)"
             >
               <ArrowLeft className="h-4 w-4" />
               <span className="hidden text-xs font-medium sm:inline">Veil</span>
-            </button>
+            </motion.button>
           )}
           {/* Channel name + switcher */}
           <div className="relative">
-            <button
+            <motion.button
               onClick={() => setChannelSwitcher((s) => !s)}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              transition={CHAT_POP}
               className="flex items-center gap-1.5 rounded-md px-2 py-1 hover:bg-white/10"
             >
-              {isDm ? <MessageCircle className="h-4 w-4 text-orange-400" /> : <Hash className="h-4 w-4 text-orange-400" />}
-              <span className="text-sm font-semibold">{channelLabel}</span>
-              <ChevronDown className="h-3.5 w-3.5 text-white/50" />
-            </button>
+              {isDm ? (
+                dmMeta?.isGroup ? (
+                  <Users className="h-4 w-4 text-orange-400" />
+                ) : (
+                  <MessageCircle className="h-4 w-4 text-orange-400" />
+                )
+              ) : (
+                <Hash className="h-4 w-4 text-orange-400" />
+              )}
+              <span className="max-w-[10rem] truncate text-sm font-semibold sm:max-w-[16rem]">
+                {channelLabel}
+              </span>
+              {totalUnread > 0 && (
+                <span
+                  key={totalUnread}
+                  className="veil-badge-pop veil-bounce-soft grid h-4 min-w-4 place-items-center rounded-full bg-orange-400 px-1 text-[9px] font-bold text-black"
+                >
+                  {totalUnread > 99 ? "99+" : totalUnread}
+                </span>
+              )}
+              <ChevronDown
+                className={`h-3.5 w-3.5 text-white/50 transition-transform duration-300 ${
+                  channelSwitcher ? "rotate-180" : ""
+                }`}
+              />
+            </motion.button>
             <AnimatePresence>
               {channelSwitcher && (
                 <motion.div
                   initial={{ opacity: 0, y: -4 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -4 }}
-                  className="veil-scroll-slim absolute left-0 top-9 z-30 max-h-[70vh] w-64 overflow-y-auto rounded-xl border border-white/10 bg-zinc-950/92 backdrop-blur-xl p-1 shadow-2xl"
+                  className="veil-scroll-slim absolute left-0 top-9 z-30 max-h-[70vh] w-72 overflow-y-auto rounded-xl border border-white/10 bg-zinc-950/92 backdrop-blur-xl p-1 shadow-2xl"
                 >
-                  <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-white/40">
+                  <div className="veil-text-shine px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-white/40">
                     Channels
                   </div>
-                  {CHANNELS.map((c) => (
-                    <button
-                      key={c.id}
-                      onClick={() => {
-                        setChannelId(c.id)
-                        setChannelSwitcher(false)
-                      }}
-                      className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm ${
-                        channelId === c.id ? "bg-white/10" : "hover:bg-white/5"
-                      }`}
-                    >
-                      <Hash className="h-3.5 w-3.5 text-white/40" />
-                      <span className="flex-1 text-left">{c.name}</span>
-                      <span className="text-[10px] text-white/30">{c.desc}</span>
-                    </button>
-                  ))}
+                  {CHANNELS.map((c, ci) => {
+                    const typingHere = (typingUsers[c.id] || []).length
+                    return (
+                      <motion.button
+                        key={c.id}
+                        initial={{ opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: Math.min(ci * 0.03, 0.24), duration: 0.2, ease: "easeOut" }}
+                        whileHover={{ x: 2 }}
+                        onClick={() => {
+                          setChannelId(c.id)
+                          setChannelSwitcher(false)
+                        }}
+                        className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm ${
+                          channelId === c.id
+                            ? "veil-pulse-glow bg-white/10"
+                            : "veil-hover-glow hover:bg-white/5"
+                        }`}
+                      >
+                        <Hash className="h-3.5 w-3.5 text-white/40" />
+                        <span className="flex-1 text-left">{c.name}</span>
+                        {typingHere > 0 ? (
+                          <TypingDots className="scale-90" />
+                        ) : unread[c.id] > 0 ? (
+                          <span
+                            key={unread[c.id]}
+                            className="veil-badge-pop veil-bounce-soft grid h-4 min-w-4 place-items-center rounded-full bg-orange-400 px-1 text-[9px] font-bold text-black"
+                          >
+                            {unread[c.id] > 99 ? "99+" : unread[c.id]}
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-white/30">{c.desc}</span>
+                        )}
+                      </motion.button>
+                    )
+                  })}
                   <div className="mt-1 flex items-center justify-between px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-white/40">
-                    <span>Direct Messages</span>
-                    <button
-                      onClick={() => setShowDmMenu((s) => !s)}
-                      className="rounded p-0.5 hover:bg-white/10"
-                      title="New DM"
-                    >
-                      <Plus className="h-3 w-3" />
-                    </button>
+                    <span>Messages</span>
+                    <span className="flex items-center gap-1">
+                      <button
+                        onClick={() => {
+                          setShowGroupMenu((s) => !s)
+                          setShowDmMenu(false)
+                        }}
+                        className={`rounded p-0.5 hover:bg-white/10 ${showGroupMenu ? "text-orange-300" : ""}`}
+                        title="New group chat — invite friends in"
+                      >
+                        <Users className="h-3 w-3" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowDmMenu((s) => !s)
+                          setShowGroupMenu(false)
+                        }}
+                        className={`rounded p-0.5 hover:bg-white/10 ${showDmMenu ? "text-orange-300" : ""}`}
+                        title="New DM"
+                      >
+                        <Plus className="h-3 w-3" />
+                      </button>
+                    </span>
                   </div>
+                  {showGroupMenu && (
+                    <div className="mx-1 mb-1 rounded-lg border border-white/10 bg-black/30 p-2">
+                      <input
+                        value={groupName}
+                        onChange={(e) => setGroupName(e.target.value)}
+                        placeholder="Group name (e.g. Squad)"
+                        maxLength={64}
+                        className="veil-focus-bloom mb-1.5 w-full rounded-md border border-white/10 bg-black/40 px-2 py-1 text-xs outline-none focus:border-orange-400/50"
+                      />
+                      {friends.length > 0 && (
+                        <div className="veil-scroll-slim mb-1.5 max-h-28 overflow-y-auto rounded-md border border-white/10">
+                          {friends.map((f) => (
+                            <label
+                              key={f.id}
+                              className="flex cursor-pointer items-center gap-2 px-2 py-1 text-[11px] hover:bg-white/5"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={!!groupPicked[f.username]}
+                                onChange={(e) =>
+                                  setGroupPicked((prev) => ({
+                                    ...prev,
+                                    [f.username]: e.target.checked,
+                                  }))
+                                }
+                                className="accent-orange-400"
+                              />
+                              <span
+                                className="grid h-4 w-4 shrink-0 place-items-center rounded-full text-[8px] font-bold text-white"
+                                style={{ backgroundColor: f.avatarColor }}
+                              >
+                                {f.username[0]?.toUpperCase()}
+                              </span>
+                              <span className="flex-1 truncate text-white/75">
+                                {displayName(f)}
+                              </span>
+                            </label>
+                          ))}
+                        </div>
+                      )}
+                      <div className="flex items-center gap-1">
+                        <input
+                          value={groupUserInput}
+                          onChange={(e) => setGroupUserInput(e.target.value)}
+                          placeholder="@username, @username…"
+                          autoCapitalize="none"
+                          className="flex-1 rounded-md border border-white/10 bg-black/40 px-2 py-1 text-xs outline-none"
+                        />
+                        <button
+                          onClick={() => void createGroup()}
+                          disabled={creatingGroup}
+                          className="veil-press flex items-center gap-1 rounded-md bg-orange-400 px-2 py-1 text-xs font-semibold text-black disabled:opacity-50"
+                        >
+                          {creatingGroup ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <Users className="h-3 w-3" />
+                          )}
+                          Create
+                        </button>
+                      </div>
+                      <p className="mt-1 text-[9.5px] leading-tight text-white/35">
+                        Tick friends and/or type @usernames — everyone gets in
+                        at once and can invite more later.
+                      </p>
+                    </div>
+                  )}
                   {showDmMenu && (
                     <div className="flex items-center gap-1 px-1 pb-1">
                       <input
@@ -4853,11 +6294,11 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                         onKeyDown={(e) => e.key === "Enter" && void createDm()}
                         placeholder="@username"
                         autoCapitalize="none"
-                        className="flex-1 rounded-md border border-white/10 bg-black/40 px-2 py-1 text-xs outline-none"
+                        className="veil-focus-bloom flex-1 rounded-md border border-white/10 bg-black/40 px-2 py-1 text-xs outline-none"
                       />
                       <button
                         onClick={() => void createDm()}
-                        className="rounded-md bg-orange-400 px-2 py-1 text-xs font-semibold text-black"
+                        className="veil-press rounded-md bg-orange-400 px-2 py-1 text-xs font-semibold text-black"
                       >
                         Open
                       </button>
@@ -4865,10 +6306,11 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                   )}
                   {dms.length === 0 ? (
                     <p className="px-2 py-1 text-[11px] text-white/30">
-                      No DMs yet. Click + to start one.
+                      No messages yet — start a DM or a group with the buttons
+                      above.
                     </p>
                   ) : (
-                    dms.map((d) => {
+                    dms.map((d, di) => {
                       const label =
                         d.name ||
                         d.members
@@ -4876,60 +6318,150 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                           .map(displayName)
                           .join(", ") ||
                         "DM"
+                      const typingHere = (typingUsers[d.id] || []).length
                       return (
-                        <button
+                        <motion.button
                           key={d.id}
+                          initial={{ opacity: 0, x: -8 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: Math.min(di * 0.03, 0.24), duration: 0.2, ease: "easeOut" }}
+                          whileHover={{ x: 2 }}
                           onClick={() => {
                             setChannelId(d.id)
                             setChannelSwitcher(false)
                           }}
                           className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm ${
-                            channelId === d.id ? "bg-white/10" : "hover:bg-white/5"
+                            channelId === d.id
+                              ? "veil-pulse-glow bg-white/10"
+                              : "veil-hover-glow hover:bg-white/5"
                           }`}
                         >
-                          <MessageCircle className="h-3.5 w-3.5 text-white/40" />
+                          {d.isGroup ? (
+                            <Users className="h-3.5 w-3.5 shrink-0 text-orange-300/70" />
+                          ) : (
+                            <MessageCircle className="h-3.5 w-3.5 shrink-0 text-white/40" />
+                          )}
                           <span className="flex-1 truncate text-left">{label}</span>
-                        </button>
+                          {typingHere > 0 ? (
+                            <TypingDots className="scale-90" />
+                          ) : d.isGroup ? (
+                            <span className="rounded-full bg-white/10 px-1.5 py-0.5 text-[9px] font-semibold text-white/50">
+                              {d.members.length}
+                            </span>
+                          ) : null}
+                          {unread[d.id] > 0 && (
+                            <span
+                              key={unread[d.id]}
+                              className="veil-badge-pop veil-bounce-soft grid h-4 min-w-4 place-items-center rounded-full bg-orange-400 px-1 text-[9px] font-bold text-black"
+                            >
+                              {unread[d.id] > 99 ? "99+" : unread[d.id]}
+                            </span>
+                          )}
+                        </motion.button>
                       )
                     })
                   )}
                   {/* Friends section */}
                   <div className="mt-1 flex items-center justify-between border-t border-white/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-white/40">
                     <span>Friends — {friends.length}</span>
-                    <button
-                      onClick={() => setShowFriendMenu((s) => !s)}
-                      className="rounded p-0.5 hover:bg-white/10"
-                      title="Add friend"
-                    >
-                      <Plus className="h-3 w-3" />
-                    </button>
-                  </div>
-                  {showFriendMenu && (
-                    <div className="flex items-center gap-1 px-1 pb-1">
-                      <input
-                        value={friendTarget}
-                        onChange={(e) => setFriendTarget(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && void addFriend()}
-                        placeholder="@username"
-                        className="flex-1 rounded-md border border-white/10 bg-black/40 px-2 py-1 text-xs outline-none"
-                      />
+                    <div className="flex items-center gap-1.5">
+                      {friendRequestsIn.length > 0 && (
+                        <button
+                          onClick={() => setShowFriendMenu(false)}
+                          className="veil-bounce-soft grid h-4 min-w-4 place-items-center rounded-full bg-orange-400 px-1 text-[9px] font-bold text-black"
+                          title={`${friendRequestsIn.length} friend request${friendRequestsIn.length === 1 ? "" : "s"} waiting`}
+                        >
+                          {friendRequestsIn.length}
+                        </button>
+                      )}
                       <button
-                        onClick={() => void addFriend()}
-                        className="rounded-md bg-orange-400 px-2 py-1 text-xs font-semibold text-black"
+                        onClick={() => setShowFriendMenu((s) => !s)}
+                        className="rounded p-0.5 hover:bg-white/10"
+                        title="Send a friend request"
                       >
-                        Add
+                        <Plus className="h-3 w-3" />
                       </button>
                     </div>
+                  </div>
+                  {showFriendMenu && (
+                    <div className="px-1 pb-1">
+                      <div className="flex items-center gap-1">
+                        <input
+                          value={friendTarget}
+                          onChange={(e) => setFriendTarget(e.target.value)}
+                          onKeyDown={(e) => e.key === "Enter" && void addFriend()}
+                          placeholder="@username"
+                          autoCapitalize="none"
+                          className="veil-focus-bloom flex-1 rounded-md border border-white/10 bg-black/40 px-2 py-1 text-xs outline-none"
+                        />
+                        <button
+                          onClick={() => void addFriend()}
+                          disabled={friendBusy}
+                          className="veil-press veil-hover-glow flex items-center gap-1 rounded-md bg-orange-400 px-2 py-1 text-xs font-semibold text-black disabled:opacity-50"
+                        >
+                          {friendBusy ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <UserPlus className="h-3 w-3" />
+                          )}
+                          Send
+                        </button>
+                      </div>
+                      <p className="mt-1 text-[9.5px] leading-tight text-white/35">
+                        They get a notification — you become friends when they
+                        accept.
+                      </p>
+                    </div>
                   )}
-                  {friends.length === 0 ? (
+                  {/* Incoming friend requests — accept / decline inline */}
+                  {friendRequestsIn.length > 0 && (
+                    <div className="mb-1 space-y-1 px-1">
+                      {friendRequestsIn.map((r, ri) => (
+                        <div
+                          key={r.id}
+                          className={`veil-slide-right-pop veil-stagger-${(ri % 8) + 1} flex items-center gap-2 rounded-md border border-emerald-400/20 bg-emerald-400/5 px-2 py-1.5`}
+                        >
+                          <span
+                            className="grid h-5 w-5 shrink-0 place-items-center rounded-full text-[9px] font-bold text-white"
+                            style={{ backgroundColor: r.user.avatarColor || "#f97316" }}
+                          >
+                            {r.user.username?.[0]?.toUpperCase()}
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-xs text-white/85">
+                              {displayName(r.user)}
+                            </span>
+                            <span className="block text-[9.5px] text-emerald-300/70">
+                              wants to be your friend
+                            </span>
+                          </span>
+                          <button
+                            onClick={() => void respondFriend(r.id, "accept")}
+                            className="veil-hover-bounce veil-press grid h-6 w-6 shrink-0 place-items-center rounded-md bg-emerald-500/90 text-black hover:bg-emerald-400"
+                            title={`Accept @${r.user.username}`}
+                          >
+                            <Check className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            onClick={() => void respondFriend(r.id, "decline")}
+                            className="veil-hover-wobble veil-press grid h-6 w-6 shrink-0 place-items-center rounded-md border border-white/10 text-white/50 hover:bg-red-500/10 hover:text-red-300"
+                            title={`Decline @${r.user.username}`}
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {friends.length === 0 && friendRequestsIn.length === 0 ? (
                     <p className="px-2 py-1 text-[11px] text-white/30">
-                      No friends yet. Click + to add one.
+                      No friends yet. Click + to send a request.
                     </p>
                   ) : (
-                    friends.map((f) => (
+                    friends.map((f, fi) => (
                       <div
                         key={f.id}
-                        className="group flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-white/5"
+                        className={`veil-slide-right-pop veil-stagger-${(fi % 8) + 1} veil-hover-glow group flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-white/5`}
                       >
                         <span
                           className="grid h-5 w-5 shrink-0 place-items-center rounded-full text-[9px] font-bold text-white"
@@ -4943,14 +6475,14 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                             setDmTarget(f.username)
                             void createDm()
                           }}
-                          className="hidden rounded p-1 text-white/40 hover:bg-white/10 hover:text-white group-hover:block"
+                          className="veil-hover-bounce hidden rounded p-1 text-white/40 hover:bg-white/10 hover:text-white group-hover:block"
                           title="DM"
                         >
                           <MessageCircle className="h-3 w-3" />
                         </button>
                         <button
                           onClick={() => void removeFriend(f.username)}
-                          className="hidden rounded p-1 text-white/40 hover:bg-red-500/10 hover:text-red-300 group-hover:block"
+                          className="veil-hover-wobble hidden rounded p-1 text-white/40 hover:bg-red-500/10 hover:text-red-300 group-hover:block"
                           title="Remove friend"
                         >
                           <X className="h-3 w-3" />
@@ -4958,30 +6490,95 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                       </div>
                     ))
                   )}
+                  {/* Outgoing requests — pending, cancellable */}
+                  {friendRequestsOut.length > 0 && (
+                    <div className="mt-0.5 space-y-0.5 px-1">
+                      {friendRequestsOut.map((r, roi) => (
+                        <div
+                          key={r.id}
+                          className={`veil-slide-right-pop veil-stagger-${(roi % 8) + 1} group flex w-full items-center gap-2 rounded-md px-2 py-1 text-[11px] hover:bg-white/5`}
+                        >
+                          <Clock className="h-3 w-3 shrink-0 text-white/25" />
+                          <span className="flex-1 truncate text-left text-white/40">
+                            {displayName(r.user)}
+                          </span>
+                          <span className="shrink-0 rounded-full bg-white/5 px-1.5 py-0.5 text-[9px] text-white/35">
+                            waiting
+                          </span>
+                          <button
+                            onClick={() => void cancelFriendRequest(r.id)}
+                            className="hidden rounded p-1 text-white/35 hover:bg-red-500/10 hover:text-red-300 group-hover:block"
+                            title="Cancel request"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
 
-          {/* Channel description */}
-          <span className="hidden text-xs text-white/40 sm:inline">
-            {isDm
-              ? "Direct message"
-              : channelMeta?.desc}
-          </span>
+          {/* Channel description + group actions */}
+          {isDm && dmMeta ? (
+            <div className="hidden items-center gap-1.5 sm:flex">
+              <span className="text-xs text-white/40">
+                {dmMeta.isGroup
+                  ? `Group — ${dmMeta.members.length} member${dmMeta.members.length === 1 ? "" : "s"}`
+                  : "Direct message"}
+              </span>
+              <button
+                onClick={() => setShowInvite(true)}
+                className="flex items-center gap-1 rounded-md bg-orange-400/10 px-2 py-0.5 text-[11px] font-semibold text-orange-300 hover:bg-orange-400/20"
+                title="Invite people to this conversation"
+              >
+                <UserPlus className="h-3 w-3" />
+                <span className="hidden md:inline">Invite</span>
+              </button>
+              {dmMeta.isGroup && (
+                <button
+                  onClick={() => {
+                    setRenameDraft(dmMeta.name || "")
+                    setShowRename(true)
+                  }}
+                  className="rounded-md p-1 text-white/40 hover:bg-white/10 hover:text-white"
+                  title="Rename group"
+                >
+                  <Pencil className="h-3 w-3" />
+                </button>
+              )}
+              <button
+                onClick={() => setShowLeaveConfirm(true)}
+                className="rounded-md p-1 text-white/40 hover:bg-red-500/15 hover:text-red-300"
+                title={dmMeta.isGroup ? "Leave group" : "Close DM"}
+              >
+                <LogOut className="h-3 w-3" />
+              </button>
+            </div>
+          ) : (
+            <span className="hidden text-xs text-white/40 sm:inline">
+              {channelMeta?.desc}
+            </span>
+          )}
 
           <div className="ml-auto flex items-center gap-1">
             {/* Clock — isolated so its 1s tick never re-renders the app */}
             <LiveClock />
 
             {/* Coins */}
-            <button
+            <motion.button
               onClick={() => setShowTransfer(true)}
+              whileHover={{ scale: 1.06, y: -1 }}
+              whileTap={{ scale: 0.94 }}
+              transition={CHAT_POP}
               className="flex items-center gap-1 rounded-md bg-orange-400/10 px-2 py-1 text-xs font-semibold text-orange-300 hover:bg-orange-400/20"
               title="Send coins"
             >
-              🪙 {account.coins.toLocaleString()}
-            </button>
+              {/* keyed span — flips 720° whenever the balance changes */}
+              <span key={account.coins} className="veil-coin-flip">🪙 {account.coins.toLocaleString()}</span>
+            </motion.button>
 
             {/* Daily reward */}
             <DailyRewardButton
@@ -4991,35 +6588,41 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
             />
 
             {/* Online count */}
-            <span className="hidden items-center gap-1 rounded-md bg-white/5 px-2 py-1 text-xs text-white/60 md:flex">
-              <Circle className="h-2 w-2 fill-emerald-400 text-emerald-400" />
+            <span className="veil-hover-glow hidden items-center gap-1 rounded-md bg-white/5 px-2 py-1 text-xs text-white/60 md:flex">
+              <Circle className="veil-twinkle h-2 w-2 fill-emerald-400 text-emerald-400" />
               {presence.length} online
             </span>
 
             {/* Pinned */}
-            <button
+            <motion.button
               onClick={() => {
                 setShowPinned((s) => !s)
                 setShowNotifications(false)
                 setShowSearch(false)
                 setShowBackup(false)
               }}
+              whileHover={{ scale: 1.16, y: -1 }}
+              whileTap={{ scale: 0.86 }}
+              transition={CHAT_POP}
               className={`rounded-md p-1.5 hover:bg-white/10 ${
                 showPinned ? "bg-white/10 text-orange-300" : "text-white/60"
               }`}
               title="Pinned messages"
             >
               <Pin className="h-4 w-4" />
-            </button>
+            </motion.button>
 
             {/* Notifications */}
-            <button
+            <motion.button
               onClick={() => {
                 setShowNotifications((s) => !s)
                 setShowPinned(false)
                 setShowSearch(false)
                 setShowBackup(false)
               }}
+              whileHover={{ scale: 1.16, y: -1 }}
+              whileTap={{ scale: 0.86, rotate: -12 }}
+              transition={CHAT_POP}
               className={`relative rounded-md p-1.5 hover:bg-white/10 ${
                 showNotifications ? "bg-white/10 text-orange-300" : "text-white/60"
               }`}
@@ -5027,94 +6630,121 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
             >
               <Bell className="h-4 w-4" />
               {notifications.filter((n) => !n.read).length > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 grid h-3.5 min-w-3.5 place-items-center rounded-full bg-red-500 text-[8px] font-bold text-white">
+                <motion.span
+                  key={notifications.filter((n) => !n.read).length}
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={CHAT_POP}
+                  className="veil-badge-pop absolute -right-0.5 -top-0.5 grid h-3.5 min-w-3.5 place-items-center rounded-full bg-red-500 text-[8px] font-bold text-white"
+                >
                   {notifications.filter((n) => !n.read).length}
-                </span>
+                </motion.span>
               )}
-            </button>
+            </motion.button>
 
             {/* Search */}
-            <button
+            <motion.button
               onClick={() => {
                 setShowSearch((s) => !s)
                 setShowPinned(false)
                 setShowNotifications(false)
                 setShowBackup(false)
               }}
+              whileHover={{ scale: 1.16, y: -1 }}
+              whileTap={{ scale: 0.86 }}
+              transition={CHAT_POP}
               className={`rounded-md p-1.5 hover:bg-white/10 ${
                 showSearch ? "bg-white/10 text-orange-300" : "text-white/60"
               }`}
               title="Search messages"
             >
               <Search className="h-4 w-4" />
-            </button>
+            </motion.button>
 
             {/* Member list toggle */}
-            <button
+            <motion.button
               onClick={() => setShowMembers((s) => !s)}
+              whileHover={{ scale: 1.16, y: -1 }}
+              whileTap={{ scale: 0.86 }}
+              transition={CHAT_POP}
               className={`rounded-md p-1.5 hover:bg-white/10 ${
                 showMembers ? "bg-white/10 text-orange-300" : "text-white/60"
               }`}
               title="Toggle player list"
             >
               <Users className="h-4 w-4" />
-            </button>
+            </motion.button>
 
             {/* Chat backup (mods/owner) — jsDelivr safety net */}
             {isMod(account) && (
-              <button
+              <motion.button
                 onClick={() => {
                   setShowBackup((s) => !s)
                   setShowPinned(false)
                   setShowNotifications(false)
                   setShowSearch(false)
                 }}
+                whileHover={{ scale: 1.16, y: -1 }}
+                whileTap={{ scale: 0.86 }}
+                transition={CHAT_POP}
                 className={`rounded-md p-1.5 hover:bg-white/10 ${
                   showBackup ? "bg-white/10 text-emerald-300" : "text-white/60"
                 }`}
                 title="Chat backups (auto every 30s, published to jsDelivr)"
               >
                 <DatabaseBackup className="h-4 w-4" />
-              </button>
+              </motion.button>
             )}
 
             {/* Mod panel */}
             {isMod(account) && (
-              <button
+              <motion.button
                 onClick={() => setShowMod(true)}
+                whileHover={{ scale: 1.16, y: -1 }}
+                whileTap={{ scale: 0.86 }}
+                transition={CHAT_POP}
                 className="rounded-md bg-red-500/15 p-1.5 text-red-300 hover:bg-red-500/25"
                 title="Moderation panel"
               >
                 <Shield className="h-4 w-4" />
-              </button>
+              </motion.button>
             )}
 
             {/* Avatar with camera */}
-            <div className="relative">
-              <button
+            <div className="veil-pulse-glow relative">
+              <motion.button
                 onClick={() => setShowProfile(true)}
+                whileHover={{ scale: 1.12 }}
+                whileTap={{ scale: 0.92 }}
+                transition={CHAT_POP}
                 className="rounded-full ring-2 ring-white/10 hover:ring-orange-400/50"
                 title="Your profile"
               >
                 <AvatarWithAccessory account={account} size={28} />
-              </button>
-              <button
+              </motion.button>
+              <motion.button
                 onClick={() => setShowProfile(true)}
+                whileHover={{ scale: 1.25, rotate: 90 }}
+                whileTap={{ scale: 0.85 }}
+                transition={CHAT_POP}
                 className="absolute -bottom-0.5 -right-0.5 grid h-4 w-4 place-items-center rounded-full border border-black/60 bg-orange-400 text-black"
                 title="Change profile picture"
               >
                 <Camera className="h-2.5 w-2.5" />
-              </button>
+              </motion.button>
             </div>
 
             {/* Logout */}
-            <button
+            <motion.button
               onClick={logout}
+              whileHover={{ scale: 1.16, rotate: 10 }}
+              whileTap={{ scale: 0.86 }}
+              transition={CHAT_POP}
               className="rounded-md p-1.5 text-white/60 hover:bg-red-500/20 hover:text-red-300"
               title="Sign out"
             >
               <LogOut className="h-4 w-4" />
-            </button>
+            </motion.button>
           </div>
         </header>
 
@@ -5129,15 +6759,43 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
               className="relative min-h-0 flex-1 overflow-y-auto"
               style={{ scrollbarWidth: "thin" }}
             >
+              {/* Slim loading bar while a channel switch's fetch is in
+               * flight — the previous list stays visible underneath. */}
+              {channelLoading && (
+                <div className="pointer-events-none sticky top-0 z-20 h-0.5 w-full overflow-hidden">
+                  <div className="h-full w-1/3 animate-[veil-slide_1.1s_ease-in-out_infinite] rounded-full bg-gradient-to-r from-transparent via-orange-400 to-transparent" />
+                </div>
+              )}
               <div className="py-2">
+                {hasMoreOlder && (
+                  <div className="grid place-items-center py-1.5">
+                    <button
+                      onClick={() => void loadOlder()}
+                      disabled={loadingOlder}
+                      className="veil-hover-lift flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] font-medium text-white/60 transition-colors hover:border-white/20 hover:bg-white/10 hover:text-white disabled:opacity-50"
+                      title="Load the previous 100 messages"
+                    >
+                      {loadingOlder ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <ChevronUp className="h-3 w-3" />
+                      )}
+                      {loadingOlder ? "Loading…" : "Load older messages"}
+                    </button>
+                  </div>
+                )}
                 {mergedMessages.length === 0 ? (
-                  <div className="grid place-items-center py-20 text-center text-white/40">
-                    <Hash className="mb-2 h-8 w-8 opacity-50" />
+                  <div className="veil-rise grid place-items-center py-20 text-center text-white/40">
+                    <Hash className="veil-empty-bob mb-2 h-8 w-8 opacity-50" />
                     <p className="text-sm">No messages here yet.</p>
-                    <p className="mt-1 text-xs">Be the first to say something!</p>
+                    <p className="veil-text-breathe mt-1 text-xs">Be the first to say something!</p>
                   </div>
                 ) : (
-                  mergedMessages.map((m, i) => {
+                  /* Keyed by channel — every switch re-plays a soft rise for
+                   * the whole stack while individual rows stay calm (their
+                   * entrance spring only fires for live arrivals). */
+                  <div key={channelId} className="veil-rise">
+                  {mergedMessages.map((m, i) => {
                     const prev = mergedMessages[i - 1]
                     const newDay =
                       i === 0 || dayKeyOf(m.createdAt) !== dayKeyOf(prev.createdAt)
@@ -5157,33 +6815,49 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                           editing={editingId === m.id}
                           editDraft={editingId === m.id ? editDraft : ""}
                           editBusy={editBusy}
+                          fresh={freshIds.has(m.id)}
+                          myId={account.id}
                           onReply={handleReply}
                           onPin={togglePin}
                           onDelete={deleteMessage}
                           onEditStart={startEdit}
                           onEditDraft={setEditDraft}
-                          onEditSave={() => void saveEdit()}
+                          onEditSave={handleEditSave}
                           onEditCancel={cancelEdit}
                           onOpenProfile={openProfile}
+                          onReact={toggleReaction}
                         />
                       </div>
                     )
-                  })
+                  })}
+                  </div>
                 )}
                 <div ref={messagesEndRef} />
 
-                {/* Typing indicator */}
-                {activeTyping.length > 0 && (
-                  <div className="px-4 py-1 text-xs text-white/40">
-                    <span className="italic">
-                      {activeTyping
-                        .slice(0, 3)
-                        .map((u) => displayName(u))
-                        .join(", ")}{" "}
-                      {activeTyping.length === 1 ? "is" : "are"} typing…
-                    </span>
-                  </div>
-                )}
+                {/* Typing indicator — a soft bubble that floats up when
+                    someone starts typing and sinks away when they stop. */}
+                <AnimatePresence>
+                  {activeTyping.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      transition={{ duration: 0.24, ease: "easeOut" }}
+                      className="px-4 py-1.5"
+                    >
+                      <span className="veil-pulse-glow inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] py-1 pl-2.5 pr-3 text-xs text-white/50 shadow-lg backdrop-blur-sm">
+                        <TypingDots />
+                        <span className="italic">
+                          {activeTyping
+                            .slice(0, 3)
+                            .map((u) => displayName(u))
+                            .join(", ")}{" "}
+                          {activeTyping.length === 1 ? "is" : "are"} typing…
+                        </span>
+                      </span>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
 
@@ -5206,7 +6880,7 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                   </span>
                   <button
                     onClick={() => setReplyTo(null)}
-                    className="ml-auto rounded p-0.5 text-white/40 hover:bg-white/10 hover:text-white"
+                    className="veil-hover-wobble ml-auto rounded p-0.5 text-white/40 hover:bg-white/10 hover:text-white"
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>
@@ -5236,42 +6910,57 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                 )}
               </AnimatePresence>
 
-              {/* Upload progress — a big file streams for a while */}
-              {upload && (
-                <div className="mb-2 rounded-xl border border-orange-400/30 bg-orange-400/5 px-3 py-2">
-                  <div className="flex items-center justify-between gap-2 text-[11.5px] text-white/70">
-                    <span className="min-w-0 flex-1 truncate">
-                      <Paperclip className="mr-1 inline h-3 w-3 text-orange-300" />
-                      {upload.name}
-                    </span>
-                    <span className="tabular-nums font-semibold text-orange-300">{upload.pct}%</span>
-                  </div>
-                  <div
-                    className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/10"
-                    role="progressbar"
-                    aria-label={`Uploading ${upload.name}`}
-                    aria-valuenow={upload.pct}
-                    aria-valuemin={0}
-                    aria-valuemax={100}
+              {/* Upload progress — a big file streams for a while. The
+                  panel springs in and the bar wears candy stripes. */}
+              <AnimatePresence>
+                {upload && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                    transition={CHAT_SOFT}
+                    className="mb-2 origin-bottom rounded-xl border border-orange-400/30 bg-orange-400/5 px-3 py-2"
                   >
+                    <div className="flex items-center justify-between gap-2 text-[11.5px] text-white/70">
+                      <span className="min-w-0 flex-1 truncate">
+                        <Paperclip className="mr-1 inline h-3 w-3 text-orange-300" />
+                        {upload.name}
+                      </span>
+                      <span className="tabular-nums font-semibold text-orange-300">{upload.pct}%</span>
+                    </div>
                     <div
-                      className="h-full rounded-full bg-orange-400 transition-[width] duration-150"
-                      style={{ width: `${upload.pct}%` }}
-                    />
-                  </div>
-                </div>
-              )}
+                      className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/10"
+                      role="progressbar"
+                      aria-label={`Uploading ${upload.name}`}
+                      aria-valuenow={upload.pct}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                    >
+                      <div
+                        className="veil-upload-stripes h-full rounded-full bg-orange-400 transition-[width] duration-150"
+                        style={{ width: `${upload.pct}%` }}
+                      />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-              <div className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-black/30 px-2 py-1.5">
-                <button
+              {/* The composer — on focus a warm gradient edge sweeps the
+                  border while the glow ring holds (veil-composer-focus).
+                  Mega tier adds the veil-pulse-glow breathing halo. */}
+              <div className="veil-composer-focus veil-pulse-glow relative flex items-center gap-1.5 rounded-xl border border-white/10 bg-black/30 px-2 py-1.5 transition-[border-color,box-shadow] duration-300">
+                <motion.button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={!!upload}
+                  whileHover={{ scale: 1.18, rotate: -10 }}
+                  whileTap={{ scale: 0.85 }}
+                  transition={CHAT_POP}
                   className="rounded-md p-1.5 text-white/60 hover:bg-white/10 disabled:opacity-40"
                   title="Attach a file (up to 300 MB) — images, videos and audio play inline"
                   aria-label="Attach a file"
                 >
-                  <Paperclip className="h-4 w-4" />
-                </button>
+                  <Paperclip className="veil-hover-spin h-4 w-4" />
+                </motion.button>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -5284,37 +6973,46 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                   aria-hidden
                   tabIndex={-1}
                 />
-                <button
+                <motion.button
                   onClick={() => {
                     setShowGif((s) => !s)
                     setShowEmoji(false)
                   }}
-                  className={`rounded-md px-1.5 py-1 text-[10px] font-bold hover:bg-white/10 ${
+                  whileHover={{ scale: 1.08, y: -1 }}
+                  whileTap={{ scale: 0.88 }}
+                  transition={CHAT_POP}
+                  className={`veil-hover-glow rounded-md px-1.5 py-1 text-[10px] font-bold hover:bg-white/10 ${
                     showGif ? "text-orange-300" : "text-white/60"
                   }`}
                   title="Search GIFs"
                 >
                   GIF
-                </button>
-                <button
+                </motion.button>
+                <motion.button
                   onClick={() => {
                     setShowEmoji((s) => !s)
                     setShowGif(false)
                   }}
+                  whileHover={{ scale: 1.2, rotate: 14 }}
+                  whileTap={{ scale: 0.85 }}
+                  transition={CHAT_POP}
                   className={`rounded-md p-1.5 hover:bg-white/10 ${
                     showEmoji ? "text-orange-300" : "text-white/60"
                   }`}
                   title="Emoji"
                 >
-                  <Smile className="h-4 w-4" />
-                </button>
-                <button
+                  <Smile className="veil-hover-wobble h-4 w-4" />
+                </motion.button>
+                <motion.button
                   onClick={() => setShowTransfer(true)}
-                  className="rounded-md p-1.5 text-white/60 hover:bg-white/10"
+                  whileHover={{ scale: 1.15, rotate: [0, -9, 9, 0] }}
+                  whileTap={{ scale: 0.85 }}
+                  transition={CHAT_POP}
+                  className="veil-hover-glow rounded-md p-1.5 text-white/60 hover:bg-white/10"
                   title="Send coins"
                 >
-                  <Gift className="h-4 w-4" />
-                </button>
+                  <Gift className="veil-hover-bounce h-4 w-4" />
+                </motion.button>
                 <input
                   ref={inputRef}
                   value={input}
@@ -5328,14 +7026,34 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                   disabled={channelLocked}
                   className="flex-1 bg-transparent px-2 py-1 text-sm text-white outline-none placeholder:text-white/30 disabled:opacity-50"
                 />
-                <button
-                  onClick={() => void sendMessage()}
-                  disabled={!input.trim()}
-                  className="grid h-8 w-8 place-items-center rounded-md bg-orange-400 text-black disabled:opacity-40"
-                  title="Send"
-                >
-                  <Send className="h-4 w-4" />
-                </button>
+                {/* Send — swells with a breathing glow ring the moment
+                    there is text to send, pops its icon ready, and squeezes
+                    on tap as the message flies. Mega tier: the wrapper owns
+                    press + hover-bounce so it composes with framer's
+                    whileHover/whileTap transforms on the button itself. */}
+                <div className={`veil-press ${input.trim() ? "veil-hover-bounce" : ""}`}>
+                  <motion.button
+                    onClick={() => void sendMessage()}
+                    disabled={!input.trim()}
+                    whileHover={input.trim() ? { scale: 1.14, rotate: -8 } : undefined}
+                    whileTap={{ scale: 0.82 }}
+                    transition={CHAT_POP}
+                    className={`grid h-8 w-8 place-items-center rounded-md bg-orange-400 text-black transition-[opacity,box-shadow] duration-300 ${
+                      input.trim() ? "veil-send-glow" : "opacity-40"
+                    }`}
+                    title="Send"
+                  >
+                    <motion.span
+                      key={input.trim() ? "armed" : "idle"}
+                      initial={{ scale: 0.55, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={CHAT_POP}
+                      className="grid place-items-center"
+                    >
+                      <Send className="h-4 w-4" />
+                    </motion.span>
+                  </motion.button>
+                </div>
               </div>
             </div>
           </main>
@@ -5346,21 +7064,41 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
           <div className="pointer-events-none absolute right-2 top-2 z-50 flex flex-col items-end gap-2">
             <AnimatePresence>
               {showPinned && (
-                <div className="pointer-events-auto">
+                <motion.div
+                  initial={{ opacity: 0, x: 28, scale: 0.97 }}
+                  animate={{ opacity: 1, x: 0, scale: 1 }}
+                  exit={{ opacity: 0, x: 28, scale: 0.97 }}
+                  transition={CHAT_SOFT}
+                  className="pointer-events-auto"
+                >
                   <PinnedPanel messages={pinned} onClose={() => setShowPinned(false)} />
-                </div>
+                </motion.div>
               )}
               {showNotifications && (
-                <div className="pointer-events-auto">
+                <motion.div
+                  initial={{ opacity: 0, x: 28, scale: 0.97 }}
+                  animate={{ opacity: 1, x: 0, scale: 1 }}
+                  exit={{ opacity: 0, x: 28, scale: 0.97 }}
+                  transition={CHAT_SOFT}
+                  className="pointer-events-auto"
+                >
                   <NotificationsPanel
                     notifications={notifications}
                     onClear={() => setNotifications([])}
                     onClose={() => setShowNotifications(false)}
+                    onFriendAccept={(requestId) => void respondFriend(requestId, "accept")}
+                    onFriendDecline={(requestId) => void respondFriend(requestId, "decline")}
                   />
-                </div>
+                </motion.div>
               )}
               {showSearch && (
-                <div className="pointer-events-auto">
+                <motion.div
+                  initial={{ opacity: 0, x: 28, scale: 0.97 }}
+                  animate={{ opacity: 1, x: 0, scale: 1 }}
+                  exit={{ opacity: 0, x: 28, scale: 0.97 }}
+                  transition={CHAT_SOFT}
+                  className="pointer-events-auto"
+                >
                   <SearchPanel
                     messages={messages}
                     query={searchQuery}
@@ -5368,28 +7106,34 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
                     onClose={() => setShowSearch(false)}
                     onJump={() => setShowSearch(false)}
                   />
-                </div>
+                </motion.div>
               )}
               {showBackup && (
-                <div className="pointer-events-auto">
+                <motion.div
+                  initial={{ opacity: 0, x: 28, scale: 0.97 }}
+                  animate={{ opacity: 1, x: 0, scale: 1 }}
+                  exit={{ opacity: 0, x: 28, scale: 0.97 }}
+                  transition={CHAT_SOFT}
+                  className="pointer-events-auto"
+                >
                   <BackupPanel
                     token={token}
                     toast={toast}
                     onClose={() => setShowBackup(false)}
                     onRestored={() => void reloadCurrentChannel()}
                   />
-                </div>
+                </motion.div>
               )}
             </AnimatePresence>
           </div>
 
-          {/* Member list */}
+          {/* Member list — scoped to the conversation for DMs/groups */}
           <AnimatePresence>
             {showMembers && (
               <PlayerList
                 account={account}
-                members={playersMembers}
-                presence={playersPresence}
+                members={isDm && dmMeta ? dmMeta.members : playersMembers}
+                presence={isDm && dmMeta ? dmPresence : playersPresence}
                 onOpenProfile={openProfile}
                 onClose={() => setShowMembers(false)}
               />
@@ -5471,6 +7215,78 @@ export function ChatApp({ url, onBack }: { url?: string; onBack?: () => void }) 
             toast={toast}
           />
         )}
+        {/* Invite people to a group chat */}
+        {showInvite && dmMeta && (
+          <InviteModal
+            dm={dmMeta}
+            friends={friends}
+            me={account}
+            onInvite={inviteToGroup}
+            onClose={() => setShowInvite(false)}
+          />
+        )}
+        {/* Rename group */}
+        {showRename && dmMeta?.isGroup && (
+          <ModalShell title="Rename group" onClose={() => setShowRename(false)}>
+            <div className="space-y-3">
+              <input
+                autoFocus
+                value={renameDraft}
+                maxLength={64}
+                onChange={(e) => setRenameDraft(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && void renameGroup()}
+                placeholder="New group name"
+                className="w-full rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-sm outline-none focus:border-orange-400/50"
+              />
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => setShowRename(false)}
+                  className="rounded-lg px-3 py-1.5 text-sm text-white/60 hover:bg-white/10"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => void renameGroup()}
+                  disabled={!renameDraft.trim()}
+                  className="flex items-center gap-1.5 rounded-lg bg-orange-400 px-3 py-1.5 text-sm font-semibold text-black disabled:opacity-40"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                  Save name
+                </button>
+              </div>
+            </div>
+          </ModalShell>
+        )}
+        {/* Leave group / close DM confirm */}
+        {showLeaveConfirm && dmMeta && (
+          <ModalShell
+            title={dmMeta.isGroup ? "Leave group?" : "Close this DM?"}
+            onClose={() => setShowLeaveConfirm(false)}
+          >
+            <div className="space-y-3">
+              <p className="text-sm leading-relaxed text-white/70">
+                {dmMeta.isGroup
+                  ? `You'll stop receiving messages from "${dmMeta.name || channelLabel}". Other members keep the group — someone can invite you back anytime.`
+                  : "The DM disappears from your list. The other person keeps their copy — you can always start it again."}
+              </p>
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => setShowLeaveConfirm(false)}
+                  className="rounded-lg px-3 py-1.5 text-sm text-white/60 hover:bg-white/10"
+                >
+                  Stay
+                </button>
+                <button
+                  onClick={() => void leaveGroup()}
+                  className="flex items-center gap-1.5 rounded-lg bg-red-500 px-3 py-1.5 text-sm font-semibold text-white hover:bg-red-400"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                  {dmMeta.isGroup ? "Leave group" : "Close DM"}
+                </button>
+              </div>
+            </div>
+          </ModalShell>
+        )}
       </AnimatePresence>
     </div>
   )
@@ -5545,7 +7361,7 @@ function DailyRewardButton({
       disabled={!status?.eligible || claiming}
       className={`relative flex items-center gap-1 rounded-md px-2 py-1 text-xs ${
         status?.eligible
-          ? "bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25"
+          ? "veil-bounce-soft bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25"
           : "bg-white/5 text-white/40"
       }`}
       title={
@@ -5561,7 +7377,7 @@ function DailyRewardButton({
         {status?.eligible ? "Daily" : `${status?.streak || 0}🔥`}
       </span>
       {status && status.streak > 0 && status.eligible && (
-        <span className="absolute -right-0.5 -top-0.5 grid h-3.5 min-w-3.5 place-items-center rounded-full bg-orange-400 text-[8px] font-bold text-black">
+        <span className="veil-pop-in absolute -right-0.5 -top-0.5 grid h-3.5 min-w-3.5 place-items-center rounded-full bg-orange-400 text-[8px] font-bold text-black">
           {status.streak}
         </span>
       )}

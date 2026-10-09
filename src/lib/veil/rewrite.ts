@@ -891,7 +891,11 @@ export function controlScript(pageUrl: string, cookies?: string[]): string {
   },true);
   document.addEventListener("mouseleave",function(){send("mouse",{y:999})},true);
   /* Escape pressed inside the veiled page returns to Veil's start page
-     (capture phase so pages that swallow keydown can't strand the user). */
+     (capture phase so pages that swallow keydown can't strand the user) —
+     BUT never while the page itself is fullscreen (a video or game: that
+     Escape exits the fullscreen, it must not dump the whole session) and
+     never while the page has an open <dialog> (that Escape closes the
+     dialog). This was the "randomly back on the start page" bug. */
   /* PANIC relay: the parent can't see keydowns that land in this frame —
      it hands us the panic combo (veil:panic-cfg) and we match it here,
      then relay the hit home; the parent navigates the whole tab away. */
@@ -906,7 +910,13 @@ export function controlScript(pageUrl: string, cookies?: string[]): string {
     send("panic-ready",{});
   }catch(e){}
   document.addEventListener("keydown",function(e){
-    if(e.key==="Escape"){try{send("esc",{})}catch(x){}}
+    if(e.key==="Escape"){
+      try{
+        if(document.fullscreenElement)return;
+        if(document.querySelector("dialog[open]"))return;
+        send("esc",{})
+      }catch(x){}
+    }
     try{
       if(!PC.on)return;
       var k=(e.key||"").toLowerCase();

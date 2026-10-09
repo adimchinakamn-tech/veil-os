@@ -2,6 +2,7 @@ import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
 import { getPresence, touchPresence, type PresenceSnapshot } from "@/lib/veil/presence"
 import { liveRoomActiveUsers } from "@/lib/veil/live-room"
+import { noteRequestOrigin } from "@/lib/veil/live-origin"
 
 /**
  * /api/presence — the site's "who's online" endpoint. ONE number shared
@@ -57,7 +58,8 @@ async function withLiveRoom(snap: PresenceSnapshot): Promise<PresenceSnapshot> {
   }
 }
 
-export async function GET(): Promise<Response> {
+export async function GET(req: Request): Promise<Response> {
+  noteRequestOrigin(req)
   const snap = await withLiveRoom(getPresence())
   return NextResponse.json(snap, {
     headers: { ...CORS, "cache-control": "no-store" },
@@ -65,6 +67,7 @@ export async function GET(): Promise<Response> {
 }
 
 export async function POST(req: Request): Promise<Response> {
+  noteRequestOrigin(req)
   let account: unknown = undefined
   let bodyVid: unknown = undefined
   try {

@@ -6,17 +6,24 @@
  * filtering, body rewriting, streaming pass-through, charset handling).
  */
 
-import { parseProxiedPath } from "./codec-server";
-import { cookieHeader, storeSetCookies } from "./cookies";
+import { parseProxiedPath, type RequestCtx } from "./codec-server";
+import {
+  cookieHeader,
+  storeSetCookies,
+  normContainer,
+  DEFAULT_CONTAINER,
+} from "./cookies";
 import { rewriteHtml, rewriteCss, rewriteM3u8, rewriteJsonMedia } from "./rewriter";
 import { HOOK_BUNDLE, quasarHeadParts } from "./hooks";
 import { siteFixFor, type SiteFix } from "./site-fixes";
 import { rewriteJs } from "./js-ast";
 import { createHtmlStream } from "./html-stream";
 import { assertSafeTarget } from "./security";
-import { quasarDispatcher } from "./http-agent";
+import { dispatcherFor } from "./http-agent";
 import { injectPoTokenIfNeeded } from "./potoken";
 import { QUASAR_VERSION } from "./version";
+import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 // Raw, UNPATCHED undici fetch. The proxy engine must never go through
 // Next.js's globalThis.fetch wrapper: its dev instrumentation (data-cache
 // wrapping / response cloning) corrupts large streamed upstream bodies and
@@ -113,26 +120,49 @@ function clientHostnameOf(headers: Headers): string | undefined {
  * the Location into a proxied path): every hop becomes its own proxied
  * request with native browser semantics — method downgrades, body handling,
  * per-hop cookie absorption and a canonical visible /p/ URL afterwards.
+ *
+ * v2.1.0 — `ctx` carries the per-tab context decoded from the request blob:
+ * container (cookie-jar partition), egress mode (upstream proxy vs direct)
+ * and an optional User-Agent override (client-hint headers are dropped when
+ * set so the request stays internally consistent).
  */
 export async function proxyFetch(
   method: string,
   startTarget: string,
   clientHeaders: Headers,
-  body: ArrayBuffer | undefined
+  body: ArrayBuffer | undefined,
+  ctx: RequestCtx = {}
 ): Promise<ProxiedRequestResult> {
   const targetUrl = new URL(startTarget);
+  const container = ctx.container ? normContainer(ctx.container) : DEFAULT_CONTAINER;
 
   // SSRF guard (also re-applied per hop by the browser-driven redirect chain).
   // The client host unlocks the same-host WS-bridge probe exemption.
   await assertSafeTarget(targetUrl, clientHostnameOf(clientHeaders));
 
-  const jarCookie = cookieHeader(targetUrl.origin);
+  const jarCookie = cookieHeader(targetUrl.origin, container);
 
   const headers = new Headers();
   forEachClientHeader(clientHeaders, (name, value) => {
     if (!REQ_HEADER_BLOCKLIST.has(name)) headers.set(name, value);
   });
   if (jarCookie) headers.set("cookie", jarCookie);
+
+  // v2.1.0 — UA override: replace the forwarded UA and drop client hints,
+  // which would contradict the override and defeat its purpose.
+  if (ctx.ua) {
+    headers.set("user-agent", ctx.ua);
+    headers.delete("sec-ch-ua");
+    headers.delete("sec-ch-ua-mobile");
+    headers.delete("sec-ch-ua-platform");
+    headers.delete("sec-ch-ua-full-version-list");
+    headers.delete("sec-ch-ua-arch");
+    headers.delete("sec-ch-ua-bitness");
+    headers.delete("sec-ch-ua-model");
+    headers.delete("sec-ch-ua-platform-version");
+    headers.delete("sec-ch-ua-reduced");
+    headers.delete("sec-ch-ua-wow64");
+  }
 
   // Per-site request fixes (headers stripped/merged for this host).
   const fix = siteFixFor(startTarget);
@@ -180,7 +210,7 @@ export async function proxyFetch(
         /* token injection is best-effort */
       }
     }
-    res = await fetchWithRetry(startTarget, method, headers, body);
+    res = await fetchWithRetry(startTarget, method, headers, body, ctx.egress);
   } catch (err) {
     throw enhanceFetchError(err, startTarget);
   }
@@ -189,7 +219,7 @@ export async function proxyFetch(
   // session cookies on the 302/303 responses themselves).
   const setCookies =
     typeof res.headers.getSetCookie === "function" ? res.headers.getSetCookie() : [];
-  if (setCookies.length) storeSetCookies(targetUrl.origin, setCookies);
+  if (setCookies.length) storeSetCookies(targetUrl.origin, setCookies, container);
 
   return { response: res, finalUrl: startTarget };
 }
@@ -204,7 +234,8 @@ function fetchOnce(
   target: string,
   method: string,
   headers: Headers,
-  body: ArrayBuffer | undefined
+  body: ArrayBuffer | undefined,
+  egress?: string
 ): Promise<Response> {
   const ctrl = new AbortController();
   const timer = setTimeout(
@@ -220,7 +251,8 @@ function fetchOnce(
       redirect: "manual",
       signal: ctrl.signal,
       // v2.0.4 — pooled dispatcher with HTTP/2 enabled (QUASAR_NO_H2=1 reverts).
-      dispatcher: quasarDispatcher(),
+      // v2.1.0 — egress mode selects the pool (QUASAR_UPSTREAM_PROXY / direct).
+      dispatcher: dispatcherFor(egress),
     } as Parameters<typeof undiciFetch>[1]
   )
     .then((res) => res as unknown as Response)
@@ -236,7 +268,8 @@ async function fetchWithRetry(
   target: string,
   method: string,
   headers: Headers,
-  body: ArrayBuffer | undefined
+  body: ArrayBuffer | undefined,
+  egress?: string
 ): Promise<Response> {
   const idempotent = method === "GET" || method === "HEAD";
   let lastErr: unknown;
@@ -245,7 +278,7 @@ async function fetchWithRetry(
       await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
     }
     try {
-      return await fetchOnce(target, method, headers, body);
+      return await fetchOnce(target, method, headers, body, egress);
     } catch (err) {
       lastErr = err;
     }
@@ -304,11 +337,8 @@ interface JsCacheEntry {
 
 const jsCache = new Map<string, JsCacheEntry>();
 const JS_CACHE_MAX_ENTRIES = 48;
-/* 64MB (was 160MB — on the 4GB dev box the rewritten-JS cache was the
- * single biggest controllable heap resident; 48 entries rarely needs
- * more than ~60MB and the miss cost is one upstream re-fetch + rewrite). */
 const JS_CACHE_MAX_BYTES =
-  Math.max(16, Number(process.env.QUASAR_JS_CACHE_MB) || 64) * 1024 * 1024;
+  Math.max(16, Number(process.env.QUASAR_JS_CACHE_MB) || 160) * 1024 * 1024;
 let jsCacheBytes = 0;
 
 function jsCacheGet(key: string): JsCacheEntry | undefined {
@@ -330,7 +360,78 @@ function jsCacheSet(key: string, entry: JsCacheEntry): void {
     jsCacheBytes -= oldest.length + (evicted ? evicted.code.length * 2 : 0);
     jsCache.delete(oldest);
   }
+  astCacheDirty = true;
+  scheduleAstPersist();
 }
+
+/* v2.1.0 — AST cache disk persistence. In-memory alone meant every server
+   restart re-ran acorn on every chunk of every site. Write-behind (90s when
+   dirty) with an atomic tmp+rename; load bounded by the same byte budget. */
+const AST_CACHE_DIR = process.env.QUASAR_CACHE_DIR || join(process.cwd(), ".quasar-cache");
+const AST_CACHE_FILE = join(AST_CACHE_DIR, "ast-cache.json");
+let astCacheDirty = false;
+let astCacheTimer: ReturnType<typeof setInterval> | null = null;
+
+function scheduleAstPersist(): void {
+  if (astCacheTimer) return;
+  astCacheTimer = setInterval(() => {
+    if (!astCacheDirty) return;
+    astCacheDirty = false;
+    try {
+      // Map order is LRU order (oldest first) — serialize newest-first.
+      const entries: [string, JsCacheEntry][] = [];
+      let budget = JS_CACHE_MAX_BYTES;
+      for (const [k, e] of Array.from(jsCache.entries()).reverse()) {
+        const cost = k.length + e.code.length * 2;
+        if (cost > budget) continue;
+        budget -= cost;
+        entries.push([k, e]);
+        if (entries.length >= JS_CACHE_MAX_ENTRIES) break;
+      }
+      mkdirSync(AST_CACHE_DIR, { recursive: true });
+      const tmp = AST_CACHE_FILE + ".tmp";
+      writeFileSync(tmp, JSON.stringify({ v: 1, entries }), "utf8");
+      renameSync(tmp, AST_CACHE_FILE);
+    } catch {
+      /* cache persistence is best-effort */
+    }
+  }, 90_000);
+  // Never hold the process open for a cache write.
+  try {
+    (astCacheTimer as unknown as { unref?: () => void }).unref?.();
+  } catch {}
+}
+
+(function loadAstCache() {
+  try {
+    const raw = JSON.parse(readFileSync(AST_CACHE_FILE, "utf8")) as {
+      v?: number;
+      entries?: [string, JsCacheEntry][];
+    };
+    if (!raw || raw.v !== 1 || !Array.isArray(raw.entries)) return;
+    let budget = JS_CACHE_MAX_BYTES;
+    for (const [key, entry] of raw.entries) {
+      if (
+        typeof key !== "string" ||
+        !entry ||
+        typeof entry.code !== "string" ||
+        !Array.isArray(entry.headers)
+      )
+        continue;
+      const cost = key.length + entry.code.length * 2;
+      if (cost > budget) continue;
+      budget -= cost;
+      jsCache.set(key, { code: entry.code, status: entry.status, headers: entry.headers });
+      jsCacheBytes += cost;
+      if (jsCache.size >= JS_CACHE_MAX_ENTRIES) break;
+    }
+    if (jsCache.size) {
+      console.log("[quasar] AST cache restored from disk: " + jsCache.size + " entries");
+    }
+  } catch {
+    /* first boot or unreadable — start empty */
+  }
+})();
 
 function decodeBuffer(buf: ArrayBuffer, charset: string): string {
   try {
@@ -353,8 +454,12 @@ function sizeWithin(res: Response, max: number): boolean {
 }
 
 /** Build the head-injection block (page data + site config + hooks). */
-function buildInjection(targetUrl: string, site: SiteFix | null): string {
-  const { pageDataTag, siteConfigTag } = quasarHeadParts(targetUrl, site);
+function buildInjection(
+  targetUrl: string,
+  site: SiteFix | null,
+  ctx?: RequestCtx
+): string {
+  const { pageDataTag, siteConfigTag } = quasarHeadParts(targetUrl, site, ctx);
   return pageDataTag + siteConfigTag + `<script data-quasar="engine">${HOOK_BUNDLE}</script>`;
 }
 
@@ -362,7 +467,8 @@ function buildInjection(targetUrl: string, site: SiteFix | null): string {
 export async function buildResponseBody(
   res: Response,
   finalUrl: string,
-  method: string
+  method: string,
+  ctx: RequestCtx = {}
 ): Promise<BodyOutcome> {
   const headers = buildClientHeaders(res, finalUrl);
   const status = res.status;
@@ -376,7 +482,7 @@ export async function buildResponseBody(
   const flags = fix?.flags ?? {};
 
   if (lower.includes("text/html") || lower.includes("application/xhtml")) {
-    const injection = buildInjection(finalUrl, fix);
+    const injection = buildInjection(finalUrl, fix, ctx);
 
     // Preferred path: stream the document through the incremental rewriter —
     // first paint happens while the rest of the body is still in flight.

@@ -37,6 +37,48 @@ function git(args: string[]): { code: number; err: string } {
   return { code: r.status ?? 1, err: (r.stderr || "").slice(0, 400) }
 }
 
+function gitOut(args: string[]): string {
+  try {
+    const r = spawnSync("git", args, {
+      cwd: ROOT,
+      encoding: "utf-8",
+      env: { ...process.env, GIT_TERMINAL_PROMPT: "0" },
+    })
+    return r.status === 0 ? (r.stdout || "") : ""
+  } catch {
+    return ""
+  }
+}
+
+/** 2026-10-07 PERMANENT revert fix, part 2: before a snapshot commit is
+ * stacked, verify this box is not sitting on a STALE lineage (a platform
+ * snapshot-restore rolls the repo back while origin/main keeps every
+ * pushed feature). When HEAD is strictly behind origin/main and no
+ * tracked file outside backups/ is modified, adopt the remote tip first
+ * and rewrite the snapshot files — a backup must never anchor the box
+ * to old code again. Returns true when a heal happened. */
+function healStaleLineage(rewrite: () => void): boolean {
+  // strictly behind? (HEAD is an ancestor of origin/main, but the remote
+  // tip is NOT an ancestor of HEAD — equal counts as healthy)
+  const headAnc = git(["merge-base", "--is-ancestor", "HEAD", "origin/main"]).code === 0
+  const remoteAnc = git(["merge-base", "--is-ancestor", "origin/main", "HEAD"]).code === 0
+  if (!headAnc || remoteAnc) return false
+  // Only tracked modifications matter; untracked noise (dev.log, tmp/)
+  // never blocks a reset. Dirt under backups/ is fine — we rewrite it.
+  const porcelain = gitOut(["status", "--porcelain"])
+  const blocking = porcelain
+    .split("\n")
+    .filter((l) => l && !l.startsWith("??"))
+    .filter((l) => {
+      const p = l.slice(3).split(" -> ").pop()!.trim()
+      return !p.startsWith("backups/")
+    })
+  if (blocking.length > 0) return false
+  if (git(["reset", "--hard", "origin/main"]).code !== 0) return false
+  rewrite() /* re-materialize the fresh snapshot the reset just clobbered */
+  return true
+}
+
 async function main(): Promise<void> {
   const sig = await backupSignature()
   const state = readBackupState()
@@ -59,11 +101,15 @@ async function main(): Promise<void> {
   // chat content. Serverless cold boots + disaster restores read
   // backups/chat/latest.json, so this push IS the off-site backup.
   git(["fetch", "origin", "main", "--quiet"])
+  const healed = healStaleLineage(() => {
+    writeBackupFiles(backup)
+  })
+  if (healed) console.error("LINEAGE-HEALED reset to origin/main before snapshot")
   git(["add", "-A", "backups/chat"])
   const staged = git(["diff", "--cached", "--quiet"])
+  const stamp = new Date().toISOString().replace("T", " ").slice(0, 16)
   let committed = false
   if (staged.code !== 0) {
-    const stamp = new Date().toISOString().replace("T", " ").slice(0, 16)
     const c = git([
       "commit",
       "-m",
@@ -74,13 +120,37 @@ async function main(): Promise<void> {
   }
   let push = git(["push", "origin", "main"])
   if (push.code !== 0) {
-    // remote moved (a CDN room write landed between fetch and push) —
-    // rebase this box's commit on top and retry once
-    const pull = git(["pull", "--rebase", "--autostash", "origin", "main"])
+    // remote moved (a feature commit or another box's backup landed between
+    // fetch and push) — rebase this box's commit on top and retry.
+    //
+    // 2026-10-07 PERMANENT FIX for the "site keeps getting reverted" bug:
+    // plain `pull --rebase` dies on conflicts inside backups/chat/* when the
+    // remote lineage also advanced backup files, the abort then left this
+    // box forever diverged — stacking backup commits on a STALE codebase
+    // while every push failed silently. That is exactly how the new-tab
+    // overhaul / quasar 2.1.0 / search fixes "disappeared" from this box.
+    // `-X theirs` resolves backup-file conflicts in favor of THIS box's
+    // newer snapshot (the only thing this loop writes), and --autostash
+    // preserves any in-flight edits. If even that fails, hard-recover by
+    // resetting to the remote tip and re-staging the fresh snapshot, so
+    // the loop can NEVER strand the box on a stale lineage again.
+    const pull = git(["pull", "--rebase", "-X", "theirs", "--autostash", "origin", "main"])
     if (pull.code === 0) {
       push = git(["push", "origin", "main"])
     } else {
       git(["rebase", "--abort"])
+      // Hard recovery: adopt the remote code, keep the snapshot we just wrote.
+      git(["stash", "push", "-u", "-m", "backup-recovery", "backups/chat"])
+      if (git(["reset", "--hard", "origin/main"]).code === 0) {
+        git(["stash", "pop"])
+        git(["add", "-A", "backups/chat"])
+        git([
+          "commit",
+          "-m",
+          `chat backup (recovered): ${backup.counts.messages} messages @ ${stamp}`,
+        ])
+        push = git(["push", "origin", "main"])
+      }
     }
   }
   const pushOk = push.code === 0

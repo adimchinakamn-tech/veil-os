@@ -185,6 +185,8 @@ export type ChatBackupV1 = {
   dms: { id: string; name: string | null; isGroup: boolean; ownerId: string | null; createdAt: string }[]
   dmMembers: { dmId: string; accountId: string }[]
   friends: { accountId: string; friendId: string; createdAt: string }[]
+  /* v1.1 — emoji reactions (optional so pre-reaction backups still parse) */
+  reactions?: { messageId: string; accountId: string; emoji: string }[]
 }
 
 export function isChatBackup(data: unknown): data is ChatBackupV1 {
@@ -201,12 +203,13 @@ export function isChatBackup(data: unknown): data is ChatBackupV1 {
 // ---------------------------------------------------------------------------
 
 export async function collectChatBackup(): Promise<ChatBackupV1> {
-  const [accounts, messages, dms, dmMembers, friends] = await Promise.all([
+  const [accounts, messages, dms, dmMembers, friends, reactions] = await Promise.all([
     db.chatAccount.findMany({ orderBy: { createdAt: "asc" } }),
     db.chatMessage.findMany({ orderBy: { createdAt: "asc" } }),
     db.chatDM.findMany({ orderBy: { createdAt: "asc" } }),
     db.dMMember.findMany(),
     db.chatFriend.findMany(),
+    db.chatReaction.findMany(),
   ])
   return {
     veil: "chat-backup",
@@ -255,18 +258,24 @@ export async function collectChatBackup(): Promise<ChatBackupV1> {
       friendId: f.friendId,
       createdAt: f.createdAt.toISOString(),
     })),
+    reactions: reactions.map((r) => ({
+      messageId: r.messageId,
+      accountId: r.accountId,
+      emoji: r.emoji,
+    })),
   }
 }
 
 /** Cheap change fingerprint — used by the backup loop to skip no-op runs. */
 export async function backupSignature(): Promise<string> {
-  const [msgCount, accCount, dmCount, lastMsg] = await Promise.all([
+  const [msgCount, accCount, dmCount, reactCount, lastMsg] = await Promise.all([
     db.chatMessage.count(),
     db.chatAccount.count(),
     db.chatDM.count(),
+    db.chatReaction.count(),
     db.chatMessage.findFirst({ orderBy: { createdAt: "desc" }, select: { id: true, createdAt: true } }),
   ])
-  return [msgCount, accCount, dmCount, lastMsg ? `${lastMsg.id}@${lastMsg.createdAt.getTime()}` : "-"].join("|")
+  return [msgCount, accCount, dmCount, reactCount, lastMsg ? `${lastMsg.id}@${lastMsg.createdAt.getTime()}` : "-"].join("|")
 }
 
 // ---------------------------------------------------------------------------
@@ -317,6 +326,7 @@ export type RestoreResult = {
   messagesSkipped: number
   dmsRestored: number
   friendsRestored: number
+  reactionsRestored: number
   restoredFrom?: string
 }
 
@@ -332,6 +342,7 @@ export async function restoreChatBackup(
     messagesSkipped: 0,
     dmsRestored: 0,
     friendsRestored: 0,
+    reactionsRestored: 0,
     restoredFrom: opts.restoredFrom,
   }
   if (!isChatBackup(data)) {
@@ -458,6 +469,18 @@ export async function restoreChatBackup(
       })
     msgIds.add(m.id)
     res.messagesImported++
+  }
+
+  // ---- pass 4: reactions (skip rows that already exist) ------------------
+  for (const r of data.reactions ?? []) {
+    const accountId = r?.accountId ? idMap.get(r.accountId) : undefined
+    if (!r?.messageId || !accountId || typeof r.emoji !== "string" || !r.emoji) continue
+    await db.chatReaction
+      .create({ data: { messageId: r.messageId, accountId, emoji: r.emoji } })
+      .catch(() => {
+        /* unique (message, account, emoji) — already restored */
+      })
+    res.reactionsRestored++
   }
 
   res.ok = true

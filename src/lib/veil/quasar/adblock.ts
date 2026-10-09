@@ -110,19 +110,6 @@ export const AD_HOSTS: string[] = [
   "snap.licdn.com",
   "bat.bing.com",
   "ads.linkedin.com",
-  // Adult-network ad servers & tracking metrics (observed 2-2.5s proxy
-  // round-trips per hit in dev logs — pure waste)
-  "pemsrv.com",
-  "exdynsrv.com",
-  "realsrv.com",
-  "ero-advertising.com",
-  "tsyndicate.com",
-  "tjk-njk.com",
-  "grtbt.com",
-  "wsrv.nl",
-  "histats.com",
-  "addthis.com",
-  "sharethis.com",
 ];
 
 /** Literal tokens matched against pathname+query (lowercased). */
@@ -208,14 +195,10 @@ export function isAdUrl(target: string | URL): boolean {
 /**
  * The DOM-layer bundle injected ahead of the hook engine on every proxied
  * page. Plain ES5-ish code (no backticks) so it can be embedded in HTML.
- * VEIL INTEGRATION: the popup blocker (window.open override) and the
- * target=_blank click interceptor are intentionally NOT installed here —
- * the hook engine owns both and opens popups as VEIL TABS via the shell's
- * open-tab bridge. This layer keeps: the ad element sweeper,
- * MutationObserver removal, ad-container CSS, the blocked-counters
- * reported to the app chrome, the isAd() matcher the engine consults
- * before opening popup tabs, and relaying service-worker network-block
- * totals up to the parent.
+ * Owns: ad element sweeper, MutationObserver removal, ad-container CSS,
+ * window.open popup blocker, target=_blank popunder protection, the
+ * blocked-counters reported to the app chrome, and relaying service-worker
+ * network-block totals up to the parent.
  */
 export const ADBLOCK_SOURCE = `(function () {
 'use strict';
@@ -243,10 +226,7 @@ function count(kind) {
     postTimer = setTimeout(function () { postTimer = null; postStats(); }, 400);
   }
 }
-/* Engine-facing API: the hook engine (loaded after this layer) calls isAd()
- * before opening a window.open popup / target=_blank link as a Veil tab —
- * ad targets are counted + dropped, everything else opens in Veil. */
-window.__QUASAR_ADBLOCK__ = { stats: stats, count: count, isAd: isAdUrl };
+window.__QUASAR_ADBLOCK__ = { stats: stats, count: count };
 
 /* ---------- relay service-worker network-block totals ---------- */
 try {
@@ -293,13 +273,53 @@ function res(u) {
   } catch (e) { return u; }
 }
 
-/* ---------- popup policy (Veil) ---------- */
-/* v1.3.8 stock blocks window.open + target=_blank here. In Veil the HOOK
- * ENGINE owns both surfaces: window.open and _blank links open as fresh
- * VEIL TABS through the shell's open-tab bridge (the user's requirement:
- * popups never escape to the host browser), and the engine consults
- * isAd() above so AD popups are still counted + dropped. Installing a
- * blocker here would fight the engine for the same globals. */
+/* ---------- popup + popunder blocker (v1.3.8) ---------- */
+/* window.open never spawns a real popup: script-opened windows without a
+   fresh user gesture are counted and dropped; gesture-backed opens navigate
+   the current tunnel instead (same content, zero popunders). */
+try {
+  var openWrapper = function (url) {
+    try {
+      var trusted = false;
+      try { trusted = !!(navigator.userActivation && navigator.userActivation.isActive); } catch (e0) {}
+      if (!trusted) { count('popups'); return null; }
+      if (url) { try { location.assign(res(url)); } catch (e1) {} }
+      return null;
+    } catch (e2) { return null; }
+  };
+  /* stealth: present as the native window.open */
+  try { Object.defineProperty(openWrapper, 'name', { value: 'open', configurable: true }); } catch (e3) {}
+  try { Object.defineProperty(openWrapper, 'length', { value: 3, configurable: true }); } catch (e4) {}
+  try {
+    if (window.__QUASAR_STEALTH__ && window.__QUASAR_STEALTH__.mark) {
+      window.__QUASAR_STEALTH__.mark(openWrapper, 'function open() { [native code] }');
+    }
+  } catch (e5) {}
+  window.open = openWrapper;
+} catch (e) {}
+
+/* target=_blank anchors: stay in the tunnel on a real click; a click
+   without user activation is a synthetic popunder -> counted + blocked.
+   Modifier/middle clicks keep native behavior (explicit new-tab intent). */
+try {
+  document.addEventListener('click', function (e) {
+    try {
+      if (e.defaultPrevented || e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+      var t = e.target;
+      while (t && t.nodeType === 1 && t.tagName !== 'A') t = t.parentNode;
+      if (!t || t.nodeType !== 1) return;
+      var tgt = (t.getAttribute('target') || '').toLowerCase();
+      if (tgt !== '_blank' && tgt !== 'blank') return;
+      var href = t.getAttribute('href') || '';
+      if (!href || href.charAt(0) === '#') return;
+      e.preventDefault();
+      var trusted2 = false;
+      try { trusted2 = !!(navigator.userActivation && navigator.userActivation.isActive); } catch (e3) {}
+      if (!trusted2) { count('popups'); return; }
+      try { location.assign(res(href)); } catch (e4) {}
+    } catch (err) {}
+  }, true);
+} catch (e) {}
 
 /* ---------- DOM ad sweeper ---------- */
 function ensureStyle() {

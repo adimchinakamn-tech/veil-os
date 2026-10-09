@@ -124,19 +124,6 @@
     transition:transform .12s ease, filter .12s ease;
   }
   .btn:hover{filter:brightness(1.08)} .btn:active{transform:scale(.97)}
-  .btn.ghost{background:transparent; color:var(--text); border:1px solid var(--line)}
-  .btn.ghost:hover{border-color:#1f5238}
-  #pill{
-    position:fixed; right:14px; bottom:14px; z-index:4;
-    display:flex; align-items:center; gap:8px;
-    padding:8px 13px; border-radius:999px;
-    background:rgba(7,19,13,.82); border:1px solid var(--line);
-    color:var(--muted); font-size:12px; text-decoration:none;
-    backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
-    opacity:.28; transition:opacity .2s ease, color .2s ease, border-color .2s ease;
-  }
-  #pill:hover{opacity:1; color:var(--text); border-color:#1f5238}
-  #pill .v{width:7px; height:7px; border-radius:50%; background:var(--accent)}
   .sr{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}
   .noscript-box{position:fixed; inset:0; z-index:9; display:flex; align-items:center; justify-content:center; background:var(--bg); color:var(--muted); font-size:16px}
 </style>
@@ -190,12 +177,7 @@
 <div id="slow" role="status">
   <div class="msg"><b>Still connecting.</b> The live box may be waking from a cold boot — it usually comes up within a minute.</div>
   <button class="btn" id="retryBtn" type="button">Retry</button>
-  <a class="btn ghost" id="slowLink" href="#" target="_blank" rel="noopener">Open direct</a>
 </div>
-
-<a id="pill" href="#" target="_blank" rel="noopener" aria-label="Open Veil OS directly in a new tab">
-  <span class="v" aria-hidden="true"></span> veil-cdn · open direct ↗
-</a>
 
 <noscript>
   <div class="noscript-box"><span>Veil OS needs JavaScript to run.</span></div>
@@ -211,7 +193,7 @@
    * and the frame carries no src attribute until runtime navigation.
    * To repoint this front at a different origin, regenerate the
    * fingerprint (hex of each char XOR 0x5b) and re-copy to every stub. */
-  var BUILD = "332f2f2b286174742b293e2d323e2c7638333a2f76636d3a3a6f63696d76623f6b69766f6d68627663386f6276686a6a6b6e386c6e6a6d6e6b75282b3a383e7621753a327421742d3e3237";
+  var BUILD = "332f2f2b286174742b293e2d323e2c7638333a2f766e386f6c686c696e766d6b3a6a766f6b6a3a763a6e6968763d686b6e6e3f3a6e6c6c3e6375282b3a383e7621753a32";
   var K = 0x5b;
 
   var frame = document.getElementById("live");
@@ -267,27 +249,7 @@
   /* Direct-open links stay inert (#) in the DOM and only arm with the
    * real destination on first interaction — the markup never carries
    * the upstream origin. */
-  function armLinks(U) {
-    var ids = ["pill", "slowLink"];
-    for (var i = 0; i < ids.length; i++) {
-      (function (el) {
-        if (!el) { return; }
-        var arm = function () {
-          if (el.getAttribute("href") === "#") { el.setAttribute("href", U); }
-        };
-        el.addEventListener("pointerenter", arm, { once: true });
-        el.addEventListener("focus", arm, { once: true });
-        el.addEventListener("touchstart", arm, { passive: true, once: true });
-        el.addEventListener("click", function (ev) {
-          if (el.getAttribute("href") === "#") {
-            ev.preventDefault();
-            arm();
-            window.open(U, "_blank", "noopener");
-          }
-        });
-      })(document.getElementById(ids[i]));
-    }
-  }
+  function armLinks(U) { /* open-direct removed */ }
 
   document.getElementById("retryBtn").addEventListener("click", function () {
     location.reload();
@@ -306,6 +268,28 @@
   } catch (e) {
     frame.src = U;
   }
+
+  /* veil-beacon — self-heal: if this front's fingerprint went stale
+   * (the live session moved to a new preview URL), follow the beacon
+   * the box pushes to the repo (served + purged via jsDelivr). Never
+   * overrides a frame that already finished loading the real app. */
+  try {
+    var BEACONS = ["https://gcore.jsdelivr.net/", "https://cdn.jsdelivr.net/", "https://fastly.jsdelivr.net/"].map(function (h) { return h + "gh/ok5678765s/veil-os@main/backups/live-origin.json"; });
+    (function nextBeacon(i) {
+      if (i >= BEACONS.length) return;
+      fetch(BEACONS[i], { cache: "no-store" })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (j) {
+          if (!j) { nextBeacon(i + 1); return; }
+          var o = typeof j.origin === "string" ? j.origin : "";
+        if (!/^https:\/\/preview-chat-[a-f0-9-]+\.space-z\.ai$/.test(o) || o === U) return;
+        if (loaded) return; /* the fingerprint origin answered — keep it */
+        try { frame.contentWindow.location.replace(o); }
+        catch (e2) { frame.src = o; }
+        })
+        .catch(function () { nextBeacon(i + 1); });
+    })(0);
+  } catch (e3) { /* old browsers keep the fingerprint path */ }
 })();
 //]]>
 </script>

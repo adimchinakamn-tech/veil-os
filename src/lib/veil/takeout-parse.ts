@@ -30,10 +30,11 @@ export interface TakeoutHistoryRow {
 }
 
 /** how many rows an import keeps (newest first). Effectively unlimited —
- * a full YouTube Takeout history imports whole; the client's history
- * store trims to what localStorage can hold (writeHistory keeps the
- * newest rows that fit). Byte caps in the extract layer bound the
- * input size, so this is just the row-level paranoia ceiling. */
+ * a full YouTube Takeout history imports whole; the client's IndexedDB
+ * history store caps at HISTORY_CAP = 1,000,000 rows and trims oldest.
+ * Byte caps in the extract layer bound the input size, so this is just
+ * the row-level paranoia ceiling. (2026-10-07 "stream history should be
+ * infinite max 1,000,000", re-confirmed 2026-10-09 "MAKEIT 1 MILLION".) */
 export const MAX_HISTORY_ROWS = 1_000_000;
 
 /* ------------------------------------------------------------------ */

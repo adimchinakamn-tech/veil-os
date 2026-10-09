@@ -116,6 +116,9 @@ model ChatAccount {
   blackjackGames          BlackjackGame[]
   friends                 ChatFriend[] @relation("FriendOwner")
   friendOf                ChatFriend[] @relation("FriendTarget")
+  friendRequestsSent      ChatFriendRequest[] @relation("FriendReqFrom")
+  friendRequestsReceived  ChatFriendRequest[] @relation("FriendReqTo")
+  reactions               ChatReaction[]
 }
 
 model ChatMessage {
@@ -130,9 +133,27 @@ model ChatMessage {
   editedAt        DateTime? // set when the author edited the message ("(edited)")
 
   account ChatAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  reactions ChatReaction[]
 
   @@index([channelId])
   @@index([accountId])
+}
+
+// ---- Message reactions (emoji) ----
+// One row per (message, account, emoji) — toggling removes the row. The
+// chat UI aggregates these into "emoji chips" with counts under a message.
+model ChatReaction {
+  id        String   @id @default(cuid())
+  messageId String
+  accountId String
+  emoji     String // single emoji grapheme from the fixed quick-reaction set
+  createdAt DateTime @default(now())
+
+  message ChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  account ChatAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, accountId, emoji])
+  @@index([messageId])
 }
 
 model ChatDM {
@@ -204,6 +225,30 @@ model ChatFriend {
   @@unique([accountId, friendId])
   @@index([accountId])
   @@index([friendId])
+}
+
+// ---- Friend requests (2026-10-07: "add friend" → notification →
+//      accept/decline → THEN you're friends) ----
+// "add" no longer silently creates a one-way link. It files a pending
+// request; the target sees it as a live notification (bell + sidebar +
+// toast via the relay's private user rooms) and accepts or declines.
+// Accepting creates BOTH ChatFriend rows at once (friendship is always
+// mutual). Declines simply delete the row — nothing is stored about a
+// declined request, so re-asking later stays possible and drama-free.
+model ChatFriendRequest {
+  id        String   @id @default(cuid())
+  fromId    String // the sender
+  toId      String // the recipient
+  status    String   @default("pending") // only "pending" rows live here
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  from ChatAccount @relation("FriendReqFrom", fields: [fromId], references: [id], onDelete: Cascade)
+  to   ChatAccount @relation("FriendReqTo", fields: [toId], references: [id], onDelete: Cascade)
+
+  @@unique([fromId, toId])
+  @@index([toId])
+  @@index([fromId])
 }
 
 // ---- Site updates (owner changelog, posted through the website) ----

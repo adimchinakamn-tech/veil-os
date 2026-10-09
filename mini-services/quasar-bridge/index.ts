@@ -1,10 +1,10 @@
 /**
- * Quasar WebSocket Bridge (v2.0.4)
+ * Quasar ws-bridge
  * ----------------
  * Standalone Bun mini-service that bridges WebSockets for the Quasar proxy.
  *
  * Why: the Next.js app cannot proxy WebSocket connections. Proxied pages run
- * injected hooks that open `new WebSocket("/quasar-bridge?XTransformPort=3310&target=<ENC>")`
+ * injected hooks that open `new WebSocket("/ws-bridge?XTransformPort=3310&target=<ENC>")`
  * on the app's origin; the Caddy gateway forwards that request (via the
  * XTransformPort query hint) to this service on port 3310. We decode the
  * `target` blob with the shared multi-format codec (src/lib/veil/quasar/codec-server.ts

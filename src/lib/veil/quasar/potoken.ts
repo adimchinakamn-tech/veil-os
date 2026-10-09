@@ -1,5 +1,5 @@
 /**
- * Quasar poToken Provider (v2.0.4, optional)
+ * Quasar poToken Provider (v2.1.0, optional)
  * ------------------------------------------
  * YouTube's innertube API demands a poToken (BotGuard attestation) for
  * playback on suspicious clients; the streaming server's undici requests are
@@ -16,9 +16,16 @@
  *
  * Env: QUASAR_YT_POTOKEN=0 disables the module entirely (default enabled
  * since the deps ship with the project).
+ *
+ * v2.1.0: when QUASAR_POTOKEN_BROWSER=1, injection first tries the optional
+ * REAL-browser minter (potoken-browser.ts, playwright-core) — it attacks
+ * the jsdom ceiling below by running BotGuard in genuine Chromium. It raises
+ * the odds but is not a guarantee; any miss falls back to this jsdom path,
+ * so the default (flag unset) behavior is byte-for-byte unchanged.
  */
 
 import { fetch as undiciFetch } from "undici";
+import { browserPoTokenEnabled, mintPoTokenBrowser } from "./potoken-browser";
 
 const REQUEST_KEY = "O43z0dpjhgX20SCx4KAo"; // WEB player attestation request key
 const GOOG_API_KEY = "AIzaSyDyT5W0Jh49F30Pqqtyfdf7pDLFKLJoAnw"; // public WAA key
@@ -169,16 +176,23 @@ export async function injectPoTokenIfNeeded(body: ArrayBuffer): Promise<ArrayBuf
     const json = JSON.parse(text) as Record<string, unknown>;
     if (!json || typeof json !== "object") return body;
 
-    const box = await getMinter();
-    if (!box) return body;
-
     // Content binding: the video ID when present (content-bound token),
     // otherwise a generic binding — matches YouTube's web client behavior.
     const binding =
       (typeof json.videoId === "string" && json.videoId) ||
       (typeof json.contentBinding === "string" && json.contentBinding) ||
       "";
-    const poToken = await box.minter.mintAsWebsafeString(binding);
+
+    // v2.1.0: browser-first when explicitly enabled. mintPoTokenBrowser
+    // never throws; null → fall through to the jsdom/bgutils path.
+    let poToken: string | null = null;
+    if (browserPoTokenEnabled()) {
+      poToken = (await mintPoTokenBrowser(binding))?.poToken ?? null;
+    }
+    if (!poToken) {
+      const box = await getMinter();
+      if (box) poToken = await box.minter.mintAsWebsafeString(binding);
+    }
     if (!poToken) return body;
 
     if (!json.serviceIntegrityDimensions) {
