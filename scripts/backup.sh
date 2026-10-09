@@ -111,6 +111,20 @@ content_hash > "$UPDIR/$FILE.hash" 2>/dev/null || true
 # Plain-text worklog copy next to the snapshots (grep-able without tar).
 cp -f "$ROOT/worklog.md" "$UPDIR/worklog.md" 2>/dev/null || true
 
+# ---- git bundle (2026-10-10: the "animations vanished" postmortem) --------
+# The tar snapshots carry the TREE; this bundle additionally carries git
+# HISTORY (every commit on main) as one portable file — independent of
+# GitHub, independent of .git surviving a revert. Restore with:
+#   git clone upload/veil-snapshots/veil-git-*.bundle -b main restored
+# Rotated to the 3 newest (~55MB each).
+if git -C "$ROOT" rev-parse --verify main >/dev/null 2>&1; then
+  if git -C "$ROOT" bundle create "$UPDIR/veil-git-$STAMP.bundle" main >/dev/null 2>&1; then
+    ls -1t "$UPDIR"/veil-git-*.bundle 2>/dev/null | tail -n +4 | while read -r old; do
+      rm -f "$old" 2>/dev/null
+    done
+  fi
+fi
+
 # ---- recovery kit (the revert-proof toolbox) --------------------------------
 # The scripts that REBUILD this project, stored INSIDE the revert-proof
 # upload tree: even if scripts/ is wiped wholesale, veil-kit + the

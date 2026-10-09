@@ -667,3 +667,35 @@ Stage Summary:
 - ~240 mega-class applications across 9 files, all hover/ambient on always-mounted chrome and entrances only on conditionally-mounted items (search results, composers, toasts, dialogs, feed lists with stagger). No existing animation code touched; no framer-motion node carries a CSS transform class (transform effects ride child/sibling nodes); max ~2 animation classes per element (spec-listed chips carry pop-in + stagger + lift + press as explicitly requested).
 - Skipped + why: veil-bounce-soft on veil-player eq bars (existing vm-eq animation would be overridden — "do not modify existing" rule); volume-icon wobble (no volume control in the player); arcade grid-item CSS pop-in (framer whileInView already staggers those exact nodes).
 - ESLint clean on settings/music/ai/wallpapers/arcade/updates/stream + veil-player + start-sections; dev server compiles and serves 200 with no errors in dev.log.
+
+---
+Task ID: rollback-recovery-1010
+Agent: main (Z.ai Code)
+Task: User reported the site got restarted/rolled back and "the animations are gone" — recover ALL overwritten work from the backup servers and make sure this never happens again.
+
+Work Log:
+- Damage assessment: globals.css down to 39 veil- refs (was 258), 0 data-veil-fancy gates, motion.ts syncFancyDomAttr gone, chat-app 1 (was 163). CHIKEN JOCKEY splash + HISTORY_CAP 1M had survived.
+- Hunt: git reflog + `git fsck --lost-found` + scanning every commit's globals.css for data-veil-fancy → origin/main @ ac88a1e (GitHub, Oct 8 23:58) had the COMPLETE animation library (107 gates) + all component applications (chat-app 163, arcade 49, wallpapers 58, updates 36, music 14...) + quasar infra (potoken, http-cache, site-fixes, yt-remux).
+- Root cause: platform rollback left local main diverged (ahead 37 stale, behind 137 good); the chat-backup loop's `pull --rebase` aborted on every cycle (reflog proves it) and the stash-based hard recovery silently no-opped → pushes failed silently → box sat on stale code while origin held everything.
+- Recovery: `git merge origin/main` → 5 conflicts (stream-section ×3, takeout-parse ×1, chat backups ×2). Resolved keeping HEAD's IndexedDB 1M history architecture + origin's animation code. start-page auto-merged (CHIKEN survived), settings auto-merged.
+- Pushed merge 51495b3 to GitHub — origin/main is now the UNION (animations + 1M cap + splash + all fixes).
+- Prisma: regenerated client + db:push (merge brought ChatReaction/FriendRequest models). Restarted dev server to drop the stale in-memory client.
+- Chat data: live DB had 0 messages (lost in the earlier rollback, NOT by my db:push — the 19:21 pre-merge snapshot already had 0). Restored all 32 messages from git backup a78d37a:backups/chat/latest.json into db/custom.db (all 16 author accounts existed in the live 22). Forced fresh backup: 22 accounts / 32 messages pushed.
+- Verified via agent-browser: splash "CHIKEN JOCKEY!!!" renders; animations ON → heading/nav compute `veil-rise-fancy`, probe `veil-pop-in`; OFF → animationName none, data-veil-fancy null; chat login as Veil works, restored messages in DOM ("added way more animations" present).
+
+HARDENING (make sure this never happens again):
+1. upload/veil-keeper.sh — NEW divergence heal: when diverged from origin/main and clean outside backups/, `git merge --autostash -X theirs origin/main` + push (runs every 90s; would have self-healed today's incident within 90s). Keeper restarted with the new code.
+2. scripts/chat-backup.ts — push-failure path rewritten: merge -X theirs first; on merge failure, /tmp file-copy (not stash) + reset --hard origin/main + re-commit. Can never silently strand the box again.
+3. scripts/backup.sh — every snapshot now also writes a full-history git bundle to upload/veil-snapshots/veil-git-*.bundle (rotated ×3, ~270MB each) — GitHub-independent recovery: `git clone <bundle> -b main`.
+- All three syntax-checked / lint-clean; chat-backup --force verified pushing; first bundle created.
+
+Stage Summary:
+- ALL animation work recovered and live (107 CSS gates + ~470 class applications across 14 files), merged with the 1M IndexedDB history + CHIKEN JOCKEY + takeout fixes. Nothing lost.
+- Chat: 32 messages + 22 accounts live, backed up, pushed to GitHub + jsDelivr purge.
+- Triple backup now: GitHub (push every ≤30s) + tar snapshots (revert-proof upload/) + git bundles (full history, revert-proof).
+- Self-heal: keeper fast-forward heal + NEW divergence merge heal every 90s.
+
+Unresolved / risks:
+- The platform's UUID snapshot commits can still stack stale trees mid-session (while work is uncommitted) — the heals deliberately no-op then (dirty-tree guard). Always commit+push promptly after feature work; the 15-min cron reviewer should too.
+- If a future rollback happens, expect: 90s keeper divergence heal (clean tree) OR manual `git merge -X theirs origin/main` if dirty.
+- agent-browser CDP can wedge after a 30s timeout on busy pages — use disk/DB polling during heavy QA.

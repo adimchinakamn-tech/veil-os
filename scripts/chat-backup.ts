@@ -1,4 +1,5 @@
 import { spawnSync } from "child_process"
+import fs from "node:fs"
 import {
   collectChatBackup,
   writeBackupFiles,
@@ -121,35 +122,44 @@ async function main(): Promise<void> {
   let push = git(["push", "origin", "main"])
   if (push.code !== 0) {
     // remote moved (a feature commit or another box's backup landed between
-    // fetch and push) — rebase this box's commit on top and retry.
+    // fetch and push) — reconcile with the remote and retry.
     //
-    // 2026-10-07 PERMANENT FIX for the "site keeps getting reverted" bug:
-    // plain `pull --rebase` dies on conflicts inside backups/chat/* when the
-    // remote lineage also advanced backup files, the abort then left this
-    // box forever diverged — stacking backup commits on a STALE codebase
-    // while every push failed silently. That is exactly how the new-tab
-    // overhaul / quasar 2.1.0 / search fixes "disappeared" from this box.
-    // `-X theirs` resolves backup-file conflicts in favor of THIS box's
-    // newer snapshot (the only thing this loop writes), and --autostash
-    // preserves any in-flight edits. If even that fails, hard-recover by
-    // resetting to the remote tip and re-staging the fresh snapshot, so
-    // the loop can NEVER strand the box on a stale lineage again.
-    const pull = git(["pull", "--rebase", "-X", "theirs", "--autostash", "origin", "main"])
-    if (pull.code === 0) {
+    // 2026-10-10 PERMANENT FIX (the "animations vanished" postmortem):
+    // the old `pull --rebase -X theirs` kept ABORTING whenever a platform
+    // rollback diverged this box (conflicts -X cannot settle: modify/
+    // delete, renames), and the stash-based hard recovery silently
+    // no-opped — the box then sat diverged for a day while every push
+    // failed and origin/main held every animation commit. MERGE instead:
+    // -X theirs takes the REMOTE side of conflicting hunks (after a
+    // rollback the remote is the newest code), local-only files merge
+    // in untouched, and the next cycle re-commits fresh backup JSONs
+    // anyway. If even the merge fails, hard-recover by copying the
+    // fresh snapshot to /tmp (plain files — cannot fail like stash),
+    // adopting the remote tip, copying back, and re-committing.
+    const merge = git([
+      "merge", "--autostash", "-X", "theirs", "origin/main",
+      "-m", "auto: merge origin/main (rollback recovery)",
+    ])
+    if (merge.code === 0) {
       push = git(["push", "origin", "main"])
     } else {
-      git(["rebase", "--abort"])
-      // Hard recovery: adopt the remote code, keep the snapshot we just wrote.
-      git(["stash", "push", "-u", "-m", "backup-recovery", "backups/chat"])
-      if (git(["reset", "--hard", "origin/main"]).code === 0) {
-        git(["stash", "pop"])
-        git(["add", "-A", "backups/chat"])
-        git([
-          "commit",
-          "-m",
-          `chat backup (recovered): ${backup.counts.messages} messages @ ${stamp}`,
-        ])
-        push = git(["push", "origin", "main"])
+      git(["merge", "--abort"])
+      const tmp = `/tmp/veil-chat-backup-${Date.now()}`
+      try {
+        fs.mkdirSync(tmp, { recursive: true })
+        fs.cpSync(`${ROOT}/backups/chat`, tmp, { recursive: true })
+        if (git(["reset", "--hard", "origin/main"]).code === 0) {
+          fs.cpSync(tmp, `${ROOT}/backups/chat`, { recursive: true })
+          git(["add", "-A", "backups/chat"])
+          git([
+            "commit",
+            "-m",
+            `chat backup (recovered): ${backup.counts.messages} messages @ ${stamp}`,
+          ])
+          push = git(["push", "origin", "main"])
+        }
+      } finally {
+        fs.rmSync(tmp, { recursive: true, force: true })
       }
     }
   }
