@@ -19,7 +19,7 @@
 #                            guard + dedup + revive — the anti-reboot
 #                            machinery, see scripts/dev-watchdog.sh)
 #   - Next.js dev server    (port 3000, heap-capped via NODE_OPTIONS
-#                            --max-old-space-size=1536 in package.json)
+#                            --max-old-space-size=1792 in package.json)
 #   - ws-relay              (port 3003, WebSocket tunnel)
 #   - freetube-service      (port 3031, the real FreeTube program)
 # ============================================================================

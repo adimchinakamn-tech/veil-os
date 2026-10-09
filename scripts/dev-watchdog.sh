@@ -22,9 +22,25 @@
 #     kernel kill zone AND far enough above the plateau that only true leaks
 #     trip it.
 #
-# Protections kept from v2:
-#   1. RSS guard   — planned restart of next-server before it crosses the
-#                    limit (cooldown-enforced).
+# v4 (2026-10-09 "website should never restart" round): the restart
+#   POLICY changed. v3 (and Next.js's own internal watchdog) restarted on
+#   process-local metrics alone — but a big RSS with a healthy box is NOT
+#   an emergency (heap cap now 1792MB; the live heap alone legitimately
+#   reaches ~1.2GB on a fully-warm tree). Restarting a healthy-but-large
+#   server was exactly the "website randomly restarts" bug.
+#   NEW RULES:
+#     * RSS alone NEVER restarts. It logs a rate-limited warning and
+#       trusts the heap gardener (v5, instrumentation.ts) to compact.
+#     * A planned restart needs BOTH a huge RSS (> 2.3GB) AND real box
+#       pressure (MemAvailable < 700MB).
+#     * MemAvailable < 320MB alone remains the emergency path (the true
+#       OOM firewall — the alternative is a whole-box kernel panic).
+#   Cycle tightened 15s → 10s so pressure is caught faster than ever,
+#   while the 15-min cooldown still prevents any restart storm.
+#
+# Protections kept from v2/v3:
+#   1. Corroborated RSS guard — planned restart only when the box itself
+#                    is running out of memory (RSS high AND MemAvail low).
 #   2. MemAvailable guard — if the box drops below ~320MB available,
 #                    restart next-server to instantly free ~1.5GB.
 #   3. Dedup       — if multiple next-server instances pile up, keep the
@@ -46,9 +62,11 @@ for pid in $(pgrep -f 'bash scripts/dev-watchdog.sh' 2>/dev/null); do
 done
 sleep 0.3
 
-CYCLE=15               # seconds between checks
-RSS_LIMIT_KB=2100000   # 2.05GB — measured plateau of this dev server (1024MB heap + ~900MB non-heap: webpack module graph, source maps, undici buffers) is ~1.95GB after a full compile; the line sits above the plateau (no periodic restarts in normal operation) and 200MB under the kernel OOM kill zone (~2.25GB anon RSS). The gardener compacts from 1.35GB upward; only true leaks or compile spikes cross the line, and the 15-min cooldown makes even those single events, never storms.
-MEMAVAIL_MIN_KB=320000 # 320MB — whole-box emergency threshold
+CYCLE=10               # seconds between checks (v4: faster reaction, zero extra restarts)
+RSS_WARN_KB=2000000    # 1.95GiB — log-only: big server, gardener compacts, NO restart
+RSS_LIMIT_KB=2350000   # 2.3GB  — restart CANDIDATE, but only with real box pressure
+PRESSURE_MIN_KB=700000 # 700MB  — MemAvailable below this + RSS over limit = true pressure
+MEMAVAIL_MIN_KB=320000 # 320MB — whole-box emergency threshold (last resort)
 COOLDOWN_S=900         # min seconds between FORCED restarts (15 min — a restart storm is worse than transient pressure)
 BOOT_GRACE_S=90        # give a booting server this long before reviving
 # CRITICAL: outside .next/ — the dev server wipes its dev dir on every boot,
@@ -133,8 +151,9 @@ server_age() {
 }
 
 # ---- main loop -----------------------------------------------------------
-log "v3 armed: RSS>$((${RSS_LIMIT_KB}/1024))MB → planned restart | MemAvail<$((${MEMAVAIL_MIN_KB}/1024))MB → emergency restart | cycle=${CYCLE}s cooldown=${COOLDOWN_S}s (cooldown state survives dev boots)"
+log "v4 armed: RSS>1950MB → warn-only (gardener compacts) | RSS>2300MB + MemAvail<700MB → planned restart | MemAvail<320MB → emergency | cycle=${CYCLE}s cooldown=${COOLDOWN}s"
 
+TICKS=0
 while true; do
   # === 1. dedup: orphan next-server instances are pure memory waste ===
   mapfile -t SPIDS < <(server_pids)
@@ -158,8 +177,9 @@ while true; do
   if [ -n "$MAINPID" ]; then
     RSS=$(pid_rss "$MAINPID")
     MEMAV=$(mem_available)
-    if [ "$RSS" -gt "$RSS_LIMIT_KB" ] && ! cooldown_active; then
-      log "next-server pid=$MAINPID RSS=$((RSS/1024))MB > limit — PLANNED restart (prevents machine OOM reboot)"
+    TICKS=$((TICKS + 1))
+    if [ "$RSS" -gt "$RSS_LIMIT_KB" ] && [ "$MEMAV" -lt "$PRESSURE_MIN_KB" ] && ! cooldown_active; then
+      log "next-server pid=$MAINPID RSS=$((RSS/1024))MB > limit AND MemAvail=$((MEMAV/1024))MB < pressure line — PLANNED restart (real box pressure)"
       arm_cooldown
       kill_dev_tree
       relaunch_dev
@@ -170,6 +190,12 @@ while true; do
       kill_dev_tree
       relaunch_dev
       sleep 25
+    elif [ "$RSS" -gt "$RSS_WARN_KB" ]; then
+      # v4 POLICY: big server + healthy box = NOT an emergency. Log once
+      # every ~5 min (every 30th tick) so dev-watchdog.log stays readable.
+      if [ $((TICKS % 30)) -eq 1 ]; then
+        log "RSS=$((RSS/1024))MB high but MemAvail=$((MEMAV/1024))MB healthy — trusting heap gardener, NO restart (v4 policy)"
+      fi
     fi
   fi
 

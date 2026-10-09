@@ -46,39 +46,60 @@ export async function register(): Promise<void> {
   }
   try {
     // Heap gardener — the #1 cause of "the site randomly restarts": the dev
-    // server's RSS drifts upward for hours until the OOM watchdog kills it
-    // (a visible, session-killing restart). A gentle full GC every 60
-    // seconds (--expose-gc in the dev NODE_OPTIONS) compacts the heap
-    // before the drift accumulates, so watchdog restarts become rare
-    // emergencies instead of a daily surprise. No-op without --expose-gc.
-    // v3 (2026-10-02 "it keeps restarting permanently" round): heap cap is
-    // now 1024MB (package.json) with the watchdog line at 1.75GB, so the
-    // compact threshold sits at 1.35GB — comfortably above the working set,
-    // well below the line, and checked every 60s.
-    // v4 (2026-10-08 "never randomly restarts" round): interval 60s → 30s
-    // and the compact line 1.35GB → 1.30GB — the observed plateau drifts
-    // 1.65 → 2.05GB in ~1h, and every extra compaction pass before the
-    // 1.75GB planned-restart line buys the session more uptime between
-    // clean relaunches (the alternative is the kernel OOM-killing the
-    // whole box). No-op without --expose-gc.
+    // server's heap drifts upward until EITHER Next.js's own watchdog trips
+    // (it restarts the server after any request whose used_heap_size
+    // crosses 80% of heap_size_limit — with the old 1024MB cap that line
+    // sat at ~973MB while the LIVE set alone measured 734MB, so every
+    // compile burst restarted the site) or the box watchdog intervenes.
+    //
+    // v5 (2026-10-09 "website should never restart" round):
+    //   * cap raised to 1792MB (package.json) — the internal 80% line now
+    //     sits at ~1.5GB, far above the observed live set, so Next's
+    //     self-restart becomes unreachable in normal operation.
+    //   * compaction is now HEAP-PRESSURE aware: v3/v4 keyed off RSS, which
+    //     includes ~800MB of non-heap (external/code) that gc() can never
+    //     reclaim — the compactor fired constantly yet the heap kept
+    //     growing. Now it reads v8.getHeapStatistics() directly and
+    //     compacts when heapUsed exceeds 55% of the limit, and compacts
+    //     HARD (double gc + warn) past 72%.
+    //   * durable telemetry: one line every 5 min to /home/z/veil-heap.log
+    //     (outside .next/, survives boots) — future restart forensics no
+    //     longer need the SIGUSR1 inspector dance.
+    // No-op without --expose-gc.
     const maybeGc = (globalThis as { gc?: () => void }).gc;
     if (typeof maybeGc === "function") {
-      let lastRss = 0;
-      let stableTicks = 0;
+      const v8mod = await import(/* webpackIgnore: true */ "node:v8");
+      const fsmod = (await import(/* webpackIgnore: true */ "node:fs")).default;
+      const HEARTBEAT = "/home/z/veil-heap.log";
+      let lastBeat = 0;
+      const beat = (line: string) => {
+        try {
+          fsmod.appendFileSync(HEARTBEAT, `${new Date().toISOString()} ${line}\n`);
+        } catch { /* telemetry is best-effort */ }
+      };
       setInterval(() => {
         try {
+          const hs = v8mod.getHeapStatistics();
+          const used = hs.used_heap_size;
+          const limit = hs.heap_size_limit;
+          const ratio = limit > 0 ? used / limit : 0;
           const rss = process.memoryUsage().rss;
-          // Compact harder when RSS is creeping (within 450 MB of the
-          // watchdog's 1.75 GB line) — every tick instead of waiting.
-          const nearLimit = rss > 1.3 * 1024 * 1024 * 1024;
-          if (nearLimit || stableTicks % 5 === 0) {
+          if (ratio > 0.72) {
+            // Danger zone (still 8% under Next's own 80% restart line):
+            // compact twice and leave a durable trace.
+            maybeGc();
+            maybeGc();
+            beat(`WARN compact-hard heapUsed=${Math.round(used / 1048576)}MB limit=${Math.round(limit / 1048576)}MB rss=${Math.round(rss / 1048576)}MB`);
+          } else if (ratio > 0.55 || rss > 1.45 * 1024 * 1024 * 1024) {
             maybeGc();
           }
-          if (rss > lastRss) stableTicks = 0;
-          else stableTicks++;
-          lastRss = rss;
+          const now = Date.now();
+          if (now - lastBeat > 5 * 60 * 1000) {
+            lastBeat = now;
+            beat(`ok heapUsed=${Math.round(used / 1048576)}MB limit=${Math.round(limit / 1048576)}MB rss=${Math.round(rss / 1048576)}MB ext=${Math.round(process.memoryUsage().external / 1048576)}MB`);
+          }
         } catch { /* never throw in the timer */ }
-      }, 30 * 1000).unref();
+      }, 15 * 1000).unref();
     }
   } catch {
     /* never break server boot */
