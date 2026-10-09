@@ -28,6 +28,7 @@
  */
 
 import { importStreamDataMap, type StreamImportSummary } from "@/components/veil/stream-section";
+import { historyCount, historySerialize } from "@/lib/veil/history-store";
 
 export const BACKUP_FORMAT = "veil.backup.v2";
 
@@ -46,7 +47,10 @@ export interface VeilBackupFile {
   keys: Record<string, string>;
 }
 
-/** Collect every Veil localStorage entry as { key: rawString }. */
+/** Collect every Veil localStorage entry as { key: rawString }. The
+ * watch history lives in IndexedDB now — it is re-injected under its
+ * legacy key so backups keep the exact same portable shape (and stay
+ * importable on older Veil builds). */
 export function exportVeilBackup(): VeilBackupFile {
   const keys: Record<string, string> = {};
   if (typeof window !== "undefined") {
@@ -54,6 +58,8 @@ export function exportVeilBackup(): VeilBackupFile {
       const k = window.localStorage.key(i);
       if (k && VEIL_KEY_RE.test(k)) keys[k] = window.localStorage.getItem(k) ?? "";
     }
+    const hist = historySerialize();
+    if (hist !== "[]") keys["veil.stream.history.v1"] = hist;
   }
   return {
     format: BACKUP_FORMAT,
@@ -107,10 +113,6 @@ export function veilBackupStats(): VeilBackupStats {
       prefs++;
     }
   }
-  const stream = readJson<{ history?: unknown[]; subs?: object; playlists?: unknown[] }>(
-    "veil.stream.history.v1",
-    {},
-  );
   const subs = readJson<Record<string, unknown>>("veil.stream.subs.v1", {});
   const playlists = readJson<unknown[]>("veil.stream.playlists.v1", []);
   const ratings = readJson<Record<string, string>>("veil.stream.ratings.v1", {});
@@ -119,7 +121,7 @@ export function veilBackupStats(): VeilBackupStats {
   const links = readJson<unknown[]>("veil:links:v1", []);
   return {
     totalKeys,
-    history: Array.isArray(stream) ? stream.length : 0,
+    history: historyCount(),
     subs: Object.keys(subs ?? {}).length,
     playlists: Array.isArray(playlists) ? playlists.length : 0,
     liked: Object.values(ratings).filter((r) => r === "like").length,

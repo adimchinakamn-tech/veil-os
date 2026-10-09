@@ -97,6 +97,17 @@ import { rankFeed, type RankCard, type RankNotInterested, type RankResult } from
 // is safe under webpack/ESM.
 import { describeRestore, exportVeilBackup, importVeilBackup } from "@/lib/veil/backup";
 import {
+  historyClear,
+  historyCount,
+  historyDelete,
+  historyImportTakeout,
+  historyMergeBackup,
+  historyReady,
+  historySerialize,
+  historySnapshot,
+  historyTouch,
+} from "@/lib/veil/history-store";
+import {
   SUBS_FILE_RE,
   type TakeoutHistoryRow,
 } from "@/lib/veil/takeout-parse";
@@ -328,7 +339,7 @@ function relTime(at: number): string {
 }
 
 /* ------------------------------------------------------------------ */
-/* Watch history — per device (localStorage, never leaves the browser)  */
+/* Watch history — per device (IndexedDB, never leaves the browser)    */
 /* ------------------------------------------------------------------ */
 
 interface HistoryEntry {
@@ -336,10 +347,11 @@ interface HistoryEntry {
   at: number;
 }
 const HISTORY_KEY = "veil.stream.history.v1";
-/* Effectively unlimited: a full YouTube Takeout history (even 100k+ rows)
- * imports whole. The real bound is localStorage quota — writeHistory()
- * trims to the newest rows that fit instead of silently dropping all. */
-const HISTORY_CAP = 1_000_000;
+/* The store lives in IndexedDB (see lib/veil/history-store.ts) — the
+ * same "veil.stream.history.v1" NAME survives in backups/exports, but
+ * a million rows now actually persist instead of dying on
+ * localStorage's ~5MB quota. The row cap (HISTORY_CAP, 1,000,000)
+ * lives in the store — parse, persist and UI all agree on it. */
 const HISTORY_PAUSED_KEY = "veil.stream.history.paused.v1";
 
 /** Paused watch history (YouTube's "pause watch history"): while on,
@@ -365,55 +377,10 @@ function setHistoryPaused(paused: boolean): void {
 }
 
 function readHistory(): HistoryEntry[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = window.localStorage.getItem(HISTORY_KEY);
-    if (!raw) return [];
-    const parsed: unknown = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return parsed
-      .filter(
-        (h): h is { card: YtCard; at?: number } =>
-          Boolean(h && typeof h === "object" && (h as { card?: YtCard }).card?.id),
-      )
-      .map((h) => ({ card: h.card, at: typeof h.at === "number" ? h.at : 0 }));
-  } catch {
-    return [];
-  }
-}
-
-function writeHistory(entries: HistoryEntry[]): number {
-  let persisted = entries.length;
-  try {
-    window.localStorage.setItem(HISTORY_KEY, JSON.stringify(entries));
-  } catch {
-    /* Quota exceeded (a huge import can outrun localStorage's ~5MB).
-     * Don't silently drop EVERYTHING — keep as many NEWEST rows as fit
-     * (entries are newest-first at every call site). Estimate from a
-     * sample, then step down until the write lands. */
-    persisted = 0;
-    try {
-      const sample = entries.slice(0, 100);
-      const sampleLen = JSON.stringify(sample).length + 2;
-      const avg = Math.max(64, sampleLen / Math.max(1, sample.length));
-      const budget = 4.5 * 1024 * 1024; /* stay under the typical 5MB cap */
-      let keep = Math.min(entries.length, Math.floor(budget / avg));
-      while (keep > 0) {
-        try {
-          window.localStorage.setItem(HISTORY_KEY, JSON.stringify(entries.slice(0, keep)));
-          persisted = keep;
-          break;
-        } catch {
-          keep = Math.floor(keep * 0.85);
-        }
-      }
-    } catch {
-      /* storage unavailable entirely — history stays best-effort */
-    }
-  }
-  _watchedIds = null; /* drop the watched-id cache */
-  window.dispatchEvent(new Event("veil-stream-history"));
-  return persisted;
+  /* the IndexedDB store's in-memory mirror — newest-first, deduped by
+   * video id, primed by historyReady() at startup (and by the module's
+   * auto-kick). READ-ONLY: callers sort/slice into copies. */
+  return historySnapshot<YtCard>() as HistoryEntry[];
 }
 
 /** The channels this device watches most (by watch count) — sent up with
@@ -443,8 +410,8 @@ function topWatchedVideos(n: number): string[] {
 }
 
 /** Watched-id cache — one shared parse per history change, not one per
- * card render. Invalidated by writeHistory (same tab) and the history
- * event (imports, other components). */
+ * card render. Invalidated by the history store's event (every mirror
+ * mutation) and by the local mutation helpers. */
 let _watchedIds: Set<string> | null = null;
 function watchedIdsSnapshot(): Set<string> {
   if (!_watchedIds) {
@@ -642,16 +609,30 @@ function writeRating(id: string, r: Rating | null, chan?: LikedMetaEntry): void 
 
 /** The channels behind this device's LIKED videos — the strongest signal
  * the For You / Shorts blends get (together with subscriptions). Older
- * likes backfill off history when the meta map doesn't know them. */
+ * likes backfill off history when the meta map doesn't know them; the
+ * backfill map is built lazily so a million-row history is only walked
+ * when a liked video actually needs it. */
 function likedChannelIds(): string[] {
   const ratings = readAllRatings();
   const meta = readLikedMeta();
-  const hist = readHistory();
   const ids = new Set<string>();
+  let byVideo: Map<string, string> | null = null;
   for (const [vid, r] of Object.entries(ratings)) {
     if (r !== "like") continue;
-    const m = meta[vid];
-    const a = m?.authorId ?? hist.find((h) => h.card?.id === vid)?.card?.authorId;
+    const m = meta[vid]?.authorId;
+    if (m) {
+      ids.add(m);
+      continue;
+    }
+    if (byVideo === null) {
+      byVideo = new Map();
+      for (const h of readHistory()) {
+        const v = h.card?.id;
+        const a = h.card?.authorId;
+        if (v && a) byVideo.set(v, a);
+      }
+    }
+    const a = byVideo.get(vid);
     if (a) ids.add(a);
   }
   return [...ids];
@@ -1297,7 +1278,7 @@ export function streamDataStats(): {
   const ratings = readAllRatings();
   const ni = readNotInterested();
   return {
-    history: readHistory().length,
+    history: historyCount(),
     subs: Object.keys(readSubs()).length,
     playlists: readPlaylists().length,
     liked: Object.values(ratings).filter((r) => r === "like").length,
@@ -1307,7 +1288,9 @@ export function streamDataStats(): {
 }
 
 /** Collect every veil.stream.* localStorage entry as { key: rawString } —
- * the exact on-disk format, importable on any device/browser. */
+ * the exact on-disk format, importable on any device/browser. The watch
+ * history now lives in IndexedDB, so its legacy key is re-injected from
+ * the mirror — exports keep the exact same shape they always had. */
 export function exportStreamDataMap(): Record<string, string> {
   const out: Record<string, string> = {};
   if (typeof window === "undefined") return out;
@@ -1315,6 +1298,8 @@ export function exportStreamDataMap(): Record<string, string> {
     const k = window.localStorage.key(i);
     if (k && k.startsWith(STREAM_DATA_PREFIX)) out[k] = window.localStorage.getItem(k) ?? "";
   }
+  const hist = historySerialize();
+  if (hist !== "[]") out[HISTORY_KEY] = hist;
   return out;
 }
 
@@ -1353,19 +1338,13 @@ export function importStreamDataMap(raw: string): StreamImportSummary {
 
   const summary: StreamImportSummary = { history: 0, subs: 0, playlists: 0, liked: 0, prefs: false };
 
-  /* history — merge by video id, newest `at` wins, cap applied */
+  /* history — merge by video id, newest `at` wins, cap applied (the
+   * IndexedDB store merges synchronously into its mirror and persists
+   * in chunked background transactions) */
   const inHist = readKey<HistoryEntry[]>(HISTORY_KEY);
   if (Array.isArray(inHist)) {
-    const byId = new Map<string, HistoryEntry>();
-    for (const h of [...readHistory(), ...inHist]) {
-      const id = h?.card?.id;
-      if (!id) continue;
-      const prev = byId.get(id);
-      if (!prev || (h.at ?? 0) > (prev.at ?? 0)) byId.set(id, { card: h.card, at: h.at ?? 0 });
-    }
-    const merged = [...byId.values()].sort((a, b) => b.at - a.at).slice(0, HISTORY_CAP);
-    writeHistory(merged);
-    summary.history = merged.length;
+    _watchedIds = null;
+    summary.history = historyMergeBackup(inHist);
   }
 
   /* subscriptions — merge; an import never unsubscribes anything */
@@ -6963,14 +6942,14 @@ export function parseTakeoutSubs(
  * (through the /api/yt/s proxy, exactly like every other image), title
  * + channel from the activity log; duration/views are unknown until
  * the video is opened (which refetches full metadata). Existing
- * entries win (their cards are complete). Returns how many landed. */
-function importWatchHistory(rows: TakeoutHistoryRow[]): number {
-  const existing = readHistory();
-  const have = new Set(existing.map((h) => h.card.id));
+ * entries win (their cards are complete). Returns how many landed —
+ * the honest post-cap, post-quota count from the IndexedDB write. */
+async function importWatchHistory(rows: TakeoutHistoryRow[]): Promise<number> {
   const fresh: HistoryEntry[] = [];
+  const ids = new Set<string>();
   for (const r of rows) {
-    if (!r?.id || have.has(r.id)) continue;
-    have.add(r.id);
+    if (!r?.id || ids.has(r.id)) continue;
+    ids.add(r.id);
     fresh.push({
       card: {
         id: r.id,
@@ -6988,12 +6967,9 @@ function importWatchHistory(rows: TakeoutHistoryRow[]): number {
     });
   }
   if (fresh.length === 0) return 0;
-  /* newest first, capped like the native store */
-  const merged = [...existing, ...fresh].sort((a, b) => b.at - a.at).slice(0, HISTORY_CAP);
-  const persisted = writeHistory(merged);
-  /* honest count: only what actually landed (post-cap AND post-quota) */
-  const freshIds = new Set(fresh.map((f) => f.card.id));
-  return merged.slice(0, persisted).filter((m) => freshIds.has(m.card.id)).length;
+  const landed = await historyImportTakeout(fresh);
+  _watchedIds = null;
+  return landed;
 }
 
 /** The full "Import from YouTube" flow — shared by the Subscriptions
@@ -7019,6 +6995,8 @@ async function runYouTubeImport(
   signal?: AbortSignal,
 ): Promise<YouTubeImportResult> {
   try {
+    /* the history store's mirror must be primed before merges land */
+    await historyReady();
     let texts: { name: string; text: string }[];
     let historyRows: TakeoutHistoryRow[] = [];
     let truncated = false;
@@ -7170,8 +7148,8 @@ async function runYouTubeImport(
      * server `seen` list on the next round) stops recommending
      * everything YouTube already showed them. */
     if (historyRows.length > 0) {
-      const n = importWatchHistory(historyRows);
-      if (n > 0) bits.push(`${n} video${n === 1 ? "" : "s"} marked as watched`);
+      const n = await importWatchHistory(historyRows);
+      if (n > 0) bits.push(`${n.toLocaleString()} video${n === 1 ? "" : "s"} marked as watched`);
     }
 
     if (bits.length > 0) {
@@ -7771,26 +7749,33 @@ function StreamDataMenu() {
     };
   }, [open]);
 
-  const doExport = () => {
-    const backup = exportVeilBackup();
-    const keys = Object.keys(backup.keys);
-    if (keys.length === 0) {
-      setNote({ ok: false, text: "nothing to export yet — this browser has no Veil data" });
-      return;
+  const doExport = async () => {
+    try {
+      /* prime the IndexedDB mirror so the backup carries the FULL
+       * history, not whatever loaded so far */
+      await historyReady();
+      const backup = exportVeilBackup();
+      const keys = Object.keys(backup.keys);
+      if (keys.length === 0) {
+        setNote({ ok: false, text: "nothing to export yet — this browser has no Veil data" });
+        return;
+      }
+      const stamp = new Date();
+      const pad = (n: number) => String(n).padStart(2, "0");
+      const fname = `veil-backup-${stamp.getFullYear()}${pad(stamp.getMonth() + 1)}${pad(stamp.getDate())}.json`;
+      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fname;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+      setNote({ ok: true, text: `exported ${keys.length} keys — wallpaper, history, subs, settings… → ${fname}` });
+    } catch (e) {
+      setNote({ ok: false, text: e instanceof Error ? e.message : "the export didn't complete" });
     }
-    const stamp = new Date();
-    const pad = (n: number) => String(n).padStart(2, "0");
-    const fname = `veil-backup-${stamp.getFullYear()}${pad(stamp.getMonth() + 1)}${pad(stamp.getDate())}.json`;
-    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = fname;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 4000);
-    setNote({ ok: true, text: `exported ${keys.length} keys — wallpaper, history, subs, settings… → ${fname}` });
   };
 
   const doImport = async (file: File) => {
@@ -7798,6 +7783,7 @@ function StreamDataMenu() {
     setNote(null);
     try {
       const text = await file.text();
+      await historyReady();
       const s = importVeilBackup(text);
       const desc = describeRestore(s);
       if (!desc) {
@@ -8085,13 +8071,14 @@ export function StreamSection({ onBack }: { onBack: () => void }) {
     infinite: boolean;
   } | null>(null);
 
-  /* ---- watch history — per device ---- */
+  /* ---- watch history — per device (IndexedDB via history-store) ---- */
   const [histEntries, setHistEntries] = React.useState<HistoryEntry[] | null>(null);
   const histPaused = useHistoryPaused();
-  /* Incremental rendering for the History page — a big history (300 capped)
-   * rendered as one wall of cards spiked the tab AND the dev server (one
-   * thumbnail request per card at once); the page now reveals in pages
-   * (24 at a time) with a sentinel auto-loading the next page on scroll. */
+  /* Incremental rendering for the History page — a big history (the full
+   * 1,000,000-row class) rendered as one wall of cards spiked the tab
+   * AND the dev server (one thumbnail request per card at once); the
+   * page now reveals in pages (24 at a time) with a sentinel
+   * auto-loading the next page on scroll. */
   const HIST_PAGE = 24;
   const [histShown, setHistShown] = React.useState(HIST_PAGE);
   React.useEffect(() => {
@@ -8107,10 +8094,13 @@ export function StreamSection({ onBack }: { onBack: () => void }) {
   const subsVersion = useSubsVersion();
   const ratingsVersion = useRatingsVersion();
   /* the ranker's signal bundle — shared by the round-1 memo and every
-   * deep-round batch so the whole river sees the same curation */
+   * deep-round batch so the whole river sees the same curation. Only
+   * the NEWEST 5,000 rows ride along: recency-weighted ranking is
+   * statistically identical on the deep tail, and mapping a full
+   * million-row history per feed load is pure waste. */
   const foryouSignals = React.useCallback(
     (seed: number) => ({
-      history: (histEntries ?? []).map((h) => ({ card: h.card as RankCard, at: h.at })),
+      history: (histEntries ?? []).slice(0, 5000).map((h) => ({ card: h.card as RankCard, at: h.at })),
       subs: Object.keys(readSubs()),
       likedChannels: likedChannelIds(),
       ...niSignal(),
@@ -8138,9 +8128,11 @@ export function StreamSection({ onBack }: { onBack: () => void }) {
       const chans = topWatchedChannels(8);
       const vids = topWatchedVideos(3);
       const boost = boostChannelIds(8);
-      /* WATCHED videos never enter the feed — the whole history rides
-       * the request as the server-side exclusion list */
-      const seen = [...watchedIdsSnapshot()];
+      /* WATCHED videos never enter the feed — the history rides the
+       * request as the server-side exclusion list. Capped at the newest
+       * 20,000 ids (a full million-row history would be a 10MB+ POST
+       * body; anything older than that is client-filtered anyway) */
+      const seen = [...watchedIdsSnapshot()].slice(0, 20000);
       fetchJsonSafe<{ cards?: YtCard[]; next?: Record<string, string> | null } | YtGate>("/api/yt/feed", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -8203,9 +8195,12 @@ export function StreamSection({ onBack }: { onBack: () => void }) {
     },
     [remember, subsVersion, ratingsVersion],
   );
+  const histLoaded = histEntries !== null;
   React.useEffect(() => {
-    loadFeed();
-  }, [loadFeed]);
+    /* wait for the history mirror — the first deal should already know
+     * what this device watched so `seen` actually excludes it */
+    if (histLoaded) loadFeed();
+  }, [histLoaded, loadFeed]);
 
   /** Infinite For You — one deeper round of the channel river: the
    *  next few uploads of every alive channel (subscribed/liked/watched
@@ -8328,49 +8323,52 @@ export function StreamSection({ onBack }: { onBack: () => void }) {
       .finally(() => setPopularLoading(false));
   }, [remember]);
 
-  /* ---- history reads/writes (per device — localStorage) ---- */
+  /* ---- history reads/writes (per device — IndexedDB store) ---- */
   React.useEffect(() => {
-    setHistEntries(readHistory());
+    let alive = true;
+    historyReady()
+      .then((rows) => {
+        if (alive) setHistEntries(rows as unknown as HistoryEntry[]);
+      })
+      .catch(() => {
+        if (alive) setHistEntries([]);
+      });
     /* cross-component sync — an import (or another section) rewrote the
      * history; refresh the local copy + the For You personalization */
     const refresh = () => setHistEntries(readHistory());
     window.addEventListener("veil-stream-history", refresh);
-    return () => window.removeEventListener("veil-stream-history", refresh);
+    return () => {
+      alive = false;
+      window.removeEventListener("veil-stream-history", refresh);
+    };
   }, []);
   const pushHistory = React.useCallback(
     (card: YtCard) => {
       /* paused history records nothing — the video also stays in the
        * feed, since the watched filter rides this same store */
       if (!card?.id || historyPaused()) return;
-      setHistEntries((prev) => {
-        const base = (prev ?? readHistory()).filter((h) => h.card.id !== card.id);
-        const next = [{ card, at: Date.now() }, ...base].slice(0, HISTORY_CAP);
-        writeHistory(next);
-        return next;
-      });
+      _watchedIds = null;
+      historyTouch(card);
+      setHistEntries(readHistory());
     },
     [],
   );
   const removeHistory = React.useCallback((id: string) => {
-    setHistEntries((prev) => {
-      const next = (prev ?? readHistory()).filter((h) => h.card.id !== id);
-      writeHistory(next);
-      return next;
-    });
+    _watchedIds = null;
+    historyDelete(id);
+    setHistEntries(readHistory());
   }, []);
   /** Undo target for the removal snackbar — puts the entry back where
    * the timeline says it belongs (sorted by `at`, deduped by id). */
   const restoreHistory = React.useCallback((entry: HistoryEntry) => {
-    setHistEntries((prev) => {
-      const base = prev ?? readHistory();
-      if (base.some((h) => h.card.id === entry.card.id)) return base;
-      const next = [...base, entry].sort((a, b) => b.at - a.at).slice(0, HISTORY_CAP);
-      writeHistory(next);
-      return next;
-    });
+    if (!entry?.card?.id) return;
+    _watchedIds = null;
+    historyTouch(entry.card, entry.at);
+    setHistEntries(readHistory());
   }, []);
   const clearHistory = React.useCallback(() => {
-    writeHistory([]);
+    _watchedIds = null;
+    historyClear();
     setHistEntries([]);
   }, []);
 
