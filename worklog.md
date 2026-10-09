@@ -1,5 +1,94 @@
 # Veil OS — Worklog / Handover
 
+## Project status (2026-10-09 ~23:45 UTC) — "WEBSITE SHOULD NEVER RESTART" + BUNDLE REFRESH
+
+**Both user asks shipped.** (a) git bundle refreshed — the newest
+`upload/veil-snapshots/veil-git-20261009-232352+.bundle` covers HEAD
+exactly (31ec941, pushed; retention ×3, ~270MB each); (b) the
+restart-happy dev server was re-architected so that **no restart path is
+reachable in normal operation**. Measured, root-caused, fixed, verified.
+
+- Live preview: `https://preview-chat-5c473725-60a1-401a-a523-f3055da577e8.space-z.ai/`
+- HEAD: 31ec941 (origin/main, pushed). Working tree clean.
+
+## What was done this round
+
+### 1. ROOT CAUSE of the visible restarts (measured, not guessed)
+- Activated the V8 inspector on the LIVE next-server (SIGUSR1 →
+  :9229 → CDP HeapProfiler.collectGarbage) and measured: the warm heap
+  is **768MB LIVE** (forced full GC does not shrink it), heap limit was
+  1.19GB (1024MB cap), so Next.js's INTERNAL watchdog — it restarts the
+  server after any request whose `used_heap_size > 0.8 × heap_size_limit`
+  (node_modules/next/dist/server/lib/start-server.js:234) — had its line
+  at **~973MB, only ~200MB above the live set**. Every compile burst or
+  traffic spike tripped it. That, plus our own watchdog restarting on RSS
+  alone, was the whole "website randomly restarts" story.
+- dev.log forensics agreed: 4 × "Server is approaching the used memory
+  threshold, restarting..." today; durable dev-watchdog.log also showed a
+  21:12 emergency restart when box MemAvailable hit 304MB.
+
+### 2. The fix — three layers, all measured
+- **package.json dev script**: `--max-old-space-size=1024 → 1792`.
+  New heap limit measured in-process: **1984MB**, so Next's internal
+  restart line moved to **~1.55GB used** — the 768MB live set would have
+  to double before the internal watchdog can even consider firing.
+- **Gardener v5.1** (src/instrumentation.ts): compaction is now
+  HEAP-PRESSURE aware (reads v8.getHeapStatistics directly; v3/v4 keyed
+  off RSS which includes ~800MB of non-heap gc() can never reclaim):
+  gc() when heapUsed>55% of limit OR RSS>1.45GB OR MemAvail<900MB;
+  **double-gc + durable WARN past 72% of limit or MemAvail<600MB**; and
+  a telemetry heartbeat every 5 min to **/home/z/veil-heap.log**
+  (survives boots — `tail` it to check health; no more inspector dance).
+- **dev-watchdog v4** (scripts/dev-watchdog.sh): **RSS alone NEVER
+  restarts the server.** A planned restart now requires BOTH RSS>2.3GB
+  AND MemAvailable<700MB (real box pressure); MemAvail<320MB alone
+  remains the true last-resort OOM firewall; cycle 15s→10s; high-RSS
+  states log a rate-limited "trusting heap gardener, NO restart" line.
+  v4 + gardener sync'd into upload/veil-kit/ (revert-proof).
+
+### 3. Applied + verified
+- One controlled restart to load the new cap (Ready in 2.8s — warm
+  filesystem cache), then a second one to load gardener v5.1 (instrumentation
+  is boot-loaded). Both before committing; the keeper/veil-pulse revived
+  everything cleanly. Exactly ONE next-server chain holds :3000 now
+  (verified: single PID, no orphans, no stray 3001+ listeners).
+- Inspector probe on the new process: heap_size_limit=2080374784 ✓,
+  heapUsed 600MB fresh boot. Telemetry: `ok heapUsed=768MB limit=1984MB
+  rss=1723MB` (old proc) → `ok heapUsed=499MB … rss=1063MB` (new proc).
+- agent-browser through the preview gateway: title loads, 9 ×
+  veil-rise-fancy (hydrated), clock + dock present, "15 online" (socket.io
+  live), no page errors; VLM screenshot verdict: "layout fully intact, no
+  glitches, no overlapping elements, no broken layouts."
+- git: e8fb5ef (never-restart core) + 31ec941 (gardener v5.1) committed
+  and pushed; bundle created after each, newest verified to cover HEAD.
+
+## Known blockers / risks
+1. **The trade-off is honest**: a bigger cap means the server can now sit
+   at ~1.9-2.3GB RSS without anyone restarting it. If the box ever hits
+   REAL memory pressure (MemAvail<700MB), the watchdog still acts — that
+   is by design (kernel panic is worse). Watch /home/z/veil-heap.log.
+2. The 21:12-class emergency (other processes eating the box) is now
+   defended in-server (gardener compacts on MemAvail<900MB), but if
+   mini-services balloon, the emergency path can still fire.
+3. Full `bun run lint` OOMs — lint targeted files only (never fixed).
+4. jsDelivr purge throttling + front self-heal notes from the previous
+   round still apply (fronts carry the correct 401a fingerprint).
+5. dev.log truncates on every chain restart (tee) — dev-watchdog.log is
+   the durable record; /home/z/veil-heap.log is the memory record.
+
+## Priority recommendations for the next phase
+1. Standing user ask: extend the motion blitz to wallpapers / arcade /
+   stream / updates sections (entrances, hovers, card springs).
+2. Surface /veil-jsdelivr-front.zip inside the app (Updates entry or
+   Links card) — still not linked in-UI.
+3. Scroll-to-bottom FAB with spring + unread count in chat.
+4. Tab-close hit area (44px) — carried over.
+5. Watch one full hour of /home/z/veil-heap.log after this round —
+   expect `ok` lines drifting to a ~1.0-1.2GB heapUsed plateau with NO
+   restarts. If a WARN compact-hard ever appears, that's the gardener
+   working as designed, not a bug.
+
+
 ## Project status (2026-10-08 ~22:45 UTC) — BACKUP SYSTEM HARDENED + FRONT SELF-HEAL
 
 **All four user asks shipped.** The user reported (a) "make sure this
