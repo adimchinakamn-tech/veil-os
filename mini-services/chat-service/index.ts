@@ -1,6 +1,6 @@
 import { createServer } from "http"
 import { createHmac, timingSafeEqual } from "crypto"
-import { readFileSync } from "fs"
+import { readFileSync, statSync } from "fs"
 import { Server, Socket } from "socket.io"
 
 /**
@@ -52,20 +52,29 @@ const PORT = 3004
 
 // Shared with src/lib/chat-auth.ts (same box) — the HMAC signing secret.
 // The Next.js side SELF-HEALS a missing key (mints + persists one on first
-// use), so a failed read here is never cached: the next identify re-reads
-// the file and picks the healed key up live, without a relay restart.
+// use, restoring from the revert-proof spare in upload/veil-kit first), so
+// a failed read here is never fatal: we keep the last good secret cached
+// and re-check the file whenever its mtime changes (rollback heals + secret
+// rotations are picked up live, without a relay restart).
 const SECRET_PATH = "/home/z/my-project/db/chat-secret.key"
 let cachedSecret: Buffer | null = null
+let secretMtimeMs = 0
 function sessionSecret(): Buffer | null {
-  if (cachedSecret) return cachedSecret
   try {
-    const txt = readFileSync(SECRET_PATH, "utf-8").trim()
-    if (!txt) return null
-    cachedSecret = Buffer.from(txt, "utf-8")
-    return cachedSecret
+    const m = statSync(SECRET_PATH).mtimeMs
+    if (!cachedSecret || m !== secretMtimeMs) {
+      const txt = readFileSync(SECRET_PATH, "utf-8").trim()
+      if (txt) {
+        cachedSecret = Buffer.from(txt, "utf-8")
+        secretMtimeMs = m
+      }
+      // empty/missing file: KEEP the previous cache — a transient wipe
+      // (rollback mid-write, editor save) must not nuke socket auth.
+    }
   } catch {
-    return null // missing/unreadable — retry on the next call
+    /* stat/read failed — serve from cache if we have one */
   }
+  return cachedSecret
 }
 
 interface TokenPayload {

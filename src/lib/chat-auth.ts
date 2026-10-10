@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual, randomBytes } from "crypto"
-import { readFileSync, writeFileSync, mkdirSync } from "fs"
+import { readFileSync, writeFileSync, mkdirSync, statSync } from "fs"
+import { dirname } from "path"
 import { db } from "@/lib/db"
 
 /**
@@ -28,33 +29,122 @@ export type SessionPayload = {
 
 const TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000
 
+/* 2026-10-10 "it keeps signing me out of chat" fix — the secret is now
+ * REVERT-PROOF. Root cause: platform rollbacks periodically lose
+ * db/chat-secret.key (a 13:10 snapshot literally captured it missing); the
+ * old self-heal then MINTED a fresh secret on the next login, which
+ * instantly invalidated every token in every browser ("mass sign-out").
+ * Now the secret is triple-homed:
+ *   1. db/chat-secret.key          — live copy (also inside tar snapshots)
+ *   2. upload/veil-kit/chat-secret.key — SPARE on the revert-proof volume
+ *      (same place the GitHub PAT survives; keeper re-syncs every 90s)
+ *   3. the running process cache   — always the truth for LIVE sessions
+ * Precedence: mid-run, the in-use cache wins (it signed every token that
+ * currently works) and both files are re-synced to it. On boot, the spare
+ * wins over db/ (a rollback can only make db/ STALE, while the spare is
+ * written only by mints + seeding, so it is always freshest-or-equal).
+ * A mint now happens only when BOTH copies are gone. */
 const SECRET_PATH = "/home/z/my-project/db/chat-secret.key"
+const SECRET_SPARE_PATH = "/home/z/my-project/upload/veil-kit/chat-secret.key"
 let cachedSecret: Buffer | null = null
-function sessionSecret(): Buffer {
-  if (cachedSecret) return cachedSecret
-  let txt: string
+let secretMtimeMs = 0
+
+function readSecretFile(path: string): string | null {
   try {
-    txt = readFileSync(SECRET_PATH, "utf-8")
-    if (!txt.trim()) throw new Error("empty secret")
+    const txt = readFileSync(path, "utf-8").trim()
+    return txt.length >= 32 ? txt : null
   } catch {
-    /* SELF-HEAL (2026-10-03 "server error during log in or sign up" fix):
-     * a sandbox rollback / volume wipe can lose db/chat-secret.key — every
-     * login, register and token verify then died with ENOENT (500). Instead
-     * of failing closed forever, mint a fresh random secret and persist it;
-     * tokens signed with a lost secret are unverifiable anyway, so users
-     * simply sign in again once. The relay (mini-services/chat-service)
-     * re-reads the file until it exists, so it picks this up live. */
-    txt = randomBytes(48).toString("hex")
-    try {
-      mkdirSync("/home/z/my-project/db", { recursive: true })
-      writeFileSync(SECRET_PATH, txt + "\n", { mode: 0o600 })
-      console.warn("[chat-auth] chat-secret.key was missing — generated a new one")
-    } catch {
-      /* read-only filesystem — keep the secret in memory for this boot */
-    }
+    return null
   }
-  cachedSecret = Buffer.from(txt.trim(), "utf-8")
+}
+
+function writeSecretFile(path: string, txt: string): void {
+  try {
+    mkdirSync(dirname(path), { recursive: true })
+    writeFileSync(path, txt + "\n", { mode: 0o600 })
+  } catch {
+    /* best-effort — the other copy + memory cache still carry the secret */
+  }
+}
+
+function adoptSecret(txt: string): Buffer {
+  cachedSecret = Buffer.from(txt, "utf-8")
+  try {
+    secretMtimeMs = statSync(SECRET_PATH).mtimeMs
+  } catch {
+    secretMtimeMs = 0
+  }
   return cachedSecret
+}
+
+function sessionSecret(): Buffer {
+  if (cachedSecret) {
+    /* Live rollback watch — stat is ~µs; token verify stays hot-path safe.
+     * If db/chat-secret.key changed under us (platform rollbacks rewrite
+     * the tree mid-run), reconcile WITHOUT dropping the in-use secret: the
+     * cache is what every working token verifies against. */
+    try {
+      const m = statSync(SECRET_PATH).mtimeMs
+      if (m !== secretMtimeMs) {
+        const cur = readSecretFile(SECRET_PATH)
+        if (cur !== null && cur === cachedSecret.toString("utf-8")) {
+          secretMtimeMs = m // same secret, new mtime (touch/restore) — noop
+        } else {
+          // db diverged from the in-use secret. Re-assert the cache as the
+          // source of truth on BOTH copies so the next boot + the relay +
+          // future rollbacks all converge on the secret live sessions use.
+          const live = cachedSecret.toString("utf-8")
+          writeSecretFile(SECRET_PATH, live)
+          writeSecretFile(SECRET_SPARE_PATH, live)
+          secretMtimeMs = 0 // re-stat on next call (file just rewritten)
+          console.warn(
+            "[chat-auth] db/chat-secret.key changed under us (rollback?) — re-asserted the live secret on db + spare",
+          )
+        }
+      }
+    } catch {
+      /* stat failed (transient) — keep serving from cache */
+    }
+    return cachedSecret
+  }
+
+  /* ---- boot path: reconcile the two persisted copies, mint only if both
+   * are gone. The SPARE wins on mismatch: it lives on the revert-proof
+   * volume and is only ever written by seeding/mints, so a mismatch means
+   * db/ was rolled back to something stale. ---- */
+  const dbSecret = readSecretFile(SECRET_PATH)
+  const spareSecret = readSecretFile(SECRET_SPARE_PATH)
+
+  if (dbSecret && spareSecret && dbSecret !== spareSecret) {
+    console.warn(
+      "[chat-auth] db secret != spare (rollback) — restoring db from the revert-proof spare (existing sessions survive)",
+    )
+    writeSecretFile(SECRET_PATH, spareSecret)
+    return adoptSecret(spareSecret)
+  }
+  if (dbSecret) {
+    // healthy boot (or first run of this fix) — make sure the spare exists
+    if (!spareSecret) writeSecretFile(SECRET_SPARE_PATH, dbSecret)
+    return adoptSecret(dbSecret)
+  }
+  if (spareSecret) {
+    // db copy lost (rollback) but the spare survived — RESTORE, not mint.
+    console.warn(
+      "[chat-auth] db/chat-secret.key missing — restored from upload/veil-kit spare (no sign-outs)",
+    )
+    writeSecretFile(SECRET_PATH, spareSecret)
+    return adoptSecret(spareSecret)
+  }
+
+  /* Both copies gone — the only path that still mints. Spare first, then
+   * db, so a crash between writes leaves the spare freshest-or-equal. */
+  const txt = randomBytes(48).toString("hex")
+  writeSecretFile(SECRET_SPARE_PATH, txt)
+  writeSecretFile(SECRET_PATH, txt)
+  console.warn(
+    "[chat-auth] chat-secret.key lost everywhere — minted a new one (users sign in once more)",
+  )
+  return adoptSecret(txt)
 }
 
 function b64url(s: string): string {
