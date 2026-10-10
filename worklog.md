@@ -1,5 +1,93 @@
 # Veil OS — Worklog / Handover
 
+## Project status (2026-10-10 ~16:30 UTC) — "KEEPS SIGNING ME OUT" FIXED + BUNDLES REFRESHED
+
+**Both user asks shipped.** (a) git bundles refreshed — newest
+`upload/veil-snapshots/veil-git-20261010-162751.bundle` covers HEAD (710f039,
+pushed; retention ×3); (b) the recurring chat sign-outs are root-caused and
+fixed with a **revert-proof session secret**. Browser-verified E2E,
+including a live rollback simulation.
+
+- Live preview: `https://preview-chat-5c473725-60a1-401a-a523-f3055da577e8.space-z.ai/`
+- Dev server: up 5h+ with ZERO restarts (the never-restart round is holding —
+  watchdog v4 correctly logs "RSS high but healthy, NO restart" at 2.3GB RSS).
+
+## What was done this round
+
+### 1. ROOT CAUSE of "it keeps signing me out of chat"
+- Chat tokens are HMAC-SHA256 signed with `db/chat-secret.key`. Platform
+  rollbacks periodically LOSE that file (the 13:10 tar snapshot literally
+  captured it missing). The old self-heal then MINTED a brand-new secret on
+  the next login → every existing token in every browser instantly failed
+  verification → mass sign-out. Timeline today: rollback ~11:14 (also
+  reverted the DB — the "0 messages" backup) → first post-rollback login
+  16:12 → new secret minted → everyone signed out once more.
+- The DB itself is NOT the problem: `src/lib/db.ts` re-seeds from
+  `backups/chat/latest.json` on boot with account IDs preserved, so tokens
+  stay valid across DB re-seeds — the SECRET was the only missing link.
+
+### 2. The fix — secret is now triple-homed
+- **`upload/veil-kit/chat-secret.key` (SPARE)** — the revert-proof volume
+  (same place the GitHub PAT survives). Seeded from the live secret.
+- **`src/lib/chat-auth.ts`**:
+  - Boot path: db vs spare reconciled — spare WINS on mismatch (it can only
+    be fresher; db can only be rolled back). db missing → RESTORE from
+    spare, never mint. Mint only when BOTH copies are gone (spare written
+    first, then db).
+  - Mid-run **mtime watch**: every sessionSecret() call stats the file
+    (~µs); if a rollback changes/deletes it mid-run, the in-use cache wins
+    (it signed every working token) and BOTH files are re-asserted from it.
+- **`mini-services/chat-service/index.ts` (relay)**: same mtime watch —
+  follows secret heals/rotations live; a transient missing/empty file keeps
+  the last good cache (socket auth never drops).
+- **`upload/veil-keeper.sh`**: `sync_chat_secret` step every 90s cycle —
+  covers rollbacks that land while the dev server is DOWN (spare wins on
+  mismatch; seeds spare when missing). Keeper restarted with the new script.
+- Tar snapshots already include `db/chat-secret.key` (db/ is in
+  SNAPSHOT_DIRS) — a third copy.
+
+### 3. Verified (all live tests)
+- **Rollback simulation (sabotage)**: overwrote db secret with garbage →
+  API call with an existing token → still `{"ok":true}` → db file HEALED
+  back to the live secret automatically. Log: "[chat-auth] db/chat-secret.key
+  changed under us (rollback?) — re-asserted the live secret on db + spare".
+- **Deletion simulation**: rm db/chat-secret.key → API call → token still
+  valid → file restored from the spare. Log: "[chat-auth]
+  db/chat-secret.key missing — restored from upload/veil-kit spare".
+- **Browser E2E**: login as Veil through the preview gateway → chat loads
+  (36 rows, #general, presence "N online" = socket.io live) → page reload
+  mid-session → **session survived** (no auth screen, chat reloaded from
+  localStorage token) → sent "QA: sign-out fix verified…" → rendered with
+  veil-msg-fresh animation → persisted to DB → cleaned up.
+- ESLint on changed files: clean. No page errors.
+
+### 4. Bundles + git
+- Committed 710f039 + pushed. Bundle created after; newest covers HEAD
+  exactly (`git bundle list-heads` == `git rev-parse HEAD`).
+
+## Known blockers / risks
+1. If BOTH the db secret and the upload/ spare are ever lost simultaneously
+   (e.g. full volume wipe), a fresh secret is minted → one-time sign-in for
+   everyone. The tar snapshots make this a three-way catastrophe, not a
+   routine one.
+2. The never-restart trade-off stands: server may sit at ~2.3GB RSS without
+   restarts; only real box pressure (MemAvail<700MB) triggers action.
+   Watch /home/z/veil-heap.log.
+3. Full `bun run lint` OOMs — lint targeted files only.
+4. Rollbacks can still revert the gitignored db/custom.db content between
+   backup-loop commits (≤30s window) — accounts re-seed on boot from
+   backups/chat/latest.json, but rows created in that window are lost
+   (pre-existing, content-safe by design).
+
+## Priority recommendations for the next phase
+1. Watch one more rollback cycle — the keeper's `chat-secret:` log line
+   should now appear on every rollback with sessions surviving.
+2. Standing ask: motion blitz on wallpapers / arcade / stream / updates.
+3. Surface /veil-jsdelivr-front.zip in the Updates or Links card.
+4. Scroll-to-bottom FAB with unread count in chat.
+5. Tab-close hit area (44px) — carried over.
+
+
 ## Project status (2026-10-09 ~23:45 UTC) — "WEBSITE SHOULD NEVER RESTART" + BUNDLE REFRESH
 
 **Both user asks shipped.** (a) git bundle refreshed — the newest
